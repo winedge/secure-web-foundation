@@ -9,6 +9,11 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Onboarding from "./pages/Onboarding";
 import Marketplace from "./pages/Marketplace";
+import MyLeads from "./pages/MyLeads";
+import Wallet from "./pages/Wallet";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminFirms from "./pages/admin/AdminFirms";
+import AdminLeads from "./pages/admin/AdminLeads";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +31,11 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/my-leads" element={<MyLeads />} />
+            <Route path="/wallet" element={<Wallet />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/firms" element={<AdminFirms />} />
+            <Route path="/admin/leads" element={<AdminLeads />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
