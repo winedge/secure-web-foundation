@@ -12,6 +12,7 @@ import Marketplace from "./pages/Marketplace";
 import MyLeads from "./pages/MyLeads";
 import Wallet from "./pages/Wallet";
 import Campaigns from "./pages/Campaigns";
+import Reports from "./pages/Reports";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminFirms from "./pages/admin/AdminFirms";
 import AdminLeads from "./pages/admin/AdminLeads";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/my-leads" element={<MyLeads />} />
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/campaigns" element={<Campaigns />} />
+            <Route path="/reports" element={<Reports />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/firms" element={<AdminFirms />} />
             <Route path="/admin/leads" element={<AdminLeads />} />
