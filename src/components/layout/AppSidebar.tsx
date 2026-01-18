@@ -9,6 +9,7 @@ import {
   FileText,
   TrendingUp,
   Shield,
+  Wallet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
@@ -19,6 +20,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Lead Marketplace', href: '/marketplace', icon: ShoppingCart },
   { name: 'My Leads', href: '/my-leads', icon: Briefcase },
+  { name: 'Wallet', href: '/wallet', icon: Wallet },
   { name: 'Campaigns', href: '/campaigns', icon: TrendingUp },
   { name: 'Reports', href: '/reports', icon: FileText },
   { name: 'Settings', href: '/settings', icon: Settings },
