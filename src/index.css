@@ -186,7 +186,7 @@
 
   .gradient-bg::before {
     content: '';
-    @apply absolute inset-0 opacity-30;
+    @apply absolute inset-0 opacity-30 pointer-events-none;
     background: radial-gradient(ellipse at 30% 20%, hsl(160 84% 39% / 0.15) 0%, transparent 50%),
                 radial-gradient(ellipse at 70% 80%, hsl(199 89% 48% / 0.1) 0%, transparent 50%);
   }
