@@ -195,6 +195,11 @@ export default function Auth() {
                     </p>
                   )}
                 </div>
+                <div className="flex justify-end">
+                  <Link to="/reset-password" className="text-sm text-primary hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? 'Signing in...' : 'Sign In'}
                 </Button>
