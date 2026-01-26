@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, Zap, BarChart3, CheckCircle } from 'lucide-react';
+import { ArrowRight, Shield, Zap, BarChart3, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
+import { useState } from 'react';
 
 const features = [
   {
@@ -23,82 +24,118 @@ const features = [
 
 export default function Index() {
   const { user } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="gradient-bg min-h-[90vh] flex items-center">
-        <div className="container mx-auto px-6 py-20 relative z-10">
-          <nav className="flex items-center justify-between mb-20">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent">
-                <span className="text-xl font-bold text-accent-foreground">L</span>
+      <section className="gradient-bg min-h-screen flex flex-col">
+        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 flex-1 flex flex-col">
+          {/* Navigation */}
+          <nav className="flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-accent">
+                <span className="text-lg sm:text-xl font-bold text-accent-foreground">L</span>
               </div>
-              <span className="text-2xl font-bold text-white">LeadsThru</span>
+              <span className="text-xl sm:text-2xl font-bold text-white">LeadsThru</span>
             </div>
-            <div className="flex items-center gap-4">
+
+            {/* Desktop Navigation */}
+            <div className="hidden sm:flex items-center gap-3">
               {user ? (
-                <Button asChild variant="secondary">
-                  <Link to="/dashboard">Go to Dashboard</Link>
+                <Button asChild variant="secondary" size="sm">
+                  <Link to="/dashboard">Dashboard</Link>
                 </Button>
               ) : (
                 <>
-                  <Button asChild variant="ghost" className="text-white hover:text-white hover:bg-white/10">
+                  <Button asChild variant="ghost" size="sm" className="text-white hover:text-white hover:bg-white/10">
                     <Link to="/auth">Sign In</Link>
                   </Button>
-                  <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                  <Button asChild size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground">
                     <Link to="/auth?mode=signup">Get Started</Link>
                   </Button>
                 </>
               )}
             </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="sm:hidden p-2 text-white"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </nav>
 
-          <div className="max-w-3xl">
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-              Mass Tort Leads,{' '}
-              <span className="text-accent">AI-Verified</span>
-            </h1>
-            <p className="text-xl text-white/80 mb-8 max-w-2xl">
-              Access the most transparent marketplace for verified mass tort leads. 
-              AI-scored, compliance-ready, and available for instant purchase.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg px-8">
-                <Link to="/auth?mode=signup">
-                  Start Free Trial
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 text-lg px-8">
-                <Link to="/marketplace">Browse Leads</Link>
-              </Button>
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="sm:hidden mt-4 p-4 bg-white/10 backdrop-blur-md rounded-xl space-y-3">
+              {user ? (
+                <Button asChild variant="secondary" className="w-full">
+                  <Link to="/dashboard">Dashboard</Link>
+                </Button>
+              ) : (
+                <>
+                  <Button asChild variant="ghost" className="w-full text-white hover:text-white hover:bg-white/20">
+                    <Link to="/auth">Sign In</Link>
+                  </Button>
+                  <Button asChild className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+                    <Link to="/auth?mode=signup">Get Started</Link>
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Hero Content */}
+          <div className="flex-1 flex items-center py-12 sm:py-20">
+            <div className="max-w-2xl">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight">
+                Mass Tort Leads,{' '}
+                <span className="text-accent">AI-Verified</span>
+              </h1>
+              <p className="text-base sm:text-lg md:text-xl text-white/80 mb-6 sm:mb-8 max-w-xl">
+                Access the most transparent marketplace for verified mass tort leads. 
+                AI-scored, compliance-ready, and available for instant purchase.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground text-base sm:text-lg px-6 sm:px-8">
+                  <Link to="/auth?mode=signup">
+                    Start Free Trial
+                    <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 text-base sm:text-lg px-6 sm:px-8">
+                  <Link to="/marketplace">Browse Leads</Link>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-24 bg-background">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Why Law Firms Choose LeadsThru</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+      <section className="py-16 sm:py-24 bg-background">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Why Law Firms Choose LeadsThru</h2>
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
               The smarter way to acquire high-quality mass tort leads
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="p-8 rounded-2xl bg-card border border-border hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                className="p-6 sm:p-8 rounded-2xl bg-card border border-border hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
-                  <feature.icon className="h-7 w-7 text-primary" />
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4 sm:mb-6">
+                  <feature.icon className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
+                <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">{feature.title}</h3>
+                <p className="text-sm sm:text-base text-muted-foreground">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -106,32 +143,32 @@ export default function Index() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-primary text-primary-foreground">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold mb-6">Ready to Get Started?</h2>
-          <p className="text-xl opacity-80 mb-8 max-w-2xl mx-auto">
+      <section className="py-16 sm:py-24 bg-primary text-primary-foreground">
+        <div className="container mx-auto px-4 sm:px-6 text-center">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">Ready to Get Started?</h2>
+          <p className="text-base sm:text-lg md:text-xl opacity-80 mb-6 sm:mb-8 max-w-xl mx-auto">
             Join hundreds of law firms already using LeadsThru to grow their practice.
           </p>
-          <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg px-8">
+          <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground text-base sm:text-lg px-6 sm:px-8">
             <Link to="/auth?mode=signup">
               Create Your Account
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
             </Link>
           </Button>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 bg-card border-t border-border">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+      <footer className="py-8 sm:py-12 bg-card border-t border-border">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2 sm:gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                 <span className="text-sm font-bold text-primary-foreground">L</span>
               </div>
               <span className="font-semibold">LeadsThru</span>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-right">
               © 2024 LeadsThru. All rights reserved. Not a law firm. Not legal advice.
             </p>
           </div>
