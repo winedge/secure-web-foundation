@@ -1,13 +1,11 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Building2, ArrowRight } from 'lucide-react';
+import { Building2, ArrowRight, Globe, Mail, Phone, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useCreateFirm } from '@/hooks/use-firm';
 
 const firmSchema = z.object({
@@ -18,11 +16,17 @@ const firmSchema = z.object({
   contact_phone: z.string().optional(),
 });
 
+type FirmFormData = z.infer<typeof firmSchema>;
+
 export default function Onboarding() {
   const navigate = useNavigate();
   const createFirm = useCreateFirm();
 
-  const form = useForm<z.infer<typeof firmSchema>>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FirmFormData>({
     resolver: zodResolver(firmSchema),
     defaultValues: {
       name: '',
@@ -33,7 +37,7 @@ export default function Onboarding() {
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof firmSchema>) => {
+  const onSubmit = async (data: FirmFormData) => {
     await createFirm.mutateAsync({
       name: data.name,
       website: data.website || undefined,
@@ -45,105 +49,128 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen gradient-bg flex items-center justify-center p-6">
-      <div className="w-full max-w-lg">
-        <div className="flex items-center gap-3 justify-center mb-8">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent">
-            <span className="text-xl font-bold text-accent-foreground">L</span>
+    <div className="min-h-screen gradient-bg flex flex-col">
+      {/* Header */}
+      <header className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-accent">
+            <span className="text-lg sm:text-xl font-bold text-accent-foreground">L</span>
           </div>
-          <span className="text-2xl font-bold text-white">LeadsThru</span>
+          <span className="text-xl sm:text-2xl font-bold text-white">LeadsThru</span>
         </div>
+      </header>
 
-        <Card>
-          <CardHeader className="text-center">
-            <div className="mx-auto w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-              <Building2 className="h-7 w-7 text-primary" />
-            </div>
-            <CardTitle>Set Up Your Firm</CardTitle>
-            <CardDescription>
-              Tell us about your law firm to get started
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Firm Name *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Smith & Associates" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12">
+        <div className="w-full max-w-md">
+          <Card className="border-0 shadow-2xl">
+            <CardHeader className="text-center pb-4 sm:pb-6">
+              <div className="mx-auto w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-3 sm:mb-4">
+                <Building2 className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+              </div>
+              <CardTitle className="text-xl sm:text-2xl">Set Up Your Firm</CardTitle>
+              <CardDescription className="text-sm sm:text-base">
+                Tell us about your law firm to get started
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                {/* Firm Name - Required */}
+                <div className="space-y-2">
+                  <label htmlFor="name" className="text-sm font-medium flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    Firm Name <span className="text-destructive">*</span>
+                  </label>
+                  <Input
+                    id="name"
+                    placeholder="Smith & Associates"
+                    className="h-11"
+                    {...register('name')}
+                  />
+                  {errors.name && (
+                    <p className="text-sm text-destructive">{errors.name.message}</p>
                   )}
-                />
-                <FormField
-                  control={form.control}
-                  name="website"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Website</FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://yourfirm.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                </div>
+
+                {/* Website */}
+                <div className="space-y-2">
+                  <label htmlFor="website" className="text-sm font-medium flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    Website
+                  </label>
+                  <Input
+                    id="website"
+                    placeholder="https://yourfirm.com"
+                    className="h-11"
+                    {...register('website')}
+                  />
+                  {errors.website && (
+                    <p className="text-sm text-destructive">{errors.website.message}</p>
                   )}
-                />
-                <FormField
-                  control={form.control}
-                  name="practice_type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Practice Type</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Mass Tort, Personal Injury" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                </div>
+
+                {/* Practice Type */}
+                <div className="space-y-2">
+                  <label htmlFor="practice_type" className="text-sm font-medium flex items-center gap-2">
+                    <Briefcase className="h-4 w-4 text-muted-foreground" />
+                    Practice Type
+                  </label>
+                  <Input
+                    id="practice_type"
+                    placeholder="Mass Tort, Personal Injury"
+                    className="h-11"
+                    {...register('practice_type')}
+                  />
+                </div>
+
+                {/* Contact Email */}
+                <div className="space-y-2">
+                  <label htmlFor="contact_email" className="text-sm font-medium flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    Contact Email
+                  </label>
+                  <Input
+                    id="contact_email"
+                    type="email"
+                    placeholder="contact@yourfirm.com"
+                    className="h-11"
+                    {...register('contact_email')}
+                  />
+                  {errors.contact_email && (
+                    <p className="text-sm text-destructive">{errors.contact_email.message}</p>
                   )}
-                />
-                <FormField
-                  control={form.control}
-                  name="contact_email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contact Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="contact@yourfirm.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="contact_phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contact Phone</FormLabel>
-                      <FormControl>
-                        <Input placeholder="(555) 123-4567" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button 
-                  type="submit" 
-                  className="w-full" 
+                </div>
+
+                {/* Contact Phone */}
+                <div className="space-y-2">
+                  <label htmlFor="contact_phone" className="text-sm font-medium flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    Contact Phone
+                  </label>
+                  <Input
+                    id="contact_phone"
+                    placeholder="(555) 123-4567"
+                    className="h-11"
+                    {...register('contact_phone')}
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full h-11 sm:h-12 text-base mt-6"
                   disabled={createFirm.isPending}
                 >
                   {createFirm.isPending ? 'Creating...' : 'Continue to Dashboard'}
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </form>
-            </Form>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          <p className="text-center text-white/60 text-xs sm:text-sm mt-6">
+            By continuing, you agree to our Terms of Service and Privacy Policy
+          </p>
+        </div>
       </div>
     </div>
   );
