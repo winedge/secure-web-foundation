@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, ArrowUpDown } from 'lucide-react';
+import { Search, Filter, ArrowUpDown, DollarSign } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LeadCard } from '@/components/leads/LeadCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { useLeads, LeadFilters } from '@/hooks/use-leads';
 import { useAuth } from '@/lib/auth-context';
 import { useFirm } from '@/hooks/use-firm';
@@ -21,6 +22,8 @@ export default function Marketplace() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState<LeadFilters>({});
   const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
+  const [searchQuery, setSearchQuery] = useState('');
   const { data: leads, isLoading: leadsLoading } = useLeads(filters);
 
   useEffect(() => {
@@ -35,10 +38,31 @@ export default function Marketplace() {
     }
   }, [firm, firmLoading, user, navigate]);
 
-  const sortedLeads = useMemo(() => {
+  // Calculate min/max prices from leads data
+  const priceStats = useMemo(() => {
+    if (!leads || leads.length === 0) return { min: 0, max: 5000 };
+    const prices = leads.map(l => l.price);
+    return {
+      min: Math.floor(Math.min(...prices)),
+      max: Math.ceil(Math.max(...prices))
+    };
+  }, [leads]);
+
+  const sortedAndFilteredLeads = useMemo(() => {
     if (!leads) return [];
     
-    return [...leads].sort((a, b) => {
+    // Apply price filter and search
+    let filtered = leads.filter(lead => {
+      const matchesPrice = lead.price >= priceRange[0] && lead.price <= priceRange[1];
+      const matchesSearch = searchQuery === '' || 
+        lead.tort_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        lead.state.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (lead.city && lead.city.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchesPrice && matchesSearch;
+    });
+
+    // Apply sorting
+    return filtered.sort((a, b) => {
       switch (sortBy) {
         case 'newest':
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -56,7 +80,7 @@ export default function Marketplace() {
           return 0;
       }
     });
-  }, [leads, sortBy]);
+  }, [leads, sortBy, priceRange, searchQuery]);
 
   if (loading || firmLoading) {
     return (
@@ -77,64 +101,102 @@ export default function Marketplace() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-3 sm:gap-4 mb-6 sm:mb-8 p-3 sm:p-4 rounded-xl bg-card border border-border">
-          <div className="flex-1 min-w-[180px]">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search leads..." className="pl-10" />
+        <div className="flex flex-col gap-4 mb-6 sm:mb-8 p-4 sm:p-5 rounded-xl bg-card border border-border">
+          {/* Top row: Search and dropdowns */}
+          <div className="flex flex-wrap gap-3 sm:gap-4">
+            <div className="flex-1 min-w-[180px]">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search leads..." 
+                  className="pl-10"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
             </div>
+            
+            <Select onValueChange={(v) => setFilters({ ...filters, tortType: v === 'all' ? undefined : v })}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Tort Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {tortTypes.map((type) => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select onValueChange={(v) => setFilters({ ...filters, state: v === 'all' ? undefined : v })}>
+              <SelectTrigger className="w-[calc(50%-6px)] sm:w-[120px]">
+                <SelectValue placeholder="State" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All States</SelectItem>
+                {states.map((state) => (
+                  <SelectItem key={state} value={state}>{state}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select onValueChange={(v) => setFilters({ ...filters, tier: v === 'all' ? undefined : v })}>
+              <SelectTrigger className="w-[calc(50%-6px)] sm:w-[140px]">
+                <SelectValue placeholder="Tier" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Tiers</SelectItem>
+                <SelectItem value="A">Tier A (80-100)</SelectItem>
+                <SelectItem value="B">Tier B (60-79)</SelectItem>
+                <SelectItem value="C">Tier C (40-59)</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <ArrowUpDown className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="oldest">Oldest First</SelectItem>
+                <SelectItem value="price-low">Price: Low to High</SelectItem>
+                <SelectItem value="price-high">Price: High to Low</SelectItem>
+                <SelectItem value="score-high">Score: High to Low</SelectItem>
+                <SelectItem value="score-low">Score: Low to High</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          
-          <Select onValueChange={(v) => setFilters({ ...filters, tortType: v === 'all' ? undefined : v })}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Tort Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              {tortTypes.map((type) => (
-                <SelectItem key={type} value={type}>{type}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
 
-          <Select onValueChange={(v) => setFilters({ ...filters, state: v === 'all' ? undefined : v })}>
-            <SelectTrigger className="w-[calc(50%-6px)] sm:w-[120px]">
-              <SelectValue placeholder="State" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All States</SelectItem>
-              {states.map((state) => (
-                <SelectItem key={state} value={state}>{state}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select onValueChange={(v) => setFilters({ ...filters, tier: v === 'all' ? undefined : v })}>
-            <SelectTrigger className="w-[calc(50%-6px)] sm:w-[140px]">
-              <SelectValue placeholder="Tier" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Tiers</SelectItem>
-              <SelectItem value="A">Tier A (80-100)</SelectItem>
-              <SelectItem value="B">Tier B (60-79)</SelectItem>
-              <SelectItem value="C">Tier C (40-59)</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-            <SelectTrigger className="w-full sm:w-[160px]">
-              <ArrowUpDown className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Newest First</SelectItem>
-              <SelectItem value="oldest">Oldest First</SelectItem>
-              <SelectItem value="price-low">Price: Low to High</SelectItem>
-              <SelectItem value="price-high">Price: High to Low</SelectItem>
-              <SelectItem value="score-high">Score: High to Low</SelectItem>
-              <SelectItem value="score-low">Score: Low to High</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* Price Range Filter */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-2 border-t border-border">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <DollarSign className="h-4 w-4" />
+              <span>Price Range:</span>
+            </div>
+            <div className="flex-1 max-w-md flex items-center gap-4">
+              <span className="text-sm font-medium min-w-[60px]">${priceRange[0]}</span>
+              <Slider
+                value={priceRange}
+                onValueChange={(value) => setPriceRange(value as [number, number])}
+                min={priceStats.min}
+                max={priceStats.max}
+                step={50}
+                className="flex-1"
+              />
+              <span className="text-sm font-medium min-w-[60px]">${priceRange[1]}</span>
+            </div>
+            {(priceRange[0] > priceStats.min || priceRange[1] < priceStats.max) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setPriceRange([priceStats.min, priceStats.max])}
+                className="text-xs"
+              >
+                Reset
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Leads Grid */}
@@ -142,13 +204,16 @@ export default function Marketplace() {
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
-        ) : sortedLeads.length > 0 ? (
+        ) : sortedAndFilteredLeads.length > 0 ? (
           <>
             <p className="text-sm text-muted-foreground mb-4">
-              Showing {sortedLeads.length} available lead{sortedLeads.length !== 1 ? 's' : ''}
+              Showing {sortedAndFilteredLeads.length} available lead{sortedAndFilteredLeads.length !== 1 ? 's' : ''}
+              {leads && sortedAndFilteredLeads.length < leads.length && (
+                <span> (filtered from {leads.length})</span>
+              )}
             </p>
             <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {sortedLeads.map((lead) => (
+              {sortedAndFilteredLeads.map((lead) => (
                 <LeadCard key={lead.id} lead={lead} />
               ))}
             </div>
