@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -11,10 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { History, Search, FileCheck } from 'lucide-react';
+import { History, Search, FileCheck, Download } from 'lucide-react';
 import { AuditLogsTable } from '@/components/admin/AuditLogsTable';
 import { ConsentLogsTable } from '@/components/admin/ConsentLogsTable';
 import { AuditStatsCards } from '@/components/admin/AuditStatsCards';
+import { exportAuditLogsToCSV, exportConsentLogsToCSV } from '@/lib/export-utils';
+import { toast } from 'sonner';
 
 export default function AdminAuditLogs() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -67,6 +70,24 @@ export default function AdminAuditLogs() {
   const uniqueActions = [...new Set(auditLogs?.map(log => log.action) || [])];
   const uniqueConsentTypes = [...new Set(consentLogs?.map((log: any) => log.consent_type) || [])];
 
+  const handleExportAuditLogs = () => {
+    if (!filteredAuditLogs || filteredAuditLogs.length === 0) {
+      toast.error('No audit logs to export');
+      return;
+    }
+    exportAuditLogsToCSV(filteredAuditLogs);
+    toast.success(`Exported ${filteredAuditLogs.length} audit logs`);
+  };
+
+  const handleExportConsentLogs = () => {
+    if (!filteredConsentLogs || filteredConsentLogs.length === 0) {
+      toast.error('No consent logs to export');
+      return;
+    }
+    exportConsentLogsToCSV(filteredConsentLogs);
+    toast.success(`Exported ${filteredConsentLogs.length} consent logs`);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -114,6 +135,10 @@ export default function AdminAuditLogs() {
                     ))}
                   </SelectContent>
                 </Select>
+                <Button variant="outline" size="sm" onClick={handleExportAuditLogs}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export CSV
+                </Button>
               </div>
             </div>
           </CardHeader>
@@ -130,17 +155,23 @@ export default function AdminAuditLogs() {
                 <FileCheck className="h-5 w-5" />
                 Consent Records ({filteredConsentLogs?.length || 0})
               </CardTitle>
-              <Select value={consentTypeFilter} onValueChange={setConsentTypeFilter}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue placeholder="Consent Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  {uniqueConsentTypes.map((type) => (
-                    <SelectItem key={type} value={type}>{type.toUpperCase()}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Select value={consentTypeFilter} onValueChange={setConsentTypeFilter}>
+                  <SelectTrigger className="w-full sm:w-40">
+                    <SelectValue placeholder="Consent Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    {uniqueConsentTypes.map((type) => (
+                      <SelectItem key={type} value={type}>{type.toUpperCase()}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" size="sm" onClick={handleExportConsentLogs}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export CSV
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>

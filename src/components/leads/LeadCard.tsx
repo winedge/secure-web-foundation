@@ -1,20 +1,13 @@
 import { useState } from 'react';
-import { MapPin, Calendar, Lock, Unlock, CheckCircle, AlertCircle } from 'lucide-react';
+import { MapPin, Calendar, Lock, Unlock, CheckCircle, Eye } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TierBadge } from './TierBadge';
 import { ScoreIndicator } from './ScoreIndicator';
 import { cn, formatCurrency } from '@/lib/utils';
-import { Lead, usePurchaseLead } from '@/hooks/use-leads';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Lead } from '@/hooks/use-leads';
+import { LeadDetailModal } from './LeadDetailModal';
 
 interface LeadCardProps {
   lead: Lead;
@@ -22,14 +15,7 @@ interface LeadCardProps {
 }
 
 export function LeadCard({ lead, isPurchased = false }: LeadCardProps) {
-  const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
-  const { mutate: purchaseLead, isPending } = usePurchaseLead();
-
-  const handlePurchase = () => {
-    purchaseLead(lead.id, {
-      onSuccess: () => setShowPurchaseDialog(false),
-    });
-  };
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   return (
     <>
@@ -110,69 +96,24 @@ export function LeadCard({ lead, isPurchased = false }: LeadCardProps) {
         </CardContent>
 
         <CardFooter className="p-5 pt-0">
-          {isPurchased ? (
-            <Button className="w-full" variant="outline">
-              View Details
-            </Button>
-          ) : (
-            <Button 
-              className="w-full btn-glow" 
-              onClick={() => setShowPurchaseDialog(true)}
-            >
-              Purchase Lead
-            </Button>
-          )}
+          <Button 
+            className="w-full" 
+            variant={isPurchased ? 'outline' : 'default'}
+            onClick={() => setShowDetailModal(true)}
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            {isPurchased ? 'View Details' : 'View & Purchase'}
+          </Button>
         </CardFooter>
       </Card>
 
-      {/* Purchase Dialog */}
-      <Dialog open={showPurchaseDialog} onOpenChange={setShowPurchaseDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Purchase</DialogTitle>
-            <DialogDescription>
-              You are about to purchase this lead. This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="flex justify-between items-center p-4 rounded-lg bg-muted">
-              <div>
-                <p className="font-medium">{lead.tort_type}</p>
-                <p className="text-sm text-muted-foreground">{lead.state}</p>
-              </div>
-              <div className="text-right">
-                <TierBadge tier={lead.tier} />
-                <p className="text-sm text-muted-foreground mt-1">
-                  Score: {lead.ai_quality_score}
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-between p-4 rounded-lg border border-border">
-              <span className="font-medium">Total Amount</span>
-              <span className="text-2xl font-bold">{formatCurrency(lead.price)}</span>
-            </div>
-
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-warning/10 text-warning">
-              <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-              <p className="text-sm">
-                This amount will be deducted from your wallet balance. After purchase, 
-                you'll have access to the full lead details including contact information.
-              </p>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPurchaseDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handlePurchase} disabled={isPending}>
-              {isPending ? 'Processing...' : 'Confirm Purchase'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Lead Detail Modal */}
+      <LeadDetailModal
+        lead={lead}
+        open={showDetailModal}
+        onOpenChange={setShowDetailModal}
+        isPurchased={isPurchased}
+      />
     </>
   );
 }

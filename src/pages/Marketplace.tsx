@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { useLeads, LeadFilters } from '@/hooks/use-leads';
+import { useRealtimeLeads } from '@/hooks/use-realtime-leads';
 import { useAuth } from '@/lib/auth-context';
 import { useFirm } from '@/hooks/use-firm';
 
@@ -25,6 +26,9 @@ export default function Marketplace() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
   const [searchQuery, setSearchQuery] = useState('');
   const { data: leads, isLoading: leadsLoading } = useLeads(filters);
+  
+  // Enable real-time updates
+  useRealtimeLeads();
 
   useEffect(() => {
     if (!loading && !user) {
