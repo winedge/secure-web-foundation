@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useFirm } from '@/hooks/use-firm';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -7,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
+import { toast } from 'sonner';
 import { 
   Wallet as WalletIcon, 
   CreditCard, 
@@ -14,12 +16,45 @@ import {
   ArrowDownLeft,
   Plus,
   History,
-  Crown
+  Crown,
+  Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function Wallet() {
   const { data: firm } = useFirm();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [loadingAmount, setLoadingAmount] = useState<number | null>(null);
+
+  // Handle success/cancel from Stripe redirect
+  useEffect(() => {
+    if (searchParams.get('success') === 'true') {
+      const amount = searchParams.get('amount');
+      toast.success(`Payment successful! $${amount} will be added to your wallet shortly.`);
+      setSearchParams({});
+    } else if (searchParams.get('canceled') === 'true') {
+      toast.info('Payment was canceled.');
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams]);
+
+  const handleAddFunds = async (amount: number) => {
+    setLoadingAmount(amount);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { amount },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error: any) {
+      toast.error('Failed to create checkout: ' + error.message);
+    } finally {
+      setLoadingAmount(null);
+    }
+  };
 
   const { data: purchases } = useQuery({
     queryKey: ['purchase-history', firm?.id],
@@ -75,13 +110,17 @@ export default function Wallet() {
                       key={amount}
                       variant="outline"
                       className="h-auto py-3 flex flex-col"
-                      onClick={() => {
-                        // Will integrate with Stripe
-                        window.location.href = `/api/create-checkout?amount=${amount}`;
-                      }}
+                      disabled={loadingAmount !== null}
+                      onClick={() => handleAddFunds(amount)}
                     >
-                      <span className="text-lg font-bold">{formatCurrency(amount)}</span>
-                      <span className="text-xs text-muted-foreground">Add funds</span>
+                      {loadingAmount === amount ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <>
+                          <span className="text-lg font-bold">{formatCurrency(amount)}</span>
+                          <span className="text-xs text-muted-foreground">Add funds</span>
+                        </>
+                      )}
                     </Button>
                   ))}
                 </div>
