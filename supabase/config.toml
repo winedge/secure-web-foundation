@@ -2,3 +2,9 @@ project_id = "sdtphgskqpelpbwhipls"
 
 [functions.create-checkout]
 verify_jwt = false
+
+[functions.ingest-leads]
+verify_jwt = false
+
+[functions.webhook-handler]
+verify_jwt = false
