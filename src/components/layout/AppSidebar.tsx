@@ -11,6 +11,8 @@ import {
   Shield,
   Wallet,
   History,
+  Upload,
+  BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
@@ -31,6 +33,8 @@ const adminNavigation = [
   { name: 'Admin Panel', href: '/admin', icon: Shield },
   { name: 'Manage Firms', href: '/admin/firms', icon: Users },
   { name: 'Manage Leads', href: '/admin/leads', icon: Briefcase },
+  { name: 'Data Ingestion', href: '/admin/data-ingestion', icon: Upload },
+  { name: 'Reporting', href: '/admin/reporting', icon: BarChart3 },
   { name: 'Audit Logs', href: '/admin/audit-logs', icon: History },
 ];
 

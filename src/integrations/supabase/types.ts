@@ -138,6 +138,101 @@ export type Database = {
           },
         ]
       }
+      contacts: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string
+          duplicate_of: string | null
+          email: string | null
+          external_id: string | null
+          firm_id: string | null
+          first_name: string | null
+          id: string
+          is_duplicate: boolean | null
+          last_name: string | null
+          lead_id: string | null
+          metadata: Json | null
+          phone: string | null
+          source_id: string | null
+          state: string | null
+          status: Database["public"]["Enums"]["contact_status"] | null
+          updated_at: string
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          duplicate_of?: string | null
+          email?: string | null
+          external_id?: string | null
+          firm_id?: string | null
+          first_name?: string | null
+          id?: string
+          is_duplicate?: boolean | null
+          last_name?: string | null
+          lead_id?: string | null
+          metadata?: Json | null
+          phone?: string | null
+          source_id?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["contact_status"] | null
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          duplicate_of?: string | null
+          email?: string | null
+          external_id?: string | null
+          firm_id?: string | null
+          first_name?: string | null
+          id?: string
+          is_duplicate?: boolean | null
+          last_name?: string | null
+          lead_id?: string | null
+          metadata?: Json | null
+          phone?: string | null
+          source_id?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["contact_status"] | null
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_duplicate_of_fkey"
+            columns: ["duplicate_of"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "lead_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firm_members: {
         Row: {
           created_at: string
@@ -224,6 +319,47 @@ export type Database = {
         }
         Relationships: []
       }
+      journey_data: {
+        Row: {
+          contact_id: string
+          created_at: string
+          duration_seconds: number | null
+          entered_at: string
+          exited_at: string | null
+          id: string
+          metadata: Json | null
+          stage: string
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          duration_seconds?: number | null
+          entered_at?: string
+          exited_at?: string | null
+          id?: string
+          metadata?: Json | null
+          stage: string
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          duration_seconds?: number | null
+          entered_at?: string
+          exited_at?: string | null
+          id?: string
+          metadata?: Json | null
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_data_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_purchases: {
         Row: {
           amount: number
@@ -272,6 +408,90 @@ export type Database = {
           },
         ]
       }
+      lead_sources: {
+        Row: {
+          configuration: Json | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          source_type: Database["public"]["Enums"]["lead_source_type"]
+          updated_at: string
+        }
+        Insert: {
+          configuration?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          source_type: Database["public"]["Enums"]["lead_source_type"]
+          updated_at?: string
+        }
+        Update: {
+          configuration?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          source_type?: Database["public"]["Enums"]["lead_source_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lead_statuses: {
+        Row: {
+          change_reason: string | null
+          changed_by: string | null
+          contact_id: string | null
+          created_at: string
+          id: string
+          lead_id: string
+          metadata: Json | null
+          previous_status: string | null
+          status: string
+        }
+        Insert: {
+          change_reason?: string | null
+          changed_by?: string | null
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          lead_id: string
+          metadata?: Json | null
+          previous_status?: string | null
+          status: string
+        }
+        Update: {
+          change_reason?: string | null
+          changed_by?: string | null
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string
+          metadata?: Json | null
+          previous_status?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_statuses_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_statuses_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           address: string | null
@@ -285,17 +505,23 @@ export type Database = {
           created_at: string
           diagnosis_details: string | null
           documents_url: string[] | null
+          duplicate_of: string | null
           email: string | null
           exposure_details: string | null
+          external_id: string | null
           first_name: string | null
           fraud_risk_score: number | null
           id: string
+          ingested_at: string | null
+          is_duplicate: boolean | null
           is_exclusive: boolean | null
           is_verified: boolean | null
           last_name: string | null
+          metadata: Json | null
           phone: string | null
           price: number
           source: string | null
+          source_id: string | null
           state: string
           status: Database["public"]["Enums"]["lead_status"] | null
           tier: Database["public"]["Enums"]["lead_tier"]
@@ -315,17 +541,23 @@ export type Database = {
           created_at?: string
           diagnosis_details?: string | null
           documents_url?: string[] | null
+          duplicate_of?: string | null
           email?: string | null
           exposure_details?: string | null
+          external_id?: string | null
           first_name?: string | null
           fraud_risk_score?: number | null
           id?: string
+          ingested_at?: string | null
+          is_duplicate?: boolean | null
           is_exclusive?: boolean | null
           is_verified?: boolean | null
           last_name?: string | null
+          metadata?: Json | null
           phone?: string | null
           price: number
           source?: string | null
+          source_id?: string | null
           state: string
           status?: Database["public"]["Enums"]["lead_status"] | null
           tier?: Database["public"]["Enums"]["lead_tier"]
@@ -345,17 +577,23 @@ export type Database = {
           created_at?: string
           diagnosis_details?: string | null
           documents_url?: string[] | null
+          duplicate_of?: string | null
           email?: string | null
           exposure_details?: string | null
+          external_id?: string | null
           first_name?: string | null
           fraud_risk_score?: number | null
           id?: string
+          ingested_at?: string | null
+          is_duplicate?: boolean | null
           is_exclusive?: boolean | null
           is_verified?: boolean | null
           last_name?: string | null
+          metadata?: Json | null
           phone?: string | null
           price?: number
           source?: string | null
+          source_id?: string | null
           state?: string
           status?: Database["public"]["Enums"]["lead_status"] | null
           tier?: Database["public"]["Enums"]["lead_tier"]
@@ -369,6 +607,84 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_duplicate_of_fkey"
+            columns: ["duplicate_of"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "lead_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notes: {
+        Row: {
+          contact_id: string | null
+          content: string
+          created_at: string
+          firm_id: string | null
+          id: string
+          is_pinned: boolean | null
+          lead_id: string | null
+          metadata: Json | null
+          title: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          contact_id?: string | null
+          content: string
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          lead_id?: string | null
+          metadata?: Json | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          contact_id?: string | null
+          content?: string
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          lead_id?: string | null
+          metadata?: Json | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
@@ -402,6 +718,85 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      touchpoints: {
+        Row: {
+          channel: string | null
+          completed_at: string | null
+          contact_id: string
+          content: string | null
+          created_at: string
+          direction: string | null
+          duration_seconds: number | null
+          firm_id: string | null
+          id: string
+          lead_id: string | null
+          metadata: Json | null
+          outcome: string | null
+          scheduled_at: string | null
+          subject: string | null
+          touchpoint_type: Database["public"]["Enums"]["touchpoint_type"]
+          user_id: string | null
+        }
+        Insert: {
+          channel?: string | null
+          completed_at?: string | null
+          contact_id: string
+          content?: string | null
+          created_at?: string
+          direction?: string | null
+          duration_seconds?: number | null
+          firm_id?: string | null
+          id?: string
+          lead_id?: string | null
+          metadata?: Json | null
+          outcome?: string | null
+          scheduled_at?: string | null
+          subject?: string | null
+          touchpoint_type: Database["public"]["Enums"]["touchpoint_type"]
+          user_id?: string | null
+        }
+        Update: {
+          channel?: string | null
+          completed_at?: string | null
+          contact_id?: string
+          content?: string | null
+          created_at?: string
+          direction?: string | null
+          duration_seconds?: number | null
+          firm_id?: string | null
+          id?: string
+          lead_id?: string | null
+          metadata?: Json | null
+          outcome?: string | null
+          scheduled_at?: string | null
+          subject?: string | null
+          touchpoint_type?: Database["public"]["Enums"]["touchpoint_type"]
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "touchpoints_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "touchpoints_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "touchpoints_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -444,9 +839,35 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "firm_owner" | "firm_staff" | "claimant"
+      contact_status:
+        | "new"
+        | "contacted"
+        | "qualified"
+        | "nurturing"
+        | "converted"
+        | "lost"
+        | "do_not_contact"
+      lead_source_type:
+        | "csv_upload"
+        | "google_ads"
+        | "meta_ads"
+        | "dialer"
+        | "crm"
+        | "intake_form"
+        | "referral"
+        | "other"
       lead_status: "available" | "purchased" | "expired" | "flagged"
       lead_tier: "A" | "B" | "C" | "D"
       subscription_plan: "basic" | "premium"
+      touchpoint_type:
+        | "call"
+        | "email"
+        | "sms"
+        | "meeting"
+        | "note"
+        | "status_change"
+        | "document"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -575,9 +996,38 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "firm_owner", "firm_staff", "claimant"],
+      contact_status: [
+        "new",
+        "contacted",
+        "qualified",
+        "nurturing",
+        "converted",
+        "lost",
+        "do_not_contact",
+      ],
+      lead_source_type: [
+        "csv_upload",
+        "google_ads",
+        "meta_ads",
+        "dialer",
+        "crm",
+        "intake_form",
+        "referral",
+        "other",
+      ],
       lead_status: ["available", "purchased", "expired", "flagged"],
       lead_tier: ["A", "B", "C", "D"],
       subscription_plan: ["basic", "premium"],
+      touchpoint_type: [
+        "call",
+        "email",
+        "sms",
+        "meeting",
+        "note",
+        "status_change",
+        "document",
+        "other",
+      ],
     },
   },
 } as const
