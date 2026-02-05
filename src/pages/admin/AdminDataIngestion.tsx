@@ -1,16 +1,13 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+ import { useQuery } from '@tanstack/react-query';
+ import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CSVUpload } from '@/components/admin/CSVUpload';
+ import { LeadSourcesManager } from '@/components/admin/LeadSourcesManager';
 import { 
   Upload, 
-  Globe, 
-  Phone, 
-  Database,
   Webhook,
   Copy,
   CheckCircle
@@ -20,18 +17,6 @@ import { toast } from 'sonner';
 
 export default function AdminDataIngestion() {
   const [copied, setCopied] = useState<string | null>(null);
-
-  const { data: sources } = useQuery({
-    queryKey: ['lead-sources'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('lead_sources')
-        .select('*')
-        .order('name');
-      if (error) throw error;
-      return data;
-    },
-  });
 
   const { data: stats } = useQuery({
     queryKey: ['ingestion-stats'],
@@ -65,22 +50,6 @@ export default function AdminDataIngestion() {
     setCopied(id);
     toast.success('Copied to clipboard');
     setTimeout(() => setCopied(null), 2000);
-  };
-
-  const getSourceIcon = (sourceType: string) => {
-    switch (sourceType) {
-      case 'csv_upload':
-        return <Upload className="h-5 w-5" />;
-      case 'google_ads':
-      case 'meta_ads':
-        return <Globe className="h-5 w-5" />;
-      case 'dialer':
-        return <Phone className="h-5 w-5" />;
-      case 'crm':
-        return <Database className="h-5 w-5" />;
-      default:
-        return <Database className="h-5 w-5" />;
-    }
   };
 
   return (
@@ -237,39 +206,7 @@ export default function AdminDataIngestion() {
           </TabsContent>
 
           <TabsContent value="sources">
-            <Card>
-              <CardHeader>
-                <CardTitle>Lead Sources</CardTitle>
-                <CardDescription>
-                  Configure and monitor lead sources
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {sources?.map((source) => (
-                    <Card key={source.id} className="bg-muted/30">
-                      <CardContent className="pt-6">
-                        <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                            {getSourceIcon(source.source_type)}
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium">{source.name}</p>
-                            <p className="text-sm text-muted-foreground">{source.description}</p>
-                            <Badge 
-                              variant={source.is_active ? 'default' : 'secondary'}
-                              className="mt-2"
-                            >
-                              {source.is_active ? 'Active' : 'Inactive'}
-                            </Badge>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+             <LeadSourcesManager />
           </TabsContent>
         </Tabs>
       </div>
