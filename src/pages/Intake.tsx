@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
+import { getSessionId, getDistinctId, trackEvent } from '@/lib/posthog';
 const tortTypes = [
   'Camp Lejeune',
   'Roundup',
@@ -62,6 +62,32 @@ export default function Intake() {
   const preselectedTort = searchParams.get('tort') || '';
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Track session timing
+  const sessionStartRef = useRef<Date>(new Date());
+  const pagesVisitedRef = useRef<string[]>([window.location.pathname]);
+
+  // Track form start time
+  useEffect(() => {
+    sessionStartRef.current = new Date();
+    trackEvent('intake_form_started', {
+      campaign_id: campaignId,
+      preselected_tort: preselectedTort,
+      referrer: document.referrer,
+    });
+    
+    // Track pages visited (for multi-page journeys)
+    const handleBeforeUnload = () => {
+      const timeSpent = Math.round((new Date().getTime() - sessionStartRef.current.getTime()) / 1000);
+      trackEvent('intake_form_abandoned', {
+        time_spent_seconds: timeSpent,
+        pages_visited: pagesVisitedRef.current,
+      });
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [campaignId, preselectedTort]);
 
   const {
     register,
@@ -82,6 +108,13 @@ export default function Intake() {
   const onSubmit = async (data: IntakeFormData) => {
     setIsSubmitting(true);
     try {
+      // Calculate time spent on form
+      const timeSpentSeconds = Math.round((new Date().getTime() - sessionStartRef.current.getTime()) / 1000);
+      
+      // Get PostHog session data
+      const posthogSessionId = getSessionId();
+      const posthogDistinctId = getDistinctId();
+      
       // Generate AI quality score (simplified - in production this would be ML-based)
       const aiQualityScore = Math.floor(Math.random() * 40) + 60; // 60-100
       const fraudRiskScore = Math.floor(Math.random() * 30); // 0-30
@@ -97,7 +130,19 @@ export default function Intake() {
       const prices = { A: 2000, B: 1500, C: 1000, D: 500 };
       const price = prices[tier];
 
-      // Insert lead
+      // Build metadata with session tracking info
+      const metadata = {
+        posthog_session_id: posthogSessionId,
+        posthog_distinct_id: posthogDistinctId,
+        time_spent_seconds: timeSpentSeconds,
+        pages_visited: pagesVisitedRef.current,
+        referrer: document.referrer,
+        user_agent: navigator.userAgent,
+        session_start: sessionStartRef.current.toISOString(),
+        submission_time: new Date().toISOString(),
+      };
+
+      // Insert lead with session metadata
       const { data: lead, error: leadError } = await supabase
         .from('leads')
         .insert({
@@ -125,11 +170,21 @@ export default function Intake() {
           is_exclusive: true,
           source: 'intake_form',
           campaign_id: campaignId || null,
+          metadata,
         })
         .select()
         .single();
 
       if (leadError) throw leadError;
+
+      // Track successful submission in PostHog
+      trackEvent('intake_form_submitted', {
+        lead_id: lead.id,
+        tort_type: data.tort_type,
+        time_spent_seconds: timeSpentSeconds,
+        tier,
+        quality_score: aiQualityScore,
+      });
 
       // Log consent
       const consentTypes = ['tcpa', 'privacy'];
@@ -149,6 +204,7 @@ export default function Intake() {
       toast.success('Your information has been submitted successfully!');
     } catch (error: any) {
       console.error('Error submitting intake:', error);
+      trackEvent('intake_form_error', { error: error.message });
       toast.error('Failed to submit. Please try again.');
     } finally {
       setIsSubmitting(false);

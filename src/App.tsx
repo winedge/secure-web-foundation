@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth-context";
+import { PostHogProvider, PostHogPageView } from "@/lib/posthog";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -29,33 +30,36 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/intake" element={<Intake />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/my-leads" element={<MyLeads />} />
-            <Route path="/wallet" element={<Wallet />} />
-            <Route path="/campaigns" element={<Campaigns />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/firms" element={<AdminFirms />} />
-            <Route path="/admin/leads" element={<AdminLeads />} />
-            <Route path="/admin/audit-logs" element={<AdminAuditLogs />} />
-            <Route path="/admin/data-ingestion" element={<AdminDataIngestion />} />
-            <Route path="/admin/reporting" element={<AdminReporting />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <PostHogProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <PostHogPageView />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/intake" element={<Intake />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/marketplace" element={<Marketplace />} />
+              <Route path="/my-leads" element={<MyLeads />} />
+              <Route path="/wallet" element={<Wallet />} />
+              <Route path="/campaigns" element={<Campaigns />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/firms" element={<AdminFirms />} />
+              <Route path="/admin/leads" element={<AdminLeads />} />
+              <Route path="/admin/audit-logs" element={<AdminAuditLogs />} />
+              <Route path="/admin/data-ingestion" element={<AdminDataIngestion />} />
+              <Route path="/admin/reporting" element={<AdminReporting />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </PostHogProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
