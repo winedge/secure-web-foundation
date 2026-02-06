@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { usePurchasedLeads } from '@/hooks/use-leads';
+import { useLeadNotes, useCreateNote, useDeleteNote, useTogglePinNote } from '@/hooks/use-lead-notes';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { ContactJourneyTimeline } from '@/components/leads/ContactJourneyTimeline';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { TierBadge } from '@/components/leads/TierBadge';
 import { ScoreIndicator } from '@/components/leads/ScoreIndicator';
 import { formatCurrency } from '@/lib/utils';
@@ -19,7 +22,12 @@ import {
   Download,
   Eye,
   CheckCircle,
-  Shield
+  Shield,
+  Clock,
+  Pin,
+  Trash2,
+  Plus,
+  X
 } from 'lucide-react';
 import {
   Dialog,
@@ -28,18 +36,160 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+
+function LeadNotesPanel({ leadId }: { leadId: string }) {
+  const { data: notes, isLoading } = useLeadNotes(leadId);
+  const createNote = useCreateNote();
+  const deleteNote = useDeleteNote();
+  const togglePin = useTogglePinNote();
+  const [showAddNote, setShowAddNote] = useState(false);
+  const [newNoteTitle, setNewNoteTitle] = useState('');
+  const [newNoteContent, setNewNoteContent] = useState('');
+
+  const handleSubmitNote = () => {
+    if (!newNoteContent.trim()) return;
+    
+    createNote.mutate({
+      leadId,
+      title: newNoteTitle || undefined,
+      content: newNoteContent,
+    }, {
+      onSuccess: () => {
+        setNewNoteTitle('');
+        setNewNoteContent('');
+        setShowAddNote(false);
+      },
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Add Note Button/Form */}
+      {showAddNote ? (
+        <Card className="border-primary">
+          <CardContent className="pt-4 space-y-3">
+            <Input
+              placeholder="Note title (optional)"
+              value={newNoteTitle}
+              onChange={(e) => setNewNoteTitle(e.target.value)}
+            />
+            <Textarea
+              placeholder="Write your note..."
+              value={newNoteContent}
+              onChange={(e) => setNewNoteContent(e.target.value)}
+              rows={3}
+            />
+            <div className="flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowAddNote(false)}
+              >
+                <X className="h-4 w-4 mr-1" />
+                Cancel
+              </Button>
+              <Button 
+                size="sm"
+                onClick={handleSubmitNote}
+                disabled={!newNoteContent.trim() || createNote.isPending}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                {createNote.isPending ? 'Adding...' : 'Add Note'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Button 
+          variant="outline" 
+          className="w-full"
+          onClick={() => setShowAddNote(true)}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Note
+        </Button>
+      )}
+
+      {/* Notes List */}
+      {notes?.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          <p>No notes yet</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {notes?.map((note) => (
+            <Card key={note.id} className={cn(note.is_pinned && 'ring-1 ring-primary')}>
+              <CardContent className="pt-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1">
+                    {note.title && (
+                      <h4 className="font-medium flex items-center gap-2">
+                        {note.is_pinned && <Pin className="h-3 w-3 text-primary" />}
+                        {note.title}
+                      </h4>
+                    )}
+                    <p className="text-sm text-muted-foreground mt-1">{note.content}</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {format(new Date(note.created_at), 'MMM d, yyyy h:mm a')}
+                    </p>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => togglePin.mutate({ noteId: note.id, isPinned: note.is_pinned || false })}
+                    >
+                      <Pin className={cn('h-4 w-4', note.is_pinned && 'text-primary fill-primary')} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => deleteNote.mutate(note.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function MyLeads() {
   const { data: leads, isLoading } = usePurchasedLeads();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedLead, setSelectedLead] = useState<any>(null);
+  const [selectedLead, setSelectedLead] = useState<string | null>(null);
 
   const filteredLeads = leads?.filter((lead) =>
     `${lead.first_name} ${lead.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lead.tort_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lead.state.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const selectedLeadData = leads?.find((l) => l.id === selectedLead);
 
   return (
     <DashboardLayout>
@@ -163,118 +313,147 @@ export default function MyLeads() {
 
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button variant="outline" className="w-full mt-3 gap-2">
+                      <Button 
+                        variant="outline" 
+                        className="w-full mt-3 gap-2"
+                        onClick={() => setSelectedLead(lead.id)}
+                      >
                         <Eye className="h-4 w-4" />
                         View Full Details
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
+                    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                           <User className="h-5 w-5" />
                           {lead.first_name} {lead.last_name}
                         </DialogTitle>
                       </DialogHeader>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                        {/* Contact Info */}
-                        <div className="space-y-4">
-                          <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                            Contact Information
-                          </h4>
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                              <Mail className="h-4 w-4 text-muted-foreground" />
-                              <span>{lead.email}</span>
+                      
+                      <Tabs defaultValue="details" className="mt-4">
+                        <TabsList className="grid w-full grid-cols-3">
+                          <TabsTrigger value="details">Details</TabsTrigger>
+                          <TabsTrigger value="journey">
+                            <Clock className="h-4 w-4 mr-2" />
+                            Journey
+                          </TabsTrigger>
+                          <TabsTrigger value="notes">
+                            <FileText className="h-4 w-4 mr-2" />
+                            Notes
+                          </TabsTrigger>
+                        </TabsList>
+                        
+                        <TabsContent value="details" className="mt-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Contact Info */}
+                            <div className="space-y-4">
+                              <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                                Contact Information
+                              </h4>
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <Mail className="h-4 w-4 text-muted-foreground" />
+                                  <span>{lead.email}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Phone className="h-4 w-4 text-muted-foreground" />
+                                  <span>{lead.phone}</span>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                  <div>
+                                    <p>{lead.address}</p>
+                                    <p>{lead.city}, {lead.state} {lead.zip_code}</p>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Phone className="h-4 w-4 text-muted-foreground" />
-                              <span>{lead.phone}</span>
+
+                            {/* Case Info */}
+                            <div className="space-y-4">
+                              <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                                Case Information
+                              </h4>
+                              <div className="space-y-2">
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Tort Type</span>
+                                  <span className="font-medium">{lead.tort_type}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Age Bucket</span>
+                                  <span className="font-medium">{lead.age_bucket || 'N/A'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Tier</span>
+                                  <TierBadge tier={lead.tier} />
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-muted-foreground">Quality Score</span>
+                                  <ScoreIndicator score={lead.ai_quality_score || 0} size="sm" />
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-muted-foreground">Fraud Risk</span>
+                                  <ScoreIndicator score={100 - (lead.fraud_risk_score || 0)} size="sm" />
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex items-start gap-2">
-                              <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                              <div>
-                                <p>{lead.address}</p>
-                                <p>{lead.city}, {lead.state} {lead.zip_code}</p>
+
+                            {/* Diagnosis Details */}
+                            {lead.diagnosis_details && (
+                              <div className="md:col-span-2 space-y-2">
+                                <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                                  Diagnosis Details
+                                </h4>
+                                <p className="text-sm bg-muted/50 p-3 rounded-lg">
+                                  {lead.diagnosis_details}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Exposure Details */}
+                            {lead.exposure_details && (
+                              <div className="md:col-span-2 space-y-2">
+                                <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                                  Exposure Details
+                                </h4>
+                                <p className="text-sm bg-muted/50 p-3 rounded-lg">
+                                  {lead.exposure_details}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Purchase Info */}
+                            <div className="md:col-span-2 space-y-2 border-t pt-4">
+                              <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                                Purchase Information
+                              </h4>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Amount Paid</span>
+                                <span className="font-bold text-primary">
+                                  {formatCurrency(Number(lead.purchaseInfo?.amount || 0))}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Purchased On</span>
+                                <span className="flex items-center gap-2">
+                                  <Calendar className="h-4 w-4" />
+                                  {lead.purchaseInfo?.purchased_at 
+                                    ? format(new Date(lead.purchaseInfo.purchased_at), 'MMM d, yyyy')
+                                    : 'N/A'}
+                                </span>
                               </div>
                             </div>
                           </div>
-                        </div>
-
-                        {/* Case Info */}
-                        <div className="space-y-4">
-                          <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                            Case Information
-                          </h4>
-                          <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Tort Type</span>
-                              <span className="font-medium">{lead.tort_type}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Age Bucket</span>
-                              <span className="font-medium">{lead.age_bucket || 'N/A'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Tier</span>
-                              <TierBadge tier={lead.tier} />
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-muted-foreground">Quality Score</span>
-                              <ScoreIndicator score={lead.ai_quality_score || 0} size="sm" />
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-muted-foreground">Fraud Risk</span>
-                              <ScoreIndicator score={100 - (lead.fraud_risk_score || 0)} size="sm" />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Diagnosis Details */}
-                        {lead.diagnosis_details && (
-                          <div className="md:col-span-2 space-y-2">
-                            <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                              Diagnosis Details
-                            </h4>
-                            <p className="text-sm bg-muted/50 p-3 rounded-lg">
-                              {lead.diagnosis_details}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Exposure Details */}
-                        {lead.exposure_details && (
-                          <div className="md:col-span-2 space-y-2">
-                            <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                              Exposure Details
-                            </h4>
-                            <p className="text-sm bg-muted/50 p-3 rounded-lg">
-                              {lead.exposure_details}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Purchase Info */}
-                        <div className="md:col-span-2 space-y-2 border-t pt-4">
-                          <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                            Purchase Information
-                          </h4>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Amount Paid</span>
-                            <span className="font-bold text-primary">
-                              {formatCurrency(Number(lead.purchaseInfo?.amount || 0))}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Purchased On</span>
-                            <span className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4" />
-                              {lead.purchaseInfo?.purchased_at 
-                                ? format(new Date(lead.purchaseInfo.purchased_at), 'MMM d, yyyy')
-                                : 'N/A'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+                        </TabsContent>
+                        
+                        <TabsContent value="journey" className="mt-4">
+                          <ContactJourneyTimeline leadId={lead.id} />
+                        </TabsContent>
+                        
+                        <TabsContent value="notes" className="mt-4">
+                          <LeadNotesPanel leadId={lead.id} />
+                        </TabsContent>
+                      </Tabs>
                     </DialogContent>
                   </Dialog>
                 </CardContent>
