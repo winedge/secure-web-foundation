@@ -17,6 +17,9 @@ export interface Lead {
   price: number;
   status: 'available' | 'purchased' | 'expired' | 'flagged';
   created_at: string;
+  source?: string | null;
+  source_id?: string | null;
+  metadata?: Record<string, any> | null;
   // PII fields (only visible after purchase)
   first_name?: string;
   last_name?: string;

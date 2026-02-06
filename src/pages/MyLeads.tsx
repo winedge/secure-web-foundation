@@ -3,6 +3,7 @@ import { usePurchasedLeads } from '@/hooks/use-leads';
 import { useLeadNotes, useCreateNote, useDeleteNote, useTogglePinNote } from '@/hooks/use-lead-notes';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ContactJourneyTimeline } from '@/components/leads/ContactJourneyTimeline';
+import { SessionAnalytics } from '@/components/leads/SessionAnalytics';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,7 +28,8 @@ import {
   Pin,
   Trash2,
   Plus,
-  X
+  X,
+  Video
 } from 'lucide-react';
 import {
   Dialog,
@@ -331,8 +333,12 @@ export default function MyLeads() {
                       </DialogHeader>
                       
                       <Tabs defaultValue="details" className="mt-4">
-                        <TabsList className="grid w-full grid-cols-3">
+                        <TabsList className="grid w-full grid-cols-4">
                           <TabsTrigger value="details">Details</TabsTrigger>
+                          <TabsTrigger value="session">
+                            <Video className="h-4 w-4 mr-2" />
+                            Session
+                          </TabsTrigger>
                           <TabsTrigger value="journey">
                             <Clock className="h-4 w-4 mr-2" />
                             Journey
@@ -444,6 +450,10 @@ export default function MyLeads() {
                               </div>
                             </div>
                           </div>
+                        </TabsContent>
+                        
+                        <TabsContent value="session" className="mt-4">
+                          <SessionAnalytics metadata={lead.metadata} />
                         </TabsContent>
                         
                         <TabsContent value="journey" className="mt-4">
