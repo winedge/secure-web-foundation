@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SessionAnalyticsDashboard } from '@/components/admin/SessionAnalyticsDashboard';
 import { 
   BarChart, 
   Bar, 
@@ -189,6 +190,7 @@ export default function AdminReporting() {
             <TabsTrigger value="sources">Lead Source Performance</TabsTrigger>
             <TabsTrigger value="journey">Contact Journey</TabsTrigger>
             <TabsTrigger value="calls">Call Outcomes</TabsTrigger>
+            <TabsTrigger value="sessions">Session Analytics</TabsTrigger>
             <TabsTrigger value="dedup">De-duplication</TabsTrigger>
           </TabsList>
 
@@ -483,6 +485,11 @@ export default function AdminReporting() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Session Analytics */}
+          <TabsContent value="sessions" className="space-y-6">
+            <SessionAnalyticsDashboard />
           </TabsContent>
         </Tabs>
       </div>

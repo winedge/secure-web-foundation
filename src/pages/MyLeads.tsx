@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { usePurchasedLeads } from '@/hooks/use-leads';
+import { usePurchasedLeads, useLeadSources } from '@/hooks/use-leads';
 import { useLeadNotes, useCreateNote, useDeleteNote, useTogglePinNote } from '@/hooks/use-lead-notes';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ContactJourneyTimeline } from '@/components/leads/ContactJourneyTimeline';
@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { TierBadge } from '@/components/leads/TierBadge';
 import { ScoreIndicator } from '@/components/leads/ScoreIndicator';
 import { formatCurrency } from '@/lib/utils';
+import { exportLeadsToCSV } from '@/lib/export-utils';
 import { 
   User, 
   Mail, 
@@ -182,6 +183,7 @@ function LeadNotesPanel({ leadId }: { leadId: string }) {
 
 export default function MyLeads() {
   const { data: leads, isLoading } = usePurchasedLeads();
+  const { data: sourcesMap } = useLeadSources();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLead, setSelectedLead] = useState<string | null>(null);
 
@@ -204,7 +206,12 @@ export default function MyLeads() {
               View and manage your purchased leads with full contact details
             </p>
           </div>
-          <Button variant="outline" className="gap-2">
+          <Button 
+            variant="outline" 
+            className="gap-2"
+            onClick={() => leads && exportLeadsToCSV(leads)}
+            disabled={!leads || leads.length === 0}
+          >
             <Download className="h-4 w-4" />
             Export CSV
           </Button>
@@ -278,6 +285,14 @@ export default function MyLeads() {
                         {lead.first_name} {lead.last_name}
                       </CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">{lead.tort_type}</p>
+                      {(lead.source_id || lead.source) && (
+                        <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                          <span>Source:</span>
+                          <span className="font-medium">
+                            {lead.source_id && sourcesMap?.get(lead.source_id)?.name || lead.source || 'Unknown'}
+                          </span>
+                        </p>
+                      )}
                     </div>
                     <TierBadge tier={lead.tier} />
                   </div>
