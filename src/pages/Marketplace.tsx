@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { useLeads, LeadFilters } from '@/hooks/use-leads';
+import { useLeads, useLeadSources, LeadFilters } from '@/hooks/use-leads';
 import { useRealtimeLeads } from '@/hooks/use-realtime-leads';
 import { useAuth } from '@/lib/auth-context';
 import { useFirm } from '@/hooks/use-firm';
@@ -26,7 +26,7 @@ export default function Marketplace() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
   const [searchQuery, setSearchQuery] = useState('');
   const { data: leads, isLoading: leadsLoading } = useLeads(filters);
-  
+  const { data: sourcesMap } = useLeadSources();
   // Enable real-time updates
   useRealtimeLeads();
 
@@ -218,7 +218,7 @@ export default function Marketplace() {
             </p>
             <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {sortedAndFilteredLeads.map((lead) => (
-                <LeadCard key={lead.id} lead={lead} />
+                <LeadCard key={lead.id} lead={lead} sourceName={lead.source_id ? sourcesMap?.get(lead.source_id)?.name : undefined} />
               ))}
             </div>
           </>

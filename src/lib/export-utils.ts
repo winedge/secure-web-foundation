@@ -50,6 +50,36 @@ export function exportConsentLogsToCSV(logs: ConsentLog[], filename?: string): v
   downloadCSV(headers, rows, filename || `consent-logs-${format(new Date(), 'yyyy-MM-dd')}.csv`);
 }
 
+export function exportLeadsToCSV(leads: any[], filename?: string): void {
+  const headers = [
+    'Name', 'Email', 'Phone', 'Tort Type', 'State', 'City', 'ZIP',
+    'Tier', 'Quality Score', 'Fraud Risk', 'Price', 'Status',
+    'Verified', 'Exclusive', 'Created', 'Purchased', 'Amount Paid'
+  ];
+
+  const rows = leads.map(lead => [
+    `${lead.first_name || ''} ${lead.last_name || ''}`.trim(),
+    lead.email || '',
+    lead.phone || '',
+    lead.tort_type || '',
+    lead.state || '',
+    lead.city || '',
+    lead.zip_code || '',
+    lead.tier || '',
+    String(lead.ai_quality_score || ''),
+    String(lead.fraud_risk_score || ''),
+    String(lead.price || ''),
+    lead.status || '',
+    lead.is_verified ? 'Yes' : 'No',
+    lead.is_exclusive ? 'Yes' : 'No',
+    lead.created_at ? format(new Date(lead.created_at), 'yyyy-MM-dd HH:mm:ss') : '',
+    lead.purchaseInfo?.purchased_at ? format(new Date(lead.purchaseInfo.purchased_at), 'yyyy-MM-dd HH:mm:ss') : '',
+    String(lead.purchaseInfo?.amount || ''),
+  ]);
+
+  downloadCSV(headers, rows, filename || `my-leads-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+}
+
 function downloadCSV(headers: string[], rows: string[][], filename: string): void {
   const csvContent = [
     headers.join(','),

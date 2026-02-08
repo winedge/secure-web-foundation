@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MapPin, Calendar, Lock, Unlock, CheckCircle, Eye } from 'lucide-react';
+import { MapPin, Calendar, Lock, Unlock, CheckCircle, Eye, Globe } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,9 +12,10 @@ import { LeadDetailModal } from './LeadDetailModal';
 interface LeadCardProps {
   lead: Lead;
   isPurchased?: boolean;
+  sourceName?: string;
 }
 
-export function LeadCard({ lead, isPurchased = false }: LeadCardProps) {
+export function LeadCard({ lead, isPurchased = false, sourceName }: LeadCardProps) {
   const [showDetailModal, setShowDetailModal] = useState(false);
 
   return (
@@ -64,6 +65,12 @@ export function LeadCard({ lead, isPurchased = false }: LeadCardProps) {
 
           {/* Badges */}
           <div className="flex flex-wrap gap-2 mb-4">
+            {(sourceName || lead.source) && (
+              <Badge variant="outline" className="gap-1">
+                <Globe className="h-3 w-3" />
+                {sourceName || lead.source}
+              </Badge>
+            )}
             {lead.is_verified && (
               <Badge variant="secondary" className="gap-1">
                 <CheckCircle className="h-3 w-3 text-success" />

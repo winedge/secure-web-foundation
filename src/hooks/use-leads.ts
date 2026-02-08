@@ -47,7 +47,7 @@ export function useLeads(filters?: LeadFilters) {
     queryFn: async () => {
       let query = supabase
         .from('leads')
-        .select('id, tort_type, state, age_bucket, ai_quality_score, fraud_risk_score, tier, is_verified, is_exclusive, price, status, created_at')
+        .select('id, tort_type, state, age_bucket, ai_quality_score, fraud_risk_score, tier, is_verified, is_exclusive, price, status, created_at, source, source_id')
         .eq('status', 'available')
         .order('created_at', { ascending: false });
 
@@ -74,6 +74,19 @@ export function useLeads(filters?: LeadFilters) {
 
       if (error) throw error;
       return data as Lead[];
+    },
+  });
+}
+
+export function useLeadSources() {
+  return useQuery({
+    queryKey: ['lead-sources-map'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('lead_sources')
+        .select('id, name, source_type');
+      if (error) throw error;
+      return new Map(data.map(s => [s.id, { name: s.name, type: s.source_type }]));
     },
   });
 }
