@@ -91,14 +91,14 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Verify webhook secret (optional but recommended)
+    // Verify webhook secret (mandatory)
     const webhookSecret = req.headers.get('x-webhook-secret');
     const expectedSecret = Deno.env.get('WEBHOOK_SECRET');
     
-    if (expectedSecret && webhookSecret !== expectedSecret) {
-      console.warn('Invalid webhook secret');
+    if (!expectedSecret || webhookSecret !== expectedSecret) {
+      console.warn('Invalid or missing webhook secret');
       return new Response(
-        JSON.stringify({ error: 'Invalid webhook secret' }),
+        JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

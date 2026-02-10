@@ -135,62 +135,15 @@ export function usePurchaseLead() {
     mutationFn: async (leadId: string) => {
       if (!user || !firm) throw new Error('Not authenticated');
 
-      // Get lead details
-      const { data: lead, error: leadError } = await supabase
-        .from('leads')
-        .select('price, status')
-        .eq('id', leadId)
-        .single();
-
-      if (leadError) throw leadError;
-      if (lead.status !== 'available') throw new Error('Lead is no longer available');
-
-      // Check wallet balance
-      if (Number(firm.wallet_balance) < Number(lead.price)) {
-        throw new Error('Insufficient wallet balance');
-      }
-
-      // Create purchase record
-      const { error: purchaseError } = await supabase
-        .from('lead_purchases')
-        .insert({
-          lead_id: leadId,
-          firm_id: firm.id,
-          user_id: user.id,
-          amount: lead.price,
-          payment_method: 'wallet',
-        });
-
-      if (purchaseError) throw purchaseError;
-
-      // Update lead status
-      const { error: updateError } = await supabase
-        .from('leads')
-        .update({ status: 'purchased' })
-        .eq('id', leadId);
-
-      if (updateError) throw updateError;
-
-      // Update firm wallet balance
-      const { error: walletError } = await supabase
-        .from('firms')
-        .update({ 
-          wallet_balance: Number(firm.wallet_balance) - Number(lead.price) 
-        })
-        .eq('id', firm.id);
-
-      if (walletError) throw walletError;
-
-      // Log the purchase
-      await supabase.from('audit_logs').insert({
-        user_id: user.id,
-        action: 'lead_purchase',
-        entity_type: 'lead',
-        entity_id: leadId,
-        details: { amount: lead.price, firm_id: firm.id },
+      // Use atomic server-side RPC to prevent race conditions
+      const { data, error } = await supabase.rpc('purchase_lead', {
+        _lead_id: leadId,
+        _user_id: user.id,
+        _firm_id: firm.id,
       });
 
-      return { leadId, amount: lead.price };
+      if (error) throw new Error(error.message);
+      return { leadId, amount: (data as any)?.amount };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
