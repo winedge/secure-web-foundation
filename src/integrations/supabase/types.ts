@@ -233,6 +233,65 @@ export type Database = {
           },
         ]
       }
+      firm_branding: {
+        Row: {
+          accent_color: string | null
+          background_color: string | null
+          created_at: string
+          custom_fields: Json | null
+          description_text: string | null
+          firm_display_name: string | null
+          firm_id: string
+          heading_text: string | null
+          id: string
+          logo_url: string | null
+          primary_color: string | null
+          slug: string
+          updated_at: string
+          visible_fields: Json | null
+        }
+        Insert: {
+          accent_color?: string | null
+          background_color?: string | null
+          created_at?: string
+          custom_fields?: Json | null
+          description_text?: string | null
+          firm_display_name?: string | null
+          firm_id: string
+          heading_text?: string | null
+          id?: string
+          logo_url?: string | null
+          primary_color?: string | null
+          slug: string
+          updated_at?: string
+          visible_fields?: Json | null
+        }
+        Update: {
+          accent_color?: string | null
+          background_color?: string | null
+          created_at?: string
+          custom_fields?: Json | null
+          description_text?: string | null
+          firm_display_name?: string | null
+          firm_id?: string
+          heading_text?: string | null
+          id?: string
+          logo_url?: string | null
+          primary_color?: string | null
+          slug?: string
+          updated_at?: string
+          visible_fields?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firm_branding_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firm_members: {
         Row: {
           created_at: string
