@@ -18,6 +18,8 @@ import {
   ShieldCheck,
   Smartphone,
   Laptop,
+  MapPin,
+  Wifi,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -34,12 +36,6 @@ function formatDuration(seconds: number): string {
   return `${mins}m ${secs}s`;
 }
 
-function DeviceIcon({ ua }: { ua?: string }) {
-  if (!ua) return <Monitor className="h-4 w-4" />;
-  if (ua.includes('Mobile') || ua.includes('Android')) return <Smartphone className="h-4 w-4" />;
-  return <Laptop className="h-4 w-4" />;
-}
-
 export function SessionDetailView({ metadata, leadName }: SessionDetailViewProps) {
   if (!metadata) {
     return (
@@ -53,8 +49,8 @@ export function SessionDetailView({ metadata, leadName }: SessionDetailViewProps
   const timing = metadata.timing;
   const interactions = metadata.interactions || [];
   const consent = metadata.consent_validation;
+  const clientInfo = metadata.client_info;
 
-  // Backwards compat: old metadata format without fingerprint
   const userAgent = fingerprint?.user_agent || metadata.user_agent || '—';
   const timeSpent = timing?.total_session_seconds || metadata.time_spent_seconds || 0;
   const formTime = timing?.form_completion_seconds || metadata.time_spent_seconds || 0;
@@ -110,6 +106,72 @@ export function SessionDetailView({ metadata, leadName }: SessionDetailViewProps
           </CardContent>
         </Card>
       </div>
+
+      {/* IP Address & Location */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <MapPin className="h-4 w-4" />
+            IP Address &amp; Location
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {clientInfo ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <p className="text-muted-foreground">IP Address</p>
+                <p className="font-medium font-mono">{clientInfo.ip_address || '—'}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">City</p>
+                <p className="font-medium">{clientInfo.geolocation?.city || '—'}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Region</p>
+                <p className="font-medium">{clientInfo.geolocation?.region || '—'}{clientInfo.geolocation?.region_code ? ` (${clientInfo.geolocation.region_code})` : ''}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Country</p>
+                <p className="font-medium">{clientInfo.geolocation?.country || '—'}{clientInfo.geolocation?.country_code ? ` (${clientInfo.geolocation.country_code})` : ''}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">ZIP Code</p>
+                <p className="font-medium">{clientInfo.geolocation?.zip || '—'}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Timezone</p>
+                <p className="font-medium">{clientInfo.geolocation?.timezone || fingerprint?.timezone || '—'}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Coordinates</p>
+                <p className="font-medium">
+                  {clientInfo.geolocation?.latitude && clientInfo.geolocation?.longitude
+                    ? `${clientInfo.geolocation.latitude}, ${clientInfo.geolocation.longitude}`
+                    : '—'}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">ISP</p>
+                <p className="font-medium">{clientInfo.geolocation?.isp || '—'}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Organization</p>
+                <p className="font-medium">{clientInfo.geolocation?.org || '—'}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground space-y-2">
+              <p>No IP/location data captured (legacy submission).</p>
+              {fingerprint?.timezone && (
+                <div>
+                  <p className="text-muted-foreground">Browser Timezone</p>
+                  <p className="font-medium text-foreground">{fingerprint.timezone}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Browser Fingerprint */}
       {fingerprint && (

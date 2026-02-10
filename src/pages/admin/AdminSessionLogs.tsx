@@ -174,6 +174,9 @@ export default function AdminSessionLogs() {
                       <TableHead>Date</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Tort Type</TableHead>
+                      <TableHead>IP Address</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Timezone</TableHead>
                       <TableHead>Device</TableHead>
                       <TableHead>Duration</TableHead>
                       <TableHead>Interactions</TableHead>
@@ -184,6 +187,8 @@ export default function AdminSessionLogs() {
                   <TableBody>
                     {filteredLeads.map((lead) => {
                       const meta = lead.metadata as any;
+                      const ci = meta?.client_info;
+                      const geo = ci?.geolocation;
                       return (
                         <TableRow key={lead.id}>
                           <TableCell className="whitespace-nowrap">
@@ -193,6 +198,17 @@ export default function AdminSessionLogs() {
                             {lead.first_name} {lead.last_name}
                           </TableCell>
                           <TableCell>{lead.tort_type}</TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {ci?.ip_address || '—'}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            {geo?.city && geo?.region_code
+                              ? `${geo.city}, ${geo.region_code}`
+                              : geo?.country || '—'}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {geo?.timezone || meta?.fingerprint?.timezone || '—'}
+                          </TableCell>
                           <TableCell>
                             <Badge variant="outline">{getDeviceType(meta)}</Badge>
                           </TableCell>

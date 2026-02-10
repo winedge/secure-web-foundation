@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getSessionId, getDistinctId, trackEvent } from '@/lib/posthog';
-import { SessionRecorder } from '@/lib/session-recorder';
+import { SessionRecorder, ClientNetworkInfo } from '@/lib/session-recorder';
 
 const tortTypes = [
   'Camp Lejeune', 'Roundup', 'Talcum Powder', 'AFFF', 'Paraquat',
@@ -66,6 +66,7 @@ export default function Intake() {
 
   // Session recorder
   const recorderRef = useRef(new SessionRecorder());
+  const clientInfoRef = useRef<ClientNetworkInfo | null>(null);
 
   useEffect(() => {
     trackEvent('intake_form_started', {
@@ -73,6 +74,11 @@ export default function Intake() {
       preselected_tort: preselectedTort,
       referrer: document.referrer,
     });
+
+    // Fetch client IP/geo info from edge function
+    supabase.functions.invoke('get-client-info').then(({ data }) => {
+      if (data) clientInfoRef.current = data as ClientNetworkInfo;
+    }).catch(() => { /* silently fail — not critical */ });
 
     const handleBeforeUnload = () => {
       const timing = recorderRef.current.getTimingData();
@@ -132,7 +138,8 @@ export default function Intake() {
       const sessionRecord = recorderRef.current.buildRecord(
         posthogSessionId,
         posthogDistinctId,
-        consentValidation
+        consentValidation,
+        clientInfoRef.current
       );
 
       // Generate scores
