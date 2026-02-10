@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
 import { useIsAdmin } from '@/hooks/use-user-role';
@@ -11,8 +12,16 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const { isAdmin, isLoading: roleLoading } = useIsAdmin();
+  const [timedOut, setTimedOut] = useState(false);
 
-  if (loading || (requireAdmin && roleLoading)) {
+  useEffect(() => {
+    const timer = setTimeout(() => setTimedOut(true), 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const stillLoading = loading || (requireAdmin && roleLoading);
+
+  if (stillLoading && !timedOut) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
