@@ -212,21 +212,8 @@ export default function Intake() {
         });
       }
 
-      // Log audit trail
-      await supabase.from('audit_logs').insert({
-        action: 'lead_intake_submission',
-        entity_type: 'lead',
-        entity_id: lead.id,
-        details: {
-          tort_type: data.tort_type,
-          state: data.state,
-          tier,
-          quality_score: aiQualityScore,
-          session_duration: sessionRecord.timing.total_session_seconds,
-          interactions_count: sessionRecord.interactions.length,
-          device: sessionRecord.fingerprint.touch_support ? 'mobile' : 'desktop',
-        },
-      });
+      // Audit logging is handled server-side via RLS-protected policies
+      // Anon users cannot write audit logs directly (security fix)
 
       setSubmitted(true);
       toast.success('Your information has been submitted successfully!');

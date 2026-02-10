@@ -836,6 +836,10 @@ export type Database = {
         Args: { _firm_id: string; _user_id: string }
         Returns: boolean
       }
+      purchase_lead: {
+        Args: { _firm_id: string; _lead_id: string; _user_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "firm_owner" | "firm_staff" | "claimant"

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth-context";
 import { PostHogProvider, PostHogPageView } from "@/lib/posthog";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -38,25 +39,30 @@ const App = () => (
           <BrowserRouter>
             <PostHogPageView />
             <Routes>
+              {/* Public routes */}
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/intake" element={<Intake />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/marketplace" element={<Marketplace />} />
-              <Route path="/my-leads" element={<MyLeads />} />
-              <Route path="/wallet" element={<Wallet />} />
-              <Route path="/campaigns" element={<Campaigns />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/firms" element={<AdminFirms />} />
-              <Route path="/admin/leads" element={<AdminLeads />} />
-              <Route path="/admin/audit-logs" element={<AdminAuditLogs />} />
-              <Route path="/admin/data-ingestion" element={<AdminDataIngestion />} />
-              <Route path="/admin/reporting" element={<AdminReporting />} />
-              <Route path="/admin/session-logs" element={<AdminSessionLogs />} />
+
+              {/* Protected routes */}
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+              <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
+              <Route path="/my-leads" element={<ProtectedRoute><MyLeads /></ProtectedRoute>} />
+              <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+              <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
+              <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+
+              {/* Admin routes */}
+              <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
+              <Route path="/admin/firms" element={<ProtectedRoute requireAdmin><AdminFirms /></ProtectedRoute>} />
+              <Route path="/admin/leads" element={<ProtectedRoute requireAdmin><AdminLeads /></ProtectedRoute>} />
+              <Route path="/admin/audit-logs" element={<ProtectedRoute requireAdmin><AdminAuditLogs /></ProtectedRoute>} />
+              <Route path="/admin/data-ingestion" element={<ProtectedRoute requireAdmin><AdminDataIngestion /></ProtectedRoute>} />
+              <Route path="/admin/reporting" element={<ProtectedRoute requireAdmin><AdminReporting /></ProtectedRoute>} />
+              <Route path="/admin/session-logs" element={<ProtectedRoute requireAdmin><AdminSessionLogs /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
