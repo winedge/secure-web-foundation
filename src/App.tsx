@@ -12,6 +12,8 @@ import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Onboarding from "./pages/Onboarding";
 import Intake from "./pages/Intake";
+import BrandedIntake from "./pages/BrandedIntake";
+import IntakeFormBuilder from "./pages/IntakeFormBuilder";
 import Marketplace from "./pages/Marketplace";
 import MyLeads from "./pages/MyLeads";
 import Wallet from "./pages/Wallet";
@@ -44,6 +46,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/intake" element={<Intake />} />
+              <Route path="/intake/:slug" element={<BrandedIntake />} />
 
               {/* Protected routes */}
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -54,6 +57,7 @@ const App = () => (
               <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/intake-builder" element={<ProtectedRoute><IntakeFormBuilder /></ProtectedRoute>} />
 
               {/* Admin routes */}
               <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />

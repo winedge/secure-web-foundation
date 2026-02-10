@@ -15,6 +15,7 @@ import {
   BarChart3,
   Monitor,
   ClipboardList,
+  Paintbrush,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
@@ -27,6 +28,7 @@ const navigation = [
   { name: 'My Leads', href: '/my-leads', icon: Briefcase },
   { name: 'Wallet', href: '/wallet', icon: Wallet },
   { name: 'Campaigns', href: '/campaigns', icon: TrendingUp },
+  { name: 'Intake Form', href: '/intake-builder', icon: Paintbrush },
   { name: 'Reports', href: '/reports', icon: FileText },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
