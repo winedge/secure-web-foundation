@@ -13,6 +13,7 @@ import {
   History,
   Upload,
   BarChart3,
+  Monitor,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
@@ -34,6 +35,7 @@ const adminNavigation = [
   { name: 'Manage Firms', href: '/admin/firms', icon: Users },
   { name: 'Manage Leads', href: '/admin/leads', icon: Briefcase },
   { name: 'Data Ingestion', href: '/admin/data-ingestion', icon: Upload },
+  { name: 'Session Logs', href: '/admin/session-logs', icon: Monitor },
   { name: 'Reporting', href: '/admin/reporting', icon: BarChart3 },
   { name: 'Audit Logs', href: '/admin/audit-logs', icon: History },
 ];

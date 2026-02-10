@@ -23,6 +23,7 @@ import AdminLeads from "./pages/admin/AdminLeads";
 import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
 import AdminDataIngestion from "./pages/admin/AdminDataIngestion";
 import AdminReporting from "./pages/admin/AdminReporting";
+import AdminSessionLogs from "./pages/admin/AdminSessionLogs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/admin/audit-logs" element={<AdminAuditLogs />} />
               <Route path="/admin/data-ingestion" element={<AdminDataIngestion />} />
               <Route path="/admin/reporting" element={<AdminReporting />} />
+              <Route path="/admin/session-logs" element={<AdminSessionLogs />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
