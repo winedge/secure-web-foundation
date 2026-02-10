@@ -53,11 +53,29 @@ export interface ConsentValidation {
   consent_language_version: string;
 }
 
+export interface ClientNetworkInfo {
+  ip_address: string;
+  geolocation: {
+    country?: string;
+    country_code?: string;
+    region?: string;
+    region_code?: string;
+    city?: string;
+    zip?: string;
+    latitude?: number;
+    longitude?: number;
+    timezone?: string;
+    isp?: string;
+    org?: string;
+  };
+}
+
 export interface SessionRecord {
   fingerprint: BrowserFingerprint;
   interactions: FormInteraction[];
   timing: TimingData;
   consent_validation: ConsentValidation | null;
+  client_info: ClientNetworkInfo | null;
   pages_visited: string[];
   referrer: string;
   entry_url: string;
@@ -243,13 +261,15 @@ export class SessionRecorder {
   buildRecord(
     posthogSessionId: string | null,
     posthogDistinctId: string | null,
-    consentValidation: ConsentValidation | null
+    consentValidation: ConsentValidation | null,
+    clientInfo: ClientNetworkInfo | null = null
   ): SessionRecord {
     return {
       fingerprint: collectBrowserFingerprint(),
       interactions: this.interactions,
       timing: this.getTimingData(),
       consent_validation: consentValidation,
+      client_info: clientInfo,
       pages_visited: this.pagesVisited,
       referrer: document.referrer,
       entry_url: window.location.href,
