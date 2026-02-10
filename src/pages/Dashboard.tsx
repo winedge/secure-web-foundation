@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, Briefcase, DollarSign, TrendingUp } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -13,6 +13,12 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { data: firm, isLoading: firmLoading } = useFirm();
   const { data: purchasedLeads } = usePurchasedLeads();
+  const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setTimedOut(true), 5000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -21,12 +27,12 @@ export default function Dashboard() {
   }, [user, loading, navigate]);
 
   useEffect(() => {
-    if (!firmLoading && user && !firm) {
+    if (user && !firmLoading && !firm) {
       navigate('/onboarding');
     }
   }, [firm, firmLoading, user, navigate]);
 
-  if (loading || firmLoading) {
+  if ((loading || firmLoading) && !timedOut) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
