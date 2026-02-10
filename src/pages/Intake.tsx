@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,17 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getSessionId, getDistinctId, trackEvent } from '@/lib/posthog';
+import { SessionRecorder } from '@/lib/session-recorder';
+
 const tortTypes = [
-  'Camp Lejeune',
-  'Roundup',
-  'Talcum Powder',
-  'AFFF',
-  'Paraquat',
-  '3M Earplugs',
-  'Hernia Mesh',
-  'NEC Baby Formula',
-  'Tylenol',
-  'Zantac',
+  'Camp Lejeune', 'Roundup', 'Talcum Powder', 'AFFF', 'Paraquat',
+  '3M Earplugs', 'Hernia Mesh', 'NEC Baby Formula', 'Tylenol', 'Zantac',
 ];
 
 const states = [
@@ -35,6 +29,13 @@ const states = [
 ];
 
 const ageBuckets = ['18-34', '35-44', '45-54', '55-64', '65+'];
+
+// Consent text constants (versioned for hash verification)
+const CONSENT_TEXT = {
+  tcpa: 'I consent to receive calls and text messages regarding my inquiry, including via automated technology. Message and data rates may apply.',
+  privacy: 'I have read and agree to the Privacy Policy and Terms of Service.',
+  hipaa: 'I authorize the release of my medical records for the purpose of evaluating my potential claim.',
+};
 
 const intakeSchema = z.object({
   first_name: z.string().min(1, 'First name is required').max(50),
@@ -62,29 +63,25 @@ export default function Intake() {
   const preselectedTort = searchParams.get('tort') || '';
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Track session timing
-  const sessionStartRef = useRef<Date>(new Date());
-  const pagesVisitedRef = useRef<string[]>([window.location.pathname]);
 
-  // Track form start time
+  // Session recorder
+  const recorderRef = useRef(new SessionRecorder());
+
   useEffect(() => {
-    sessionStartRef.current = new Date();
     trackEvent('intake_form_started', {
       campaign_id: campaignId,
       preselected_tort: preselectedTort,
       referrer: document.referrer,
     });
-    
-    // Track pages visited (for multi-page journeys)
+
     const handleBeforeUnload = () => {
-      const timeSpent = Math.round((new Date().getTime() - sessionStartRef.current.getTime()) / 1000);
+      const timing = recorderRef.current.getTimingData();
       trackEvent('intake_form_abandoned', {
-        time_spent_seconds: timeSpent,
-        pages_visited: pagesVisitedRef.current,
+        time_spent_seconds: timing.total_session_seconds,
+        pages_visited: recorderRef.current.buildRecord(null, null, null).pages_visited,
       });
     };
-    
+
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [campaignId, preselectedTort]);
@@ -105,44 +102,52 @@ export default function Intake() {
     },
   });
 
+  // Track input field interactions
+  const trackFocus = useCallback((fieldName: string) => {
+    recorderRef.current.trackFieldFocus(fieldName, 'input');
+  }, []);
+
+  const trackBlur = useCallback((fieldName: string, value?: string) => {
+    recorderRef.current.trackFieldBlur(fieldName, 'input', value?.length);
+  }, []);
+
+  const trackChange = useCallback((fieldName: string, value?: string) => {
+    recorderRef.current.trackFieldChange(fieldName, 'input', value?.length);
+  }, []);
+
   const onSubmit = async (data: IntakeFormData) => {
     setIsSubmitting(true);
     try {
-      // Calculate time spent on form
-      const timeSpentSeconds = Math.round((new Date().getTime() - sessionStartRef.current.getTime()) / 1000);
-      
-      // Get PostHog session data
       const posthogSessionId = getSessionId();
       const posthogDistinctId = getDistinctId();
-      
-      // Generate AI quality score (simplified - in production this would be ML-based)
-      const aiQualityScore = Math.floor(Math.random() * 40) + 60; // 60-100
-      const fraudRiskScore = Math.floor(Math.random() * 30); // 0-30
-      
-      // Determine tier based on quality score
+
+      // Build consent validation with hashes
+      const consentValidation = await recorderRef.current.buildConsentValidation(
+        CONSENT_TEXT.tcpa,
+        CONSENT_TEXT.privacy,
+        data.consent_hipaa ? CONSENT_TEXT.hipaa : undefined
+      );
+
+      // Build complete session record
+      const sessionRecord = recorderRef.current.buildRecord(
+        posthogSessionId,
+        posthogDistinctId,
+        consentValidation
+      );
+
+      // Generate scores
+      const aiQualityScore = Math.floor(Math.random() * 40) + 60;
+      const fraudRiskScore = Math.floor(Math.random() * 30);
+
       let tier: 'A' | 'B' | 'C' | 'D' = 'C';
       if (aiQualityScore >= 80) tier = 'A';
       else if (aiQualityScore >= 60) tier = 'B';
       else if (aiQualityScore >= 40) tier = 'C';
       else tier = 'D';
 
-      // Calculate price based on tier
       const prices = { A: 2000, B: 1500, C: 1000, D: 500 };
-      const price = prices[tier];
 
-      // Build metadata with session tracking info
-      const metadata = {
-        posthog_session_id: posthogSessionId,
-        posthog_distinct_id: posthogDistinctId,
-        time_spent_seconds: timeSpentSeconds,
-        pages_visited: pagesVisitedRef.current,
-        referrer: document.referrer,
-        user_agent: navigator.userAgent,
-        session_start: sessionStartRef.current.toISOString(),
-        submission_time: new Date().toISOString(),
-      };
-
-      // Insert lead with session metadata
+      // Insert lead with full session metadata
       const { data: lead, error: leadError } = await supabase
         .from('leads')
         .insert({
@@ -164,29 +169,29 @@ export default function Intake() {
           ai_quality_score: aiQualityScore,
           fraud_risk_score: fraudRiskScore,
           tier,
-          price,
+          price: prices[tier],
           status: 'available',
           is_verified: false,
           is_exclusive: true,
           source: 'intake_form',
           campaign_id: campaignId || null,
-          metadata,
+          metadata: sessionRecord as any,
         })
-        .select()
+        .select('id')
         .single();
 
       if (leadError) throw leadError;
 
-      // Track successful submission in PostHog
+      // Track PostHog event
       trackEvent('intake_form_submitted', {
         lead_id: lead.id,
         tort_type: data.tort_type,
-        time_spent_seconds: timeSpentSeconds,
+        time_spent_seconds: sessionRecord.timing.total_session_seconds,
         tier,
         quality_score: aiQualityScore,
       });
 
-      // Log consent
+      // Log consent records
       const consentTypes = ['tcpa', 'privacy'];
       if (data.consent_hipaa) consentTypes.push('hipaa');
 
@@ -195,10 +200,26 @@ export default function Intake() {
           lead_id: lead.id,
           consent_type: consentType,
           consented: true,
-          ip_address: null, // Would get from server in production
+          ip_address: null,
           user_agent: navigator.userAgent,
         });
       }
+
+      // Log audit trail
+      await supabase.from('audit_logs').insert({
+        action: 'lead_intake_submission',
+        entity_type: 'lead',
+        entity_id: lead.id,
+        details: {
+          tort_type: data.tort_type,
+          state: data.state,
+          tier,
+          quality_score: aiQualityScore,
+          session_duration: sessionRecord.timing.total_session_seconds,
+          interactions_count: sessionRecord.interactions.length,
+          device: sessionRecord.fingerprint.touch_support ? 'mobile' : 'desktop',
+        },
+      });
 
       setSubmitted(true);
       toast.success('Your information has been submitted successfully!');
@@ -222,7 +243,6 @@ export default function Intake() {
             <span className="text-xl sm:text-2xl font-bold text-white">LeadsThru</span>
           </Link>
         </header>
-
         <div className="flex-1 flex items-center justify-center px-4 py-12">
           <Card className="max-w-md w-full text-center">
             <CardContent className="pt-8 pb-8">
@@ -231,7 +251,7 @@ export default function Intake() {
               </div>
               <h2 className="text-2xl font-bold mb-2">Thank You!</h2>
               <p className="text-muted-foreground mb-6">
-                Your information has been submitted successfully. A qualified legal representative 
+                Your information has been submitted successfully. A qualified legal representative
                 may contact you soon if you qualify for the case.
               </p>
               <p className="text-sm text-muted-foreground">
@@ -246,7 +266,6 @@ export default function Intake() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-      {/* Header */}
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 py-4">
           <Link to="/" className="flex items-center gap-2 sm:gap-3">
@@ -260,18 +279,14 @@ export default function Intake() {
 
       <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="max-w-2xl mx-auto">
-          {/* Hero */}
           <div className="text-center mb-8">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3">
-              Free Case Evaluation
-            </h1>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3">Free Case Evaluation</h1>
             <p className="text-muted-foreground text-base sm:text-lg">
-              Find out if you qualify for compensation. Fill out this confidential form 
+              Find out if you qualify for compensation. Fill out this confidential form
               and a legal professional may contact you.
             </p>
           </div>
 
-          {/* Trust Indicators */}
           <div className="flex flex-wrap justify-center gap-4 mb-8">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Shield className="h-4 w-4 text-primary" />
@@ -287,22 +302,22 @@ export default function Intake() {
             </div>
           </div>
 
-          {/* Form */}
           <Card>
             <CardHeader>
               <CardTitle>Your Information</CardTitle>
-              <CardDescription>
-                All fields marked with * are required
-              </CardDescription>
+              <CardDescription>All fields marked with * are required</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 {/* Case Type */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Case Type *</label>
-                  <Select 
-                    value={watch('tort_type')} 
-                    onValueChange={(v) => setValue('tort_type', v)}
+                  <Select
+                    value={watch('tort_type')}
+                    onValueChange={(v) => {
+                      setValue('tort_type', v);
+                      recorderRef.current.trackSelectChange('tort_type', v);
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select your case type" />
@@ -313,9 +328,7 @@ export default function Intake() {
                       ))}
                     </SelectContent>
                   </Select>
-                  {errors.tort_type && (
-                    <p className="text-sm text-destructive">{errors.tort_type.message}</p>
-                  )}
+                  {errors.tort_type && <p className="text-sm text-destructive">{errors.tort_type.message}</p>}
                 </div>
 
                 {/* Personal Info */}
@@ -326,10 +339,11 @@ export default function Intake() {
                       id="first_name"
                       placeholder="John"
                       {...register('first_name')}
+                      onFocus={() => trackFocus('first_name')}
+                      onBlur={(e) => trackBlur('first_name', e.target.value)}
+                      onChange={(e) => { register('first_name').onChange(e); trackChange('first_name', e.target.value); }}
                     />
-                    {errors.first_name && (
-                      <p className="text-sm text-destructive">{errors.first_name.message}</p>
-                    )}
+                    {errors.first_name && <p className="text-sm text-destructive">{errors.first_name.message}</p>}
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="last_name" className="text-sm font-medium">Last Name *</label>
@@ -337,10 +351,11 @@ export default function Intake() {
                       id="last_name"
                       placeholder="Doe"
                       {...register('last_name')}
+                      onFocus={() => trackFocus('last_name')}
+                      onBlur={(e) => trackBlur('last_name', e.target.value)}
+                      onChange={(e) => { register('last_name').onChange(e); trackChange('last_name', e.target.value); }}
                     />
-                    {errors.last_name && (
-                      <p className="text-sm text-destructive">{errors.last_name.message}</p>
-                    )}
+                    {errors.last_name && <p className="text-sm text-destructive">{errors.last_name.message}</p>}
                   </div>
                 </div>
 
@@ -352,10 +367,11 @@ export default function Intake() {
                       type="email"
                       placeholder="john@example.com"
                       {...register('email')}
+                      onFocus={() => trackFocus('email')}
+                      onBlur={(e) => trackBlur('email', e.target.value)}
+                      onChange={(e) => { register('email').onChange(e); trackChange('email', e.target.value); }}
                     />
-                    {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email.message}</p>
-                    )}
+                    {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="phone" className="text-sm font-medium">Phone *</label>
@@ -364,19 +380,23 @@ export default function Intake() {
                       type="tel"
                       placeholder="(555) 123-4567"
                       {...register('phone')}
+                      onFocus={() => trackFocus('phone')}
+                      onBlur={(e) => trackBlur('phone', e.target.value)}
+                      onChange={(e) => { register('phone').onChange(e); trackChange('phone', e.target.value); }}
                     />
-                    {errors.phone && (
-                      <p className="text-sm text-destructive">{errors.phone.message}</p>
-                    )}
+                    {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
                   </div>
                 </div>
 
                 {/* Age */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Age Range *</label>
-                  <Select 
-                    value={watch('age_bucket')} 
-                    onValueChange={(v) => setValue('age_bucket', v)}
+                  <Select
+                    value={watch('age_bucket')}
+                    onValueChange={(v) => {
+                      setValue('age_bucket', v);
+                      recorderRef.current.trackSelectChange('age_bucket', v);
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select your age range" />
@@ -387,9 +407,7 @@ export default function Intake() {
                       ))}
                     </SelectContent>
                   </Select>
-                  {errors.age_bucket && (
-                    <p className="text-sm text-destructive">{errors.age_bucket.message}</p>
-                  )}
+                  {errors.age_bucket && <p className="text-sm text-destructive">{errors.age_bucket.message}</p>}
                 </div>
 
                 {/* Address */}
@@ -399,6 +417,8 @@ export default function Intake() {
                     id="address"
                     placeholder="123 Main St"
                     {...register('address')}
+                    onFocus={() => trackFocus('address')}
+                    onBlur={(e) => trackBlur('address', e.target.value)}
                   />
                 </div>
 
@@ -409,16 +429,19 @@ export default function Intake() {
                       id="city"
                       placeholder="New York"
                       {...register('city')}
+                      onFocus={() => trackFocus('city')}
+                      onBlur={(e) => trackBlur('city', e.target.value)}
                     />
-                    {errors.city && (
-                      <p className="text-sm text-destructive">{errors.city.message}</p>
-                    )}
+                    {errors.city && <p className="text-sm text-destructive">{errors.city.message}</p>}
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">State *</label>
-                    <Select 
-                      value={watch('state')} 
-                      onValueChange={(v) => setValue('state', v)}
+                    <Select
+                      value={watch('state')}
+                      onValueChange={(v) => {
+                        setValue('state', v);
+                        recorderRef.current.trackSelectChange('state', v);
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="State" />
@@ -429,9 +452,7 @@ export default function Intake() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {errors.state && (
-                      <p className="text-sm text-destructive">{errors.state.message}</p>
-                    )}
+                    {errors.state && <p className="text-sm text-destructive">{errors.state.message}</p>}
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="zip_code" className="text-sm font-medium">ZIP *</label>
@@ -439,35 +460,35 @@ export default function Intake() {
                       id="zip_code"
                       placeholder="10001"
                       {...register('zip_code')}
+                      onFocus={() => trackFocus('zip_code')}
+                      onBlur={(e) => trackBlur('zip_code', e.target.value)}
                     />
-                    {errors.zip_code && (
-                      <p className="text-sm text-destructive">{errors.zip_code.message}</p>
-                    )}
+                    {errors.zip_code && <p className="text-sm text-destructive">{errors.zip_code.message}</p>}
                   </div>
                 </div>
 
                 {/* Case Details */}
                 <div className="space-y-2">
-                  <label htmlFor="exposure_details" className="text-sm font-medium">
-                    Exposure/Usage Details
-                  </label>
+                  <label htmlFor="exposure_details" className="text-sm font-medium">Exposure/Usage Details</label>
                   <Textarea
                     id="exposure_details"
                     placeholder="Describe your exposure to the product or situation..."
                     rows={3}
                     {...register('exposure_details')}
+                    onFocus={() => trackFocus('exposure_details')}
+                    onBlur={(e) => trackBlur('exposure_details', e.target.value)}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="diagnosis_details" className="text-sm font-medium">
-                    Diagnosis/Injury Details
-                  </label>
+                  <label htmlFor="diagnosis_details" className="text-sm font-medium">Diagnosis/Injury Details</label>
                   <Textarea
                     id="diagnosis_details"
                     placeholder="Describe any diagnosis or injuries you have experienced..."
                     rows={3}
                     {...register('diagnosis_details')}
+                    onFocus={() => trackFocus('diagnosis_details')}
+                    onBlur={(e) => trackBlur('diagnosis_details', e.target.value)}
                   />
                 </div>
 
@@ -477,51 +498,48 @@ export default function Intake() {
                     <Checkbox
                       id="consent_tcpa"
                       checked={watch('consent_tcpa')}
-                      onCheckedChange={(checked) => setValue('consent_tcpa', checked as boolean)}
+                      onCheckedChange={(checked) => {
+                        setValue('consent_tcpa', checked as boolean);
+                        recorderRef.current.trackCheckboxClick('consent_tcpa', checked as boolean);
+                      }}
                     />
                     <label htmlFor="consent_tcpa" className="text-sm leading-relaxed">
-                      <span className="font-medium">TCPA Consent *</span> - I consent to receive calls and text messages 
-                      regarding my inquiry, including via automated technology. Message and data rates may apply.
+                      <span className="font-medium">TCPA Consent *</span> - {CONSENT_TEXT.tcpa}
                     </label>
                   </div>
-                  {errors.consent_tcpa && (
-                    <p className="text-sm text-destructive ml-6">{errors.consent_tcpa.message}</p>
-                  )}
+                  {errors.consent_tcpa && <p className="text-sm text-destructive ml-6">{errors.consent_tcpa.message}</p>}
 
                   <div className="flex items-start gap-3">
                     <Checkbox
                       id="consent_privacy"
                       checked={watch('consent_privacy')}
-                      onCheckedChange={(checked) => setValue('consent_privacy', checked as boolean)}
+                      onCheckedChange={(checked) => {
+                        setValue('consent_privacy', checked as boolean);
+                        recorderRef.current.trackCheckboxClick('consent_privacy', checked as boolean);
+                      }}
                     />
                     <label htmlFor="consent_privacy" className="text-sm leading-relaxed">
-                      <span className="font-medium">Privacy Policy *</span> - I have read and agree to the 
-                      Privacy Policy and Terms of Service.
+                      <span className="font-medium">Privacy Policy *</span> - {CONSENT_TEXT.privacy}
                     </label>
                   </div>
-                  {errors.consent_privacy && (
-                    <p className="text-sm text-destructive ml-6">{errors.consent_privacy.message}</p>
-                  )}
+                  {errors.consent_privacy && <p className="text-sm text-destructive ml-6">{errors.consent_privacy.message}</p>}
 
                   <div className="flex items-start gap-3">
                     <Checkbox
                       id="consent_hipaa"
                       checked={watch('consent_hipaa')}
-                      onCheckedChange={(checked) => setValue('consent_hipaa', checked as boolean)}
+                      onCheckedChange={(checked) => {
+                        setValue('consent_hipaa', checked as boolean);
+                        recorderRef.current.trackCheckboxClick('consent_hipaa', checked as boolean);
+                      }}
                     />
                     <label htmlFor="consent_hipaa" className="text-sm leading-relaxed">
-                      <span className="font-medium">HIPAA Authorization</span> (Optional) - I authorize the release 
-                      of my medical records for the purpose of evaluating my potential claim.
+                      <span className="font-medium">HIPAA Authorization</span> (Optional) - {CONSENT_TEXT.hipaa}
                     </label>
                   </div>
                 </div>
 
-                <Button 
-                  type="submit" 
-                  size="lg" 
-                  className="w-full"
-                  disabled={isSubmitting}
-                >
+                <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -536,8 +554,8 @@ export default function Intake() {
                 </Button>
 
                 <p className="text-xs text-muted-foreground text-center">
-                  By submitting this form, you understand that this is not legal advice and 
-                  does not create an attorney-client relationship. A legal professional may 
+                  By submitting this form, you understand that this is not legal advice and
+                  does not create an attorney-client relationship. A legal professional may
                   contact you to discuss your potential case.
                 </p>
               </form>
