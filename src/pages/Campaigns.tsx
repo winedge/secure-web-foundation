@@ -93,7 +93,7 @@ export default function Campaigns() {
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Campaigns</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Campaigns</h1>
             <p className="text-muted-foreground">
               Create and manage your lead acquisition campaigns
             </p>
@@ -105,7 +105,7 @@ export default function Campaigns() {
         </div>
 
         {/* Stats */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Campaigns</CardTitle>

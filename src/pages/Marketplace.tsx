@@ -96,7 +96,7 @@ export default function Marketplace() {
 
   return (
     <DashboardLayout>
-      <div className="p-4 sm:p-8">
+      <div>
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold">Lead Marketplace</h1>
           <p className="text-muted-foreground mt-1">

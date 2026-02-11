@@ -42,9 +42,9 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="p-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Welcome back, {firm?.name || 'there'}!</h1>
+      <div>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold">Welcome back, {firm?.name || 'there'}!</h1>
           <p className="text-muted-foreground mt-1">
             Here's an overview of your lead activity
           </p>

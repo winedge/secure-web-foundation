@@ -201,7 +201,7 @@ export default function MyLeads() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">My Leads</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">My Leads</h1>
             <p className="text-muted-foreground mt-1">
               View and manage your purchased leads with full contact details
             </p>
@@ -348,7 +348,7 @@ export default function MyLeads() {
                       </DialogHeader>
                       
                       <Tabs defaultValue="details" className="mt-4">
-                        <TabsList className="grid w-full grid-cols-4">
+                        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
                           <TabsTrigger value="details">Details</TabsTrigger>
                           <TabsTrigger value="session">
                             <Video className="h-4 w-4 mr-2" />
