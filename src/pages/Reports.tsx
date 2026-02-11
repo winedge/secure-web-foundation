@@ -73,14 +73,14 @@ export default function Reports() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Reports & Analytics</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Reports & Analytics</h1>
           <p className="text-muted-foreground">
             Track your lead acquisition performance and spending trends
           </p>
         </div>
 
         {/* Key Metrics */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Spent</CardTitle>

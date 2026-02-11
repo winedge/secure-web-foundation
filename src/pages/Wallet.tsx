@@ -79,7 +79,7 @@ export default function Wallet() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Wallet & Billing</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Wallet & Billing</h1>
           <p className="text-muted-foreground mt-1">
             Manage your wallet balance and subscription
           </p>
@@ -104,7 +104,7 @@ export default function Wallet() {
               
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">Add funds to your wallet</p>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {topUpAmounts.map((amount) => (
                     <Button
                       key={amount}

@@ -16,11 +16,15 @@ import {
   Monitor,
   ClipboardList,
   Paintbrush,
+  Menu,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
 import { useIsAdmin } from '@/hooks/use-user-role';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useState } from 'react';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -50,7 +54,7 @@ const adminLogs = [
   { name: 'Intake Submissions', href: '/admin/leads', icon: ClipboardList },
 ];
 
-export function AppSidebar() {
+function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { signOut, user } = useAuth();
   const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
@@ -78,78 +82,110 @@ export function AppSidebar() {
 
   const renderLinks = (items: typeof navigation, className: typeof navLinkClass) =>
     items.map((item) => (
-      <NavLink key={item.name} to={item.href} className={className}>
+      <NavLink key={item.name} to={item.href} className={className} onClick={onNavigate}>
         <item.icon className="h-5 w-5 shrink-0" />
         {item.name}
       </NavLink>
     ));
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
-      <div className="flex h-full flex-col">
-        {/* Logo */}
-        <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary">
-            <span className="text-lg font-bold text-sidebar-primary-foreground">L</span>
-          </div>
-          <span className="text-xl font-bold tracking-tight">LeadsThru</span>
+    <div className="flex h-full flex-col">
+      {/* Logo */}
+      <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary">
+          <span className="text-lg font-bold text-sidebar-primary-foreground">L</span>
         </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
-          {renderLinks(navigation, navLinkClass)}
-
-          {/* Admin Navigation */}
-          {isAdmin && (
-            <>
-              <div className="my-4 border-t border-sidebar-border" />
-              <p className="px-3 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-                Admin — Overview
-              </p>
-              <div className="space-y-0.5">
-                {renderLinks(adminOverview, adminLinkClass)}
-              </div>
-
-              <p className="px-3 pt-4 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-                Data Management
-              </p>
-              <div className="space-y-0.5">
-                {renderLinks(adminData, adminLinkClass)}
-              </div>
-
-              <p className="px-3 pt-4 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-                Logs &amp; Monitoring
-              </p>
-              <div className="space-y-0.5">
-                {renderLinks(adminLogs, adminLinkClass)}
-              </div>
-            </>
-          )}
-        </nav>
-
-        {/* User section */}
-        <div className="border-t border-sidebar-border p-4">
-          <div className="mb-3 flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sidebar-accent">
-              <span className="text-sm font-medium">
-                {user?.email?.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="truncate text-sm font-medium">{user?.email}</p>
-              <p className="text-xs text-sidebar-foreground/50">Law Firm</p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-            onClick={handleSignOut}
-          >
-            <LogOut className="h-4 w-4" />
-            Sign out
-          </Button>
-        </div>
+        <span className="text-xl font-bold tracking-tight">LeadsThru</span>
       </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
+        {renderLinks(navigation, navLinkClass)}
+
+        {/* Admin Navigation */}
+        {isAdmin && (
+          <>
+            <div className="my-4 border-t border-sidebar-border" />
+            <p className="px-3 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+              Admin — Overview
+            </p>
+            <div className="space-y-0.5">
+              {renderLinks(adminOverview, adminLinkClass)}
+            </div>
+
+            <p className="px-3 pt-4 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+              Data Management
+            </p>
+            <div className="space-y-0.5">
+              {renderLinks(adminData, adminLinkClass)}
+            </div>
+
+            <p className="px-3 pt-4 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+              Logs &amp; Monitoring
+            </p>
+            <div className="space-y-0.5">
+              {renderLinks(adminLogs, adminLinkClass)}
+            </div>
+          </>
+        )}
+      </nav>
+
+      {/* User section */}
+      <div className="border-t border-sidebar-border p-4">
+        <div className="mb-3 flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sidebar-accent">
+            <span className="text-sm font-medium">
+              {user?.email?.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="truncate text-sm font-medium">{user?.email}</p>
+            <p className="text-xs text-sidebar-foreground/50">Law Firm</p>
+          </div>
+        </div>
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+          onClick={handleSignOut}
+        >
+          <LogOut className="h-4 w-4" />
+          Sign out
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export function MobileHeader() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="lg:hidden sticky top-0 z-50 flex h-14 items-center gap-3 border-b border-border bg-sidebar px-4">
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="text-sidebar-foreground">
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle menu</span>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-64 p-0 bg-sidebar text-sidebar-foreground border-sidebar-border">
+          <SidebarContent onNavigate={() => setOpen(false)} />
+        </SheetContent>
+      </Sheet>
+      <div className="flex items-center gap-2">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
+          <span className="text-sm font-bold text-sidebar-primary-foreground">L</span>
+        </div>
+        <span className="text-lg font-bold tracking-tight text-sidebar-foreground">LeadsThru</span>
+      </div>
+    </div>
+  );
+}
+
+export function AppSidebar() {
+  return (
+    <aside className="fixed left-0 top-0 z-40 hidden lg:block h-screen w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
+      <SidebarContent />
     </aside>
   );
 }

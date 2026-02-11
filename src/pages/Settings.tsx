@@ -121,29 +121,30 @@ export default function Settings() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Settings</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Settings</h1>
           <p className="text-muted-foreground">
             Manage your account and firm preferences
           </p>
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-4">
-            <TabsTrigger value="profile" className="gap-2">
+          <TabsList className="grid w-full max-w-md grid-cols-2 sm:grid-cols-4">
+            <TabsTrigger value="profile" className="gap-1 sm:gap-2">
               <User className="h-4 w-4" />
-              Profile
+              <span className="hidden sm:inline">Profile</span>
+              <span className="sm:hidden">Profile</span>
             </TabsTrigger>
-            <TabsTrigger value="firm" className="gap-2">
+            <TabsTrigger value="firm" className="gap-1 sm:gap-2">
               <Building className="h-4 w-4" />
-              Firm
+              <span>Firm</span>
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="gap-2">
+            <TabsTrigger value="notifications" className="gap-1 sm:gap-2">
               <Bell className="h-4 w-4" />
-              Alerts
+              <span>Alerts</span>
             </TabsTrigger>
-            <TabsTrigger value="security" className="gap-2">
+            <TabsTrigger value="security" className="gap-1 sm:gap-2">
               <Shield className="h-4 w-4" />
-              Security
+              <span>Security</span>
             </TabsTrigger>
           </TabsList>
 
