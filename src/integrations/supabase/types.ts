@@ -136,6 +136,13 @@ export type Database = {
             referencedRelation: "leads"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "consent_logs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contacts: {
@@ -222,6 +229,13 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
             referencedColumns: ["id"]
           },
           {
@@ -465,6 +479,13 @@ export type Database = {
             referencedRelation: "leads"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "lead_purchases_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
         ]
       }
       lead_sources: {
@@ -547,6 +568,13 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_statuses_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
             referencedColumns: ["id"]
           },
         ]
@@ -676,6 +704,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "leads_duplicate_of_fkey"
+            columns: ["duplicate_of"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "leads_source_id_fkey"
             columns: ["source_id"]
             isOneToOne: false
@@ -744,6 +779,13 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
             referencedColumns: ["id"]
           },
         ]
@@ -855,6 +897,13 @@ export type Database = {
             referencedRelation: "leads"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "touchpoints_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_roles: {
@@ -880,7 +929,48 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      leads_marketplace: {
+        Row: {
+          age_bucket: string | null
+          ai_quality_score: number | null
+          created_at: string | null
+          id: string | null
+          is_exclusive: boolean | null
+          is_verified: boolean | null
+          price: number | null
+          state: string | null
+          status: Database["public"]["Enums"]["lead_status"] | null
+          tier: Database["public"]["Enums"]["lead_tier"] | null
+          tort_type: string | null
+        }
+        Insert: {
+          age_bucket?: string | null
+          ai_quality_score?: number | null
+          created_at?: string | null
+          id?: string | null
+          is_exclusive?: boolean | null
+          is_verified?: boolean | null
+          price?: number | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["lead_status"] | null
+          tier?: Database["public"]["Enums"]["lead_tier"] | null
+          tort_type?: string | null
+        }
+        Update: {
+          age_bucket?: string | null
+          ai_quality_score?: number | null
+          created_at?: string | null
+          id?: string | null
+          is_exclusive?: boolean | null
+          is_verified?: boolean | null
+          price?: number | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["lead_status"] | null
+          tier?: Database["public"]["Enums"]["lead_tier"] | null
+          tort_type?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_user_firm_id: { Args: { _user_id: string }; Returns: string }
