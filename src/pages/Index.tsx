@@ -3,6 +3,7 @@ import { ArrowRight, Shield, Zap, BarChart3, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
 import { useState } from 'react';
+import logoImg from '@/assets/leadthru-logo.png';
 
 const features = [
   {
@@ -33,12 +34,7 @@ export default function Index() {
         <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 flex-1 flex flex-col">
           {/* Navigation */}
           <nav className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-accent">
-                <span className="text-lg sm:text-xl font-bold text-accent-foreground">L</span>
-              </div>
-              <span className="text-xl sm:text-2xl font-bold text-white">LeadsThru</span>
-            </div>
+            <img src={logoImg} alt="LeadThru" className="h-9 sm:h-10" />
 
             {/* Desktop Navigation */}
             <div className="hidden sm:flex items-center gap-3">
@@ -162,12 +158,7 @@ export default function Index() {
       <footer className="py-8 sm:py-12 bg-card border-t border-border">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <span className="text-sm font-bold text-primary-foreground">L</span>
-              </div>
-              <span className="font-semibold">LeadsThru</span>
-            </div>
+            <img src={logoImg} alt="LeadThru" className="h-7" />
             <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-right">
               © 2024 LeadsThru. All rights reserved. Not a law firm. Not legal advice.
             </p>

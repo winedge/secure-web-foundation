@@ -20,6 +20,7 @@ import {
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import logoImg from '@/assets/leadthru-logo.png';
 import { useAuth } from '@/lib/auth-context';
 import { useIsAdmin } from '@/hooks/use-user-role';
 import { Button } from '@/components/ui/button';
@@ -92,10 +93,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     <div className="flex h-full flex-col">
       {/* Logo */}
       <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary">
-          <span className="text-lg font-bold text-sidebar-primary-foreground">L</span>
-        </div>
-        <span className="text-xl font-bold tracking-tight">LeadsThru</span>
+        <img src={logoImg} alt="LeadThru" className="h-8" />
       </div>
 
       {/* Navigation */}
@@ -172,12 +170,7 @@ export function MobileHeader() {
           <SidebarContent onNavigate={() => setOpen(false)} />
         </SheetContent>
       </Sheet>
-      <div className="flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
-          <span className="text-sm font-bold text-sidebar-primary-foreground">L</span>
-        </div>
-        <span className="text-lg font-bold tracking-tight text-sidebar-foreground">LeadsThru</span>
-      </div>
+      <img src={logoImg} alt="LeadThru" className="h-7" />
     </div>
   );
 }
