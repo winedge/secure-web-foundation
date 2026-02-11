@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
 import { useState } from 'react';
 import logoImg from '@/assets/leadthru-logo.png';
+import logoDark from '@/assets/leadthru-logo-dark.png';
 
 const features = [
   {
@@ -158,7 +159,7 @@ export default function Index() {
       <footer className="py-8 sm:py-12 bg-card border-t border-border">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <img src={logoImg} alt="LeadThru" className="h-7" />
+            <img src={logoDark} alt="LeadThru" className="h-7" />
             <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-right">
               © 2024 LeadsThru. All rights reserved. Not a law firm. Not legal advice.
             </p>
