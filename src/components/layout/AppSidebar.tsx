@@ -18,6 +18,7 @@ import {
   Paintbrush,
   Menu,
   X,
+  Megaphone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import logoImg from '@/assets/leadthru-logo-dark.png';
@@ -33,6 +34,7 @@ const navigation = [
   { name: 'My Leads', href: '/my-leads', icon: Briefcase },
   { name: 'Wallet', href: '/wallet', icon: Wallet },
   { name: 'Campaigns', href: '/campaigns', icon: TrendingUp },
+  { name: 'Meta Ads', href: '/meta-ads', icon: Megaphone },
   { name: 'Intake Form', href: '/intake-builder', icon: Paintbrush },
   { name: 'Reports', href: '/reports', icon: FileText },
   { name: 'Settings', href: '/settings', icon: Settings },

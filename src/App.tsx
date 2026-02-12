@@ -18,6 +18,7 @@ import Marketplace from "./pages/Marketplace";
 import MyLeads from "./pages/MyLeads";
 import Wallet from "./pages/Wallet";
 import Campaigns from "./pages/Campaigns";
+import MetaAds from "./pages/MetaAds";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/my-leads" element={<ProtectedRoute><MyLeads /></ProtectedRoute>} />
               <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
               <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
+              <Route path="/meta-ads" element={<ProtectedRoute><MetaAds /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/intake-builder" element={<ProtectedRoute><IntakeFormBuilder /></ProtectedRoute>} />
