@@ -14,3 +14,12 @@ verify_jwt = false
 
 [functions.meta-ai-assistant]
 verify_jwt = false
+
+[functions.meta-oauth]
+verify_jwt = false
+
+[functions.budget-reallocation]
+verify_jwt = false
+
+[functions.social-content-generator]
+verify_jwt = false
