@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, x-webhook-secret',
-};
+import { corsHeaders, handleCors, jsonResponse } from "../_shared/cors.ts";
+import { createSupabaseClient } from "../_shared/auth.ts";
 
 interface CallDispositionPayload {
   type: 'call_disposition';
@@ -47,49 +43,22 @@ interface CRMSyncPayload {
 
 type WebhookPayload = CallDispositionPayload | StatusUpdatePayload | NotePayload | CRMSyncPayload;
 
-// deno-lint-ignore no-explicit-any
-async function findLeadByExternalId(
-  supabase: any,
-  externalId: string
-): Promise<string | undefined> {
-  const { data } = await supabase
-    .from('leads')
-    .select('id')
-    .eq('external_id', externalId)
-    .single();
-  if (data && typeof data === 'object' && 'id' in data) {
-    return (data as { id: string }).id;
-  }
-  return undefined;
+async function findLeadByExternalId(supabase: any, externalId: string): Promise<string | undefined> {
+  const { data } = await supabase.from('leads').select('id').eq('external_id', externalId).single();
+  return data?.id;
 }
 
-// deno-lint-ignore no-explicit-any
-async function findContactByExternalId(
-  supabase: any,
-  externalId: string
-): Promise<string | undefined> {
-  const { data } = await supabase
-    .from('contacts')
-    .select('id')
-    .eq('external_id', externalId)
-    .single();
-  if (data && typeof data === 'object' && 'id' in data) {
-    return (data as { id: string }).id;
-  }
-  return undefined;
+async function findContactByExternalId(supabase: any, externalId: string): Promise<string | undefined> {
+  const { data } = await supabase.from('contacts').select('id').eq('external_id', externalId).single();
+  return data?.id;
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
+  const corsResp = handleCors(req);
+  if (corsResp) return corsResp;
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabase = createSupabaseClient(true);
 
     // Verify webhook secret (mandatory)
     const webhookSecret = req.headers.get('x-webhook-secret');
@@ -97,10 +66,7 @@ serve(async (req) => {
     
     if (!expectedSecret || webhookSecret !== expectedSecret) {
       console.warn('Invalid or missing webhook secret');
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ error: 'Unauthorized' }, 401);
     }
 
     const payload: WebhookPayload = await req.json();
@@ -109,8 +75,6 @@ serve(async (req) => {
     switch (payload.type) {
       case 'call_disposition': {
         const p = payload as CallDispositionPayload;
-        
-        // Find lead or contact
         let leadId = p.lead_id;
         let contactId = p.contact_id;
         
@@ -119,51 +83,28 @@ serve(async (req) => {
           contactId = await findContactByExternalId(supabase, p.external_id);
         }
 
-        if (!leadId && !contactId) {
-          return new Response(
-            JSON.stringify({ error: 'Lead or contact not found' }),
-            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
+        if (!leadId && !contactId) return jsonResponse({ error: 'Lead or contact not found' }, 404);
 
-        // Create touchpoint for call
-        const { error: touchpointError } = await supabase
-          .from('touchpoints')
-          .insert({
-            lead_id: leadId,
-            contact_id: contactId,
-            touchpoint_type: 'call',
-            direction: 'outbound',
-            channel: 'phone',
-            outcome: p.outcome,
-            duration_seconds: p.duration_seconds,
-            content: p.notes,
-            completed_at: p.timestamp || new Date().toISOString(),
-            metadata: { agent_id: p.agent_id },
-          });
+        const { error: touchpointError } = await supabase.from('touchpoints').insert({
+          lead_id: leadId, contact_id: contactId, touchpoint_type: 'call',
+          direction: 'outbound', channel: 'phone', outcome: p.outcome,
+          duration_seconds: p.duration_seconds, content: p.notes,
+          completed_at: p.timestamp || new Date().toISOString(),
+          metadata: { agent_id: p.agent_id },
+        });
+        if (touchpointError) throw touchpointError;
 
-        if (touchpointError) {
-          console.error('Touchpoint insert error:', touchpointError);
-          throw touchpointError;
-        }
-
-        // If notes provided, also create a note
         if (p.notes) {
           await supabase.from('notes').insert({
-            lead_id: leadId,
-            contact_id: contactId,
-            title: `Call - ${p.outcome}`,
-            content: p.notes,
+            lead_id: leadId, contact_id: contactId,
+            title: `Call - ${p.outcome}`, content: p.notes,
           });
         }
-
-        console.log('Call disposition processed successfully');
         break;
       }
 
       case 'status_update': {
         const p = payload as StatusUpdatePayload;
-        
         let leadId = p.lead_id;
         let contactId = p.contact_id;
         
@@ -172,56 +113,32 @@ serve(async (req) => {
           contactId = await findContactByExternalId(supabase, p.external_id);
         }
 
-        if (!leadId && !contactId) {
-          return new Response(
-            JSON.stringify({ error: 'Lead or contact not found' }),
-            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
+        if (!leadId && !contactId) return jsonResponse({ error: 'Lead or contact not found' }, 404);
 
-        // Create status history entry
-        const { error: statusError } = await supabase
-          .from('lead_statuses')
-          .insert({
-            lead_id: leadId,
-            contact_id: contactId,
-            status: p.new_status,
-            previous_status: p.previous_status,
-            change_reason: p.reason,
-          });
+        const { error: statusError } = await supabase.from('lead_statuses').insert({
+          lead_id: leadId, contact_id: contactId,
+          status: p.new_status, previous_status: p.previous_status,
+          change_reason: p.reason,
+        });
+        if (statusError) throw statusError;
 
-        if (statusError) {
-          console.error('Status insert error:', statusError);
-          throw statusError;
-        }
-
-        // Update contact status if applicable
         if (contactId) {
           const validStatuses = ['new', 'contacted', 'qualified', 'nurturing', 'converted', 'lost', 'do_not_contact'];
           if (validStatuses.includes(p.new_status)) {
-            await supabase
-              .from('contacts')
-              .update({ status: p.new_status })
-              .eq('id', contactId);
+            await supabase.from('contacts').update({ status: p.new_status }).eq('id', contactId);
           }
         }
 
-        // Create touchpoint for status change
         await supabase.from('touchpoints').insert({
-          lead_id: leadId,
-          contact_id: contactId,
-          touchpoint_type: 'status_change',
+          lead_id: leadId, contact_id: contactId, touchpoint_type: 'status_change',
           content: `Status changed from ${p.previous_status || 'unknown'} to ${p.new_status}`,
           metadata: { reason: p.reason },
         });
-
-        console.log('Status update processed successfully');
         break;
       }
 
       case 'note': {
         const p = payload as NotePayload;
-        
         let leadId = p.lead_id;
         let contactId = p.contact_id;
         
@@ -230,36 +147,18 @@ serve(async (req) => {
           contactId = await findContactByExternalId(supabase, p.external_id);
         }
 
-        if (!leadId && !contactId) {
-          return new Response(
-            JSON.stringify({ error: 'Lead or contact not found' }),
-            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
+        if (!leadId && !contactId) return jsonResponse({ error: 'Lead or contact not found' }, 404);
 
-        const { error: noteError } = await supabase
-          .from('notes')
-          .insert({
-            lead_id: leadId,
-            contact_id: contactId,
-            title: p.title,
-            content: p.content,
-          });
-
-        if (noteError) {
-          console.error('Note insert error:', noteError);
-          throw noteError;
-        }
-
-        // Also create touchpoint
-        await supabase.from('touchpoints').insert({
-          lead_id: leadId,
-          contact_id: contactId,
-          touchpoint_type: 'note',
-          content: p.content,
+        const { error: noteError } = await supabase.from('notes').insert({
+          lead_id: leadId, contact_id: contactId,
+          title: p.title, content: p.content,
         });
+        if (noteError) throw noteError;
 
-        console.log('Note processed successfully');
+        await supabase.from('touchpoints').insert({
+          lead_id: leadId, contact_id: contactId,
+          touchpoint_type: 'note', content: p.content,
+        });
         break;
       }
 
@@ -272,50 +171,29 @@ serve(async (req) => {
             const existingLeadId = await findLeadByExternalId(supabase, p.external_id);
             
             if (existingLeadId) {
-              // Update existing lead
-              await supabase
-                .from('leads')
-                .update({
-                  ...p.data,
-                  updated_at: new Date().toISOString(),
-                })
-                .eq('id', existingLeadId);
-            } else if (p.action === 'create') {
-              // Create new lead - needs required fields
-              if (p.data.state && p.data.tort_type) {
-                await supabase.from('leads').insert({
-                  external_id: p.external_id,
-                  state: p.data.state as string,
-                  tort_type: p.data.tort_type as string,
-                  price: (p.data.price as number) || 300,
-                  status: 'available',
-                  ...p.data,
-                });
-              }
+              await supabase.from('leads').update({ ...p.data, updated_at: new Date().toISOString() }).eq('id', existingLeadId);
+            } else if (p.action === 'create' && p.data.state && p.data.tort_type) {
+              await supabase.from('leads').insert({
+                external_id: p.external_id,
+                state: p.data.state as string,
+                tort_type: p.data.tort_type as string,
+                price: (p.data.price as number) || 300,
+                status: 'available',
+                ...p.data,
+              });
             }
           }
         }
-
-        console.log('CRM sync processed successfully');
         break;
       }
 
       default:
-        return new Response(
-          JSON.stringify({ error: 'Unknown webhook type' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonResponse({ error: 'Unknown webhook type' }, 400);
     }
 
-    return new Response(
-      JSON.stringify({ success: true }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse({ success: true });
   } catch (error) {
     console.error('Webhook error:', error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse({ error: error instanceof Error ? error.message : 'Unknown error' }, 500);
   }
 });

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useFirm } from '@/hooks/use-firm';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useSubscription, openCustomerPortal } from '@/hooks/use-subscription';
 import { 
   Wallet as WalletIcon, 
   CreditCard, 
@@ -17,12 +18,15 @@ import {
   Plus,
   History,
   Crown,
-  Loader2
+  Loader2,
+  Settings2
 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function Wallet() {
   const { data: firm } = useFirm();
+  const { tier, subscribed, subscriptionEnd } = useSubscription();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [loadingAmount, setLoadingAmount] = useState<number | null>(null);
 
@@ -143,26 +147,43 @@ export default function Wallet() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Current Plan</span>
-                <Badge variant={firm?.subscription_plan === 'premium' ? 'default' : 'secondary'}>
-                  {firm?.subscription_plan || 'Basic'}
+                <Badge variant={tier === 'premium' ? 'default' : 'secondary'}>
+                  {tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : 'Free'}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Status</span>
-                <Badge variant={firm?.subscription_status === 'active' ? 'default' : 'outline'}>
-                  {firm?.subscription_status || 'Inactive'}
+                <Badge variant={subscribed ? 'default' : 'outline'}>
+                  {subscribed ? 'Active' : 'Inactive'}
                 </Badge>
               </div>
+              {subscriptionEnd && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Renews</span>
+                  <span className="text-sm">{new Date(subscriptionEnd).toLocaleDateString()}</span>
+                </div>
+              )}
               
-              {firm?.subscription_plan !== 'premium' && (
+              {subscribed ? (
+                <Button 
+                  variant="outline" 
+                  className="w-full gap-2" 
+                  onClick={async () => {
+                    try { await openCustomerPortal(); } catch (e: any) { toast.error(e.message); }
+                  }}
+                >
+                  <Settings2 className="h-4 w-4" />
+                  Manage Subscription
+                </Button>
+              ) : (
                 <div className="pt-4 border-t">
                   <div className="text-center mb-4">
-                    <p className="font-semibold">Upgrade to Premium</p>
-                    <p className="text-sm text-muted-foreground">Get 15% discount on all leads</p>
+                    <p className="font-semibold">Choose a Plan</p>
+                    <p className="text-sm text-muted-foreground">Unlock more features</p>
                   </div>
-                  <Button className="w-full gap-2">
+                  <Button className="w-full gap-2" onClick={() => navigate('/pricing')}>
                     <Crown className="h-4 w-4" />
-                    Upgrade Now - $299/mo
+                    View Plans
                   </Button>
                 </div>
               )}

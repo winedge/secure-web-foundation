@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-};
+import { handleCors, jsonResponse } from "../_shared/cors.ts";
+import { createSupabaseClient } from "../_shared/auth.ts";
 
 interface LeadData {
   first_name?: string;
@@ -29,54 +25,31 @@ interface IngestRequest {
   deduplicate?: boolean;
 }
 
-// Simple deduplication check by email or phone
-// deno-lint-ignore no-explicit-any
-async function checkDuplicate(
-  supabase: any,
-  email?: string,
-  phone?: string
-): Promise<{ isDuplicate: boolean; duplicateOf?: string }> {
-  if (!email && !phone) {
-    return { isDuplicate: false };
-  }
+async function checkDuplicate(supabase: any, email?: string, phone?: string): Promise<{ isDuplicate: boolean; duplicateOf?: string }> {
+  if (!email && !phone) return { isDuplicate: false };
 
   let query = supabase.from('leads').select('id');
-  
-  if (email) {
-    query = query.eq('email', email);
-  } else if (phone) {
-    query = query.eq('phone', phone);
-  }
+  if (email) query = query.eq('email', email);
+  else if (phone) query = query.eq('phone', phone);
 
   const { data } = await query.limit(1).single();
-  
-  if (data && typeof data === 'object' && 'id' in data) {
-    return { isDuplicate: true, duplicateOf: (data as { id: string }).id };
-  }
-  
+  if (data?.id) return { isDuplicate: true, duplicateOf: data.id };
   return { isDuplicate: false };
 }
 
-// Calculate AI quality score based on data completeness and quality
 function calculateQualityScore(lead: LeadData): number {
-  let score = 50; // Base score
-  
-  // Contact info completeness
+  let score = 50;
   if (lead.email) score += 10;
   if (lead.phone) score += 10;
   if (lead.first_name && lead.last_name) score += 5;
   if (lead.address) score += 5;
   if (lead.city) score += 3;
   if (lead.zip_code) score += 2;
-  
-  // Case details
   if (lead.diagnosis_details) score += 10;
   if (lead.exposure_details) score += 5;
-  
   return Math.min(100, score);
 }
 
-// Calculate tier based on quality score
 function calculateTier(score: number): 'A' | 'B' | 'C' | 'D' {
   if (score >= 80) return 'A';
   if (score >= 60) return 'B';
@@ -84,113 +57,50 @@ function calculateTier(score: number): 'A' | 'B' | 'C' | 'D' {
   return 'D';
 }
 
-// Calculate price based on tier and tort type
 function calculatePrice(tier: 'A' | 'B' | 'C' | 'D', tortType: string): number {
   const basePrices: Record<string, number> = {
-    'Camp Lejeune': 500,
-    'Roundup': 400,
-    'Talcum Powder': 450,
-    'AFFF': 550,
-    'Paraquat': 500,
-    '3M Earplugs': 350,
+    'Camp Lejeune': 500, 'Roundup': 400, 'Talcum Powder': 450,
+    'AFFF': 550, 'Paraquat': 500, '3M Earplugs': 350,
   };
-  
-  const tierMultipliers: Record<string, number> = {
-    'A': 1.5,
-    'B': 1.0,
-    'C': 0.7,
-    'D': 0.4,
-  };
-  
-  const basePrice = basePrices[tortType] || 400;
-  return Math.round(basePrice * tierMultipliers[tier]);
+  const tierMultipliers: Record<string, number> = { 'A': 1.5, 'B': 1.0, 'C': 0.7, 'D': 0.4 };
+  return Math.round((basePrices[tortType] || 400) * tierMultipliers[tier]);
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
+  const corsResp = handleCors(req);
+  if (corsResp) return corsResp;
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabase = createSupabaseClient(true);
 
-    // Verify authorization
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Missing authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    if (!authHeader) return jsonResponse({ error: 'Missing authorization header' }, 401);
 
-    // Get user from token
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid authorization token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    if (authError || !user) return jsonResponse({ error: 'Invalid authorization token' }, 401);
 
-    // Check if user is admin
-    const { data: roles } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .single();
-
-    if (!roles) {
-      return new Response(
-        JSON.stringify({ error: 'Admin access required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').single();
+    if (!roles) return jsonResponse({ error: 'Admin access required' }, 403);
 
     const body: IngestRequest = await req.json();
     const { leads, deduplicate = true } = body;
 
     if (!leads || !Array.isArray(leads) || leads.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'No leads provided' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ error: 'No leads provided' }, 400);
     }
 
     console.log(`Processing ${leads.length} leads...`);
 
-    // Get source IDs
-    const { data: sources } = await supabase
-      .from('lead_sources')
-      .select('id, source_type');
-    
+    const { data: sources } = await supabase.from('lead_sources').select('id, source_type');
     const sourceMap = new Map((sources as Array<{ id: string; source_type: string }> || []).map(s => [s.source_type, s.id]));
 
-    const results = {
-      total: leads.length,
-      inserted: 0,
-      duplicates: 0,
-      errors: 0,
-      insertedIds: [] as string[],
-      duplicateIds: [] as string[],
-    };
+    const results = { total: leads.length, inserted: 0, duplicates: 0, errors: 0, insertedIds: [] as string[], duplicateIds: [] as string[] };
 
     for (const lead of leads) {
       try {
-        // Check for duplicates if enabled
         if (deduplicate) {
-          const { isDuplicate, duplicateOf } = await checkDuplicate(
-            supabase,
-            lead.email,
-            lead.phone
-          );
-          
+          const { isDuplicate, duplicateOf } = await checkDuplicate(supabase, lead.email, lead.phone);
           if (isDuplicate) {
             results.duplicates++;
             if (duplicateOf) results.duplicateIds.push(duplicateOf);
@@ -198,37 +108,22 @@ serve(async (req) => {
           }
         }
 
-        // Calculate scores and pricing
         const qualityScore = calculateQualityScore(lead);
         const tier = calculateTier(qualityScore);
         const price = calculatePrice(tier, lead.tort_type);
 
-        // Insert lead
         const { data: insertedLead, error: insertError } = await supabase
           .from('leads')
           .insert({
-            first_name: lead.first_name,
-            last_name: lead.last_name,
-            email: lead.email,
-            phone: lead.phone,
-            address: lead.address,
-            city: lead.city,
-            state: lead.state,
-            zip_code: lead.zip_code,
-            tort_type: lead.tort_type,
-            age_bucket: lead.age_bucket,
-            diagnosis_details: lead.diagnosis_details,
-            exposure_details: lead.exposure_details,
-            ai_quality_score: qualityScore,
-            tier,
-            price,
-            status: 'available',
-            source_id: sourceMap.get(lead.source_type),
-            external_id: lead.external_id,
-            ingested_at: new Date().toISOString(),
-            metadata: lead.metadata || {},
-            is_verified: false,
-            is_exclusive: true,
+            first_name: lead.first_name, last_name: lead.last_name,
+            email: lead.email, phone: lead.phone, address: lead.address,
+            city: lead.city, state: lead.state, zip_code: lead.zip_code,
+            tort_type: lead.tort_type, age_bucket: lead.age_bucket,
+            diagnosis_details: lead.diagnosis_details, exposure_details: lead.exposure_details,
+            ai_quality_score: qualityScore, tier, price, status: 'available',
+            source_id: sourceMap.get(lead.source_type), external_id: lead.external_id,
+            ingested_at: new Date().toISOString(), metadata: lead.metadata || {},
+            is_verified: false, is_exclusive: true,
           })
           .select('id')
           .single();
@@ -236,9 +131,41 @@ serve(async (req) => {
         if (insertError) {
           console.error('Insert error:', insertError);
           results.errors++;
-        } else if (insertedLead && typeof insertedLead === 'object' && 'id' in insertedLead) {
+        } else if (insertedLead?.id) {
           results.inserted++;
-          results.insertedIds.push((insertedLead as { id: string }).id);
+          results.insertedIds.push(insertedLead.id);
+
+          try {
+            const { data: matches } = await supabase.rpc('match_lead_to_firms', { _lead_id: insertedLead.id });
+            if (matches && Array.isArray(matches) && matches.length > 0) {
+              console.log(`Lead ${insertedLead.id} matched to ${matches.length} firms`);
+              for (const match of matches.slice(0, 5)) {
+                await supabase.from('audit_logs').insert({
+                  user_id: user.id, action: 'lead_matched', entity_type: 'lead',
+                  entity_id: insertedLead.id,
+                  details: { firm_id: match.firm_id, firm_name: match.firm_name, match_score: match.match_score },
+                });
+              }
+
+              // Trigger email notifications to matched firms
+              try {
+                const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+                const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+                await fetch(`${supabaseUrl}/functions/v1/lead-notification`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${supabaseKey}`,
+                  },
+                  body: JSON.stringify({ lead_id: insertedLead.id, matches: matches.slice(0, 5) }),
+                });
+              } catch (notifErr) {
+                console.error('Notification error (non-fatal):', notifErr);
+              }
+            }
+          } catch (matchErr) {
+            console.error('Lead matching error (non-fatal):', matchErr);
+          }
         }
       } catch (err) {
         console.error('Lead processing error:', err);
@@ -247,16 +174,9 @@ serve(async (req) => {
     }
 
     console.log(`Ingestion complete: ${results.inserted} inserted, ${results.duplicates} duplicates, ${results.errors} errors`);
-
-    return new Response(
-      JSON.stringify(results),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse(results);
   } catch (error) {
     console.error('Ingest error:', error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse({ error: error instanceof Error ? error.message : 'Unknown error' }, 500);
   }
 });

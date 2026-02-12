@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -46,6 +76,70 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      budget_reallocation_logs: {
+        Row: {
+          ai_confidence: number | null
+          amount_moved: number | null
+          applied: boolean | null
+          campaign_id: string
+          created_at: string
+          from_ad_set_id: string | null
+          from_budget: number | null
+          id: string
+          reason: string | null
+          to_ad_set_id: string | null
+          to_budget: number | null
+        }
+        Insert: {
+          ai_confidence?: number | null
+          amount_moved?: number | null
+          applied?: boolean | null
+          campaign_id: string
+          created_at?: string
+          from_ad_set_id?: string | null
+          from_budget?: number | null
+          id?: string
+          reason?: string | null
+          to_ad_set_id?: string | null
+          to_budget?: number | null
+        }
+        Update: {
+          ai_confidence?: number | null
+          amount_moved?: number | null
+          applied?: boolean | null
+          campaign_id?: string
+          created_at?: string
+          from_ad_set_id?: string | null
+          from_budget?: number | null
+          id?: string
+          reason?: string | null
+          to_ad_set_id?: string | null
+          to_budget?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_reallocation_logs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "meta_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_reallocation_logs_from_ad_set_id_fkey"
+            columns: ["from_ad_set_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ad_sets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_reallocation_logs_to_ad_set_id_fkey"
+            columns: ["to_ad_set_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ad_sets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       campaigns: {
         Row: {
@@ -719,6 +813,345 @@ export type Database = {
           },
         ]
       }
+      meta_ad_sets: {
+        Row: {
+          age_max: number | null
+          age_min: number | null
+          bid_amount: number | null
+          campaign_id: string
+          created_at: string
+          custom_audience_id: string | null
+          daily_budget: number | null
+          genders: string[] | null
+          id: string
+          interests: Json | null
+          locations: Json | null
+          lookalike_audience_id: string | null
+          meta_adset_id: string | null
+          name: string
+          optimization_event: string | null
+          placement_type: string | null
+          placements: string[] | null
+          status: string
+          targeting: Json | null
+          updated_at: string
+        }
+        Insert: {
+          age_max?: number | null
+          age_min?: number | null
+          bid_amount?: number | null
+          campaign_id: string
+          created_at?: string
+          custom_audience_id?: string | null
+          daily_budget?: number | null
+          genders?: string[] | null
+          id?: string
+          interests?: Json | null
+          locations?: Json | null
+          lookalike_audience_id?: string | null
+          meta_adset_id?: string | null
+          name: string
+          optimization_event?: string | null
+          placement_type?: string | null
+          placements?: string[] | null
+          status?: string
+          targeting?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          age_max?: number | null
+          age_min?: number | null
+          bid_amount?: number | null
+          campaign_id?: string
+          created_at?: string
+          custom_audience_id?: string | null
+          daily_budget?: number | null
+          genders?: string[] | null
+          id?: string
+          interests?: Json | null
+          locations?: Json | null
+          lookalike_audience_id?: string | null
+          meta_adset_id?: string | null
+          name?: string
+          optimization_event?: string | null
+          placement_type?: string | null
+          placements?: string[] | null
+          status?: string
+          targeting?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ad_sets_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "meta_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_ads: {
+        Row: {
+          ad_set_id: string
+          ai_generated: boolean | null
+          ai_score: number | null
+          body_text: string | null
+          call_to_action: string | null
+          created_at: string
+          creative_type: string | null
+          description: string | null
+          display_link: string | null
+          headline: string | null
+          id: string
+          image_url: string | null
+          link_url: string | null
+          meta_ad_id: string | null
+          name: string
+          status: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          ad_set_id: string
+          ai_generated?: boolean | null
+          ai_score?: number | null
+          body_text?: string | null
+          call_to_action?: string | null
+          created_at?: string
+          creative_type?: string | null
+          description?: string | null
+          display_link?: string | null
+          headline?: string | null
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          meta_ad_id?: string | null
+          name: string
+          status?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          ad_set_id?: string
+          ai_generated?: boolean | null
+          ai_score?: number | null
+          body_text?: string | null
+          call_to_action?: string | null
+          created_at?: string
+          creative_type?: string | null
+          description?: string | null
+          display_link?: string | null
+          headline?: string | null
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          meta_ad_id?: string | null
+          name?: string
+          status?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ads_ad_set_id_fkey"
+            columns: ["ad_set_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ad_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_ai_logs: {
+        Row: {
+          action_type: string
+          applied: boolean | null
+          applied_at: string | null
+          campaign_id: string
+          created_at: string
+          description: string | null
+          id: string
+          recommendation: Json | null
+        }
+        Insert: {
+          action_type: string
+          applied?: boolean | null
+          applied_at?: string | null
+          campaign_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          recommendation?: Json | null
+        }
+        Update: {
+          action_type?: string
+          applied?: boolean | null
+          applied_at?: string | null
+          campaign_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          recommendation?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ai_logs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "meta_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_campaign_analytics: {
+        Row: {
+          ad_id: string | null
+          ad_set_id: string | null
+          campaign_id: string
+          clicks: number | null
+          conversions: number | null
+          cpc: number | null
+          cpl: number | null
+          cpm: number | null
+          created_at: string
+          ctr: number | null
+          date: string
+          frequency: number | null
+          id: string
+          impressions: number | null
+          leads: number | null
+          reach: number | null
+          spend: number | null
+        }
+        Insert: {
+          ad_id?: string | null
+          ad_set_id?: string | null
+          campaign_id: string
+          clicks?: number | null
+          conversions?: number | null
+          cpc?: number | null
+          cpl?: number | null
+          cpm?: number | null
+          created_at?: string
+          ctr?: number | null
+          date?: string
+          frequency?: number | null
+          id?: string
+          impressions?: number | null
+          leads?: number | null
+          reach?: number | null
+          spend?: number | null
+        }
+        Update: {
+          ad_id?: string | null
+          ad_set_id?: string | null
+          campaign_id?: string
+          clicks?: number | null
+          conversions?: number | null
+          cpc?: number | null
+          cpl?: number | null
+          cpm?: number | null
+          created_at?: string
+          ctr?: number | null
+          date?: string
+          frequency?: number | null
+          id?: string
+          impressions?: number | null
+          leads?: number | null
+          reach?: number | null
+          spend?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_campaign_analytics_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_campaign_analytics_ad_set_id_fkey"
+            columns: ["ad_set_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ad_sets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_campaign_analytics_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "meta_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_campaigns: {
+        Row: {
+          ai_recommendations: Json | null
+          bid_strategy: string | null
+          created_at: string
+          daily_budget: number | null
+          end_date: string | null
+          firm_id: string
+          id: string
+          lifetime_budget: number | null
+          meta_campaign_id: string | null
+          name: string
+          objective: string
+          optimization_goal: string | null
+          start_date: string | null
+          status: string
+          target_states: string[] | null
+          tort_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          ai_recommendations?: Json | null
+          bid_strategy?: string | null
+          created_at?: string
+          daily_budget?: number | null
+          end_date?: string | null
+          firm_id: string
+          id?: string
+          lifetime_budget?: number | null
+          meta_campaign_id?: string | null
+          name: string
+          objective?: string
+          optimization_goal?: string | null
+          start_date?: string | null
+          status?: string
+          target_states?: string[] | null
+          tort_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ai_recommendations?: Json | null
+          bid_strategy?: string | null
+          created_at?: string
+          daily_budget?: number | null
+          end_date?: string | null
+          firm_id?: string
+          id?: string
+          lifetime_budget?: number | null
+          meta_campaign_id?: string | null
+          name?: string
+          objective?: string
+          optimization_goal?: string | null
+          start_date?: string | null
+          status?: string
+          target_states?: string[] | null
+          tort_type?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_campaigns_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notes: {
         Row: {
           contact_id: string | null
@@ -790,6 +1223,118 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          firm_id: string
+          id: string
+          notify_email: string | null
+          notify_new_leads: boolean
+          states: string[] | null
+          tort_types: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          firm_id: string
+          id?: string
+          notify_email?: string | null
+          notify_new_leads?: boolean
+          states?: string[] | null
+          tort_types?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          firm_id?: string
+          id?: string
+          notify_email?: string | null
+          notify_new_leads?: boolean
+          states?: string[] | null
+          tort_types?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: true
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_connections: {
+        Row: {
+          access_token: string | null
+          connected_at: string | null
+          created_at: string
+          firm_id: string | null
+          id: string
+          is_active: boolean | null
+          metadata: Json | null
+          page_access_token: string | null
+          page_id: string | null
+          page_name: string | null
+          permissions: string[] | null
+          platform: string
+          platform_user_id: string | null
+          platform_username: string | null
+          refresh_token: string | null
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          connected_at?: string | null
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          page_access_token?: string | null
+          page_id?: string | null
+          page_name?: string | null
+          permissions?: string[] | null
+          platform: string
+          platform_user_id?: string | null
+          platform_username?: string | null
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          connected_at?: string | null
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          page_access_token?: string | null
+          page_id?: string | null
+          page_name?: string | null
+          permissions?: string[] | null
+          platform?: string
+          platform_user_id?: string | null
+          platform_username?: string | null
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_connections_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -797,6 +1342,8 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          onboarding_completed: boolean | null
+          onboarding_step: number | null
           phone: string | null
           updated_at: string
         }
@@ -806,6 +1353,8 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
           phone?: string | null
           updated_at?: string
         }
@@ -815,10 +1364,145 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
           phone?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      report_schedules: {
+        Row: {
+          config: Json | null
+          created_at: string
+          created_by: string
+          emails: string[]
+          firm_id: string
+          frequency: string
+          id: string
+          is_active: boolean
+          last_sent_at: string | null
+          next_send_at: string | null
+          report_type: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string
+          created_by: string
+          emails?: string[]
+          firm_id: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          last_sent_at?: string | null
+          next_send_at?: string | null
+          report_type?: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string
+          created_by?: string
+          emails?: string[]
+          firm_id?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          last_sent_at?: string | null
+          next_send_at?: string | null
+          report_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_schedules_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_posts: {
+        Row: {
+          ai_generated: boolean | null
+          ai_prompt: string | null
+          content: string
+          created_at: string
+          engagement_metrics: Json | null
+          error_message: string | null
+          firm_id: string | null
+          hashtags: string[] | null
+          id: string
+          media_type: string | null
+          media_urls: string[] | null
+          plagiarism_checked: boolean | null
+          plagiarism_score: number | null
+          platform_post_ids: Json | null
+          platforms: string[]
+          published_at: string | null
+          scheduled_at: string | null
+          status: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_generated?: boolean | null
+          ai_prompt?: string | null
+          content: string
+          created_at?: string
+          engagement_metrics?: Json | null
+          error_message?: string | null
+          firm_id?: string | null
+          hashtags?: string[] | null
+          id?: string
+          media_type?: string | null
+          media_urls?: string[] | null
+          plagiarism_checked?: boolean | null
+          plagiarism_score?: number | null
+          platform_post_ids?: Json | null
+          platforms?: string[]
+          published_at?: string | null
+          scheduled_at?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_generated?: boolean | null
+          ai_prompt?: string | null
+          content?: string
+          created_at?: string
+          engagement_metrics?: Json | null
+          error_message?: string | null
+          firm_id?: string | null
+          hashtags?: string[] | null
+          id?: string
+          media_type?: string | null
+          media_urls?: string[] | null
+          plagiarism_checked?: boolean | null
+          plagiarism_score?: number | null
+          platform_post_ids?: Json | null
+          platforms?: string[]
+          published_at?: string | null
+          scheduled_at?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_posts_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       touchpoints: {
         Row: {
@@ -984,6 +1668,14 @@ export type Database = {
       is_firm_owner: {
         Args: { _firm_id: string; _user_id: string }
         Returns: boolean
+      }
+      match_lead_to_firms: {
+        Args: { _lead_id: string }
+        Returns: {
+          firm_id: string
+          firm_name: string
+          match_score: number
+        }[]
       }
       purchase_lead: {
         Args: { _firm_id: string; _lead_id: string; _user_id: string }
