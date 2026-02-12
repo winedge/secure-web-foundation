@@ -210,17 +210,172 @@ function MetaApiConfig() {
             </div>
           )}
 
-          {/* Setup guide */}
-          <div className="border-t pt-6">
-            <h4 className="font-medium mb-3">Setup Guide</h4>
-            <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
-              <li>Go to <strong>developers.facebook.com</strong> and create a new App</li>
-              <li>Select <strong>"Business"</strong> as the app type</li>
-              <li>Add <strong>Facebook Login</strong>, <strong>Marketing API</strong>, and <strong>Instagram Graph API</strong> products</li>
-              <li>Copy the <strong>App ID</strong> and <strong>App Secret</strong> from App Settings → Basic</li>
-              <li>Add your redirect URI: <code className="px-1.5 py-0.5 bg-muted rounded text-xs">{window.location.origin}/settings?tab=connections&callback=meta</code></li>
-              <li>Submit your app for review with required permissions</li>
-            </ol>
+          {/* Detailed Setup guide */}
+          <div className="border-t pt-6 space-y-6">
+            <h4 className="text-lg font-semibold">Step-by-Step Meta App Setup Guide</h4>
+
+            {/* Step 1 */}
+            <div className="space-y-2 p-4 rounded-lg border bg-muted/20">
+              <h5 className="font-medium flex items-center gap-2">
+                <Badge variant="outline" className="h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs">1</Badge>
+                Create a Meta Developer Account
+              </h5>
+              <ol className="ml-8 space-y-1 text-sm text-muted-foreground list-disc list-outside">
+                <li>Go to <a href="https://developers.facebook.com" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 font-medium">developers.facebook.com</a></li>
+                <li>Log in with your Facebook account (must be a Business/personal account with admin access)</li>
+                <li>If prompted, complete the developer registration by verifying your account</li>
+              </ol>
+            </div>
+
+            {/* Step 2 */}
+            <div className="space-y-2 p-4 rounded-lg border bg-muted/20">
+              <h5 className="font-medium flex items-center gap-2">
+                <Badge variant="outline" className="h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs">2</Badge>
+                Create a New App
+              </h5>
+              <ol className="ml-8 space-y-1 text-sm text-muted-foreground list-disc list-outside">
+                <li>Click <strong>"My Apps"</strong> → <strong>"Create App"</strong></li>
+                <li>Select Use Case: Choose <strong>"Other"</strong> → then <strong>"Business"</strong> as the app type</li>
+                <li>Enter an App name (e.g., "LeadThru Platform") and your contact email</li>
+                <li>If you have a Meta Business account, select it. Otherwise, select "No Business Manager account"</li>
+                <li>Click <strong>"Create App"</strong></li>
+              </ol>
+            </div>
+
+            {/* Step 3 */}
+            <div className="space-y-2 p-4 rounded-lg border bg-muted/20">
+              <h5 className="font-medium flex items-center gap-2">
+                <Badge variant="outline" className="h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs">3</Badge>
+                Add Required Products
+              </h5>
+              <p className="ml-8 text-sm text-muted-foreground">From your App Dashboard, click <strong>"Add Product"</strong> and add each of these:</p>
+              <ul className="ml-8 space-y-1 text-sm text-muted-foreground list-disc list-outside">
+                <li><strong>Facebook Login for Business</strong> — Enables OAuth login for users</li>
+                <li><strong>Marketing API</strong> — Required for campaign management, ad sets, and ads</li>
+                <li><strong>Instagram Graph API</strong> — Required for Instagram posting and insights</li>
+                <li><strong>Pages API</strong> — Required for Facebook Page management and posting</li>
+              </ul>
+            </div>
+
+            {/* Step 4 */}
+            <div className="space-y-2 p-4 rounded-lg border bg-muted/20">
+              <h5 className="font-medium flex items-center gap-2">
+                <Badge variant="outline" className="h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs">4</Badge>
+                Configure Facebook Login Settings
+              </h5>
+              <ol className="ml-8 space-y-1 text-sm text-muted-foreground list-disc list-outside">
+                <li>Go to <strong>Facebook Login → Settings</strong> in your app dashboard</li>
+                <li>Set <strong>"Client OAuth Login"</strong> to <strong>Yes</strong></li>
+                <li>Set <strong>"Web OAuth Login"</strong> to <strong>Yes</strong></li>
+                <li>In <strong>"Valid OAuth Redirect URIs"</strong>, add exactly this URL:</li>
+              </ol>
+              <div className="ml-8 mt-2">
+                <code className="block px-3 py-2 bg-muted rounded text-xs break-all select-all font-mono">
+                  {window.location.origin}/settings?tab=connections&callback=meta
+                </code>
+                <p className="text-xs text-muted-foreground mt-1">Click the URL above to copy it, then paste into the Facebook Login settings</p>
+              </div>
+            </div>
+
+            {/* Step 5 */}
+            <div className="space-y-2 p-4 rounded-lg border bg-muted/20">
+              <h5 className="font-medium flex items-center gap-2">
+                <Badge variant="outline" className="h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs">5</Badge>
+                Copy App ID & App Secret
+              </h5>
+              <ol className="ml-8 space-y-1 text-sm text-muted-foreground list-disc list-outside">
+                <li>Go to <strong>App Settings → Basic</strong> in your app dashboard</li>
+                <li>Copy the <strong>App ID</strong> (numeric, e.g. 123456789012345)</li>
+                <li>Click <strong>"Show"</strong> next to App Secret, confirm your password, and copy it</li>
+                <li>Paste both values into the fields above and click <strong>"Save Credentials"</strong></li>
+                <li>Also set your <strong>App Domains</strong> to: <code className="px-1.5 py-0.5 bg-muted rounded text-xs">{window.location.hostname}</code></li>
+                <li>Add a <strong>Privacy Policy URL</strong> and <strong>Terms of Service URL</strong> (required for going live)</li>
+              </ol>
+            </div>
+
+            {/* Step 6 */}
+            <div className="space-y-2 p-4 rounded-lg border bg-muted/20">
+              <h5 className="font-medium flex items-center gap-2">
+                <Badge variant="outline" className="h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs">6</Badge>
+                Request Required Permissions (App Review)
+              </h5>
+              <p className="ml-8 text-sm text-muted-foreground">Go to <strong>App Review → Permissions and Features</strong> and request these:</p>
+              <div className="ml-8 mt-2 grid gap-1 text-sm">
+                <div className="grid grid-cols-[180px_1fr] gap-2 items-start">
+                  <code className="px-1.5 py-0.5 bg-muted rounded text-xs">pages_manage_ads</code>
+                  <span className="text-muted-foreground">Manage ads on Pages</span>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-2 items-start">
+                  <code className="px-1.5 py-0.5 bg-muted rounded text-xs">pages_manage_posts</code>
+                  <span className="text-muted-foreground">Create and manage Page posts</span>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-2 items-start">
+                  <code className="px-1.5 py-0.5 bg-muted rounded text-xs">pages_read_engagement</code>
+                  <span className="text-muted-foreground">Read Page engagement data</span>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-2 items-start">
+                  <code className="px-1.5 py-0.5 bg-muted rounded text-xs">pages_read_user_content</code>
+                  <span className="text-muted-foreground">Read user content on Pages</span>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-2 items-start">
+                  <code className="px-1.5 py-0.5 bg-muted rounded text-xs">ads_management</code>
+                  <span className="text-muted-foreground">Manage ad campaigns</span>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-2 items-start">
+                  <code className="px-1.5 py-0.5 bg-muted rounded text-xs">ads_read</code>
+                  <span className="text-muted-foreground">Read ad campaign data</span>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-2 items-start">
+                  <code className="px-1.5 py-0.5 bg-muted rounded text-xs">business_management</code>
+                  <span className="text-muted-foreground">Manage business assets</span>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-2 items-start">
+                  <code className="px-1.5 py-0.5 bg-muted rounded text-xs">instagram_basic</code>
+                  <span className="text-muted-foreground">Read Instagram profile</span>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-2 items-start">
+                  <code className="px-1.5 py-0.5 bg-muted rounded text-xs">instagram_content_publish</code>
+                  <span className="text-muted-foreground">Publish Instagram content</span>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-2 items-start">
+                  <code className="px-1.5 py-0.5 bg-muted rounded text-xs">instagram_manage_insights</code>
+                  <span className="text-muted-foreground">Access Instagram analytics</span>
+                </div>
+              </div>
+              <p className="ml-8 text-xs text-muted-foreground mt-2">
+                <strong>Note:</strong> During development, you can test with admin/developer accounts without app review. 
+                For production use with other users, all permissions must be approved by Meta.
+              </p>
+            </div>
+
+            {/* Step 7 */}
+            <div className="space-y-2 p-4 rounded-lg border bg-muted/20">
+              <h5 className="font-medium flex items-center gap-2">
+                <Badge variant="outline" className="h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs">7</Badge>
+                Set App Mode to Live
+              </h5>
+              <ol className="ml-8 space-y-1 text-sm text-muted-foreground list-disc list-outside">
+                <li>Once app review is approved, go to the top of your app dashboard</li>
+                <li>Toggle the <strong>App Mode</strong> switch from <strong>"Development"</strong> to <strong>"Live"</strong></li>
+                <li>This allows any Facebook user (not just testers) to connect their account</li>
+                <li>Come back here and click <strong>"Verify Connection"</strong> to confirm everything works</li>
+              </ol>
+            </div>
+
+            {/* Step 8 - What happens next */}
+            <div className="space-y-2 p-4 rounded-lg border-2 border-primary/30 bg-primary/5">
+              <h5 className="font-medium flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-primary" />
+                What Happens After Setup
+              </h5>
+              <ul className="ml-8 space-y-1 text-sm text-muted-foreground list-disc list-outside">
+                <li>Users go to <strong>Settings → Connections</strong> and click <strong>"Connect Facebook"</strong></li>
+                <li>They log in with their Facebook account and grant the requested permissions</li>
+                <li>Their Facebook Pages and Instagram accounts are automatically synced</li>
+                <li>They can then manage Meta Ads campaigns and schedule social media posts</li>
+                <li>The AI will use their connected accounts to auto-post and manage ad spend</li>
+              </ul>
+            </div>
           </div>
         </CardContent>
       </Card>
