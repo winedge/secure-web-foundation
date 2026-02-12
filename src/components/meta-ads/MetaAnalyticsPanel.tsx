@@ -1,8 +1,9 @@
-import { useMetaAnalytics, useMetaCampaigns } from '@/hooks/use-meta-campaigns';
+import { useMetaAnalytics, useMetaCampaigns, useFetchMetaAnalytics } from '@/hooks/use-meta-campaigns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { BarChart3, TrendingUp, DollarSign, MousePointerClick, Users, Eye } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { BarChart3, TrendingUp, DollarSign, MousePointerClick, Users, Eye, RefreshCw, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useState, useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
@@ -39,7 +40,9 @@ function generateMockData(days: number = 14) {
 export function MetaAnalyticsPanel({ campaignId }: Props) {
   const { data: campaigns } = useMetaCampaigns();
   const { data: analytics } = useMetaAnalytics(campaignId || undefined);
+  const fetchAnalytics = useFetchMetaAnalytics();
   const [selectedCampaign, setSelectedCampaign] = useState(campaignId || 'all');
+  const [datePreset, setDatePreset] = useState('last_7d');
 
   const mockData = useMemo(() => generateMockData(), []);
   const displayData = analytics?.length ? analytics : mockData;
@@ -60,13 +63,42 @@ export function MetaAnalyticsPanel({ campaignId }: Props) {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-semibold">Campaign Performance</h2>
-        <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
-          <SelectTrigger className="w-[220px]"><SelectValue placeholder="Select campaign" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Campaigns</SelectItem>
-            {campaigns?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2 flex-wrap">
+          <Select value={datePreset} onValueChange={setDatePreset}>
+            <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="last_7d">Last 7 days</SelectItem>
+              <SelectItem value="last_14d">Last 14 days</SelectItem>
+              <SelectItem value="last_30d">Last 30 days</SelectItem>
+              <SelectItem value="this_month">This month</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
+            <SelectTrigger className="w-[220px]"><SelectValue placeholder="Select campaign" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Campaigns</SelectItem>
+              {campaigns?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            className="gap-2"
+            disabled={fetchAnalytics.isPending || selectedCampaign === 'all'}
+            onClick={() => {
+              const campaign = campaigns?.find(c => c.id === selectedCampaign);
+              if (campaign?.meta_campaign_id) {
+                fetchAnalytics.mutate({
+                  campaign_id: campaign.id,
+                  meta_campaign_id: campaign.meta_campaign_id,
+                  date_preset: datePreset,
+                });
+              }
+            }}
+          >
+            {fetchAnalytics.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            Pull from Meta
+          </Button>
+        </div>
       </div>
 
       {!analytics?.length && (
