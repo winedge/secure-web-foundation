@@ -1371,6 +1371,59 @@ export type Database = {
         }
         Relationships: []
       }
+      report_schedules: {
+        Row: {
+          config: Json | null
+          created_at: string
+          created_by: string
+          emails: string[]
+          firm_id: string
+          frequency: string
+          id: string
+          is_active: boolean
+          last_sent_at: string | null
+          next_send_at: string | null
+          report_type: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string
+          created_by: string
+          emails?: string[]
+          firm_id: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          last_sent_at?: string | null
+          next_send_at?: string | null
+          report_type?: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string
+          created_by?: string
+          emails?: string[]
+          firm_id?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          last_sent_at?: string | null
+          next_send_at?: string | null
+          report_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_schedules_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       social_posts: {
         Row: {
           ai_generated: boolean | null
