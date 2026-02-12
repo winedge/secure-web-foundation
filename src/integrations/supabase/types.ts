@@ -1223,6 +1223,47 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          firm_id: string
+          id: string
+          notify_email: string | null
+          notify_new_leads: boolean
+          states: string[] | null
+          tort_types: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          firm_id: string
+          id?: string
+          notify_email?: string | null
+          notify_new_leads?: boolean
+          states?: string[] | null
+          tort_types?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          firm_id?: string
+          id?: string
+          notify_email?: string | null
+          notify_new_leads?: boolean
+          states?: string[] | null
+          tort_types?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: true
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_connections: {
         Row: {
           access_token: string | null
@@ -1302,6 +1343,7 @@ export type Database = {
           full_name: string | null
           id: string
           onboarding_completed: boolean | null
+          onboarding_step: number | null
           phone: string | null
           updated_at: string
         }
@@ -1312,6 +1354,7 @@ export type Database = {
           full_name?: string | null
           id: string
           onboarding_completed?: boolean | null
+          onboarding_step?: number | null
           phone?: string | null
           updated_at?: string
         }
@@ -1322,6 +1365,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           onboarding_completed?: boolean | null
+          onboarding_step?: number | null
           phone?: string | null
           updated_at?: string
         }
