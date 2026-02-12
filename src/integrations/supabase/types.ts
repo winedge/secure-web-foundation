@@ -719,6 +719,345 @@ export type Database = {
           },
         ]
       }
+      meta_ad_sets: {
+        Row: {
+          age_max: number | null
+          age_min: number | null
+          bid_amount: number | null
+          campaign_id: string
+          created_at: string
+          custom_audience_id: string | null
+          daily_budget: number | null
+          genders: string[] | null
+          id: string
+          interests: Json | null
+          locations: Json | null
+          lookalike_audience_id: string | null
+          meta_adset_id: string | null
+          name: string
+          optimization_event: string | null
+          placement_type: string | null
+          placements: string[] | null
+          status: string
+          targeting: Json | null
+          updated_at: string
+        }
+        Insert: {
+          age_max?: number | null
+          age_min?: number | null
+          bid_amount?: number | null
+          campaign_id: string
+          created_at?: string
+          custom_audience_id?: string | null
+          daily_budget?: number | null
+          genders?: string[] | null
+          id?: string
+          interests?: Json | null
+          locations?: Json | null
+          lookalike_audience_id?: string | null
+          meta_adset_id?: string | null
+          name: string
+          optimization_event?: string | null
+          placement_type?: string | null
+          placements?: string[] | null
+          status?: string
+          targeting?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          age_max?: number | null
+          age_min?: number | null
+          bid_amount?: number | null
+          campaign_id?: string
+          created_at?: string
+          custom_audience_id?: string | null
+          daily_budget?: number | null
+          genders?: string[] | null
+          id?: string
+          interests?: Json | null
+          locations?: Json | null
+          lookalike_audience_id?: string | null
+          meta_adset_id?: string | null
+          name?: string
+          optimization_event?: string | null
+          placement_type?: string | null
+          placements?: string[] | null
+          status?: string
+          targeting?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ad_sets_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "meta_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_ads: {
+        Row: {
+          ad_set_id: string
+          ai_generated: boolean | null
+          ai_score: number | null
+          body_text: string | null
+          call_to_action: string | null
+          created_at: string
+          creative_type: string | null
+          description: string | null
+          display_link: string | null
+          headline: string | null
+          id: string
+          image_url: string | null
+          link_url: string | null
+          meta_ad_id: string | null
+          name: string
+          status: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          ad_set_id: string
+          ai_generated?: boolean | null
+          ai_score?: number | null
+          body_text?: string | null
+          call_to_action?: string | null
+          created_at?: string
+          creative_type?: string | null
+          description?: string | null
+          display_link?: string | null
+          headline?: string | null
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          meta_ad_id?: string | null
+          name: string
+          status?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          ad_set_id?: string
+          ai_generated?: boolean | null
+          ai_score?: number | null
+          body_text?: string | null
+          call_to_action?: string | null
+          created_at?: string
+          creative_type?: string | null
+          description?: string | null
+          display_link?: string | null
+          headline?: string | null
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          meta_ad_id?: string | null
+          name?: string
+          status?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ads_ad_set_id_fkey"
+            columns: ["ad_set_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ad_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_ai_logs: {
+        Row: {
+          action_type: string
+          applied: boolean | null
+          applied_at: string | null
+          campaign_id: string
+          created_at: string
+          description: string | null
+          id: string
+          recommendation: Json | null
+        }
+        Insert: {
+          action_type: string
+          applied?: boolean | null
+          applied_at?: string | null
+          campaign_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          recommendation?: Json | null
+        }
+        Update: {
+          action_type?: string
+          applied?: boolean | null
+          applied_at?: string | null
+          campaign_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          recommendation?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ai_logs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "meta_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_campaign_analytics: {
+        Row: {
+          ad_id: string | null
+          ad_set_id: string | null
+          campaign_id: string
+          clicks: number | null
+          conversions: number | null
+          cpc: number | null
+          cpl: number | null
+          cpm: number | null
+          created_at: string
+          ctr: number | null
+          date: string
+          frequency: number | null
+          id: string
+          impressions: number | null
+          leads: number | null
+          reach: number | null
+          spend: number | null
+        }
+        Insert: {
+          ad_id?: string | null
+          ad_set_id?: string | null
+          campaign_id: string
+          clicks?: number | null
+          conversions?: number | null
+          cpc?: number | null
+          cpl?: number | null
+          cpm?: number | null
+          created_at?: string
+          ctr?: number | null
+          date?: string
+          frequency?: number | null
+          id?: string
+          impressions?: number | null
+          leads?: number | null
+          reach?: number | null
+          spend?: number | null
+        }
+        Update: {
+          ad_id?: string | null
+          ad_set_id?: string | null
+          campaign_id?: string
+          clicks?: number | null
+          conversions?: number | null
+          cpc?: number | null
+          cpl?: number | null
+          cpm?: number | null
+          created_at?: string
+          ctr?: number | null
+          date?: string
+          frequency?: number | null
+          id?: string
+          impressions?: number | null
+          leads?: number | null
+          reach?: number | null
+          spend?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_campaign_analytics_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_campaign_analytics_ad_set_id_fkey"
+            columns: ["ad_set_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ad_sets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_campaign_analytics_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "meta_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_campaigns: {
+        Row: {
+          ai_recommendations: Json | null
+          bid_strategy: string | null
+          created_at: string
+          daily_budget: number | null
+          end_date: string | null
+          firm_id: string
+          id: string
+          lifetime_budget: number | null
+          meta_campaign_id: string | null
+          name: string
+          objective: string
+          optimization_goal: string | null
+          start_date: string | null
+          status: string
+          target_states: string[] | null
+          tort_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          ai_recommendations?: Json | null
+          bid_strategy?: string | null
+          created_at?: string
+          daily_budget?: number | null
+          end_date?: string | null
+          firm_id: string
+          id?: string
+          lifetime_budget?: number | null
+          meta_campaign_id?: string | null
+          name: string
+          objective?: string
+          optimization_goal?: string | null
+          start_date?: string | null
+          status?: string
+          target_states?: string[] | null
+          tort_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ai_recommendations?: Json | null
+          bid_strategy?: string | null
+          created_at?: string
+          daily_budget?: number | null
+          end_date?: string | null
+          firm_id?: string
+          id?: string
+          lifetime_budget?: number | null
+          meta_campaign_id?: string | null
+          name?: string
+          objective?: string
+          optimization_goal?: string | null
+          start_date?: string | null
+          status?: string
+          target_states?: string[] | null
+          tort_type?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_campaigns_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notes: {
         Row: {
           contact_id: string | null
