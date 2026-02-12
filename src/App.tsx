@@ -21,6 +21,7 @@ import Campaigns from "./pages/Campaigns";
 import MetaAds from "./pages/MetaAds";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import Pricing from "./pages/Pricing";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminFirms from "./pages/admin/AdminFirms";
 import AdminLeads from "./pages/admin/AdminLeads";
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/social-calendar" element={<ProtectedRoute><SocialMediaCalendar /></ProtectedRoute>} />
               <Route path="/intake-builder" element={<ProtectedRoute><IntakeFormBuilder /></ProtectedRoute>} />
+              <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
 
               {/* Admin routes */}
               <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />

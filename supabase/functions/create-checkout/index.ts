@@ -25,11 +25,16 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { amount } = await req.json();
-    if (!amount || amount < 1) {
+    const body = await req.json();
+    const { amount, priceId } = body;
+
+    // Determine mode: subscription (priceId) or wallet top-up (amount)
+    const isSubscription = !!priceId;
+
+    if (!isSubscription && (!amount || amount < 1)) {
       throw new Error("Invalid amount");
     }
-    logStep("Amount received", { amount });
+    logStep("Request received", { amount, priceId, isSubscription });
 
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
@@ -50,33 +55,50 @@ serve(async (req) => {
       logStep("Existing customer found", { customerId });
     }
 
-    // Create checkout session for wallet top-up
-    // Using price_data since wallet amounts are dynamic
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: "Wallet Top-Up",
-              description: `Add $${amount} to your LeadsThru wallet`,
-            },
-            unit_amount: amount * 100, // Convert to cents
-          },
-          quantity: 1,
+    let session;
+
+    if (isSubscription) {
+      // Subscription checkout
+      session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        customer_email: customerId ? undefined : user.email,
+        line_items: [{ price: priceId, quantity: 1 }],
+        mode: "subscription",
+        success_url: `${req.headers.get("origin")}/wallet?success=true&subscription=true`,
+        cancel_url: `${req.headers.get("origin")}/pricing?canceled=true`,
+        metadata: {
+          user_id: user.id,
+          type: "subscription",
         },
-      ],
-      mode: "payment",
-      success_url: `${req.headers.get("origin")}/wallet?success=true&amount=${amount}`,
-      cancel_url: `${req.headers.get("origin")}/wallet?canceled=true`,
-      metadata: {
-        user_id: user.id,
-        amount: amount.toString(),
-        type: "wallet_topup",
-      },
-    });
+      });
+    } else {
+      // Wallet top-up checkout
+      session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        customer_email: customerId ? undefined : user.email,
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: "Wallet Top-Up",
+                description: `Add $${amount} to your LeadsThru wallet`,
+              },
+              unit_amount: amount * 100,
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: `${req.headers.get("origin")}/wallet?success=true&amount=${amount}`,
+        cancel_url: `${req.headers.get("origin")}/wallet?canceled=true`,
+        metadata: {
+          user_id: user.id,
+          amount: amount.toString(),
+          type: "wallet_topup",
+        },
+      });
+    }
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
 
