@@ -20,7 +20,7 @@ import {
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import logoImg from '@/assets/leadthru-logo-dark.png';
+import logoImg from '@/assets/leadthru-logo.png';
 import { useAuth } from '@/lib/auth-context';
 import { useIsAdmin } from '@/hooks/use-user-role';
 import { Button } from '@/components/ui/button';
