@@ -18,7 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   Calendar, Plus, Bot, Image, Video, Upload, Clock, CheckCircle, XCircle,
   Trash2, Edit, Send, Sparkles, ChevronLeft, ChevronRight, Loader2,
-  Facebook, Instagram, Linkedin, Twitter, AlertTriangle, FileText, Wand2,
+  Facebook, Instagram, Linkedin, Twitter, AlertTriangle, FileText, Wand2, BarChart3,
 } from 'lucide-react';
 
 const PLATFORMS = [
@@ -152,6 +152,11 @@ export default function SocialMediaCalendar() {
 
 function PostCard({ post, compact }: { post: SocialPost; compact?: boolean }) {
   const deletePost = useDeleteSocialPost();
+  const updatePost = useUpdateSocialPost();
+  const { toast } = useToast();
+  const [publishing, setPublishing] = useState(false);
+  const [fetchingMetrics, setFetchingMetrics] = useState(false);
+
   const statusColors: Record<string, string> = {
     draft: 'bg-muted text-muted-foreground',
     scheduled: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
@@ -159,6 +164,43 @@ function PostCard({ post, compact }: { post: SocialPost; compact?: boolean }) {
     published: 'bg-accent/20 text-accent',
     failed: 'bg-destructive/20 text-destructive',
   };
+
+  const handlePublishNow = async () => {
+    setPublishing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('publish-social-post', {
+        body: { action: 'publish_now', post_id: post.id },
+      });
+      if (error) throw error;
+      if (data?.errors?.length > 0) {
+        toast({ title: 'Partially published', description: data.errors.join('; '), variant: 'destructive' });
+      } else {
+        toast({ title: 'Post published!' });
+      }
+    } catch (e: any) {
+      toast({ title: 'Publish failed', description: e.message, variant: 'destructive' });
+    }
+    setPublishing(false);
+  };
+
+  const handleFetchMetrics = async () => {
+    setFetchingMetrics(true);
+    try {
+      const { error } = await supabase.functions.invoke('publish-social-post', {
+        body: { action: 'fetch_engagement' },
+      });
+      if (error) throw error;
+      toast({ title: 'Metrics updated!' });
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    }
+    setFetchingMetrics(false);
+  };
+
+  const engagement = post.engagement_metrics as Record<string, any> | null;
+  const totalLikes = engagement ? Object.values(engagement).reduce((sum: number, m: any) => sum + (m.likes || 0), 0) : 0;
+  const totalComments = engagement ? Object.values(engagement).reduce((sum: number, m: any) => sum + (m.comments || 0), 0) : 0;
+  const totalShares = engagement ? Object.values(engagement).reduce((sum: number, m: any) => sum + (m.shares || 0), 0) : 0;
 
   if (compact) {
     return (
@@ -175,6 +217,9 @@ function PostCard({ post, compact }: { post: SocialPost; compact?: boolean }) {
         {post.scheduled_at && (
           <p className="text-muted-foreground mt-0.5">{format(parseISO(post.scheduled_at), 'h:mm a')}</p>
         )}
+        {post.status === 'published' && engagement && (
+          <p className="text-muted-foreground mt-0.5">❤ {totalLikes} 💬 {totalComments}</p>
+        )}
       </div>
     );
   }
@@ -184,7 +229,7 @@ function PostCard({ post, compact }: { post: SocialPost; compact?: boolean }) {
       <CardContent className="py-4">
         <div className="flex items-start gap-4">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               <Badge className={statusColors[post.status] || ''}>{post.status}</Badge>
               {post.ai_generated && <Badge variant="outline"><Sparkles className="h-3 w-3 mr-1" />AI</Badge>}
               {post.plagiarism_checked && (
@@ -195,7 +240,7 @@ function PostCard({ post, compact }: { post: SocialPost; compact?: boolean }) {
               )}
             </div>
             <p className="text-sm mb-2">{post.content}</p>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
               <div className="flex gap-1">
                 {post.platforms?.map((p) => {
                   const platform = PLATFORMS.find((pl) => pl.id === p);
@@ -215,13 +260,73 @@ function PostCard({ post, compact }: { post: SocialPost; compact?: boolean }) {
                 </span>
               )}
             </div>
+
+            {/* Engagement Metrics */}
+            {post.status === 'published' && engagement && (
+              <div className="mt-3 p-3 rounded-lg bg-muted/50 border">
+                <div className="flex items-center gap-1 mb-2">
+                  <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground">Engagement</span>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <p className="text-lg font-bold">{totalLikes}</p>
+                    <p className="text-xs text-muted-foreground">Likes</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-bold">{totalComments}</p>
+                    <p className="text-xs text-muted-foreground">Comments</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-bold">{totalShares}</p>
+                    <p className="text-xs text-muted-foreground">Shares</p>
+                  </div>
+                </div>
+                {/* Per-platform breakdown */}
+                <div className="mt-2 space-y-1">
+                  {Object.entries(engagement).map(([platform, metrics]: [string, any]) => {
+                    const plat = PLATFORMS.find((p) => p.id === platform);
+                    if (!plat) return null;
+                    const Icon = plat.icon;
+                    return (
+                      <div key={platform} className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Icon className="h-3 w-3" />
+                        <span>{plat.label}:</span>
+                        <span>❤ {metrics.likes || 0}</span>
+                        <span>💬 {metrics.comments || 0}</span>
+                        {metrics.shares !== undefined && <span>🔄 {metrics.shares}</span>}
+                        {metrics.impressions !== undefined && <span>👁 {metrics.impressions}</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {post.error_message && (
+              <p className="text-xs text-destructive mt-2 flex items-center gap-1">
+                <XCircle className="h-3 w-3" />{post.error_message}
+              </p>
+            )}
           </div>
           {post.media_urls?.length > 0 && (
             <img src={post.media_urls[0]} alt="" className="w-16 h-16 rounded-lg object-cover" />
           )}
-          <Button variant="ghost" size="icon" onClick={() => deletePost.mutate(post.id)}>
-            <Trash2 className="h-4 w-4 text-muted-foreground" />
-          </Button>
+          <div className="flex flex-col gap-1">
+            {(post.status === 'draft' || post.status === 'scheduled') && (
+              <Button variant="outline" size="icon" onClick={handlePublishNow} disabled={publishing} title="Publish Now">
+                {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </Button>
+            )}
+            {post.status === 'published' && (
+              <Button variant="outline" size="icon" onClick={handleFetchMetrics} disabled={fetchingMetrics} title="Refresh Metrics">
+                {fetchingMetrics ? <Loader2 className="h-4 w-4 animate-spin" /> : <BarChart3 className="h-4 w-4" />}
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" onClick={() => deletePost.mutate(post.id)}>
+              <Trash2 className="h-4 w-4 text-muted-foreground" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
