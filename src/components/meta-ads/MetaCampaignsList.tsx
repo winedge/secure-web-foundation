@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMetaCampaigns, useCreateMetaCampaign, useUpdateMetaCampaign, useDeleteMetaCampaign, MetaCampaign } from '@/hooks/use-meta-campaigns';
+import { useMetaCampaigns, useCreateMetaCampaign, useUpdateMetaCampaign, useDeleteMetaCampaign, useSyncFromMeta, MetaCampaign } from '@/hooks/use-meta-campaigns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Search, Play, Pause, Trash2, Edit2, Eye, DollarSign, TrendingUp, Zap, Target } from 'lucide-react';
+import { Plus, Search, Play, Pause, Trash2, Edit2, Eye, DollarSign, TrendingUp, Zap, Target, RefreshCw, Loader2, Cloud } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
 const statusColors: Record<string, string> = {
@@ -28,6 +28,7 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
   const createCampaign = useCreateMetaCampaign();
   const updateCampaign = useUpdateMetaCampaign();
   const deleteCampaign = useDeleteMetaCampaign();
+  const syncFromMeta = useSyncFromMeta();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -117,7 +118,13 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" />New Campaign</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => syncFromMeta.mutate()} disabled={syncFromMeta.isPending} className="gap-2">
+            {syncFromMeta.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Cloud className="h-4 w-4" />}
+            Sync from Meta
+          </Button>
+          <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" />New Campaign</Button>
+        </div>
       </div>
 
       {/* List */}

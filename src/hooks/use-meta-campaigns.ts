@@ -121,6 +121,7 @@ export function useCreateMetaCampaign() {
   const qc = useQueryClient();
   const { toast } = useToast();
   const { data: firm } = useFirm();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (input: Partial<MetaCampaign>) => {
@@ -131,11 +132,30 @@ export function useCreateMetaCampaign() {
         .select()
         .single();
       if (error) throw error;
+
+      // Sync to Meta Graph API
+      try {
+        await supabase.functions.invoke('meta-ads-sync', {
+          body: {
+            action: 'create_campaign',
+            user_id: user?.id,
+            campaign_id: data.id,
+            name: data.name,
+            objective: data.objective,
+            daily_budget: data.daily_budget,
+            bid_strategy: data.bid_strategy,
+            status: data.status,
+          },
+        });
+      } catch (syncErr) {
+        console.warn('Meta sync failed (campaign still saved locally):', syncErr);
+      }
+
       return data as MetaCampaign;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['meta-campaigns'] });
-      toast({ title: 'Campaign created' });
+      toast({ title: 'Campaign created & synced to Meta' });
     },
     onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
@@ -144,6 +164,7 @@ export function useCreateMetaCampaign() {
 export function useUpdateMetaCampaign() {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, ...input }: Partial<MetaCampaign> & { id: string }) => {
@@ -154,6 +175,23 @@ export function useUpdateMetaCampaign() {
         .select()
         .single();
       if (error) throw error;
+
+      // Sync update to Meta if synced
+      if (data.meta_campaign_id) {
+        try {
+          await supabase.functions.invoke('meta-ads-sync', {
+            body: {
+              action: 'update_campaign',
+              user_id: user?.id,
+              meta_campaign_id: data.meta_campaign_id,
+              ...input,
+            },
+          });
+        } catch (syncErr) {
+          console.warn('Meta sync failed:', syncErr);
+        }
+      }
+
       return data as MetaCampaign;
     },
     onSuccess: () => {
@@ -167,11 +205,30 @@ export function useUpdateMetaCampaign() {
 export function useDeleteMetaCampaign() {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // Get meta_campaign_id before deleting
+      const { data: campaign } = await (supabase as any)
+        .from('meta_campaigns')
+        .select('meta_campaign_id')
+        .eq('id', id)
+        .single();
+
       const { error } = await (supabase as any).from('meta_campaigns').delete().eq('id', id);
       if (error) throw error;
+
+      // Delete on Meta too
+      if (campaign?.meta_campaign_id) {
+        try {
+          await supabase.functions.invoke('meta-ads-sync', {
+            body: { action: 'delete_campaign', user_id: user?.id, meta_campaign_id: campaign.meta_campaign_id },
+          });
+        } catch (syncErr) {
+          console.warn('Meta delete sync failed:', syncErr);
+        }
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['meta-campaigns'] });
@@ -335,5 +392,70 @@ export function useMetaAiAssistant() {
       return data.result;
     },
     onError: (e: any) => toast({ title: 'AI Error', description: e.message, variant: 'destructive' }),
+  });
+}
+
+// Sync from Meta — pull all campaigns from your Meta ad account
+export function useSyncFromMeta() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const { data: firm } = useFirm();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
+        body: { action: 'sync_from_meta', user_id: user?.id, firm_id: firm?.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['meta-campaigns'] });
+      toast({ title: `Synced ${data.count} campaigns from Meta` });
+    },
+    onError: (e: any) => toast({ title: 'Sync Error', description: e.message, variant: 'destructive' }),
+  });
+}
+
+// Fetch real analytics from Meta for a campaign
+export function useFetchMetaAnalytics() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ campaign_id, meta_campaign_id, date_preset }: { campaign_id: string; meta_campaign_id: string; date_preset?: string }) => {
+      const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
+        body: { action: 'fetch_analytics', user_id: user?.id, campaign_id, meta_campaign_id, date_preset },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['meta-analytics'] });
+      toast({ title: `Pulled ${data.count} days of analytics from Meta` });
+    },
+    onError: (e: any) => toast({ title: 'Analytics Error', description: e.message, variant: 'destructive' }),
+  });
+}
+
+// Get ad accounts from Meta
+export function useMetaAdAccounts() {
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
+        body: { action: 'get_ad_accounts', user_id: user?.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data.ad_accounts;
+    },
+    onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
 }
