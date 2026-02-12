@@ -1301,6 +1301,7 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          onboarding_completed: boolean | null
           phone: string | null
           updated_at: string
         }
@@ -1310,6 +1311,7 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          onboarding_completed?: boolean | null
           phone?: string | null
           updated_at?: string
         }
@@ -1319,6 +1321,7 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          onboarding_completed?: boolean | null
           phone?: string | null
           updated_at?: string
         }
@@ -1568,6 +1571,14 @@ export type Database = {
       is_firm_owner: {
         Args: { _firm_id: string; _user_id: string }
         Returns: boolean
+      }
+      match_lead_to_firms: {
+        Args: { _lead_id: string }
+        Returns: {
+          firm_id: string
+          firm_name: string
+          match_score: number
+        }[]
       }
       purchase_lead: {
         Args: { _firm_id: string; _lead_id: string; _user_id: string }

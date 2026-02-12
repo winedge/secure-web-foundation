@@ -21,26 +21,29 @@ import {
   Megaphone,
   CalendarDays,
   Cog,
+  Crown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import logoImg from '@/assets/leadthru-logo-dark.png';
 import { useAuth } from '@/lib/auth-context';
 import { useIsAdmin } from '@/hooks/use-user-role';
+import { useSubscription } from '@/hooks/use-subscription';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useState } from 'react';
 
-const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Lead Marketplace', href: '/marketplace', icon: ShoppingCart },
-  { name: 'My Leads', href: '/my-leads', icon: Briefcase },
-  { name: 'Wallet', href: '/wallet', icon: Wallet },
-  { name: 'Campaigns', href: '/campaigns', icon: TrendingUp },
-  { name: 'Meta Ads', href: '/meta-ads', icon: Megaphone },
-  { name: 'Social Calendar', href: '/social-calendar', icon: CalendarDays },
-  { name: 'Intake Form', href: '/intake-builder', icon: Paintbrush },
-  { name: 'Reports', href: '/reports', icon: FileText },
-  { name: 'Settings', href: '/settings', icon: Settings },
+const coreNavigation = [
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, premium: false },
+  { name: 'Lead Marketplace', href: '/marketplace', icon: ShoppingCart, premium: false },
+  { name: 'My Leads', href: '/my-leads', icon: Briefcase, premium: false },
+  { name: 'Wallet', href: '/wallet', icon: Wallet, premium: false },
+  { name: 'Campaigns', href: '/campaigns', icon: TrendingUp, premium: false },
+  { name: 'Meta Ads', href: '/meta-ads', icon: Megaphone, premium: true },
+  { name: 'Social Calendar', href: '/social-calendar', icon: CalendarDays, premium: true },
+  { name: 'Intake Form', href: '/intake-builder', icon: Paintbrush, premium: false },
+  { name: 'Reports', href: '/reports', icon: FileText, premium: true },
+  { name: 'Settings', href: '/settings', icon: Settings, premium: false },
 ];
 
 const adminOverview = [
@@ -64,6 +67,7 @@ const adminLogs = [
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { signOut, user } = useAuth();
   const { isAdmin } = useIsAdmin();
+  const { tier } = useSubscription();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -87,14 +91,6 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
     );
 
-  const renderLinks = (items: typeof navigation, className: typeof navLinkClass) =>
-    items.map((item) => (
-      <NavLink key={item.name} to={item.href} className={className} onClick={onNavigate}>
-        <item.icon className="h-5 w-5 shrink-0" />
-        {item.name}
-      </NavLink>
-    ));
-
   return (
     <div className="flex h-full flex-col">
       {/* Logo */}
@@ -104,7 +100,23 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
-        {renderLinks(navigation, navLinkClass)}
+        {coreNavigation.map((item) => (
+          <NavLink key={item.name} to={item.href} className={navLinkClass} onClick={onNavigate}>
+            <item.icon className="h-5 w-5 shrink-0" />
+            <span className="flex-1">{item.name}</span>
+            {item.premium && tier !== 'premium' && (
+              <Crown className="h-3.5 w-3.5 text-sidebar-foreground/40" />
+            )}
+          </NavLink>
+        ))}
+
+        {/* Pricing / Upgrade */}
+        {tier !== 'premium' && (
+          <NavLink to="/pricing" className={navLinkClass} onClick={onNavigate}>
+            <Crown className="h-5 w-5 shrink-0 text-accent" />
+            <span className="flex-1 text-accent">Upgrade Plan</span>
+          </NavLink>
+        )}
 
         {/* Admin Navigation */}
         {isAdmin && (
@@ -114,21 +126,36 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               Admin — Overview
             </p>
             <div className="space-y-0.5">
-              {renderLinks(adminOverview, adminLinkClass)}
+              {adminOverview.map((item) => (
+                <NavLink key={item.name} to={item.href} className={adminLinkClass} onClick={onNavigate}>
+                  <item.icon className="h-5 w-5 shrink-0" />
+                  {item.name}
+                </NavLink>
+              ))}
             </div>
 
             <p className="px-3 pt-4 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
               Data Management
             </p>
             <div className="space-y-0.5">
-              {renderLinks(adminData, adminLinkClass)}
+              {adminData.map((item) => (
+                <NavLink key={item.name} to={item.href} className={adminLinkClass} onClick={onNavigate}>
+                  <item.icon className="h-5 w-5 shrink-0" />
+                  {item.name}
+                </NavLink>
+              ))}
             </div>
 
             <p className="px-3 pt-4 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
               Logs &amp; Monitoring
             </p>
             <div className="space-y-0.5">
-              {renderLinks(adminLogs, adminLinkClass)}
+              {adminLogs.map((item) => (
+                <NavLink key={item.name} to={item.href} className={adminLinkClass} onClick={onNavigate}>
+                  <item.icon className="h-5 w-5 shrink-0" />
+                  {item.name}
+                </NavLink>
+              ))}
             </div>
           </>
         )}
@@ -144,7 +171,9 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           </div>
           <div className="flex-1 min-w-0">
             <p className="truncate text-sm font-medium">{user?.email}</p>
-            <p className="text-xs text-sidebar-foreground/50">Law Firm</p>
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-sidebar-border text-sidebar-foreground/50">
+              {tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : 'Free'}
+            </Badge>
           </div>
         </div>
         <Button

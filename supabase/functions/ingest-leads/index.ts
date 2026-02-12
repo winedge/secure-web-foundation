@@ -238,7 +238,28 @@ serve(async (req) => {
           results.errors++;
         } else if (insertedLead && typeof insertedLead === 'object' && 'id' in insertedLead) {
           results.inserted++;
-          results.insertedIds.push((insertedLead as { id: string }).id);
+          const leadId = (insertedLead as { id: string }).id;
+          results.insertedIds.push(leadId);
+
+          // Auto-match lead to eligible firms
+          try {
+            const { data: matches } = await supabase.rpc('match_lead_to_firms', { _lead_id: leadId });
+            if (matches && Array.isArray(matches) && matches.length > 0) {
+              console.log(`Lead ${leadId} matched to ${matches.length} firms`);
+              // Log audit entry for each match
+              for (const match of matches.slice(0, 5)) {
+                await supabase.from('audit_logs').insert({
+                  user_id: user.id,
+                  action: 'lead_matched',
+                  entity_type: 'lead',
+                  entity_id: leadId,
+                  details: { firm_id: match.firm_id, firm_name: match.firm_name, match_score: match.match_score },
+                });
+              }
+            }
+          } catch (matchErr) {
+            console.error('Lead matching error (non-fatal):', matchErr);
+          }
         }
       } catch (err) {
         console.error('Lead processing error:', err);
