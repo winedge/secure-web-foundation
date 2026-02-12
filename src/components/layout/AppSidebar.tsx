@@ -19,6 +19,8 @@ import {
   Menu,
   X,
   Megaphone,
+  CalendarDays,
+  Cog,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import logoImg from '@/assets/leadthru-logo-dark.png';
@@ -35,6 +37,7 @@ const navigation = [
   { name: 'Wallet', href: '/wallet', icon: Wallet },
   { name: 'Campaigns', href: '/campaigns', icon: TrendingUp },
   { name: 'Meta Ads', href: '/meta-ads', icon: Megaphone },
+  { name: 'Social Calendar', href: '/social-calendar', icon: CalendarDays },
   { name: 'Intake Form', href: '/intake-builder', icon: Paintbrush },
   { name: 'Reports', href: '/reports', icon: FileText },
   { name: 'Settings', href: '/settings', icon: Settings },
@@ -43,6 +46,7 @@ const navigation = [
 const adminOverview = [
   { name: 'Admin Panel', href: '/admin', icon: Shield },
   { name: 'Reporting', href: '/admin/reporting', icon: BarChart3 },
+  { name: 'Platform Settings', href: '/admin/settings', icon: Cog },
 ];
 
 const adminData = [

@@ -28,6 +28,8 @@ import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
 import AdminDataIngestion from "./pages/admin/AdminDataIngestion";
 import AdminReporting from "./pages/admin/AdminReporting";
 import AdminSessionLogs from "./pages/admin/AdminSessionLogs";
+import AdminSettings from "./pages/admin/AdminSettings";
+import SocialMediaCalendar from "./pages/SocialMediaCalendar";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,6 +61,7 @@ const App = () => (
               <Route path="/meta-ads" element={<ProtectedRoute><MetaAds /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/social-calendar" element={<ProtectedRoute><SocialMediaCalendar /></ProtectedRoute>} />
               <Route path="/intake-builder" element={<ProtectedRoute><IntakeFormBuilder /></ProtectedRoute>} />
 
               {/* Admin routes */}
@@ -69,6 +72,7 @@ const App = () => (
               <Route path="/admin/data-ingestion" element={<ProtectedRoute requireAdmin><AdminDataIngestion /></ProtectedRoute>} />
               <Route path="/admin/reporting" element={<ProtectedRoute requireAdmin><AdminReporting /></ProtectedRoute>} />
               <Route path="/admin/session-logs" element={<ProtectedRoute requireAdmin><AdminSessionLogs /></ProtectedRoute>} />
+              <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><AdminSettings /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
