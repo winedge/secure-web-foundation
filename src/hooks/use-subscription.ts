@@ -1,6 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { useSubscriptionContext } from '@/components/subscription/SubscriptionProvider';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/lib/auth-context';
 
 // Stripe product/price mapping
 export const SUBSCRIPTION_TIERS = {
@@ -35,41 +34,9 @@ export const SUBSCRIPTION_TIERS = {
 
 export type SubscriptionTier = keyof typeof SUBSCRIPTION_TIERS | null;
 
-interface SubscriptionStatus {
-  subscribed: boolean;
-  tier: SubscriptionTier;
-  subscriptionEnd: string | null;
-  loading: boolean;
-}
-
-function getTierFromProductId(productId: string | null): SubscriptionTier {
-  if (!productId) return null;
-  if (productId === SUBSCRIPTION_TIERS.premium.product_id) return 'premium';
-  if (productId === SUBSCRIPTION_TIERS.basic.product_id) return 'basic';
-  return null;
-}
-
-export function useSubscription(): SubscriptionStatus {
-  const { user } = useAuth();
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['subscription', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('check-subscription');
-      if (error) throw error;
-      return data as { subscribed: boolean; product_id: string | null; subscription_end: string | null };
-    },
-    enabled: !!user,
-    refetchInterval: 60_000, // refresh every minute
-    staleTime: 30_000,
-  });
-
-  return {
-    subscribed: data?.subscribed ?? false,
-    tier: getTierFromProductId(data?.product_id ?? null),
-    subscriptionEnd: data?.subscription_end ?? null,
-    loading: isLoading,
-  };
+// Re-export the centralized hook for backward compatibility
+export function useSubscription() {
+  return useSubscriptionContext();
 }
 
 // Feature gating hook

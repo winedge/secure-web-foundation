@@ -6,80 +6,108 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth-context";
 import { PostHogProvider, PostHogPageView } from "@/lib/posthog";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { SubscriptionProvider } from "@/components/subscription/SubscriptionProvider";
+import { RouteErrorBoundary } from "@/components/error/RouteErrorBoundary";
+import { Suspense, lazy } from "react";
+import { Loader2 } from "lucide-react";
+
+// Eager-loaded routes (landing, auth — needed immediately)
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
-import Dashboard from "./pages/Dashboard";
-import Onboarding from "./pages/Onboarding";
-import Intake from "./pages/Intake";
-import BrandedIntake from "./pages/BrandedIntake";
-import IntakeFormBuilder from "./pages/IntakeFormBuilder";
-import Marketplace from "./pages/Marketplace";
-import MyLeads from "./pages/MyLeads";
-import Wallet from "./pages/Wallet";
-import Campaigns from "./pages/Campaigns";
-import MetaAds from "./pages/MetaAds";
-import Reports from "./pages/Reports";
-import Settings from "./pages/Settings";
-import Pricing from "./pages/Pricing";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminFirms from "./pages/admin/AdminFirms";
-import AdminLeads from "./pages/admin/AdminLeads";
-import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
-import AdminDataIngestion from "./pages/admin/AdminDataIngestion";
-import AdminReporting from "./pages/admin/AdminReporting";
-import AdminSessionLogs from "./pages/admin/AdminSessionLogs";
-import AdminSettings from "./pages/admin/AdminSettings";
-import SocialMediaCalendar from "./pages/SocialMediaCalendar";
 import NotFound from "./pages/NotFound";
 
+// Lazy-loaded routes
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const Intake = lazy(() => import("./pages/Intake"));
+const BrandedIntake = lazy(() => import("./pages/BrandedIntake"));
+const IntakeFormBuilder = lazy(() => import("./pages/IntakeFormBuilder"));
+const Marketplace = lazy(() => import("./pages/Marketplace"));
+const MyLeads = lazy(() => import("./pages/MyLeads"));
+const Wallet = lazy(() => import("./pages/Wallet"));
+const Campaigns = lazy(() => import("./pages/Campaigns"));
+const MetaAds = lazy(() => import("./pages/MetaAds"));
+const Reports = lazy(() => import("./pages/Reports"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const SocialMediaCalendar = lazy(() => import("./pages/SocialMediaCalendar"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminFirms = lazy(() => import("./pages/admin/AdminFirms"));
+const AdminLeads = lazy(() => import("./pages/admin/AdminLeads"));
+const AdminAuditLogs = lazy(() => import("./pages/admin/AdminAuditLogs"));
+const AdminDataIngestion = lazy(() => import("./pages/admin/AdminDataIngestion"));
+const AdminReporting = lazy(() => import("./pages/admin/AdminReporting"));
+const AdminSessionLogs = lazy(() => import("./pages/admin/AdminSessionLogs"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+
 const queryClient = new QueryClient();
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  );
+}
+
+function LazyRoute({ children }: { children: React.ReactNode }) {
+  return (
+    <RouteErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
+        {children}
+      </Suspense>
+    </RouteErrorBoundary>
+  );
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <PostHogProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <PostHogPageView />
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/intake" element={<Intake />} />
-              <Route path="/intake/:slug" element={<BrandedIntake />} />
+      <SubscriptionProvider>
+        <PostHogProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <PostHogPageView />
+              <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/intake" element={<LazyRoute><Intake /></LazyRoute>} />
+                <Route path="/intake/:slug" element={<LazyRoute><BrandedIntake /></LazyRoute>} />
 
-              {/* Protected routes */}
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-              <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
-              <Route path="/my-leads" element={<ProtectedRoute><MyLeads /></ProtectedRoute>} />
-              <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
-              <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
-              <Route path="/meta-ads" element={<ProtectedRoute><MetaAds /></ProtectedRoute>} />
-              <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/social-calendar" element={<ProtectedRoute><SocialMediaCalendar /></ProtectedRoute>} />
-              <Route path="/intake-builder" element={<ProtectedRoute><IntakeFormBuilder /></ProtectedRoute>} />
-              <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
+                {/* Protected routes */}
+                <Route path="/dashboard" element={<ProtectedRoute><LazyRoute><Dashboard /></LazyRoute></ProtectedRoute>} />
+                <Route path="/onboarding" element={<ProtectedRoute><LazyRoute><Onboarding /></LazyRoute></ProtectedRoute>} />
+                <Route path="/marketplace" element={<ProtectedRoute><LazyRoute><Marketplace /></LazyRoute></ProtectedRoute>} />
+                <Route path="/my-leads" element={<ProtectedRoute><LazyRoute><MyLeads /></LazyRoute></ProtectedRoute>} />
+                <Route path="/wallet" element={<ProtectedRoute><LazyRoute><Wallet /></LazyRoute></ProtectedRoute>} />
+                <Route path="/campaigns" element={<ProtectedRoute><LazyRoute><Campaigns /></LazyRoute></ProtectedRoute>} />
+                <Route path="/meta-ads" element={<ProtectedRoute><LazyRoute><MetaAds /></LazyRoute></ProtectedRoute>} />
+                <Route path="/reports" element={<ProtectedRoute><LazyRoute><Reports /></LazyRoute></ProtectedRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><LazyRoute><Settings /></LazyRoute></ProtectedRoute>} />
+                <Route path="/social-calendar" element={<ProtectedRoute><LazyRoute><SocialMediaCalendar /></LazyRoute></ProtectedRoute>} />
+                <Route path="/intake-builder" element={<ProtectedRoute><LazyRoute><IntakeFormBuilder /></LazyRoute></ProtectedRoute>} />
+                <Route path="/pricing" element={<ProtectedRoute><LazyRoute><Pricing /></LazyRoute></ProtectedRoute>} />
 
-              {/* Admin routes */}
-              <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
-              <Route path="/admin/firms" element={<ProtectedRoute requireAdmin><AdminFirms /></ProtectedRoute>} />
-              <Route path="/admin/leads" element={<ProtectedRoute requireAdmin><AdminLeads /></ProtectedRoute>} />
-              <Route path="/admin/audit-logs" element={<ProtectedRoute requireAdmin><AdminAuditLogs /></ProtectedRoute>} />
-              <Route path="/admin/data-ingestion" element={<ProtectedRoute requireAdmin><AdminDataIngestion /></ProtectedRoute>} />
-              <Route path="/admin/reporting" element={<ProtectedRoute requireAdmin><AdminReporting /></ProtectedRoute>} />
-              <Route path="/admin/session-logs" element={<ProtectedRoute requireAdmin><AdminSessionLogs /></ProtectedRoute>} />
-              <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><AdminSettings /></ProtectedRoute>} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </PostHogProvider>
+                {/* Admin routes */}
+                <Route path="/admin" element={<ProtectedRoute requireAdmin><LazyRoute><AdminDashboard /></LazyRoute></ProtectedRoute>} />
+                <Route path="/admin/firms" element={<ProtectedRoute requireAdmin><LazyRoute><AdminFirms /></LazyRoute></ProtectedRoute>} />
+                <Route path="/admin/leads" element={<ProtectedRoute requireAdmin><LazyRoute><AdminLeads /></LazyRoute></ProtectedRoute>} />
+                <Route path="/admin/audit-logs" element={<ProtectedRoute requireAdmin><LazyRoute><AdminAuditLogs /></LazyRoute></ProtectedRoute>} />
+                <Route path="/admin/data-ingestion" element={<ProtectedRoute requireAdmin><LazyRoute><AdminDataIngestion /></LazyRoute></ProtectedRoute>} />
+                <Route path="/admin/reporting" element={<ProtectedRoute requireAdmin><LazyRoute><AdminReporting /></LazyRoute></ProtectedRoute>} />
+                <Route path="/admin/session-logs" element={<ProtectedRoute requireAdmin><LazyRoute><AdminSessionLogs /></LazyRoute></ProtectedRoute>} />
+                <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><LazyRoute><AdminSettings /></LazyRoute></ProtectedRoute>} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </PostHogProvider>
+      </SubscriptionProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
