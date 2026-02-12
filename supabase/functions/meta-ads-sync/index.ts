@@ -1,21 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { handleCors, jsonResponse, errorResponse } from "../_shared/cors.ts";
+import { createSupabaseClient } from "../_shared/auth.ts";
 
 const META_API = "https://graph.facebook.com/v21.0";
 
 serve(async (req) => {
-  if (req.method === "OPTIONS")
-    return new Response(null, { headers: corsHeaders });
+  const corsResp = handleCors(req);
+  if (corsResp) return corsResp;
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  const supabase = createSupabaseClient(true);
 
   try {
     const { action, user_id, ...params } = await req.json();
@@ -30,10 +23,7 @@ serve(async (req) => {
       .single();
 
     if (!fbConn?.access_token) {
-      return new Response(
-        JSON.stringify({ error: "Facebook not connected. Go to Settings → Connections to connect." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return errorResponse("Facebook not connected. Go to Settings → Connections to connect.");
     }
 
     const token = fbConn.access_token;
@@ -47,8 +37,7 @@ serve(async (req) => {
       const data = await resp.json();
       if (data.error) throw new Error(data.error.message);
       if (!data.data?.length) throw new Error("No ad accounts found. Ensure your Facebook account has an Ads Manager account.");
-      adAccountId = data.data[0].id; // Use first ad account
-      // Save for future use
+      adAccountId = data.data[0].id;
       await supabase
         .from("platform_connections")
         .update({ metadata: { ...fbConn.metadata, ad_account_id: adAccountId, ad_accounts: data.data } })
@@ -64,15 +53,11 @@ serve(async (req) => {
         name,
         objective: metaObjective,
         status: status === "active" ? "ACTIVE" : "PAUSED",
-        special_ad_categories: '["HOUSING"]', // Legal ads require special category
+        special_ad_categories: '["HOUSING"]',
         access_token: token,
       };
-      if (daily_budget) {
-        body.daily_budget = String(Math.round(daily_budget * 100)); // Meta expects cents
-      }
-      if (bid_strategy) {
-        body.bid_strategy = bid_strategy;
-      }
+      if (daily_budget) body.daily_budget = String(Math.round(daily_budget * 100));
+      if (bid_strategy) body.bid_strategy = bid_strategy;
 
       const resp = await fetch(`${META_API}/${adAccountId}/campaigns`, {
         method: "POST",
@@ -80,17 +65,10 @@ serve(async (req) => {
         body: new URLSearchParams(body),
       });
       const data = await resp.json();
+      if (data.error) return errorResponse(data.error.message);
 
-      if (data.error) {
-        return errorResponse(data.error.message);
-      }
-
-      // Save Meta campaign ID back to our DB
       if (campaign_id && data.id) {
-        await supabase
-          .from("meta_campaigns")
-          .update({ meta_campaign_id: data.id })
-          .eq("id", campaign_id);
+        await supabase.from("meta_campaigns").update({ meta_campaign_id: data.id }).eq("id", campaign_id);
       }
 
       return jsonResponse({ success: true, meta_campaign_id: data.id });
@@ -123,10 +101,7 @@ serve(async (req) => {
       const { meta_campaign_id } = params;
       if (!meta_campaign_id) return jsonResponse({ success: true, message: "Not synced to Meta" });
 
-      const resp = await fetch(
-        `${META_API}/${meta_campaign_id}?access_token=${token}`,
-        { method: "DELETE" }
-      );
+      const resp = await fetch(`${META_API}/${meta_campaign_id}?access_token=${token}`, { method: "DELETE" });
       const data = await resp.json();
       if (data.error) return errorResponse(data.error.message);
 
@@ -136,7 +111,6 @@ serve(async (req) => {
     // ─── CREATE AD SET ON META ───
     if (action === "create_adset") {
       const { adset_id, meta_campaign_id, name, daily_budget, age_min, age_max, optimization_event, locations, interests } = params;
-
       if (!meta_campaign_id) return errorResponse("Parent campaign not synced to Meta yet. Sync campaign first.");
 
       const targeting: any = {
@@ -144,18 +118,12 @@ serve(async (req) => {
         age_max: age_max || 65,
         geo_locations: {
           countries: ["US"],
-          regions: (locations || []).map((l: any) => ({
-            key: typeof l === "string" ? l : l.name,
-          })),
+          regions: (locations || []).map((l: any) => ({ key: typeof l === "string" ? l : l.name })),
         },
       };
 
       if (interests?.length) {
-        targeting.flexible_spec = [{
-          interests: interests.map((i: any) => ({
-            name: typeof i === "string" ? i : i.name,
-          })),
-        }];
+        targeting.flexible_spec = [{ interests: interests.map((i: any) => ({ name: typeof i === "string" ? i : i.name })) }];
       }
 
       const body: Record<string, string> = {
@@ -178,10 +146,7 @@ serve(async (req) => {
       if (data.error) return errorResponse(data.error.message);
 
       if (adset_id && data.id) {
-        await supabase
-          .from("meta_ad_sets")
-          .update({ meta_adset_id: data.id })
-          .eq("id", adset_id);
+        await supabase.from("meta_ad_sets").update({ meta_adset_id: data.id }).eq("id", adset_id);
       }
 
       return jsonResponse({ success: true, meta_adset_id: data.id });
@@ -189,7 +154,7 @@ serve(async (req) => {
 
     // ─── UPDATE AD SET ON META ───
     if (action === "update_adset") {
-      const { meta_adset_id, name, daily_budget, status, age_min, age_max } = params;
+      const { meta_adset_id, name, daily_budget, status } = params;
       if (!meta_adset_id) return errorResponse("Ad set not synced to Meta yet");
 
       const body: Record<string, string> = { access_token: token };
@@ -211,10 +176,8 @@ serve(async (req) => {
     // ─── CREATE AD ON META ───
     if (action === "create_ad") {
       const { ad_id, meta_adset_id, name, headline, body_text, description, link_url, image_url, call_to_action } = params;
-
       if (!meta_adset_id) return errorResponse("Parent ad set not synced to Meta yet");
 
-      // First, get or create page to use for the ad
       const { data: pageConn } = await supabase
         .from("platform_connections")
         .select("*")
@@ -226,7 +189,6 @@ serve(async (req) => {
 
       if (!pageConn?.page_id) return errorResponse("No Facebook page connected. Connect a page in Settings → Connections.");
 
-      // Create ad creative
       const creativeBody: Record<string, string> = {
         name: `Creative - ${name}`,
         object_story_spec: JSON.stringify({
@@ -236,9 +198,7 @@ serve(async (req) => {
             link: link_url || "https://example.com",
             name: headline || "",
             description: description || "",
-            call_to_action: {
-              type: call_to_action || "LEARN_MORE",
-            },
+            call_to_action: { type: call_to_action || "LEARN_MORE" },
             ...(image_url ? { picture: image_url } : {}),
           },
         }),
@@ -253,7 +213,6 @@ serve(async (req) => {
       const creativeData = await creativeResp.json();
       if (creativeData.error) return errorResponse(`Creative error: ${creativeData.error.message}`);
 
-      // Create the ad
       const adBody: Record<string, string> = {
         name,
         adset_id: meta_adset_id,
@@ -271,10 +230,7 @@ serve(async (req) => {
       if (adData.error) return errorResponse(`Ad error: ${adData.error.message}`);
 
       if (ad_id && adData.id) {
-        await supabase
-          .from("meta_ads")
-          .update({ meta_ad_id: adData.id })
-          .eq("id", ad_id);
+        await supabase.from("meta_ads").update({ meta_ad_id: adData.id }).eq("id", ad_id);
       }
 
       return jsonResponse({ success: true, meta_ad_id: adData.id });
@@ -283,7 +239,6 @@ serve(async (req) => {
     // ─── FETCH REAL ANALYTICS FROM META ───
     if (action === "fetch_analytics") {
       const { campaign_id, meta_campaign_id, date_preset } = params;
-
       if (!meta_campaign_id) return errorResponse("Campaign not synced to Meta yet");
 
       const fields = "impressions,clicks,spend,actions,cpc,cpm,ctr,reach,frequency";
@@ -293,7 +248,6 @@ serve(async (req) => {
       const data = await resp.json();
       if (data.error) return errorResponse(data.error.message);
 
-      // Transform and save analytics
       const analyticsRows = (data.data || []).map((row: any) => {
         const leads = row.actions?.find((a: any) => a.action_type === "lead")?.value || 0;
         const conversions = row.actions?.find((a: any) => a.action_type === "offsite_conversion.fb_pixel_lead")?.value || 0;
@@ -316,12 +270,8 @@ serve(async (req) => {
       });
 
       if (analyticsRows.length > 0 && campaign_id) {
-        // Upsert analytics (delete old entries for date range, then insert)
         for (const row of analyticsRows) {
-          await supabase
-            .from("meta_campaign_analytics")
-            .upsert(row, { onConflict: "campaign_id,date" })
-            .select();
+          await supabase.from("meta_campaign_analytics").upsert(row, { onConflict: "campaign_id,date" }).select();
         }
       }
 
@@ -332,7 +282,6 @@ serve(async (req) => {
     if (action === "sync_from_meta") {
       const { firm_id } = params;
 
-      // Get all campaigns from Meta
       const resp = await fetch(
         `${META_API}/${adAccountId}/campaigns?fields=id,name,objective,status,daily_budget,lifetime_budget,bid_strategy,start_time,stop_time&limit=100&access_token=${token}`
       );
@@ -341,15 +290,9 @@ serve(async (req) => {
 
       const synced = [];
       for (const mc of data.data || []) {
-        // Check if already exists locally
-        const { data: existing } = await supabase
-          .from("meta_campaigns")
-          .select("id")
-          .eq("meta_campaign_id", mc.id)
-          .single();
+        const { data: existing } = await supabase.from("meta_campaigns").select("id").eq("meta_campaign_id", mc.id).single();
 
         if (existing) {
-          // Update
           await supabase
             .from("meta_campaigns")
             .update({
@@ -361,7 +304,6 @@ serve(async (req) => {
             .eq("id", existing.id);
           synced.push({ id: existing.id, name: mc.name, action: "updated" });
         } else {
-          // Create
           const { data: newCampaign } = await supabase
             .from("meta_campaigns")
             .insert({
@@ -399,10 +341,7 @@ serve(async (req) => {
     return errorResponse("Unknown action: " + action);
   } catch (e) {
     console.error("meta-ads-sync error:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
   }
 });
 
@@ -422,17 +361,4 @@ function mapOptimizationGoal(event: string): string {
     LINK_CLICK: "LINK_CLICKS",
   };
   return map[event] || "LEAD_GENERATION";
-}
-
-function jsonResponse(data: any) {
-  return new Response(JSON.stringify(data), {
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-
-function errorResponse(message: string) {
-  return new Response(JSON.stringify({ error: message }), {
-    status: 400,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
 }

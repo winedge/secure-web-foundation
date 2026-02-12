@@ -1,22 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { handleCors, jsonResponse } from "../_shared/cors.ts";
+import { createSupabaseClient } from "../_shared/auth.ts";
 
 serve(async (req) => {
-  if (req.method === "OPTIONS")
-    return new Response(null, { headers: corsHeaders });
+  const corsResp = handleCors(req);
+  if (corsResp) return corsResp;
 
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
-
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  const supabase = createSupabaseClient(true);
 
   try {
     const { action, context } = await req.json();
@@ -32,6 +22,9 @@ serve(async (req) => {
     const temperature = config.creativity_level || 0.7;
     const brandVoice = config.brand_voice || "professional and informative";
     const contentGuidelines = config.content_guidelines || "";
+
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const systemPrompts: Record<string, string> = {
       generate_post: `You are an expert social media content creator for law firms specializing in mass tort litigation.
@@ -100,41 +93,25 @@ Return JSON: {
     const systemPrompt = systemPrompts[action];
     if (!systemPrompt) throw new Error(`Unknown action: ${action}`);
 
-    const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: config.model || "google/gemini-3-flash-preview",
-          messages: [
-            { role: "system", content: systemPrompt },
-            {
-              role: "user",
-              content: typeof context === "string" ? context : JSON.stringify(context),
-            },
-          ],
-          temperature,
-        }),
-      }
-    );
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: config.model || "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: typeof context === "string" ? context : JSON.stringify(context) },
+        ],
+        temperature,
+      }),
+    });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please add credits." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      if (response.status === 429) return jsonResponse({ error: "Rate limit exceeded. Please try again." }, 429);
+      if (response.status === 402) return jsonResponse({ error: "AI credits exhausted. Please add credits." }, 402);
       const t = await response.text();
       console.error("AI error:", response.status, t);
       throw new Error("AI gateway error");
@@ -154,35 +131,25 @@ Return JSON: {
     // If generating an image, actually generate it
     if (action === "generate_image" && parsed.prompt) {
       try {
-        const imgResp = await fetch(
-          "https://ai.gateway.lovable.dev/v1/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model: "google/gemini-2.5-flash-image",
-              messages: [{ role: "user", content: parsed.prompt }],
-              modalities: ["image", "text"],
-            }),
-          }
-        );
+        const imgResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash-image",
+            messages: [{ role: "user", content: parsed.prompt }],
+            modalities: ["image", "text"],
+          }),
+        });
 
         if (imgResp.ok) {
           const imgData = await imgResp.json();
-          const imageUrl =
-            imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+          const imageUrl = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
           if (imageUrl) {
-            // Upload to storage
-            const base64Data = imageUrl.replace(
-              /^data:image\/\w+;base64,/,
-              ""
-            );
-            const binaryData = Uint8Array.from(atob(base64Data), (c) =>
-              c.charCodeAt(0)
-            );
+            const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, "");
+            const binaryData = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
             const fileName = `ai-generated/${crypto.randomUUID()}.png`;
 
             const { data: uploadData } = await supabase.storage
@@ -190,27 +157,19 @@ Return JSON: {
               .upload(fileName, binaryData, { contentType: "image/png" });
 
             if (uploadData) {
-              const { data: publicUrl } = supabase.storage
-                .from("social-media")
-                .getPublicUrl(fileName);
+              const { data: publicUrl } = supabase.storage.from("social-media").getPublicUrl(fileName);
               parsed.generated_image_url = publicUrl.publicUrl;
             }
           }
         }
       } catch (imgErr) {
         console.error("Image generation error:", imgErr);
-        // Continue without image — not critical
       }
     }
 
-    return new Response(JSON.stringify({ result: parsed }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ result: parsed });
   } catch (e) {
     console.error("social-content-generator error:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
   }
 });
