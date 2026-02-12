@@ -146,6 +146,22 @@ serve(async (req) => {
                   details: { firm_id: match.firm_id, firm_name: match.firm_name, match_score: match.match_score },
                 });
               }
+
+              // Trigger email notifications to matched firms
+              try {
+                const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+                const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+                await fetch(`${supabaseUrl}/functions/v1/lead-notification`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${supabaseKey}`,
+                  },
+                  body: JSON.stringify({ lead_id: insertedLead.id, matches: matches.slice(0, 5) }),
+                });
+              } catch (notifErr) {
+                console.error('Notification error (non-fatal):', notifErr);
+              }
             }
           } catch (matchErr) {
             console.error('Lead matching error (non-fatal):', matchErr);
