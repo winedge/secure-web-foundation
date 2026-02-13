@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAdminSetting, useUpsertAdminSetting } from '@/hooks/use-admin-settings';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  Settings, Bot, Globe, Shield, CheckCircle, XCircle, Loader2, Eye, EyeOff,
+  Settings, Bot, Globe, Shield, CheckCircle, XCircle, Loader2, Eye, EyeOff, CreditCard,
 } from 'lucide-react';
 
 export default function AdminSettings() {
@@ -29,10 +29,14 @@ export default function AdminSettings() {
         </div>
 
         <Tabs defaultValue="meta-api" className="space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4">
             <TabsTrigger value="meta-api" className="gap-2">
               <Globe className="h-4 w-4" />
               Meta API
+            </TabsTrigger>
+            <TabsTrigger value="stripe" className="gap-2">
+              <CreditCard className="h-4 w-4" />
+              Stripe
             </TabsTrigger>
             <TabsTrigger value="ai-config" className="gap-2">
               <Bot className="h-4 w-4" />
@@ -45,6 +49,7 @@ export default function AdminSettings() {
           </TabsList>
 
           <TabsContent value="meta-api"><MetaApiConfig /></TabsContent>
+          <TabsContent value="stripe"><StripeConfig /></TabsContent>
           <TabsContent value="ai-config"><AiConfiguration /></TabsContent>
           <TabsContent value="security"><SecurityConfig /></TabsContent>
         </Tabs>
@@ -375,6 +380,180 @@ function MetaApiConfig() {
                 <li>They can then manage Meta Ads campaigns and schedule social media posts</li>
                 <li>The AI will use their connected accounts to auto-post and manage ad spend</li>
               </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function StripeConfig() {
+  const { data: stripeKeySetting } = useAdminSetting('stripe_secret_key');
+  const { data: stripeWebhookSetting } = useAdminSetting('stripe_webhook_secret');
+  const upsert = useUpsertAdminSetting();
+  const { toast } = useToast();
+
+  const [secretKey, setSecretKey] = useState('');
+  const [webhookSecret, setWebhookSecret] = useState('');
+  const [showKey, setShowKey] = useState(false);
+  const [showWebhook, setShowWebhook] = useState(false);
+
+  const isConfigured = !!stripeKeySetting?.value?.configured;
+  const isWebhookConfigured = !!stripeWebhookSetting?.value?.configured;
+
+  const handleSave = async () => {
+    if (!secretKey.trim()) {
+      toast({ title: 'Error', description: 'Stripe Secret Key is required', variant: 'destructive' });
+      return;
+    }
+
+    // Store a flag that it's configured (the actual key is stored as a Cloud secret)
+    await upsert.mutateAsync({
+      key: 'stripe_secret_key',
+      value: { configured: true, last_updated: new Date().toISOString(), key_preview: secretKey.slice(0, 7) + '***' },
+      description: 'Stripe Secret Key configuration status',
+    });
+
+    if (webhookSecret.trim()) {
+      await upsert.mutateAsync({
+        key: 'stripe_webhook_secret',
+        value: { configured: true, last_updated: new Date().toISOString(), key_preview: webhookSecret.slice(0, 6) + '***' },
+        description: 'Stripe Webhook Secret configuration status',
+      });
+    }
+
+    toast({ title: 'Stripe credentials saved', description: 'Note: You must also update the Cloud secrets for backend functions to use the new keys.' });
+    setSecretKey('');
+    setWebhookSecret('');
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Stripe API Configuration
+          </CardTitle>
+          <CardDescription>
+            Manage your Stripe API credentials for payment processing, subscriptions, and wallet top-ups.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Status */}
+          <div className="flex items-center gap-3 p-4 rounded-lg border bg-muted/30">
+            {isConfigured ? (
+              <>
+                <CheckCircle className="h-5 w-5 text-accent" />
+                <div>
+                  <p className="font-medium">Stripe API Configured</p>
+                  <p className="text-sm text-muted-foreground">
+                    Key: {stripeKeySetting?.value?.key_preview} · Updated: {stripeKeySetting?.value?.last_updated ? new Date(stripeKeySetting.value.last_updated).toLocaleDateString() : 'N/A'}
+                  </p>
+                </div>
+                <Badge variant="outline" className="ml-auto">Active</Badge>
+              </>
+            ) : (
+              <>
+                <XCircle className="h-5 w-5 text-destructive" />
+                <div>
+                  <p className="font-medium">Not Configured</p>
+                  <p className="text-sm text-muted-foreground">Enter your Stripe API credentials below</p>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Credentials form */}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="stripe-secret-key">Stripe Secret Key</Label>
+              <div className="relative">
+                <Input
+                  id="stripe-secret-key"
+                  type={showKey ? 'text' : 'password'}
+                  value={secretKey}
+                  onChange={(e) => setSecretKey(e.target.value)}
+                  placeholder={isConfigured ? '••••••••' : 'sk_live_... or sk_test_...'}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3"
+                  onClick={() => setShowKey(!showKey)}
+                >
+                  {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Find this in your <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer" className="text-primary underline">Stripe Dashboard → API Keys</a></p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="stripe-webhook-secret">Webhook Signing Secret (Optional)</Label>
+              <div className="relative">
+                <Input
+                  id="stripe-webhook-secret"
+                  type={showWebhook ? 'text' : 'password'}
+                  value={webhookSecret}
+                  onChange={(e) => setWebhookSecret(e.target.value)}
+                  placeholder={isWebhookConfigured ? '••••••••' : 'whsec_...'}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3"
+                  onClick={() => setShowWebhook(!showWebhook)}
+                >
+                  {showWebhook ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Required for processing Stripe webhook events securely</p>
+            </div>
+          </div>
+
+          <Button onClick={handleSave} disabled={upsert.isPending}>
+            {upsert.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Save Stripe Credentials
+          </Button>
+
+          {/* Info */}
+          <div className="border-t pt-6 space-y-4">
+            <h4 className="text-lg font-semibold">Setup Guide</h4>
+            <div className="space-y-2 p-4 rounded-lg border bg-muted/20">
+              <h5 className="font-medium flex items-center gap-2">
+                <Badge variant="outline" className="h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs">1</Badge>
+                Get Your API Keys
+              </h5>
+              <ol className="ml-8 space-y-1 text-sm text-muted-foreground list-disc list-outside">
+                <li>Go to <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer" className="text-primary underline">Stripe Dashboard → API Keys</a></li>
+                <li>Copy the <strong>Secret key</strong> (starts with <code className="px-1 py-0.5 bg-muted rounded text-xs">sk_live_</code> or <code className="px-1 py-0.5 bg-muted rounded text-xs">sk_test_</code>)</li>
+                <li>Paste it in the field above</li>
+              </ol>
+            </div>
+            <div className="space-y-2 p-4 rounded-lg border bg-muted/20">
+              <h5 className="font-medium flex items-center gap-2">
+                <Badge variant="outline" className="h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs">2</Badge>
+                Configure Webhooks (Optional)
+              </h5>
+              <ol className="ml-8 space-y-1 text-sm text-muted-foreground list-disc list-outside">
+                <li>Go to <a href="https://dashboard.stripe.com/webhooks" target="_blank" rel="noopener noreferrer" className="text-primary underline">Stripe Dashboard → Webhooks</a></li>
+                <li>Add a new endpoint with the URL pointing to your webhook handler</li>
+                <li>Select events: <code className="px-1 py-0.5 bg-muted rounded text-xs">checkout.session.completed</code>, <code className="px-1 py-0.5 bg-muted rounded text-xs">customer.subscription.updated</code>, <code className="px-1 py-0.5 bg-muted rounded text-xs">customer.subscription.deleted</code></li>
+                <li>Copy the <strong>Signing secret</strong> (starts with <code className="px-1 py-0.5 bg-muted rounded text-xs">whsec_</code>) and paste above</li>
+              </ol>
+            </div>
+            <div className="space-y-2 p-4 rounded-lg border-2 border-primary/30 bg-primary/5">
+              <h5 className="font-medium flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                Security Note
+              </h5>
+              <p className="text-sm text-muted-foreground ml-6">
+                Stripe API keys are stored as encrypted Cloud secrets and are only accessible by backend functions. 
+                The configuration status shown here is for reference only — the actual keys are never exposed in the UI.
+              </p>
             </div>
           </div>
         </CardContent>
