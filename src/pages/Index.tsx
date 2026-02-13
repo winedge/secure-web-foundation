@@ -103,7 +103,7 @@ export default function Index() {
                     <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 text-base sm:text-lg px-6 sm:px-8">
+                <Button asChild size="lg" className="bg-black/40 text-white text-base sm:text-lg px-6 sm:px-8 border border-white/30 hover:bg-black/50">
                   <Link to="/marketplace">Browse Leads</Link>
                 </Button>
               </div>

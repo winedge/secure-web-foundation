@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
+import logoImg from '@/assets/leadthru-logo.png';
 
 const signInSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -75,11 +76,8 @@ export default function Auth() {
   return (
     <div className="min-h-screen gradient-bg flex items-center justify-center p-6">
       <div className="w-full max-w-md">
-        <Link to="/" className="flex items-center gap-3 justify-center mb-8">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent">
-            <span className="text-xl font-bold text-accent-foreground">L</span>
-          </div>
-          <span className="text-2xl font-bold text-white">LeadsThru</span>
+        <Link to="/" className="flex items-center justify-center mb-8">
+          <img src={logoImg} alt="LeadThru" className="h-10" />
         </Link>
 
         <Card>
