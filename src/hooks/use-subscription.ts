@@ -1,5 +1,6 @@
 import { useSubscriptionContext } from '@/components/subscription/SubscriptionProvider';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsAdmin } from '@/hooks/use-user-role';
 
 // Stripe product/price mapping
 export const SUBSCRIPTION_TIERS = {
@@ -46,6 +47,12 @@ const PREMIUM_FEATURES: GatedFeature[] = ['meta_ads', 'social_calendar', 'advanc
 
 export function useFeatureGate(feature: GatedFeature): { allowed: boolean; requiredTier: string; loading: boolean } {
   const { tier, loading } = useSubscription();
+  const { isAdmin, isLoading: adminLoading } = useIsAdmin();
+
+  // Admins bypass all subscription gates
+  if (isAdmin) {
+    return { allowed: true, requiredTier: 'Premium', loading: loading || adminLoading };
+  }
 
   if (PREMIUM_FEATURES.includes(feature)) {
     return { allowed: tier === 'premium', requiredTier: 'Premium', loading };

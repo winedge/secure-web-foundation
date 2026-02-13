@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { NavItem } from './sidebar-nav-data';
+import { useIsAdmin } from '@/hooks/use-user-role';
 
 interface SidebarNavSectionProps {
   items: NavItem[];
@@ -11,6 +12,7 @@ interface SidebarNavSectionProps {
 }
 
 export function SidebarNavSection({ items, tier, variant = 'core', onNavigate }: SidebarNavSectionProps) {
+  const { isAdmin } = useIsAdmin();
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
       'group flex items-center gap-3 rounded-lg px-3 text-sm font-medium transition-all duration-200',
@@ -28,7 +30,7 @@ export function SidebarNavSection({ items, tier, variant = 'core', onNavigate }:
         <NavLink key={item.name} to={item.href} className={linkClass} onClick={onNavigate}>
           <item.icon className="h-5 w-5 shrink-0" />
           <span className="flex-1">{item.name}</span>
-          {item.premium && tier !== 'premium' && (
+          {item.premium && !isAdmin && tier !== 'premium' && (
             <Crown className="h-3.5 w-3.5 text-sidebar-foreground/40" />
           )}
         </NavLink>

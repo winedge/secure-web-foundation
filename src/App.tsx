@@ -40,6 +40,7 @@ const AdminDataIngestion = lazy(() => import("./pages/admin/AdminDataIngestion")
 const AdminReporting = lazy(() => import("./pages/admin/AdminReporting"));
 const AdminSessionLogs = lazy(() => import("./pages/admin/AdminSessionLogs"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const AdminUserRoles = lazy(() => import("./pages/admin/AdminUserRoles"));
 
 const queryClient = new QueryClient();
 
@@ -102,6 +103,7 @@ const App = () => (
                 <Route path="/admin/reporting" element={<ProtectedRoute requireAdmin><LazyRoute><AdminReporting /></LazyRoute></ProtectedRoute>} />
                 <Route path="/admin/session-logs" element={<ProtectedRoute requireAdmin><LazyRoute><AdminSessionLogs /></LazyRoute></ProtectedRoute>} />
                 <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><LazyRoute><AdminSettings /></LazyRoute></ProtectedRoute>} />
+                <Route path="/admin/user-roles" element={<ProtectedRoute requireAdmin><LazyRoute><AdminUserRoles /></LazyRoute></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
