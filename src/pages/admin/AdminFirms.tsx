@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatCurrency } from '@/lib/utils';
 import {
   Table,
@@ -21,6 +23,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
+  DialogClose,
 } from '@/components/ui/dialog';
 import { 
   Building2, 
@@ -29,14 +33,17 @@ import {
   Mail, 
   Phone, 
   Globe, 
-  MapPin,
   Wallet,
-  CreditCard
+  Crown,
+  Plus,
+  Loader2,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 export default function AdminFirms() {
   const [searchTerm, setSearchTerm] = useState('');
+  const queryClient = useQueryClient();
 
   const { data: firms, isLoading } = useQuery({
     queryKey: ['admin-firms'],
@@ -163,7 +170,7 @@ export default function AdminFirms() {
                         <Badge 
                           variant={firm.subscription_plan === 'premium' ? 'default' : 'secondary'}
                         >
-                          {firm.subscription_plan || 'basic'}
+                          {firm.subscription_plan || 'Free'}
                         </Badge>
                       </TableCell>
                       <TableCell className="font-medium">
@@ -173,82 +180,11 @@ export default function AdminFirms() {
                         {format(new Date(firm.created_at), 'MMM d, yyyy')}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle className="flex items-center gap-2">
-                                <Building2 className="h-5 w-5" />
-                                {firm.name}
-                              </DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4 mt-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <p className="text-sm text-muted-foreground">Practice Type</p>
-                                  <p className="font-medium">{firm.practice_type || 'N/A'}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm text-muted-foreground">Subscription</p>
-                                  <Badge>{firm.subscription_plan || 'basic'}</Badge>
-                                </div>
-                              </div>
-                              
-                              <div className="space-y-2">
-                                {firm.contact_email && (
-                                  <div className="flex items-center gap-2">
-                                    <Mail className="h-4 w-4 text-muted-foreground" />
-                                    {firm.contact_email}
-                                  </div>
-                                )}
-                                {firm.contact_phone && (
-                                  <div className="flex items-center gap-2">
-                                    <Phone className="h-4 w-4 text-muted-foreground" />
-                                    {firm.contact_phone}
-                                  </div>
-                                )}
-                                {firm.website && (
-                                  <div className="flex items-center gap-2">
-                                    <Globe className="h-4 w-4 text-muted-foreground" />
-                                    <a href={firm.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                                      {firm.website}
-                                    </a>
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="border-t pt-4">
-                                <p className="text-sm text-muted-foreground mb-2">Operating States</p>
-                                <div className="flex flex-wrap gap-1">
-                                  {firm.states?.map((state: string) => (
-                                    <Badge key={state} variant="outline">
-                                      {state}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-
-                              <div className="border-t pt-4 flex justify-between">
-                                <div>
-                                  <p className="text-sm text-muted-foreground">Wallet Balance</p>
-                                  <p className="text-xl font-bold text-primary">
-                                    {formatCurrency(Number(firm.wallet_balance || 0))}
-                                  </p>
-                                </div>
-                                <div className="text-right">
-                                  <p className="text-sm text-muted-foreground">Status</p>
-                                  <Badge variant={firm.subscription_status === 'active' ? 'default' : 'secondary'}>
-                                    {firm.subscription_status || 'inactive'}
-                                  </Badge>
-                                </div>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                        <div className="flex items-center justify-end gap-1">
+                          <AddWalletFundsDialog firmId={firm.id} firmName={firm.name} currentBalance={Number(firm.wallet_balance || 0)} />
+                          <ChangePlanDialog firmId={firm.id} firmName={firm.name} currentPlan={firm.subscription_plan} />
+                          <FirmDetailDialog firm={firm} />
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -259,5 +195,237 @@ export default function AdminFirms() {
         </Card>
       </div>
     </DashboardLayout>
+  );
+}
+
+function AddWalletFundsDialog({ firmId, firmName, currentBalance }: { firmId: string; firmName: string; currentBalance: number }) {
+  const [amount, setAmount] = useState('');
+  const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async (addAmount: number) => {
+      const { error } = await supabase
+        .from('firms')
+        .update({ wallet_balance: currentBalance + addAmount })
+        .eq('id', firmId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success(`Added $${amount} to ${firmName}'s wallet`);
+      queryClient.invalidateQueries({ queryKey: ['admin-firms'] });
+      setAmount('');
+      setOpen(false);
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" title="Add wallet funds">
+          <Plus className="h-4 w-4 text-primary" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Wallet className="h-5 w-5" />
+            Add Funds — {firmName}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+            <span className="text-sm text-muted-foreground">Current Balance</span>
+            <span className="font-bold text-lg">{formatCurrency(currentBalance)}</span>
+          </div>
+          <div className="space-y-2">
+            <Label>Amount to Add ($)</Label>
+            <Input
+              type="number"
+              min="1"
+              placeholder="Enter amount..."
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {[100, 500, 1000, 5000].map((v) => (
+              <Button key={v} variant="outline" size="sm" onClick={() => setAmount(String(v))}>
+                ${v.toLocaleString()}
+              </Button>
+            ))}
+          </div>
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
+          <Button
+            onClick={() => mutation.mutate(Number(amount))}
+            disabled={!amount || Number(amount) <= 0 || mutation.isPending}
+          >
+            {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Wallet className="h-4 w-4 mr-2" />}
+            Add {amount ? formatCurrency(Number(amount)) : '$0'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ChangePlanDialog({ firmId, firmName, currentPlan }: { firmId: string; firmName: string; currentPlan: string | null }) {
+  const [plan, setPlan] = useState<string>(currentPlan || '');
+  const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async (newPlan: string) => {
+      const { error } = await supabase
+        .from('firms')
+        .update({
+          subscription_plan: newPlan as any,
+          subscription_status: newPlan ? 'active' : 'inactive',
+        })
+        .eq('id', firmId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success(`${firmName} upgraded to ${plan} plan`);
+      queryClient.invalidateQueries({ queryKey: ['admin-firms'] });
+      setOpen(false);
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" title="Change subscription plan">
+          <Crown className="h-4 w-4 text-accent" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Crown className="h-5 w-5 text-accent" />
+            Change Plan — {firmName}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+            <span className="text-sm text-muted-foreground">Current Plan</span>
+            <Badge variant={currentPlan === 'premium' ? 'default' : 'secondary'}>
+              {currentPlan || 'Free'}
+            </Badge>
+          </div>
+          <div className="space-y-2">
+            <Label>New Plan</Label>
+            <Select value={plan} onValueChange={setPlan}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a plan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="basic">Basic — $99/mo</SelectItem>
+                <SelectItem value="premium">Premium — $249/mo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
+          <Button
+            onClick={() => mutation.mutate(plan)}
+            disabled={!plan || plan === currentPlan || mutation.isPending}
+          >
+            {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Crown className="h-4 w-4 mr-2" />}
+            Update Plan
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function FirmDetailDialog({ firm }: { firm: any }) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" title="View details">
+          <Eye className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            {firm.name}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 mt-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Practice Type</p>
+              <p className="font-medium">{firm.practice_type || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Subscription</p>
+              <Badge>{firm.subscription_plan || 'Free'}</Badge>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            {firm.contact_email && (
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                {firm.contact_email}
+              </div>
+            )}
+            {firm.contact_phone && (
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                {firm.contact_phone}
+              </div>
+            )}
+            {firm.website && (
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4 text-muted-foreground" />
+                <a href={firm.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  {firm.website}
+                </a>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t pt-4">
+            <p className="text-sm text-muted-foreground mb-2">Operating States</p>
+            <div className="flex flex-wrap gap-1">
+              {firm.states?.map((state: string) => (
+                <Badge key={state} variant="outline">
+                  {state}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t pt-4 flex justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Wallet Balance</p>
+              <p className="text-xl font-bold text-primary">
+                {formatCurrency(Number(firm.wallet_balance || 0))}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Status</p>
+              <Badge variant={firm.subscription_status === 'active' ? 'default' : 'secondary'}>
+                {firm.subscription_status || 'inactive'}
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
