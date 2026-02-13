@@ -4,16 +4,22 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Crown, Loader2, Sparkles } from 'lucide-react';
+import { Check, Crown, Loader2, Sparkles, Wallet } from 'lucide-react';
 import { useSubscription, SUBSCRIPTION_TIERS } from '@/hooks/use-subscription';
 import { openCustomerPortal } from '@/hooks/use-subscription';
 import { supabase } from '@/integrations/supabase/client';
+import { useFirm } from '@/hooks/use-firm';
+import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export default function Pricing() {
   const { tier: currentTier, subscribed, subscriptionEnd, loading } = useSubscription();
+  const { data: firm } = useFirm();
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [walletLoading, setWalletLoading] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  const walletBalance = Number(firm?.wallet_balance || 0);
 
   const handleSubscribe = async (priceId: string, tierKey: string) => {
     setCheckoutLoading(tierKey);
@@ -32,12 +38,69 @@ export default function Pricing() {
     }
   };
 
+  const handleWalletSubscribe = async (priceId: string, tierKey: string) => {
+    setWalletLoading(tierKey);
+    try {
+      const { data, error } = await supabase.functions.invoke('wallet-subscribe', {
+        body: { priceId },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        toast.success(data.message);
+        // Reload to refresh subscription state
+        window.location.reload();
+      } else {
+        throw new Error(data?.error || 'Unknown error');
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setWalletLoading(null);
+    }
+  };
+
   const handleManage = async () => {
     try {
       await openCustomerPortal();
     } catch (err: any) {
       toast.error('Failed to open billing portal: ' + err.message);
     }
+  };
+
+  const renderSubscribeButtons = (tierKey: string, priceId: string, price: number) => {
+    const isLoading = checkoutLoading !== null || walletLoading !== null;
+    const canAfford = walletBalance >= price;
+
+    return (
+      <div className="space-y-2">
+        <Button
+          className="w-full"
+          disabled={isLoading}
+          onClick={() => handleSubscribe(priceId, tierKey)}
+        >
+          {checkoutLoading === tierKey ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+          Pay with Card
+        </Button>
+        <Button
+          variant="outline"
+          className="w-full gap-2"
+          disabled={isLoading || !canAfford}
+          onClick={() => handleWalletSubscribe(priceId, tierKey)}
+        >
+          {walletLoading === tierKey ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Wallet className="h-4 w-4" />
+          )}
+          Pay with Wallet ({formatCurrency(walletBalance)})
+        </Button>
+        {!canAfford && (
+          <p className="text-xs text-muted-foreground text-center">
+            Insufficient balance — <button onClick={() => navigate('/wallet')} className="underline text-primary">add funds</button>
+          </p>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -82,14 +145,7 @@ export default function Pricing() {
                   Included in Premium
                 </Button>
               ) : (
-                <Button
-                  className="w-full"
-                  disabled={checkoutLoading !== null}
-                  onClick={() => handleSubscribe(SUBSCRIPTION_TIERS.basic.price_id, 'basic')}
-                >
-                  {checkoutLoading === 'basic' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Get Started
-                </Button>
+                renderSubscribeButtons('basic', SUBSCRIPTION_TIERS.basic.price_id, SUBSCRIPTION_TIERS.basic.price)
               )}
             </CardContent>
           </Card>
@@ -127,14 +183,7 @@ export default function Pricing() {
                   Manage Subscription
                 </Button>
               ) : (
-                <Button
-                  className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
-                  disabled={checkoutLoading !== null}
-                  onClick={() => handleSubscribe(SUBSCRIPTION_TIERS.premium.price_id, 'premium')}
-                >
-                  {checkoutLoading === 'premium' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Crown className="h-4 w-4 mr-2" />}
-                  Upgrade to Premium
-                </Button>
+                renderSubscribeButtons('premium', SUBSCRIPTION_TIERS.premium.price_id, SUBSCRIPTION_TIERS.premium.price)
               )}
             </CardContent>
           </Card>
