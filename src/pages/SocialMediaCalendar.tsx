@@ -350,6 +350,14 @@ function CreatePostForm({ initialDate, onCreated }: { initialDate?: Date | null;
   const [generatingImage, setGeneratingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Image generation controls
+  const [imageDescription, setImageDescription] = useState('');
+  const [imageOverlayText, setImageOverlayText] = useState('');
+  const [imageCta, setImageCta] = useState('');
+  const [imageStyle, setImageStyle] = useState('modern-professional');
+  const [imageAspect, setImageAspect] = useState('1:1');
+  const [showImageOptions, setShowImageOptions] = useState(false);
+
   const togglePlatform = (id: string) => {
     setPlatforms((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
@@ -388,12 +396,20 @@ function CreatePostForm({ initialDate, onCreated }: { initialDate?: Date | null;
   };
 
   const handleGenerateImage = async () => {
-    if (!content.trim()) return;
+    if (!content.trim() && !imageDescription.trim()) return;
     setGeneratingImage(true);
     try {
       const result = await contentAI.mutateAsync({
         action: 'generate_image',
-        context: { content, platforms },
+        context: {
+          content,
+          platforms,
+          image_description: imageDescription,
+          overlay_text: imageOverlayText,
+          cta_text: imageCta,
+          style: imageStyle,
+          aspect_ratio: imageAspect,
+        },
       });
       if (result.generated_image_url) {
         setMediaUrls([result.generated_image_url]);
@@ -521,19 +537,92 @@ function CreatePostForm({ initialDate, onCreated }: { initialDate?: Date | null;
         </div>
       )}
 
-      {/* Media */}
-      <div className="space-y-2">
-        <Label>Media</Label>
+      {/* Media & AI Image Generator */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label>Media</Label>
+          <Button variant="ghost" size="sm" onClick={() => setShowImageOptions(!showImageOptions)} className="gap-1.5 text-xs">
+            <Wand2 className="h-3 w-3" />{showImageOptions ? 'Hide' : 'Show'} AI Image Options
+          </Button>
+        </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
             <Upload className="mr-1.5 h-3.5 w-3.5" />Upload
           </Button>
-          <Button variant="outline" size="sm" onClick={handleGenerateImage} disabled={generatingImage || !content}>
-            {generatingImage ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Image className="mr-1.5 h-3.5 w-3.5" />}
-            AI Generate Image
-          </Button>
           <input ref={fileInputRef} type="file" className="hidden" accept="image/*,video/*" onChange={handleFileUpload} />
         </div>
+
+        {/* AI Image Generation Panel */}
+        {showImageOptions && (
+          <div className="p-4 rounded-lg border border-dashed border-primary/40 bg-primary/5 space-y-3">
+            <p className="text-sm font-medium flex items-center gap-2"><Image className="h-4 w-4 text-primary" />AI Image Generator</p>
+            <div className="space-y-2">
+              <Label className="text-xs">Image Description</Label>
+              <Textarea
+                value={imageDescription}
+                onChange={(e) => setImageDescription(e.target.value)}
+                placeholder="Describe the image you want — e.g., 'A professional photo of a lawyer meeting clients in a modern office, warm lighting'"
+                rows={2}
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Overlay Text (on image)</Label>
+                <Input
+                  value={imageOverlayText}
+                  onChange={(e) => setImageOverlayText(e.target.value)}
+                  placeholder="e.g., Were You Affected?"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">CTA Button Text</Label>
+                <Input
+                  value={imageCta}
+                  onChange={(e) => setImageCta(e.target.value)}
+                  placeholder="e.g., Get a Free Consultation"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Visual Style</Label>
+                <Select value={imageStyle} onValueChange={setImageStyle}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="modern-professional">Modern Professional</SelectItem>
+                    <SelectItem value="bold-attention-grabbing">Bold & Attention-Grabbing</SelectItem>
+                    <SelectItem value="minimalist-clean">Minimalist & Clean</SelectItem>
+                    <SelectItem value="warm-empathetic">Warm & Empathetic</SelectItem>
+                    <SelectItem value="corporate-formal">Corporate Formal</SelectItem>
+                    <SelectItem value="infographic">Infographic Style</SelectItem>
+                    <SelectItem value="quote-card">Quote Card</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Aspect Ratio</Label>
+                <Select value={imageAspect} onValueChange={setImageAspect}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1:1">Square (1:1) — Instagram/Facebook</SelectItem>
+                    <SelectItem value="16:9">Landscape (16:9) — Twitter/LinkedIn</SelectItem>
+                    <SelectItem value="9:16">Portrait (9:16) — Stories/Reels</SelectItem>
+                    <SelectItem value="4:5">Tall (4:5) — Instagram Feed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Button
+              onClick={handleGenerateImage}
+              disabled={generatingImage || (!content.trim() && !imageDescription.trim())}
+              className="w-full gap-2"
+            >
+              {generatingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              Generate Image with Text & CTA
+            </Button>
+          </div>
+        )}
+
         {mediaUrls.length > 0 && (
           <div className="flex gap-2 mt-2">
             {mediaUrls.map((url, i) => (
