@@ -10,7 +10,7 @@ export function createSupabaseClient(useServiceRole = false) {
   );
 }
 
-export async function getAuthenticatedUser(req: Request, supabaseClient: ReturnType<typeof createClient>) {
+export async function getAuthenticatedUser(req: Request, supabaseClient: any) {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) throw new Error("No authorization header provided");
 
