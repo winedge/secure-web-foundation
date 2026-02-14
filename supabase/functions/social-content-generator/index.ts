@@ -18,7 +18,7 @@ serve(async (req) => {
       .eq("key", "ai_configuration")
       .single();
 
-    const config = aiConfig?.value || {};
+    const config = (aiConfig?.value as Record<string, any>) || {};
     const temperature = config.creativity_level || 0.7;
     const brandVoice = config.brand_voice || "professional and informative";
     const contentGuidelines = config.content_guidelines || "";
@@ -66,11 +66,27 @@ Return JSON: {
   "is_safe_to_post": true/false
 }`,
 
-      generate_image: `You are an AI image prompt creator. Given the social media post content, create a detailed prompt for image generation.
+      generate_image: `You are an expert graphic designer creating social media images for law firms.
+The user wants an AI-generated image with specific text overlays and call-to-action elements.
+
+Based on the user's requirements, create a HIGHLY DETAILED image generation prompt that includes:
+1. The scene/background described by the user (or inferred from the post content)
+2. Text overlays: The provided overlay text should appear PROMINENTLY rendered on the image as readable headline text
+3. CTA button: If a CTA text is provided, include a styled button/banner with that text
+4. Style matching the selected visual style
+5. Brand-appropriate colors and professional typography
+
+CRITICAL RULES:
+- The overlay text and CTA MUST be part of the image as visible, readable text
+- Use bold, large, high-contrast typography for the overlay text
+- The CTA should look like a clickable button or banner at the bottom
+- Ensure text is legible against the background
+- Match the aspect ratio requested
+
 Return JSON: {
-  "prompt": "Detailed image generation prompt",
+  "prompt": "Ultra detailed image generation prompt that explicitly describes text placement, typography, and CTA button styling on the image",
   "style": "photograph|illustration|infographic|quote-card",
-  "aspect_ratio": "1:1|16:9|9:16|4:5",
+  "aspect_ratio": "the requested ratio",
   "color_palette": ["#hex1", "#hex2"]
 }`,
 
