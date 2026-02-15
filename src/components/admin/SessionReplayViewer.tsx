@@ -25,6 +25,8 @@ export function SessionReplayViewer({ recordingPath, leadName }: SessionReplayVi
   const timerRef = useRef<number>();
 
   const loadRecording = useCallback(async () => {
+    if (!containerRef.current) return;
+    
     try {
       setLoading(true);
       setError(null);
@@ -43,36 +45,18 @@ export function SessionReplayViewer({ recordingPath, leadName }: SessionReplayVi
         return;
       }
 
-      // Dynamically import rrweb's Replayer to avoid SSR issues
       const rrwebModule = await import('rrweb');
       const Replayer = rrwebModule.Replayer;
 
-      // Clear previous replayer
       if (replayerRef.current) {
         try { replayerRef.current.destroy(); } catch (_) {}
       }
 
-      // Wait for container to be available in the DOM
-      await new Promise<void>((resolve) => {
-        const check = () => {
-          if (containerRef.current) {
-            resolve();
-          } else {
-            requestAnimationFrame(check);
-          }
-        };
-        check();
-      });
-
       const container = containerRef.current!;
       container.innerHTML = '';
 
-      // Create a wrapper div for rrweb to attach to
-      const wrapper = document.createElement('div');
-      container.appendChild(wrapper);
-
       const replayer = new Replayer(events, {
-        root: wrapper,
+        root: container,
         skipInactive: true,
         showWarning: false,
         showDebug: false,
@@ -85,7 +69,6 @@ export function SessionReplayViewer({ recordingPath, leadName }: SessionReplayVi
       const meta = replayer.getMetaData();
       setDuration(meta.totalTime);
 
-      // Listen for finish
       replayer.on('finish', () => {
         setPlaying(false);
         if (timerRef.current) clearInterval(timerRef.current);
@@ -99,11 +82,19 @@ export function SessionReplayViewer({ recordingPath, leadName }: SessionReplayVi
     }
   }, [recordingPath]);
 
+  // Use a separate effect to wait for mount before loading
+  const mountedRef = useRef(false);
   useEffect(() => {
-    loadRecording();
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      // Defer to next frame so containerRef is populated
+      requestAnimationFrame(() => {
+        loadRecording();
+      });
+    }
     return () => {
       if (replayerRef.current) {
-        replayerRef.current.destroy();
+        try { replayerRef.current.destroy(); } catch (_) {}
       }
       if (timerRef.current) clearInterval(timerRef.current);
     };
@@ -165,28 +156,6 @@ export function SessionReplayViewer({ recordingPath, leadName }: SessionReplayVi
     return `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          <span className="ml-3 text-muted-foreground">Loading session recording...</span>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-12 text-destructive">
-          <AlertCircle className="h-6 w-6 mr-2" />
-          <span>{error}</span>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Card className={fullscreen ? 'fixed inset-4 z-50 flex flex-col' : ''}>
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
@@ -195,48 +164,60 @@ export function SessionReplayViewer({ recordingPath, leadName }: SessionReplayVi
           Session Recording {leadName && `- ${leadName}`}
         </CardTitle>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="font-mono">{formatTime(duration)}</Badge>
+          {!loading && <Badge variant="outline" className="font-mono">{formatTime(duration)}</Badge>}
           <Button variant="ghost" size="icon" onClick={() => setFullscreen(!fullscreen)}>
             {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </Button>
         </div>
       </CardHeader>
       <CardContent className={fullscreen ? 'flex-1 flex flex-col' : ''}>
-        {/* Replay container */}
+        {/* Replay container - always rendered so ref is available */}
         <div
           ref={containerRef}
-          className={`bg-muted rounded-lg overflow-hidden border ${fullscreen ? 'flex-1' : 'h-[400px]'}`}
-          style={{ position: 'relative' }}
+          className={`bg-muted rounded-lg overflow-hidden border relative ${fullscreen ? 'flex-1' : 'h-[400px]'} ${loading || error ? '' : ''}`}
         >
-          {/* rrweb Replayer renders an iframe here */}
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-muted z-10">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <span className="ml-3 text-muted-foreground">Loading session recording...</span>
+            </div>
+          )}
+          {error && (
+            <div className="absolute inset-0 flex items-center justify-center bg-muted z-10 text-destructive">
+              <AlertCircle className="h-6 w-6 mr-2" />
+              <span>{error}</span>
+            </div>
+          )}
         </div>
 
         {/* Controls */}
-        <div className="mt-3 space-y-2">
-          <Slider
-            value={[progress]}
-            max={duration}
-            step={100}
-            onValueChange={handleSeek}
-            className="w-full"
-          />
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={handlePlay}>
-                {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-              </Button>
-              <Button variant="outline" size="icon" onClick={handleRestart}>
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleSpeedChange}>
-                {speed}x
-              </Button>
+        {!loading && !error && (
+          <div className="mt-3 space-y-2">
+            <Slider
+              value={[progress]}
+              max={duration}
+              step={100}
+              onValueChange={handleSeek}
+              className="w-full"
+            />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" onClick={handlePlay}>
+                  {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                </Button>
+                <Button variant="outline" size="icon" onClick={handleRestart}>
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleSpeedChange}>
+                  {speed}x
+                </Button>
+              </div>
+              <span className="text-sm text-muted-foreground font-mono">
+                {formatTime(progress)} / {formatTime(duration)}
+              </span>
             </div>
-            <span className="text-sm text-muted-foreground font-mono">
-              {formatTime(progress)} / {formatTime(duration)}
-            </span>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );
