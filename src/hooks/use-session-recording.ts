@@ -1,6 +1,5 @@
 import { useRef, useCallback, useEffect } from 'react';
-import { record } from 'rrweb';
-import type { eventWithTime } from '@rrweb/types';
+import { record, type eventWithTime } from 'rrweb';
 import { supabase } from '@/integrations/supabase/client';
 
 interface UseSessionRecordingReturn {
