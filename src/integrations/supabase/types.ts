@@ -44,6 +44,114 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_feedback: {
+        Row: {
+          action_type: string
+          campaign_id: string | null
+          created_at: string
+          feedback_text: string | null
+          firm_id: string
+          id: string
+          outcome_metrics: Json | null
+          rating: string | null
+          recommendation: Json | null
+          was_applied: boolean | null
+        }
+        Insert: {
+          action_type: string
+          campaign_id?: string | null
+          created_at?: string
+          feedback_text?: string | null
+          firm_id: string
+          id?: string
+          outcome_metrics?: Json | null
+          rating?: string | null
+          recommendation?: Json | null
+          was_applied?: boolean | null
+        }
+        Update: {
+          action_type?: string
+          campaign_id?: string | null
+          created_at?: string
+          feedback_text?: string | null
+          firm_id?: string
+          id?: string
+          outcome_metrics?: Json | null
+          rating?: string | null
+          recommendation?: Json | null
+          was_applied?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_feedback_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "meta_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_feedback_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_performance_snapshots: {
+        Row: {
+          ai_action_applied: string | null
+          campaign_id: string | null
+          captured_at: string
+          created_at: string
+          firm_id: string
+          id: string
+          metrics: Json
+          snapshot_type: string
+          target_states: string[] | null
+          tort_type: string | null
+        }
+        Insert: {
+          ai_action_applied?: string | null
+          campaign_id?: string | null
+          captured_at?: string
+          created_at?: string
+          firm_id: string
+          id?: string
+          metrics: Json
+          snapshot_type: string
+          target_states?: string[] | null
+          tort_type?: string | null
+        }
+        Update: {
+          ai_action_applied?: string | null
+          campaign_id?: string | null
+          captured_at?: string
+          created_at?: string
+          firm_id?: string
+          id?: string
+          metrics?: Json
+          snapshot_type?: string
+          target_states?: string[] | null
+          tort_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_performance_snapshots_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "meta_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_performance_snapshots_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -76,6 +184,121 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      autopilot_logs: {
+        Row: {
+          action_taken: string
+          ai_reasoning: string | null
+          campaign_id: string | null
+          created_at: string
+          details: Json | null
+          firm_id: string
+          id: string
+          rule_id: string
+        }
+        Insert: {
+          action_taken: string
+          ai_reasoning?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          details?: Json | null
+          firm_id: string
+          id?: string
+          rule_id: string
+        }
+        Update: {
+          action_taken?: string
+          ai_reasoning?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          details?: Json | null
+          firm_id?: string
+          id?: string
+          rule_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autopilot_logs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "meta_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "autopilot_logs_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "autopilot_logs_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "autopilot_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      autopilot_rules: {
+        Row: {
+          actions: Json
+          campaign_id: string | null
+          conditions: Json
+          created_at: string
+          firm_id: string
+          id: string
+          is_active: boolean | null
+          last_triggered_at: string | null
+          name: string
+          rule_type: string
+          trigger_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          actions: Json
+          campaign_id?: string | null
+          conditions: Json
+          created_at?: string
+          firm_id: string
+          id?: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          name: string
+          rule_type: string
+          trigger_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          actions?: Json
+          campaign_id?: string | null
+          conditions?: Json
+          created_at?: string
+          firm_id?: string
+          id?: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          name?: string
+          rule_type?: string
+          trigger_count?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autopilot_rules_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "meta_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "autopilot_rules_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       budget_reallocation_logs: {
         Row: {
@@ -1497,6 +1720,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "social_posts_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tort_types: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          firm_id: string | null
+          id: string
+          is_active: boolean | null
+          is_system: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          firm_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_system?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          firm_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_system?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tort_types_firm_id_fkey"
             columns: ["firm_id"]
             isOneToOne: false
             referencedRelation: "firms"

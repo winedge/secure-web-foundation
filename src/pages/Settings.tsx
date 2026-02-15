@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Save, Building, User, Bell, Shield, Link2, Facebook, Instagram, Linkedin, Twitter, Video, CheckCircle, XCircle, Loader2, RefreshCw, ExternalLink } from 'lucide-react';
+import { Save, Building, User, Bell, Shield, Link2, Facebook, Instagram, Linkedin, Twitter, Video, CheckCircle, XCircle, Loader2, RefreshCw, ExternalLink, Scale } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import { useFirm } from '@/hooks/use-firm';
 import { supabase } from '@/integrations/supabase/client';
 import { usePlatformConnections, useConnectMetaPlatform, useExchangeMetaToken, useVerifyMetaConnection, useDisconnectPlatform } from '@/hooks/use-platform-connections';
 import { useSearchParams } from 'react-router-dom';
+import { TortTypeManager as TortTypeManagerComponent } from '@/components/admin/TortTypeManager';
 
 const profileSchema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters'),
@@ -164,15 +165,18 @@ export default function Settings() {
         </div>
 
         <Tabs defaultValue={defaultTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-xl grid-cols-3 sm:grid-cols-5">
+          <TabsList className="grid w-full max-w-2xl grid-cols-3 sm:grid-cols-6">
             <TabsTrigger value="profile" className="gap-1 sm:gap-2">
               <User className="h-4 w-4" />
-              <span className="hidden sm:inline">Profile</span>
-              <span className="sm:hidden">Profile</span>
+              <span>Profile</span>
             </TabsTrigger>
             <TabsTrigger value="firm" className="gap-1 sm:gap-2">
               <Building className="h-4 w-4" />
               <span>Firm</span>
+            </TabsTrigger>
+            <TabsTrigger value="tort-types" className="gap-1 sm:gap-2">
+              <Scale className="h-4 w-4" />
+              <span>Torts</span>
             </TabsTrigger>
             <TabsTrigger value="connections" className="gap-1 sm:gap-2">
               <Link2 className="h-4 w-4" />
@@ -478,6 +482,18 @@ export default function Settings() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="tort-types">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Scale className="h-5 w-5" />Tort Types</CardTitle>
+                <CardDescription>Manage tort types for your campaigns and lead tracking. Create custom torts specific to your practice.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TortTypeManagerComponent />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="notifications">

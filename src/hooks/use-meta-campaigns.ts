@@ -381,11 +381,12 @@ export function useMetaAiLogs(campaignId?: string) {
 // AI Assistant
 export function useMetaAiAssistant() {
   const { toast } = useToast();
+  const { data: firm } = useFirm();
 
   return useMutation({
     mutationFn: async ({ action, context }: { action: string; context: any }) => {
       const { data, error } = await supabase.functions.invoke('meta-ai-assistant', {
-        body: { action, context },
+        body: { action, context, firm_id: firm?.id },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

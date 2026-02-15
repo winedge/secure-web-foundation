@@ -6,8 +6,9 @@ import { MetaAdSetsPanel } from '@/components/meta-ads/MetaAdSetsPanel';
 import { MetaAdsPanel } from '@/components/meta-ads/MetaAdsPanel';
 import { MetaAnalyticsPanel } from '@/components/meta-ads/MetaAnalyticsPanel';
 import { MetaAiPanel } from '@/components/meta-ads/MetaAiPanel';
+import { AutopilotPanel } from '@/components/meta-ads/AutopilotPanel';
 import { UpgradeGate } from '@/components/subscription/UpgradeGate';
-import { LayoutDashboard, Target, Megaphone, BarChart3, Bot } from 'lucide-react';
+import { LayoutDashboard, Target, Megaphone, BarChart3, Bot, Zap } from 'lucide-react';
 
 export default function MetaAds() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
@@ -30,7 +31,7 @@ export default function MetaAds() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 h-auto">
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 h-auto">
               <TabsTrigger value="campaigns" className="gap-1.5 text-xs sm:text-sm py-2">
                 <LayoutDashboard className="h-4 w-4 hidden sm:block" />
                 Campaigns
@@ -47,9 +48,13 @@ export default function MetaAds() {
                 <BarChart3 className="h-4 w-4 hidden sm:block" />
                 Analytics
               </TabsTrigger>
-              <TabsTrigger value="ai" className="gap-1.5 text-xs sm:text-sm py-2 col-span-3 sm:col-span-1">
+              <TabsTrigger value="ai" className="gap-1.5 text-xs sm:text-sm py-2">
                 <Bot className="h-4 w-4 hidden sm:block" />
-                AI Autopilot
+                AI Brain
+              </TabsTrigger>
+              <TabsTrigger value="autopilot" className="gap-1.5 text-xs sm:text-sm py-2">
+                <Zap className="h-4 w-4 hidden sm:block" />
+                Autopilot
               </TabsTrigger>
             </TabsList>
 
@@ -92,6 +97,10 @@ export default function MetaAds() {
                   setActiveTab('campaigns');
                 }}
               />
+            </TabsContent>
+
+            <TabsContent value="autopilot">
+              <AutopilotPanel campaignId={selectedCampaignId} />
             </TabsContent>
           </Tabs>
         </div>

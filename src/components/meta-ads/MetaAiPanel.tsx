@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMetaAiAssistant, useCreateMetaCampaign, useCreateMetaAdSet, useCreateMetaAd, useMetaCampaigns, useMetaAiLogs } from '@/hooks/use-meta-campaigns';
 import { useFirm } from '@/hooks/use-firm';
+import { useTortTypes } from '@/hooks/use-tort-types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AiFeedbackButtons } from './AiFeedbackButtons';
 import {
   Bot, Sparkles, Loader2, Rocket, Target, Lightbulb, TrendingUp,
   CheckCircle2, Clock, Search, Building2, Zap, BarChart3, Eye, Shield,
@@ -27,6 +29,7 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
   const { data: firm } = useFirm();
   const { data: campaigns } = useMetaCampaigns();
   const { data: aiLogs } = useMetaAiLogs(campaignId || undefined);
+  const { data: tortTypes } = useTortTypes();
   const aiAssistant = useMetaAiAssistant();
   const createCampaign = useCreateMetaCampaign();
   const createAdSet = useCreateMetaAdSet();
@@ -199,7 +202,14 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div><Label>Tort Type</Label><Input value={tortType} onChange={e => setTortType(e.target.value)} placeholder="e.g. Camp Lejeune, Roundup" /></div>
+            <div><Label>Tort Type</Label>
+              <Select value={tortType} onValueChange={setTortType}>
+                <SelectTrigger><SelectValue placeholder="Select tort type" /></SelectTrigger>
+                <SelectContent>
+                  {(tortTypes || []).map(t => <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             <div><Label>Target States</Label><Input value={targetStates} onChange={e => setTargetStates(e.target.value)} placeholder="FL, TX, CA" /></div>
             <div><Label>Daily Budget ($)</Label><Input type="number" value={budget} onChange={e => setBudget(e.target.value)} /></div>
           </div>
@@ -261,15 +271,20 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
                         ))}
                       </div>
                     )}
+                   </div>
+                  <div className="flex items-center justify-between">
+                    <Button onClick={handleApplyStrategy} className="gap-2" disabled={createCampaign.isPending}>
+                      <CheckCircle2 className="h-4 w-4" />Apply Strategy & Create Campaign
+                    </Button>
+                    <AiFeedbackButtons actionType="generate_campaign" recommendation={aiResult} campaignId={campaignId || undefined} wasApplied={false} />
                   </div>
-                  <Button onClick={handleApplyStrategy} className="gap-2" disabled={createCampaign.isPending}>
-                    <CheckCircle2 className="h-4 w-4" />Apply Strategy & Create Campaign
-                  </Button>
                 </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
+
+
 
         {/* Competitor Analysis Tab */}
         <TabsContent value="competitor" className="mt-4">
