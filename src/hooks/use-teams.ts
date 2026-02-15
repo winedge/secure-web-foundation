@@ -12,7 +12,13 @@ export type TeamPermission =
   | 'view_settings' | 'manage_settings'
   | 'view_meta_ads' | 'manage_meta_ads'
   | 'view_social' | 'manage_social'
-  | 'manage_team';
+  | 'manage_team'
+  // Granular data visibility permissions
+  | 'view_lead_contact_info'
+  | 'view_lead_case_details'
+  | 'view_lead_financials'
+  | 'view_session_logs'
+  | 'view_session_recordings';
 
 export const PERMISSION_LABELS: Record<TeamPermission, string> = {
   view_leads: 'View Leads',
@@ -30,10 +36,25 @@ export const PERMISSION_LABELS: Record<TeamPermission, string> = {
   view_social: 'View Social',
   manage_social: 'Manage Social',
   manage_team: 'Manage Team',
+  view_lead_contact_info: 'View Contact Info',
+  view_lead_case_details: 'View Case Details',
+  view_lead_financials: 'View Financial Info',
+  view_session_logs: 'View Session Logs',
+  view_session_recordings: 'View Session Recordings',
 };
 
 export const PERMISSION_GROUPS = [
   { label: 'Leads', permissions: ['view_leads', 'manage_leads'] as TeamPermission[] },
+  {
+    label: 'Lead Data Visibility',
+    description: 'Control what lead information team members can see',
+    permissions: ['view_lead_contact_info', 'view_lead_case_details', 'view_lead_financials'] as TeamPermission[],
+  },
+  {
+    label: 'Session Data',
+    description: 'Control access to session logs and recordings',
+    permissions: ['view_session_logs', 'view_session_recordings'] as TeamPermission[],
+  },
   { label: 'Campaigns', permissions: ['view_campaigns', 'manage_campaigns'] as TeamPermission[] },
   { label: 'Reports', permissions: ['view_reports', 'manage_reports'] as TeamPermission[] },
   { label: 'Wallet', permissions: ['view_wallet', 'manage_wallet'] as TeamPermission[] },

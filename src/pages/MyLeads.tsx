@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { usePurchasedLeads, useLeadSources, useUpdatePipelineStage } from '@/hooks/use-leads';
 import { useLeadNotes, useCreateNote, useDeleteNote, useTogglePinNote } from '@/hooks/use-lead-notes';
+import { useTeamPermissions } from '@/hooks/use-team-permissions';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PipelineStageCards, PipelineStage } from '@/components/leads/PipelineStageCards';
 import { LeadPipelineTable } from '@/components/leads/LeadPipelineTable';
@@ -25,7 +26,7 @@ import { exportLeadsToCSV } from '@/lib/export-utils';
 import { 
   User, Mail, Phone, MapPin, FileText, Calendar,
   Search, Download, Eye, CheckCircle, Shield, Clock,
-  Pin, Trash2, Plus, X, Video, Brain, Scale, Upload, Users, Gavel
+  Pin, Trash2, Plus, X, Video, Brain, Scale, Upload, Users, Gavel, Lock
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -107,6 +108,160 @@ function LeadNotesPanel({ leadId }: { leadId: string }) {
         </div>
       )}
     </div>
+  );
+}
+
+function PermissionRestricted({ fallbackMessage }: { fallbackMessage?: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+      <Lock className="h-8 w-8 mb-2 opacity-50" />
+      <p className="font-medium">{fallbackMessage || 'Restricted'}</p>
+      <p className="text-sm mt-1">You don't have permission to view this information. Contact your team admin.</p>
+    </div>
+  );
+}
+
+function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
+  const { hasPermission } = useTeamPermissions();
+  const canViewContact = hasPermission('view_lead_contact_info');
+  const canViewCase = hasPermission('view_lead_case_details');
+  const canViewFinancials = hasPermission('view_lead_financials');
+  const canViewSessionLogs = hasPermission('view_session_logs');
+  const canViewRecordings = hasPermission('view_session_recordings');
+
+  return (
+    <Tabs defaultValue="details" className="mt-4">
+      <TabsList className="grid w-full grid-cols-3 sm:grid-cols-9">
+        <TabsTrigger value="details">Details</TabsTrigger>
+        <TabsTrigger value="ai-score"><Brain className="h-4 w-4 mr-1" />AI Score</TabsTrigger>
+        <TabsTrigger value="case-eval"><Scale className="h-4 w-4 mr-1" />Case Eval</TabsTrigger>
+        <TabsTrigger value="settlement"><Gavel className="h-4 w-4 mr-1" />Settlement</TabsTrigger>
+        <TabsTrigger value="documents"><Upload className="h-4 w-4 mr-1" />Docs</TabsTrigger>
+        <TabsTrigger value="war-room"><Users className="h-4 w-4 mr-1" />War Room</TabsTrigger>
+        {canViewSessionLogs && <TabsTrigger value="session"><Video className="h-4 w-4 mr-1" />Session</TabsTrigger>}
+        <TabsTrigger value="journey"><Clock className="h-4 w-4 mr-1" />Journey</TabsTrigger>
+        <TabsTrigger value="notes"><FileText className="h-4 w-4 mr-1" />Notes</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="details" className="mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {canViewContact ? (
+            <div className="space-y-4">
+              <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Contact Information</h4>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /><span>{detailLead.email}</span></div>
+                <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /><span>{detailLead.phone}</span></div>
+                <div className="flex items-start gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                  <div><p>{detailLead.address}</p><p>{detailLead.city}, {detailLead.state} {detailLead.zip_code}</p></div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Contact Information</h4>
+              <div className="flex items-center gap-2 p-4 rounded-lg bg-muted/50 text-muted-foreground">
+                <Lock className="h-4 w-4" />
+                <span className="text-sm">Contact info restricted by team permissions</span>
+              </div>
+            </div>
+          )}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Case Information</h4>
+            <div className="space-y-2">
+              <div className="flex justify-between"><span className="text-muted-foreground">Tort Type</span><span className="font-medium">{detailLead.tort_type}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Age Bucket</span><span className="font-medium">{detailLead.age_bucket || 'N/A'}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Tier</span><TierBadge tier={detailLead.tier} /></div>
+              <div className="flex justify-between items-center"><span className="text-muted-foreground">Quality Score</span><ScoreIndicator score={detailLead.ai_quality_score || 0} size="sm" /></div>
+              <div className="flex justify-between items-center"><span className="text-muted-foreground">Fraud Risk</span><ScoreIndicator score={100 - (detailLead.fraud_risk_score || 0)} size="sm" /></div>
+            </div>
+          </div>
+          {canViewCase ? (
+            <>
+              {detailLead.diagnosis_details && (
+                <div className="md:col-span-2 space-y-2">
+                  <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Diagnosis Details</h4>
+                  <p className="text-sm bg-muted/50 p-3 rounded-lg">{detailLead.diagnosis_details}</p>
+                </div>
+              )}
+              {detailLead.exposure_details && (
+                <div className="md:col-span-2 space-y-2">
+                  <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Exposure Details</h4>
+                  <p className="text-sm bg-muted/50 p-3 rounded-lg">{detailLead.exposure_details}</p>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="md:col-span-2">
+              <div className="flex items-center gap-2 p-4 rounded-lg bg-muted/50 text-muted-foreground">
+                <Lock className="h-4 w-4" />
+                <span className="text-sm">Case details restricted by team permissions</span>
+              </div>
+            </div>
+          )}
+          {canViewFinancials ? (
+            <div className="md:col-span-2 space-y-2 border-t pt-4">
+              <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Purchase Information</h4>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Amount Paid</span>
+                <span className="font-bold text-primary">{formatCurrency(Number(detailLead.purchaseInfo?.amount || 0))}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Purchased On</span>
+                <span className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  {detailLead.purchaseInfo?.purchased_at ? format(new Date(detailLead.purchaseInfo.purchased_at), 'MMM d, yyyy') : 'N/A'}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="md:col-span-2 border-t pt-4">
+              <div className="flex items-center gap-2 p-4 rounded-lg bg-muted/50 text-muted-foreground">
+                <Lock className="h-4 w-4" />
+                <span className="text-sm">Financial info restricted by team permissions</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </TabsContent>
+
+      <TabsContent value="ai-score" className="mt-4">
+        <AiScoringPanel leadId={detailLead.id} />
+      </TabsContent>
+
+      <TabsContent value="case-eval" className="mt-4">
+        {canViewCase ? <AiCaseEvaluatorPanel leadId={detailLead.id} /> : <PermissionRestricted fallbackMessage="Case Evaluation Restricted" />}
+      </TabsContent>
+
+      <TabsContent value="settlement" className="mt-4">
+        {canViewFinancials ? <SettlementPredictorPanel leadId={detailLead.id} /> : <PermissionRestricted fallbackMessage="Settlement Data Restricted" />}
+      </TabsContent>
+
+      <TabsContent value="documents" className="mt-4">
+        <DocumentAnalyzerPanel leadId={detailLead.id} />
+      </TabsContent>
+
+      <TabsContent value="war-room" className="mt-4">
+        <WarRoomPanel leadId={detailLead.id} />
+      </TabsContent>
+
+      {canViewSessionLogs && (
+        <TabsContent value="session" className="mt-4">
+          <SessionAnalytics
+            metadata={detailLead.metadata}
+            sessionRecordingUrl={canViewRecordings ? detailLead.session_recording_url : null}
+          />
+        </TabsContent>
+      )}
+
+      <TabsContent value="journey" className="mt-4">
+        <ContactJourneyTimeline leadId={detailLead.id} />
+      </TabsContent>
+
+      <TabsContent value="notes" className="mt-4">
+        <LeadNotesPanel leadId={detailLead.id} />
+      </TabsContent>
+    </Tabs>
   );
 }
 
@@ -240,103 +395,7 @@ export default function MyLeads() {
                 </DialogTitle>
               </DialogHeader>
 
-              <Tabs defaultValue="details" className="mt-4">
-                <TabsList className="grid w-full grid-cols-3 sm:grid-cols-9">
-                  <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="ai-score"><Brain className="h-4 w-4 mr-1" />AI Score</TabsTrigger>
-                  <TabsTrigger value="case-eval"><Scale className="h-4 w-4 mr-1" />Case Eval</TabsTrigger>
-                  <TabsTrigger value="settlement"><Gavel className="h-4 w-4 mr-1" />Settlement</TabsTrigger>
-                  <TabsTrigger value="documents"><Upload className="h-4 w-4 mr-1" />Docs</TabsTrigger>
-                  <TabsTrigger value="war-room"><Users className="h-4 w-4 mr-1" />War Room</TabsTrigger>
-                  <TabsTrigger value="session"><Video className="h-4 w-4 mr-1" />Session</TabsTrigger>
-                  <TabsTrigger value="journey"><Clock className="h-4 w-4 mr-1" />Journey</TabsTrigger>
-                  <TabsTrigger value="notes"><FileText className="h-4 w-4 mr-1" />Notes</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="details" className="mt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Contact Information</h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /><span>{detailLead.email}</span></div>
-                        <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /><span>{detailLead.phone}</span></div>
-                        <div className="flex items-start gap-2">
-                          <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                          <div><p>{detailLead.address}</p><p>{detailLead.city}, {detailLead.state} {detailLead.zip_code}</p></div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Case Information</h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between"><span className="text-muted-foreground">Tort Type</span><span className="font-medium">{detailLead.tort_type}</span></div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">Age Bucket</span><span className="font-medium">{detailLead.age_bucket || 'N/A'}</span></div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">Tier</span><TierBadge tier={detailLead.tier} /></div>
-                        <div className="flex justify-between items-center"><span className="text-muted-foreground">Quality Score</span><ScoreIndicator score={detailLead.ai_quality_score || 0} size="sm" /></div>
-                        <div className="flex justify-between items-center"><span className="text-muted-foreground">Fraud Risk</span><ScoreIndicator score={100 - (detailLead.fraud_risk_score || 0)} size="sm" /></div>
-                      </div>
-                    </div>
-                    {detailLead.diagnosis_details && (
-                      <div className="md:col-span-2 space-y-2">
-                        <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Diagnosis Details</h4>
-                        <p className="text-sm bg-muted/50 p-3 rounded-lg">{detailLead.diagnosis_details}</p>
-                      </div>
-                    )}
-                    {detailLead.exposure_details && (
-                      <div className="md:col-span-2 space-y-2">
-                        <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Exposure Details</h4>
-                        <p className="text-sm bg-muted/50 p-3 rounded-lg">{detailLead.exposure_details}</p>
-                      </div>
-                    )}
-                    <div className="md:col-span-2 space-y-2 border-t pt-4">
-                      <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Purchase Information</h4>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Amount Paid</span>
-                        <span className="font-bold text-primary">{formatCurrency(Number(detailLead.purchaseInfo?.amount || 0))}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Purchased On</span>
-                        <span className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          {detailLead.purchaseInfo?.purchased_at ? format(new Date(detailLead.purchaseInfo.purchased_at), 'MMM d, yyyy') : 'N/A'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="ai-score" className="mt-4">
-                  <AiScoringPanel leadId={detailLead.id} />
-                </TabsContent>
-
-                <TabsContent value="case-eval" className="mt-4">
-                  <AiCaseEvaluatorPanel leadId={detailLead.id} />
-                </TabsContent>
-
-                <TabsContent value="settlement" className="mt-4">
-                  <SettlementPredictorPanel leadId={detailLead.id} />
-                </TabsContent>
-
-                <TabsContent value="documents" className="mt-4">
-                  <DocumentAnalyzerPanel leadId={detailLead.id} />
-                </TabsContent>
-
-                <TabsContent value="war-room" className="mt-4">
-                  <WarRoomPanel leadId={detailLead.id} />
-                </TabsContent>
-
-                <TabsContent value="session" className="mt-4">
-                  <SessionAnalytics metadata={detailLead.metadata} sessionRecordingUrl={detailLead.session_recording_url} />
-                </TabsContent>
-
-                <TabsContent value="journey" className="mt-4">
-                  <ContactJourneyTimeline leadId={detailLead.id} />
-                </TabsContent>
-
-                <TabsContent value="notes" className="mt-4">
-                  <LeadNotesPanel leadId={detailLead.id} />
-                </TabsContent>
-              </Tabs>
+              <LeadDetailWithPermissions detailLead={detailLead} />
             </DialogContent>
           )}
         </Dialog>
