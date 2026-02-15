@@ -8,6 +8,8 @@ import { PipelineStageCards, PipelineStage } from '@/components/leads/PipelineSt
 import { LeadPipelineTable } from '@/components/leads/LeadPipelineTable';
 import { ContactJourneyTimeline } from '@/components/leads/ContactJourneyTimeline';
 import { SessionAnalytics } from '@/components/leads/SessionAnalytics';
+import { AiScoringPanel } from '@/components/leads/AiScoringPanel';
+import { AiCaseEvaluatorPanel } from '@/components/leads/AiCaseEvaluatorPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,7 +22,7 @@ import { exportLeadsToCSV } from '@/lib/export-utils';
 import { 
   User, Mail, Phone, MapPin, FileText, Calendar,
   Search, Download, Eye, CheckCircle, Shield, Clock,
-  Pin, Trash2, Plus, X, Video
+  Pin, Trash2, Plus, X, Video, Brain, Scale
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -236,11 +238,13 @@ export default function MyLeads() {
               </DialogHeader>
 
               <Tabs defaultValue="details" className="mt-4">
-                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+                <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
                   <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="session"><Video className="h-4 w-4 mr-2" />Session</TabsTrigger>
-                  <TabsTrigger value="journey"><Clock className="h-4 w-4 mr-2" />Journey</TabsTrigger>
-                  <TabsTrigger value="notes"><FileText className="h-4 w-4 mr-2" />Notes</TabsTrigger>
+                  <TabsTrigger value="ai-score"><Brain className="h-4 w-4 mr-1" />AI Score</TabsTrigger>
+                  <TabsTrigger value="case-eval"><Scale className="h-4 w-4 mr-1" />Case Eval</TabsTrigger>
+                  <TabsTrigger value="session"><Video className="h-4 w-4 mr-1" />Session</TabsTrigger>
+                  <TabsTrigger value="journey"><Clock className="h-4 w-4 mr-1" />Journey</TabsTrigger>
+                  <TabsTrigger value="notes"><FileText className="h-4 w-4 mr-1" />Notes</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="details" className="mt-4">
@@ -293,6 +297,14 @@ export default function MyLeads() {
                       </div>
                     </div>
                   </div>
+                </TabsContent>
+
+                <TabsContent value="ai-score" className="mt-4">
+                  <AiScoringPanel leadId={detailLead.id} />
+                </TabsContent>
+
+                <TabsContent value="case-eval" className="mt-4">
+                  <AiCaseEvaluatorPanel leadId={detailLead.id} />
                 </TabsContent>
 
                 <TabsContent value="session" className="mt-4">

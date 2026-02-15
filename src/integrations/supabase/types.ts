@@ -44,6 +44,85 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_case_evaluations: {
+        Row: {
+          created_at: string
+          evaluated_at: string
+          evaluation_details: Json | null
+          firm_id: string
+          id: string
+          jurisdiction_notes: string | null
+          lead_id: string
+          model_version: string | null
+          recommendations: string[] | null
+          settlement_estimate_high: number | null
+          settlement_estimate_low: number | null
+          similar_cases_summary: string | null
+          statute_of_limitations: string | null
+          strengths: string[] | null
+          viability_score: number
+          weaknesses: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          evaluated_at?: string
+          evaluation_details?: Json | null
+          firm_id: string
+          id?: string
+          jurisdiction_notes?: string | null
+          lead_id: string
+          model_version?: string | null
+          recommendations?: string[] | null
+          settlement_estimate_high?: number | null
+          settlement_estimate_low?: number | null
+          similar_cases_summary?: string | null
+          statute_of_limitations?: string | null
+          strengths?: string[] | null
+          viability_score?: number
+          weaknesses?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          evaluated_at?: string
+          evaluation_details?: Json | null
+          firm_id?: string
+          id?: string
+          jurisdiction_notes?: string | null
+          lead_id?: string
+          model_version?: string | null
+          recommendations?: string[] | null
+          settlement_estimate_high?: number | null
+          settlement_estimate_low?: number | null
+          similar_cases_summary?: string | null
+          statute_of_limitations?: string | null
+          strengths?: string[] | null
+          viability_score?: number
+          weaknesses?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_case_evaluations_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_case_evaluations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_case_evaluations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_feedback: {
         Row: {
           action_type: string
@@ -94,6 +173,70 @@ export type Database = {
             columns: ["firm_id"]
             isOneToOne: false
             referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_lead_scores: {
+        Row: {
+          conversion_probability: number
+          created_at: string
+          firm_id: string
+          id: string
+          lead_id: string
+          model_version: string | null
+          optimal_contact_time: string | null
+          predicted_value: number | null
+          recommended_action: string | null
+          scored_at: string
+          scoring_factors: Json | null
+        }
+        Insert: {
+          conversion_probability?: number
+          created_at?: string
+          firm_id: string
+          id?: string
+          lead_id: string
+          model_version?: string | null
+          optimal_contact_time?: string | null
+          predicted_value?: number | null
+          recommended_action?: string | null
+          scored_at?: string
+          scoring_factors?: Json | null
+        }
+        Update: {
+          conversion_probability?: number
+          created_at?: string
+          firm_id?: string
+          id?: string
+          lead_id?: string
+          model_version?: string | null
+          optimal_contact_time?: string | null
+          predicted_value?: number | null
+          recommended_action?: string | null
+          scored_at?: string
+          scoring_factors?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_lead_scores_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_lead_scores_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_lead_scores_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
             referencedColumns: ["id"]
           },
         ]
@@ -1742,6 +1885,91 @@ export type Database = {
           },
         ]
       }
+      team_members: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          invited_by: string
+          permissions: Database["public"]["Enums"]["team_permission"][]
+          team_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          invited_by: string
+          permissions?: Database["public"]["Enums"]["team_permission"][]
+          team_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          invited_by?: string
+          permissions?: Database["public"]["Enums"]["team_permission"][]
+          team_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          firm_id: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          firm_id: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          firm_id?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tort_types: {
         Row: {
           category: string | null
@@ -1989,6 +2217,22 @@ export type Database = {
       lead_status: "available" | "purchased" | "expired" | "flagged"
       lead_tier: "A" | "B" | "C" | "D"
       subscription_plan: "basic" | "premium"
+      team_permission:
+        | "view_leads"
+        | "manage_leads"
+        | "view_campaigns"
+        | "manage_campaigns"
+        | "view_reports"
+        | "manage_reports"
+        | "view_wallet"
+        | "manage_wallet"
+        | "view_settings"
+        | "manage_settings"
+        | "view_meta_ads"
+        | "manage_meta_ads"
+        | "view_social"
+        | "manage_social"
+        | "manage_team"
       touchpoint_type:
         | "call"
         | "email"
@@ -2148,6 +2392,23 @@ export const Constants = {
       lead_status: ["available", "purchased", "expired", "flagged"],
       lead_tier: ["A", "B", "C", "D"],
       subscription_plan: ["basic", "premium"],
+      team_permission: [
+        "view_leads",
+        "manage_leads",
+        "view_campaigns",
+        "manage_campaigns",
+        "view_reports",
+        "manage_reports",
+        "view_wallet",
+        "manage_wallet",
+        "view_settings",
+        "manage_settings",
+        "view_meta_ads",
+        "manage_meta_ads",
+        "view_social",
+        "manage_social",
+        "manage_team",
+      ],
       touchpoint_type: [
         "call",
         "email",
