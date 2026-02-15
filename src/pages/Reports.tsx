@@ -19,9 +19,10 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { TrendingUp, DollarSign, ShoppingCart, Target, Calendar, MapPin, BarChart3, Mail } from 'lucide-react';
+import { TrendingUp, DollarSign, ShoppingCart, Target, Calendar, MapPin, BarChart3, Mail, PieChart as PieChartIcon } from 'lucide-react';
 import { MetaDemographicReporting } from '@/components/reports/MetaDemographicReporting';
 import { ReportScheduleManager } from '@/components/reports/ReportScheduleManager';
+import { ROIPerformanceReport } from '@/components/reports/ROIPerformanceReport';
 
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 const TIER_COLORS = {
@@ -83,10 +84,14 @@ export default function Reports() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 h-auto">
+          <TabsList className="grid w-full grid-cols-4 h-auto">
             <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm py-2">
               <TrendingUp className="h-4 w-4 hidden sm:block" />
               Overview
+            </TabsTrigger>
+            <TabsTrigger value="roi" className="gap-1.5 text-xs sm:text-sm py-2">
+              <PieChartIcon className="h-4 w-4 hidden sm:block" />
+              ROI Report
             </TabsTrigger>
             <TabsTrigger value="meta" className="gap-1.5 text-xs sm:text-sm py-2">
               <BarChart3 className="h-4 w-4 hidden sm:block" />
@@ -394,6 +399,10 @@ export default function Reports() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="roi">
+            <ROIPerformanceReport />
           </TabsContent>
 
           <TabsContent value="meta">

@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.ai-case-evaluator]
 verify_jwt = false
+
+[functions.competitor-intelligence]
+verify_jwt = false
