@@ -91,7 +91,10 @@ export default function BrandedIntake() {
 
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [intakeMode, setIntakeMode] = useState<'chat' | 'form'>('chat');
+  const chatbotEnabled = (branding as any)?.chatbot_enabled ?? true;
+  const chatbotAgentName = (branding as any)?.chatbot_agent_name || 'AI Intake Assistant';
+  const chatbotAvatarUrl = (branding as any)?.chatbot_avatar_url || '';
+  const [intakeMode, setIntakeMode] = useState<'chat' | 'form'>(chatbotEnabled ? 'chat' : 'form');
   const recorderRef = useRef(new SessionRecorder());
   const clientInfoRef = useRef<ClientNetworkInfo | null>(null);
 
@@ -394,7 +397,8 @@ export default function BrandedIntake() {
             </div>
           </div>
 
-          {/* Mode Toggle */}
+          {/* Mode Toggle — only show if chatbot is enabled */}
+          {chatbotEnabled && (
           <div className="flex justify-center gap-2 mb-8">
             <Button
               variant={intakeMode === 'chat' ? 'default' : 'outline'}
@@ -417,8 +421,9 @@ export default function BrandedIntake() {
               Fill Out Form
             </Button>
           </div>
+          )}
 
-          {intakeMode === 'chat' ? (
+          {intakeMode === 'chat' && chatbotEnabled ? (
             <ConversationalIntake
               campaignId={campaignId}
               branding={{
@@ -427,6 +432,8 @@ export default function BrandedIntake() {
                 accent_color: accentColor,
                 logo_url: logoUrl || undefined,
               }}
+              agentName={chatbotAgentName}
+              agentAvatarUrl={chatbotAvatarUrl}
               onComplete={() => setSubmitted(true)}
             />
           ) : (

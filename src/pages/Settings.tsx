@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Save, Building, User, Bell, Shield, Link2, Facebook, Instagram, Linkedin, Twitter, Video, CheckCircle, XCircle, Loader2, RefreshCw, ExternalLink, Scale } from 'lucide-react';
+import { Save, Building, User, Bell, Shield, Link2, Facebook, Instagram, Linkedin, Twitter, Video, CheckCircle, XCircle, Loader2, RefreshCw, ExternalLink, Scale, MessageCircle, Upload } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/auth-context';
 import { useFirm } from '@/hooks/use-firm';
 import { supabase } from '@/integrations/supabase/client';
+import { useFirmBranding, useUpsertBranding } from '@/hooks/use-firm-branding';
 import { usePlatformConnections, useConnectMetaPlatform, useExchangeMetaToken, useVerifyMetaConnection, useDisconnectPlatform } from '@/hooks/use-platform-connections';
 import { useSearchParams } from 'react-router-dom';
 import { TortTypeManager as TortTypeManagerComponent } from '@/components/admin/TortTypeManager';
@@ -41,6 +43,12 @@ export default function Settings() {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [searchParams] = useSearchParams();
+  const { data: brandingData } = useFirmBranding();
+  const upsertBranding = useUpsertBranding();
+  const [chatbotEnabled, setChatbotEnabled] = useState(true);
+  const [chatbotAgentName, setChatbotAgentName] = useState('AI Intake Assistant');
+  const [chatbotAvatarUrl, setChatbotAvatarUrl] = useState('');
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [notifications, setNotifications] = useState({
     emailNewLeads: true,
     emailPurchases: true,
@@ -49,7 +57,16 @@ export default function Settings() {
 
   // Determine default tab from URL
   const tabParam = searchParams.get('tab');
-  const defaultTab = tabParam === 'connections' ? 'connections' : 'profile';
+  const defaultTab = tabParam === 'connections' ? 'connections' : tabParam === 'chatbot' ? 'chatbot' : 'profile';
+
+  // Load chatbot settings from branding
+  useEffect(() => {
+    if (brandingData) {
+      setChatbotEnabled((brandingData as any).chatbot_enabled ?? true);
+      setChatbotAgentName((brandingData as any).chatbot_agent_name || 'AI Intake Assistant');
+      setChatbotAvatarUrl((brandingData as any).chatbot_avatar_url || '');
+    }
+  }, [brandingData]);
 
   // Handle Meta OAuth callback
   const { data: connections, isLoading: connectionsLoading } = usePlatformConnections();
@@ -165,7 +182,7 @@ export default function Settings() {
         </div>
 
         <Tabs defaultValue={defaultTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-3 sm:grid-cols-6">
+          <TabsList className="grid w-full max-w-3xl grid-cols-4 sm:grid-cols-7">
             <TabsTrigger value="profile" className="gap-1 sm:gap-2">
               <User className="h-4 w-4" />
               <span>Profile</span>
@@ -173,6 +190,10 @@ export default function Settings() {
             <TabsTrigger value="firm" className="gap-1 sm:gap-2">
               <Building className="h-4 w-4" />
               <span>Firm</span>
+            </TabsTrigger>
+            <TabsTrigger value="chatbot" className="gap-1 sm:gap-2">
+              <MessageCircle className="h-4 w-4" />
+              <span>Chatbot</span>
             </TabsTrigger>
             <TabsTrigger value="tort-types" className="gap-1 sm:gap-2">
               <Scale className="h-4 w-4" />
@@ -191,6 +212,174 @@ export default function Settings() {
               <span>Security</span>
             </TabsTrigger>
           </TabsList>
+
+          {/* Chatbot Settings Tab */}
+          <TabsContent value="chatbot">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5" />
+                  AI Chatbot Intake
+                </CardTitle>
+                <CardDescription>
+                  Configure the AI conversational intake assistant on your intake forms. When enabled, claimants can chat with an AI instead of filling out a static form.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Enable/Disable Toggle */}
+                <div className="flex items-center justify-between p-4 rounded-lg border">
+                  <div className="space-y-0.5">
+                    <Label className="text-base font-medium">Enable AI Chatbot</Label>
+                    <p className="text-sm text-muted-foreground">
+                      When enabled, intake forms will show the "Chat with AI" option. When disabled, only the static form will be shown.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={chatbotEnabled}
+                    onCheckedChange={setChatbotEnabled}
+                  />
+                </div>
+
+                {/* Agent Customization */}
+                <div className={chatbotEnabled ? '' : 'opacity-50 pointer-events-none'}>
+                  <h3 className="text-sm font-semibold mb-4">Agent Appearance</h3>
+                  
+                  <div className="flex items-start gap-6">
+                    {/* Avatar Preview & Upload */}
+                    <div className="flex flex-col items-center gap-2">
+                      <Avatar className="h-20 w-20 border-2 border-border">
+                        <AvatarImage src={chatbotAvatarUrl || undefined} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                          {chatbotAgentName?.charAt(0) || 'A'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <Label htmlFor="avatar-upload" className="cursor-pointer">
+                        <div className="flex items-center gap-1 text-xs text-primary hover:underline">
+                          <Upload className="h-3 w-3" />
+                          {uploadingAvatar ? 'Uploading...' : 'Upload Avatar'}
+                        </div>
+                        <input
+                          id="avatar-upload"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={uploadingAvatar}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file || !firm?.id) return;
+                            setUploadingAvatar(true);
+                            try {
+                              const ext = file.name.split('.').pop();
+                              const path = `${firm.id}/chatbot-avatar.${ext}`;
+                              const { error } = await supabase.storage
+                                .from('firm-logos')
+                                .upload(path, file, { upsert: true });
+                              if (error) throw error;
+                              const { data: urlData } = supabase.storage
+                                .from('firm-logos')
+                                .getPublicUrl(path);
+                              setChatbotAvatarUrl(urlData.publicUrl);
+                              toast({ title: 'Avatar uploaded' });
+                            } catch (err: any) {
+                              toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
+                            } finally {
+                              setUploadingAvatar(false);
+                            }
+                          }}
+                        />
+                      </Label>
+                      {chatbotAvatarUrl && (
+                        <button
+                          type="button"
+                          className="text-xs text-destructive hover:underline"
+                          onClick={() => setChatbotAvatarUrl('')}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Agent Name */}
+                    <div className="flex-1 space-y-2">
+                      <Label htmlFor="agentName">Agent Name</Label>
+                      <Input
+                        id="agentName"
+                        value={chatbotAgentName}
+                        onChange={(e) => setChatbotAgentName(e.target.value)}
+                        placeholder="AI Intake Assistant"
+                        maxLength={50}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        This name appears in the chat header. Use something friendly and professional.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Preview */}
+                {chatbotEnabled && (
+                  <div className="rounded-lg border p-4 bg-muted/30">
+                    <p className="text-xs font-medium text-muted-foreground mb-3">Preview</p>
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={chatbotAvatarUrl || undefined} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                          {chatbotAgentName?.charAt(0) || 'A'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-semibold">{chatbotAgentName || 'AI Intake Assistant'}</p>
+                        <p className="text-xs text-muted-foreground">Online</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  onClick={async () => {
+                    setSaving(true);
+                    try {
+                      // We need to update firm_branding directly for chatbot fields
+                      if (brandingData?.id) {
+                        const { error } = await supabase
+                          .from('firm_branding')
+                          .update({
+                            chatbot_enabled: chatbotEnabled,
+                            chatbot_agent_name: chatbotAgentName,
+                            chatbot_avatar_url: chatbotAvatarUrl || null,
+                          } as any)
+                          .eq('id', brandingData.id);
+                        if (error) throw error;
+                      } else if (firm?.id) {
+                        // Create minimal branding record with chatbot settings
+                        const { error } = await supabase
+                          .from('firm_branding')
+                          .insert({
+                            firm_id: firm.id,
+                            slug: firm.id.slice(0, 8),
+                            chatbot_enabled: chatbotEnabled,
+                            chatbot_agent_name: chatbotAgentName,
+                            chatbot_avatar_url: chatbotAvatarUrl || null,
+                          } as any)
+                          .select()
+                          .single();
+                        if (error) throw error;
+                      }
+                      toast({ title: 'Chatbot settings saved' });
+                    } catch (err: any) {
+                      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+                    } finally {
+                      setSaving(false);
+                    }
+                  }}
+                  disabled={saving}
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {saving ? 'Saving...' : 'Save Chatbot Settings'}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="profile">
             <Card>

@@ -568,6 +568,9 @@ export type Database = {
         Row: {
           accent_color: string | null
           background_color: string | null
+          chatbot_agent_name: string | null
+          chatbot_avatar_url: string | null
+          chatbot_enabled: boolean | null
           created_at: string
           custom_fields: Json | null
           description_text: string | null
@@ -584,6 +587,9 @@ export type Database = {
         Insert: {
           accent_color?: string | null
           background_color?: string | null
+          chatbot_agent_name?: string | null
+          chatbot_avatar_url?: string | null
+          chatbot_enabled?: boolean | null
           created_at?: string
           custom_fields?: Json | null
           description_text?: string | null
@@ -600,6 +606,9 @@ export type Database = {
         Update: {
           accent_color?: string | null
           background_color?: string | null
+          chatbot_agent_name?: string | null
+          chatbot_avatar_url?: string | null
+          chatbot_enabled?: boolean | null
           created_at?: string
           custom_fields?: Json | null
           description_text?: string | null
