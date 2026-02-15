@@ -71,3 +71,30 @@ verify_jwt = false
 
 [functions.campaign-autopilot]
 verify_jwt = false
+
+[functions.ai-creative-studio]
+verify_jwt = false
+
+[functions.viral-content]
+verify_jwt = false
+
+[functions.ai-video-ads]
+verify_jwt = false
+
+[functions.dynamic-landing]
+verify_jwt = false
+
+[functions.lookalike-audience]
+verify_jwt = false
+
+[functions.intent-signals]
+verify_jwt = false
+
+[functions.geofence-engine]
+verify_jwt = false
+
+[functions.dark-funnel]
+verify_jwt = false
+
+[functions.cross-platform-autopilot]
+verify_jwt = false

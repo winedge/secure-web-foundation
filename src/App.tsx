@@ -43,6 +43,15 @@ const JudgeIntelligence = lazy(() => import("./pages/JudgeIntelligence"));
 const EvidenceVault = lazy(() => import("./pages/EvidenceVault"));
 const PredictiveLeads = lazy(() => import("./pages/PredictiveLeads"));
 const CrossFirmBenchmarks = lazy(() => import("./pages/CrossFirmBenchmarks"));
+const CreativeStudio = lazy(() => import("./pages/CreativeStudio"));
+const ViralContentEngine = lazy(() => import("./pages/ViralContentEngine"));
+const VideoAdGenerator = lazy(() => import("./pages/VideoAdGenerator"));
+const DynamicLandingPages = lazy(() => import("./pages/DynamicLandingPages"));
+const LookalikeAudience = lazy(() => import("./pages/LookalikeAudience"));
+const IntentSignalTracker = lazy(() => import("./pages/IntentSignalTracker"));
+const GeofenceCampaigns = lazy(() => import("./pages/GeofenceCampaigns"));
+const DarkFunnelIntelligence = lazy(() => import("./pages/DarkFunnelIntelligence"));
+const CrossPlatformAutopilot = lazy(() => import("./pages/CrossPlatformAutopilot"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminFirms = lazy(() => import("./pages/admin/AdminFirms"));
 const AdminLeads = lazy(() => import("./pages/admin/AdminLeads"));
@@ -118,6 +127,15 @@ const App = () => (
                 <Route path="/evidence-vault" element={<ProtectedRoute><LazyRoute><EvidenceVault /></LazyRoute></ProtectedRoute>} />
                 <Route path="/predictive-leads" element={<ProtectedRoute><LazyRoute><PredictiveLeads /></LazyRoute></ProtectedRoute>} />
                 <Route path="/benchmarks" element={<ProtectedRoute><LazyRoute><CrossFirmBenchmarks /></LazyRoute></ProtectedRoute>} />
+                <Route path="/creative-studio" element={<ProtectedRoute><LazyRoute><CreativeStudio /></LazyRoute></ProtectedRoute>} />
+                <Route path="/viral-content" element={<ProtectedRoute><LazyRoute><ViralContentEngine /></LazyRoute></ProtectedRoute>} />
+                <Route path="/video-ads" element={<ProtectedRoute><LazyRoute><VideoAdGenerator /></LazyRoute></ProtectedRoute>} />
+                <Route path="/dynamic-landing" element={<ProtectedRoute><LazyRoute><DynamicLandingPages /></LazyRoute></ProtectedRoute>} />
+                <Route path="/lookalike-audience" element={<ProtectedRoute><LazyRoute><LookalikeAudience /></LazyRoute></ProtectedRoute>} />
+                <Route path="/intent-signals" element={<ProtectedRoute><LazyRoute><IntentSignalTracker /></LazyRoute></ProtectedRoute>} />
+                <Route path="/geofence-campaigns" element={<ProtectedRoute><LazyRoute><GeofenceCampaigns /></LazyRoute></ProtectedRoute>} />
+                <Route path="/dark-funnel" element={<ProtectedRoute><LazyRoute><DarkFunnelIntelligence /></LazyRoute></ProtectedRoute>} />
+                <Route path="/cross-platform-autopilot" element={<ProtectedRoute><LazyRoute><CrossPlatformAutopilot /></LazyRoute></ProtectedRoute>} />
 
                 {/* Admin routes */}
                 <Route path="/admin" element={<ProtectedRoute requireAdmin><LazyRoute><AdminDashboard /></LazyRoute></ProtectedRoute>} />
