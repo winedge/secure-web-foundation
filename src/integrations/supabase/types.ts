@@ -2626,6 +2626,11 @@ export type Database = {
         | "view_social"
         | "manage_social"
         | "manage_team"
+        | "view_lead_contact_info"
+        | "view_lead_case_details"
+        | "view_lead_financials"
+        | "view_session_logs"
+        | "view_session_recordings"
       touchpoint_type:
         | "call"
         | "email"
@@ -2801,6 +2806,11 @@ export const Constants = {
         "view_social",
         "manage_social",
         "manage_team",
+        "view_lead_contact_info",
+        "view_lead_case_details",
+        "view_lead_financials",
+        "view_session_logs",
+        "view_session_recordings",
       ],
       touchpoint_type: [
         "call",

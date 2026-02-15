@@ -42,6 +42,9 @@ function MemberPermissionsEditor({
       {PERMISSION_GROUPS.map((group) => (
         <div key={group.label}>
           <h6 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">{group.label}</h6>
+          {'description' in group && group.description && (
+            <p className="text-xs text-muted-foreground mb-1.5">{group.description}</p>
+          )}
           <div className="flex flex-wrap gap-2">
             {group.permissions.map((p) => (
               <label key={p} className="flex items-center gap-1.5 text-sm cursor-pointer">
@@ -169,6 +172,9 @@ function TeamDetail({ teamId, onBack }: { teamId: string; onBack: () => void }) 
               {PERMISSION_GROUPS.map((group) => (
                 <div key={group.label}>
                   <h6 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">{group.label}</h6>
+                  {'description' in group && group.description && (
+                    <p className="text-xs text-muted-foreground mb-1.5">{group.description}</p>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     {group.permissions.map((p) => (
                       <label key={p} className="flex items-center gap-1.5 text-sm cursor-pointer">
