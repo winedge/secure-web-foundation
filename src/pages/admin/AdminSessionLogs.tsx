@@ -33,7 +33,7 @@ export default function AdminSessionLogs() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('leads')
-        .select('id, first_name, last_name, email, tort_type, state, tier, source, metadata, created_at')
+        .select('id, first_name, last_name, email, tort_type, state, tier, source, metadata, created_at, session_recording_url')
         .not('metadata', 'is', null)
         .order('created_at', { ascending: false })
         .limit(200);
@@ -251,6 +251,7 @@ export default function AdminSessionLogs() {
             <SessionDetailView
               metadata={selectedLead.metadata}
               leadName={`${selectedLead.first_name} ${selectedLead.last_name}`}
+              sessionRecordingUrl={selectedLead.session_recording_url}
             />
           )}
         </DialogContent>
