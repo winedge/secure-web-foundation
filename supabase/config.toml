@@ -50,3 +50,9 @@ verify_jwt = false
 
 [functions.competitor-intelligence]
 verify_jwt = false
+
+[functions.document-analyzer]
+verify_jwt = false
+
+[functions.settlement-predictor]
+verify_jwt = false
