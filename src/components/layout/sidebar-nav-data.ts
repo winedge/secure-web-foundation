@@ -37,6 +37,7 @@ export const coreNavigation: NavItem[] = [
   { name: 'Social Calendar', href: '/social-calendar', icon: CalendarDays, premium: true },
   { name: 'Intake Form', href: '/intake-builder', icon: Paintbrush },
   { name: 'Reports', href: '/reports', icon: FileText, premium: true },
+  { name: 'Teams', href: '/teams', icon: Users },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

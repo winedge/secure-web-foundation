@@ -41,3 +41,9 @@ verify_jwt = false
 
 [functions.intake-chatbot]
 verify_jwt = false
+
+[functions.ai-lead-scoring]
+verify_jwt = false
+
+[functions.ai-case-evaluator]
+verify_jwt = false
