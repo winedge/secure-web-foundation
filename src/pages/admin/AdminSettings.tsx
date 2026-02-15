@@ -14,8 +14,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useAdminSetting, useUpsertAdminSetting } from '@/hooks/use-admin-settings';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  Settings, Bot, Globe, Shield, CheckCircle, XCircle, Loader2, Eye, EyeOff, CreditCard,
+  Settings, Bot, Globe, Shield, CheckCircle, XCircle, Loader2, Eye, EyeOff, CreditCard, Scale,
 } from 'lucide-react';
+import { TortTypeManager } from '@/components/admin/TortTypeManager';
 
 export default function AdminSettings() {
   const { toast } = useToast();
@@ -29,7 +30,7 @@ export default function AdminSettings() {
         </div>
 
         <Tabs defaultValue="meta-api" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
+          <TabsList className="grid w-full max-w-2xl grid-cols-5">
             <TabsTrigger value="meta-api" className="gap-2">
               <Globe className="h-4 w-4" />
               Meta API
@@ -37,6 +38,10 @@ export default function AdminSettings() {
             <TabsTrigger value="stripe" className="gap-2">
               <CreditCard className="h-4 w-4" />
               Stripe
+            </TabsTrigger>
+            <TabsTrigger value="tort-types" className="gap-2">
+              <Scale className="h-4 w-4" />
+              Tort Types
             </TabsTrigger>
             <TabsTrigger value="ai-config" className="gap-2">
               <Bot className="h-4 w-4" />
@@ -50,6 +55,17 @@ export default function AdminSettings() {
 
           <TabsContent value="meta-api"><MetaApiConfig /></TabsContent>
           <TabsContent value="stripe"><StripeConfig /></TabsContent>
+          <TabsContent value="tort-types">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Scale className="h-5 w-5" />Manage Tort Types</CardTitle>
+                <CardDescription>Add, edit, or deactivate tort types system-wide. System torts are available to all firms.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TortTypeManager isAdmin />
+              </CardContent>
+            </Card>
+          </TabsContent>
           <TabsContent value="ai-config"><AiConfiguration /></TabsContent>
           <TabsContent value="security"><SecurityConfig /></TabsContent>
         </Tabs>

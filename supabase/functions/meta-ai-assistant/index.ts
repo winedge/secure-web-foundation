@@ -1,14 +1,51 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
+import { createSupabaseClient } from "../_shared/auth.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
   if (corsResp) return corsResp;
 
+  const supabase = createSupabaseClient(true);
+
   try {
-    const { action, context } = await req.json();
+    const { action, context, firm_id } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    // === AI LEARNING LOOP: Fetch historical feedback for this firm ===
+    let learningContext = "";
+    if (firm_id) {
+      const { data: feedback } = await supabase
+        .from("ai_feedback")
+        .select("action_type, rating, feedback_text, outcome_metrics, was_applied")
+        .eq("firm_id", firm_id)
+        .order("created_at", { ascending: false })
+        .limit(15);
+
+      if (feedback?.length) {
+        const positives = feedback.filter((f: any) => f.rating === "positive" && f.was_applied);
+        const negatives = feedback.filter((f: any) => f.rating === "negative");
+        
+        learningContext = `\n\nLEARNING FROM THIS FIRM'S HISTORY:
+- ${positives.length} positive outcomes recorded. ${positives.slice(0, 3).map((f: any) => `[${f.action_type}: ${f.feedback_text || "liked"}${f.outcome_metrics ? `, results: ${JSON.stringify(f.outcome_metrics)}` : ""}]`).join(" ")}
+- ${negatives.length} negative feedback items. ${negatives.slice(0, 3).map((f: any) => `[${f.action_type}: ${f.feedback_text || "disliked"}]`).join(" ")}
+- Adapt your recommendations based on this feedback. Repeat patterns that worked, avoid patterns they disliked.`;
+      }
+
+      // Also fetch performance snapshots for data-driven recommendations
+      const { data: snapshots } = await supabase
+        .from("ai_performance_snapshots")
+        .select("tort_type, metrics, ai_action_applied, snapshot_type")
+        .eq("firm_id", firm_id)
+        .order("captured_at", { ascending: false })
+        .limit(10);
+
+      if (snapshots?.length) {
+        learningContext += `\n\nHISTORICAL PERFORMANCE DATA:
+${snapshots.map((s: any) => `[${s.snapshot_type}${s.tort_type ? ` / ${s.tort_type}` : ""}${s.ai_action_applied ? ` after ${s.ai_action_applied}` : ""}: ${JSON.stringify(s.metrics)}]`).join("\n")}`;
+      }
+    }
 
     const systemPrompts: Record<string, string> = {
       generate_campaign: `You are a Meta Ads campaign strategist specializing in mass tort lead generation for law firms. 
@@ -137,7 +174,7 @@ Return a JSON object with:
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: systemPrompt + learningContext },
           { role: "user", content: typeof context === "string" ? context : JSON.stringify(context) },
         ],
         temperature: 0.7,
