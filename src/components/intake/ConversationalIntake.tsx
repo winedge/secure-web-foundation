@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { trackEvent } from '@/lib/posthog';
+import { useSessionRecording } from '@/hooks/use-session-recording';
 
 interface Message {
   id: string;
@@ -63,8 +64,10 @@ export default function ConversationalIntake({ campaignId, tortTypeHint, brandin
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const startTimeRef = useRef(Date.now());
+  const { startRecording, uploadRecording } = useSessionRecording();
 
   useEffect(() => {
+    startRecording();
     // Start with AI greeting
     sendToAI([{ role: 'user', content: tortTypeHint 
       ? `Hi, I'm interested in the ${tortTypeHint} case.` 
@@ -288,6 +291,9 @@ export default function ConversationalIntake({ campaignId, tortTypeHint, brandin
         messages_exchanged: messages.length,
         tier,
       });
+
+      // Upload session recording (non-blocking)
+      uploadRecording(lead.id).catch(console.error);
 
       setIsComplete(true);
       setProgress(100);

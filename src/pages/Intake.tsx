@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getSessionId, getDistinctId, trackEvent } from '@/lib/posthog';
 import { SessionRecorder, ClientNetworkInfo } from '@/lib/session-recorder';
+import { useSessionRecording } from '@/hooks/use-session-recording';
 
 const tortTypes = [
   'Camp Lejeune', 'Roundup', 'Talcum Powder', 'AFFF', 'Paraquat',
@@ -70,8 +71,10 @@ export default function Intake() {
   // Session recorder
   const recorderRef = useRef(new SessionRecorder());
   const clientInfoRef = useRef<ClientNetworkInfo | null>(null);
+  const { startRecording, uploadRecording } = useSessionRecording();
 
   useEffect(() => {
+    startRecording();
     trackEvent('intake_form_started', {
       campaign_id: campaignId,
       preselected_tort: preselectedTort,
@@ -215,8 +218,8 @@ export default function Intake() {
         });
       }
 
-      // Audit logging is handled server-side via RLS-protected policies
-      // Anon users cannot write audit logs directly (security fix)
+      // Upload session recording (non-blocking)
+      uploadRecording(lead.id).catch(console.error);
 
       setSubmitted(true);
       toast.success('Your information has been submitted successfully!');

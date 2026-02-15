@@ -1,8 +1,9 @@
-import { ExternalLink, Clock, Globe, Video, MousePointer, Route } from 'lucide-react';
+import { ExternalLink, Clock, Globe, Video, MousePointer, Route, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Json } from '@/integrations/supabase/types';
+import { SessionReplayViewer } from '@/components/admin/SessionReplayViewer';
 
 interface SessionMetadata {
   posthog_session_id?: string;
@@ -17,6 +18,7 @@ interface SessionMetadata {
 
 interface SessionAnalyticsProps {
   metadata: Json | null;
+  sessionRecordingUrl?: string | null;
 }
 
 function formatDuration(seconds: number): string {
@@ -44,7 +46,7 @@ function parseUserAgent(ua: string): { browser: string; device: string } {
   return { browser, device };
 }
 
-export function SessionAnalytics({ metadata }: SessionAnalyticsProps) {
+export function SessionAnalytics({ metadata, sessionRecordingUrl }: SessionAnalyticsProps) {
   // Parse metadata safely
   const sessionData: SessionMetadata = (metadata && typeof metadata === 'object' && !Array.isArray(metadata)) 
     ? metadata as SessionMetadata 
@@ -80,6 +82,11 @@ export function SessionAnalytics({ metadata }: SessionAnalyticsProps) {
 
   return (
     <div className="space-y-4">
+      {/* Session Recording Replay */}
+      {sessionRecordingUrl && (
+        <SessionReplayViewer recordingPath={sessionRecordingUrl} />
+      )}
+
       {/* Session Recording Link */}
       {sessionData.posthog_session_id && postHogKey && (
         <Card className="border-primary/20 bg-primary/5">

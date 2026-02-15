@@ -22,10 +22,12 @@ import {
   Wifi,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { SessionReplayViewer } from './SessionReplayViewer';
 
 interface SessionDetailViewProps {
   metadata: any;
   leadName?: string;
+  sessionRecordingUrl?: string | null;
 }
 
 function formatDuration(seconds: number): string {
@@ -36,7 +38,7 @@ function formatDuration(seconds: number): string {
   return `${mins}m ${secs}s`;
 }
 
-export function SessionDetailView({ metadata, leadName }: SessionDetailViewProps) {
+export function SessionDetailView({ metadata, leadName, sessionRecordingUrl }: SessionDetailViewProps) {
   if (!metadata) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -65,6 +67,11 @@ export function SessionDetailView({ metadata, leadName }: SessionDetailViewProps
             Recorded on {sessionStart ? format(new Date(sessionStart), 'MMM d, yyyy h:mm a') : '—'}
           </p>
         </div>
+      )}
+
+      {/* Session Recording Replay */}
+      {sessionRecordingUrl && (
+        <SessionReplayViewer recordingPath={sessionRecordingUrl} leadName={leadName} />
       )}
 
       {/* Timing Summary */}
