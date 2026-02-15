@@ -766,7 +766,9 @@ export type Database = {
           id: string
           lead_id: string
           payment_method: string | null
+          pipeline_stage: string
           purchased_at: string
+          stage_updated_at: string | null
           stripe_payment_id: string | null
           user_id: string | null
         }
@@ -776,7 +778,9 @@ export type Database = {
           id?: string
           lead_id: string
           payment_method?: string | null
+          pipeline_stage?: string
           purchased_at?: string
+          stage_updated_at?: string | null
           stripe_payment_id?: string | null
           user_id?: string | null
         }
@@ -786,7 +790,9 @@ export type Database = {
           id?: string
           lead_id?: string
           payment_method?: string | null
+          pipeline_stage?: string
           purchased_at?: string
+          stage_updated_at?: string | null
           stripe_payment_id?: string | null
           user_id?: string | null
         }
