@@ -326,7 +326,7 @@ export default function MyLeads() {
                 </TabsContent>
 
                 <TabsContent value="session" className="mt-4">
-                  <SessionAnalytics metadata={detailLead.metadata} />
+                  <SessionAnalytics metadata={detailLead.metadata} sessionRecordingUrl={detailLead.session_recording_url} />
                 </TabsContent>
 
                 <TabsContent value="journey" className="mt-4">

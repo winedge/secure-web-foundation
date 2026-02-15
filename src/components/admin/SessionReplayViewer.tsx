@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import 'rrweb/dist/style.css';
 
 interface SessionReplayViewerProps {
   recordingPath: string;
@@ -43,7 +44,8 @@ export function SessionReplayViewer({ recordingPath, leadName }: SessionReplayVi
       }
 
       // Dynamically import rrweb's Replayer to avoid SSR issues
-      const { Replayer } = await import('rrweb');
+      const rrwebModule = await import('rrweb');
+      const Replayer = rrwebModule.Replayer;
 
       // Clear previous replayer
       if (replayerRef.current) {
@@ -58,7 +60,7 @@ export function SessionReplayViewer({ recordingPath, leadName }: SessionReplayVi
         skipInactive: true,
         showWarning: false,
         showDebug: false,
-        speed,
+        speed: 1,
         UNSAFE_replayCanvas: false,
       });
 
@@ -79,7 +81,7 @@ export function SessionReplayViewer({ recordingPath, leadName }: SessionReplayVi
     } finally {
       setLoading(false);
     }
-  }, [recordingPath, speed]);
+  }, [recordingPath]);
 
   useEffect(() => {
     loadRecording();
@@ -189,7 +191,9 @@ export function SessionReplayViewer({ recordingPath, leadName }: SessionReplayVi
           ref={containerRef}
           className={`bg-muted rounded-lg overflow-hidden border ${fullscreen ? 'flex-1' : 'h-[400px]'}`}
           style={{ position: 'relative' }}
-        />
+        >
+          {/* rrweb Replayer renders an iframe here */}
+        </div>
 
         {/* Controls */}
         <div className="mt-3 space-y-2">
