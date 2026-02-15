@@ -20,7 +20,7 @@ export default function MetaAds() {
       <UpgradeGate
         feature="meta_ads"
         fallbackTitle="Unlock Meta Ads Manager"
-        fallbackDescription="AI-powered campaign management, budget optimization, and real-time analytics — all synced with your Facebook Ads account."
+        fallbackDescription="AI-powered campaign management, budget optimization, and real-time analytics - all synced with your Facebook Ads account."
       >
         <div className="space-y-6">
           <div>

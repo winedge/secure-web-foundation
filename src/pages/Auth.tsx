@@ -6,10 +6,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
+import { MFAChallenge } from '@/components/auth/MFAChallenge';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 import logoImg from '@/assets/leadthru-logo.png';
+import { supabase } from '@/integrations/supabase/client';
 
 const signInSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -28,6 +29,7 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const [isSignUp, setIsSignUp] = useState(searchParams.get('mode') === 'signup');
   const [isLoading, setIsLoading] = useState(false);
+  const [showMFA, setShowMFA] = useState(false);
   const navigate = useNavigate();
   const { signIn, signUp, user } = useAuth();
 
@@ -55,6 +57,12 @@ export default function Auth() {
     if (error) {
       toast.error(error.message);
     } else {
+      // Check if MFA is required
+      const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (aalData?.currentLevel === 'aal1' && aalData?.nextLevel === 'aal2') {
+        setShowMFA(true);
+        return;
+      }
       toast.success('Welcome back!');
       navigate('/dashboard');
     }

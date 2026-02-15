@@ -224,7 +224,7 @@ export default function ReferralNetwork() {
                         {statusIcon(ref.status)}
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-sm">{ref.leads?.tort_type} — {ref.leads?.state}</span>
+                            <span className="font-medium text-sm">{ref.leads?.tort_type} - {ref.leads?.state}</span>
                             <Badge variant={isSender ? 'default' : 'secondary'} className="text-[10px]">
                               {isSender ? 'Sent' : 'Received'}
                             </Badge>
@@ -263,7 +263,7 @@ export default function ReferralNetwork() {
                   <SelectContent>
                     {myLeads?.map((lead: any) => (
                       <SelectItem key={lead.id} value={lead.id}>
-                        {lead.first_name} {lead.last_name} — {lead.tort_type} ({lead.state})
+                        {lead.first_name} {lead.last_name} - {lead.tort_type} ({lead.state})
                       </SelectItem>
                     ))}
                   </SelectContent>

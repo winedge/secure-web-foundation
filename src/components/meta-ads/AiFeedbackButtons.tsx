@@ -34,7 +34,7 @@ export function AiFeedbackButtons({ actionType, recommendation, campaignId, wasA
     return (
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         {submitted === 'positive' ? <ThumbsUp className="h-3.5 w-3.5 text-green-500" /> : <ThumbsDown className="h-3.5 w-3.5 text-red-500" />}
-        <span>Feedback recorded — AI is learning</span>
+        <span>Feedback recorded - AI is learning</span>
       </div>
     );
   }
