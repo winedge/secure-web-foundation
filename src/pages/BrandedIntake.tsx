@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getSessionId, getDistinctId, trackEvent } from '@/lib/posthog';
 import { SessionRecorder, ClientNetworkInfo } from '@/lib/session-recorder';
+import { useSessionRecording } from '@/hooks/use-session-recording';
 import { useBrandingBySlug, type CustomField } from '@/hooks/use-firm-branding';
 
 const tortTypes = [
@@ -97,6 +98,7 @@ export default function BrandedIntake() {
   const [intakeMode, setIntakeMode] = useState<'chat' | 'form'>(chatbotEnabled ? 'chat' : 'form');
   const recorderRef = useRef(new SessionRecorder());
   const clientInfoRef = useRef<ClientNetworkInfo | null>(null);
+  const { startRecording, uploadRecording } = useSessionRecording();
 
   const visibleFields = Array.isArray(branding?.visible_fields)
     ? branding.visible_fields as string[]
@@ -124,6 +126,7 @@ export default function BrandedIntake() {
   });
 
   useEffect(() => {
+    startRecording();
     trackEvent('branded_intake_started', { slug, campaign_id: campaignId });
     supabase.functions.invoke('get-client-info').then(({ data }) => {
       if (data) clientInfoRef.current = data as ClientNetworkInfo;
@@ -223,6 +226,9 @@ export default function BrandedIntake() {
           user_agent: navigator.userAgent,
         });
       }
+
+      // Upload session recording (non-blocking)
+      uploadRecording(lead.id).catch(console.error);
 
       setSubmitted(true);
       toast.success('Your information has been submitted successfully!');

@@ -1333,6 +1333,7 @@ export type Database = {
           metadata: Json | null
           phone: string | null
           price: number
+          session_recording_url: string | null
           source: string | null
           source_id: string | null
           state: string
@@ -1369,6 +1370,7 @@ export type Database = {
           metadata?: Json | null
           phone?: string | null
           price: number
+          session_recording_url?: string | null
           source?: string | null
           source_id?: string | null
           state: string
@@ -1405,6 +1407,7 @@ export type Database = {
           metadata?: Json | null
           phone?: string | null
           price?: number
+          session_recording_url?: string | null
           source?: string | null
           source_id?: string | null
           state?: string
