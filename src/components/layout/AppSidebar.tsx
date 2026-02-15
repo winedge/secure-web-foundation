@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { Crown, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import logoImg from '@/assets/leadthru-logo-dark.png';
@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useState } from 'react';
 import { SidebarNavSection } from './SidebarNavSection';
+import { SidebarNavGroup } from './SidebarNavGroup';
 import { SidebarUserFooter } from './SidebarUserFooter';
-import { coreNavigation, adminOverview, adminData, adminLogs } from './sidebar-nav-data';
+import { standaloneItems, navGroups, bottomItems, adminOverview, adminData, adminLogs } from './sidebar-nav-data';
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { isAdmin } = useIsAdmin();
@@ -30,7 +31,16 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
-        <SidebarNavSection items={coreNavigation} tier={tier} onNavigate={onNavigate} />
+        {/* Standalone: Dashboard */}
+        <SidebarNavSection items={standaloneItems} tier={tier} onNavigate={onNavigate} />
+
+        {/* Grouped sections */}
+        {navGroups.map((group) => (
+          <SidebarNavGroup key={group.label} group={group} tier={tier} onNavigate={onNavigate} />
+        ))}
+
+        {/* Bottom standalone items */}
+        <SidebarNavSection items={bottomItems} tier={tier} onNavigate={onNavigate} />
 
         {tier !== 'premium' && (
           <NavLink to="/pricing" className={navLinkClass} onClick={onNavigate}>
