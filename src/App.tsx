@@ -38,6 +38,11 @@ const Teams = lazy(() => import("./pages/Teams"));
 const CompetitorIntelligence = lazy(() => import("./pages/CompetitorIntelligence"));
 const SmartAlerts = lazy(() => import("./pages/SmartAlerts"));
 const ReferralNetwork = lazy(() => import("./pages/ReferralNetwork"));
+const MarketPulseRadar = lazy(() => import("./pages/MarketPulseRadar"));
+const JudgeIntelligence = lazy(() => import("./pages/JudgeIntelligence"));
+const EvidenceVault = lazy(() => import("./pages/EvidenceVault"));
+const PredictiveLeads = lazy(() => import("./pages/PredictiveLeads"));
+const CrossFirmBenchmarks = lazy(() => import("./pages/CrossFirmBenchmarks"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminFirms = lazy(() => import("./pages/admin/AdminFirms"));
 const AdminLeads = lazy(() => import("./pages/admin/AdminLeads"));
@@ -108,6 +113,11 @@ const App = () => (
                 <Route path="/pricing" element={<ProtectedRoute><LazyRoute><Pricing /></LazyRoute></ProtectedRoute>} />
                 <Route path="/smart-alerts" element={<ProtectedRoute><LazyRoute><SmartAlerts /></LazyRoute></ProtectedRoute>} />
                 <Route path="/referral-network" element={<ProtectedRoute><LazyRoute><ReferralNetwork /></LazyRoute></ProtectedRoute>} />
+                <Route path="/market-pulse" element={<ProtectedRoute><LazyRoute><MarketPulseRadar /></LazyRoute></ProtectedRoute>} />
+                <Route path="/judge-intelligence" element={<ProtectedRoute><LazyRoute><JudgeIntelligence /></LazyRoute></ProtectedRoute>} />
+                <Route path="/evidence-vault" element={<ProtectedRoute><LazyRoute><EvidenceVault /></LazyRoute></ProtectedRoute>} />
+                <Route path="/predictive-leads" element={<ProtectedRoute><LazyRoute><PredictiveLeads /></LazyRoute></ProtectedRoute>} />
+                <Route path="/benchmarks" element={<ProtectedRoute><LazyRoute><CrossFirmBenchmarks /></LazyRoute></ProtectedRoute>} />
 
                 {/* Admin routes */}
                 <Route path="/admin" element={<ProtectedRoute requireAdmin><LazyRoute><AdminDashboard /></LazyRoute></ProtectedRoute>} />
