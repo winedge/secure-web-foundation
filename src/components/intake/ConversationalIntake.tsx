@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Loader2, Bot, User, CheckCircle, Shield, MessageCircle } from 'lucide-react';
+import { Send, Loader2, User, CheckCircle, Shield, MessageCircle } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -42,12 +43,14 @@ interface ConversationalIntakeProps {
     accent_color?: string;
     logo_url?: string;
   };
+  agentName?: string;
+  agentAvatarUrl?: string;
   onComplete?: (leadId: string) => void;
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/intake-chatbot`;
 
-export default function ConversationalIntake({ campaignId, tortTypeHint, branding, onComplete }: ConversationalIntakeProps) {
+export default function ConversationalIntake({ campaignId, tortTypeHint, branding, agentName = 'AI Intake Assistant', agentAvatarUrl, onComplete }: ConversationalIntakeProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -364,11 +367,14 @@ export default function ConversationalIntake({ campaignId, tortTypeHint, brandin
       {/* Header */}
       <div className="px-4 py-3 border-b bg-primary/5 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-            <MessageCircle className="h-4 w-4 text-primary" />
-          </div>
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={agentAvatarUrl || undefined} />
+            <AvatarFallback className="bg-primary/10 text-primary text-sm">
+              {agentName.charAt(0)}
+            </AvatarFallback>
+          </Avatar>
           <div>
-            <p className="text-sm font-semibold">AI Intake Assistant</p>
+            <p className="text-sm font-semibold">{agentName}</p>
             <p className="text-xs text-muted-foreground">
               {isLoading ? 'Typing...' : 'Online'}
             </p>
@@ -385,9 +391,12 @@ export default function ConversationalIntake({ campaignId, tortTypeHint, brandin
         {messages.map((msg) => (
           <div key={msg.id} className={cn('flex gap-2', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
             {msg.role === 'assistant' && (
-              <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                <Bot className="h-4 w-4 text-primary" />
-              </div>
+              <Avatar className="h-7 w-7 flex-shrink-0 mt-1">
+                <AvatarImage src={agentAvatarUrl || undefined} />
+                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                  {agentName.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
             )}
             <div className={cn(
               'max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
@@ -407,9 +416,12 @@ export default function ConversationalIntake({ campaignId, tortTypeHint, brandin
 
         {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
           <div className="flex gap-2">
-            <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Bot className="h-4 w-4 text-primary" />
-            </div>
+            <Avatar className="h-7 w-7 flex-shrink-0">
+              <AvatarImage src={agentAvatarUrl || undefined} />
+              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                {agentName.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
             <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
               <div className="flex gap-1">
                 <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:0ms]" />
