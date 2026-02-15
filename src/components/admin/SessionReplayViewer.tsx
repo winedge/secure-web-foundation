@@ -49,14 +49,30 @@ export function SessionReplayViewer({ recordingPath, leadName }: SessionReplayVi
 
       // Clear previous replayer
       if (replayerRef.current) {
-        replayerRef.current.destroy();
-      }
-      if (containerRef.current) {
-        containerRef.current.innerHTML = '';
+        try { replayerRef.current.destroy(); } catch (_) {}
       }
 
+      // Wait for container to be available in the DOM
+      await new Promise<void>((resolve) => {
+        const check = () => {
+          if (containerRef.current) {
+            resolve();
+          } else {
+            requestAnimationFrame(check);
+          }
+        };
+        check();
+      });
+
+      const container = containerRef.current!;
+      container.innerHTML = '';
+
+      // Create a wrapper div for rrweb to attach to
+      const wrapper = document.createElement('div');
+      container.appendChild(wrapper);
+
       const replayer = new Replayer(events, {
-        root: containerRef.current!,
+        root: wrapper,
         skipInactive: true,
         showWarning: false,
         showDebug: false,
