@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { TierBadge } from './TierBadge';
 import { formatCurrency } from '@/lib/utils';
 import {
   Table,
@@ -28,14 +27,14 @@ import {
   PhoneCall, 
   FileText, 
   Scale, 
-  Trash2, 
   Eye,
   ArrowLeft,
   Globe,
   Facebook,
-  Search as SearchIcon
+  Search as SearchIcon,
+  Trash2,
 } from 'lucide-react';
-import { PipelineStage, PIPELINE_STAGES } from './PipelineStageCards';
+import { PipelineStage } from './PipelineStageCards';
 
 interface PurchasedLead {
   id: string;
@@ -58,8 +57,10 @@ interface LeadPipelineTableProps {
   leads: PurchasedLead[];
   stage: PipelineStage;
   sourcesMap?: Map<string, { name: string; type: string }>;
+  marketplaceCountsByTort?: Record<string, number>;
   onMoveStage: (leadId: string, newStage: PipelineStage) => void;
   onViewDetails: (leadId: string) => void;
+  onDump?: (leadId: string) => void;
   isMoving?: boolean;
 }
 
@@ -70,32 +71,31 @@ function getSourceIcon(sourceName?: string) {
   return <Globe className="h-3.5 w-3.5" />;
 }
 
-function getNextStages(currentStage: PipelineStage): { stage: PipelineStage; label: string; icon: React.ElementType }[] {
+function getNextAction(currentStage: PipelineStage): { stage: PipelineStage; label: string; icon: React.ElementType } | null {
   switch (currentStage) {
     case 'new_lead':
-      return [
-        { stage: 'call_verification', label: 'Send to Call Verification', icon: PhoneCall },
-      ];
+      return { stage: 'call_verification', label: 'Send for call verification', icon: PhoneCall };
     case 'call_verification':
-      return [
-        { stage: 'medical_records', label: 'Send to Medical Records', icon: FileText },
-        { stage: 'new_lead', label: 'Move Back to Leads', icon: ArrowLeft },
-      ];
+      return { stage: 'medical_records', label: 'Send for medical records', icon: FileText };
     case 'medical_records':
-      return [
-        { stage: 'retainer', label: 'Send to Retainer', icon: Scale },
-        { stage: 'call_verification', label: 'Move Back', icon: ArrowLeft },
-      ];
+      return { stage: 'retainer', label: 'Send to retainer', icon: Scale };
     case 'retainer':
-      return [
-        { stage: 'medical_records', label: 'Move Back', icon: ArrowLeft },
-      ];
+      return null;
     default:
-      return [];
+      return null;
   }
 }
 
-export function LeadPipelineTable({ leads, stage, sourcesMap, onMoveStage, onViewDetails, isMoving }: LeadPipelineTableProps) {
+function getPrevAction(currentStage: PipelineStage): { stage: PipelineStage; label: string } | null {
+  switch (currentStage) {
+    case 'call_verification': return { stage: 'new_lead', label: 'Move back' };
+    case 'medical_records': return { stage: 'call_verification', label: 'Move back' };
+    case 'retainer': return { stage: 'medical_records', label: 'Move back' };
+    default: return null;
+  }
+}
+
+export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsByTort, onMoveStage, onViewDetails, onDump, isMoving }: LeadPipelineTableProps) {
   // Group leads by tort_type
   const grouped = leads.reduce<Record<string, PurchasedLead[]>>((acc, lead) => {
     const key = lead.tort_type || 'Other';
@@ -116,7 +116,8 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, onMoveStage, onVie
     });
   };
 
-  const nextActions = getNextStages(stage);
+  const nextAction = getNextAction(stage);
+  const prevAction = getPrevAction(stage);
 
   if (leads.length === 0) {
     return (
@@ -127,43 +128,45 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, onMoveStage, onVie
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {tortTypes.map((tort) => {
         const tortLeads = grouped[tort];
         const avgScore = Math.round(
           tortLeads.reduce((s, l) => s + (l.ai_quality_score || 0), 0) / tortLeads.length
         );
-        const avgPrice = tortLeads.reduce((s, l) => s + Number(l.price || 0), 0) / tortLeads.length;
+        const marketplaceCount = marketplaceCountsByTort?.[tort] || 0;
         const isOpen = openGroups.has(tort);
 
         return (
           <Collapsible key={tort} open={isOpen} onOpenChange={() => toggleGroup(tort)}>
+            {/* Tort type header matching reference */}
             <CollapsibleTrigger asChild>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted cursor-pointer transition-colors">
+              <div className="flex items-center justify-between px-4 py-3 rounded-t-lg bg-primary/10 border border-border hover:bg-primary/15 cursor-pointer transition-colors">
                 <div className="flex items-center gap-2">
-                  {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  <span className="font-semibold">{tort}</span>
+                  {isOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                  <span className="font-bold text-foreground">{tort}</span>
                 </div>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span>Leads: <strong className="text-foreground">{tortLeads.length}</strong></span>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <span>Nos. Leads: <strong className="text-foreground">{tortLeads.length}</strong></span>
+                  <span className="mx-1">|</span>
                   <span>Avg. Score: <strong className="text-foreground">{avgScore}</strong></span>
-                  <span className="hidden sm:inline">Avg. Price: <strong className="text-foreground">{formatCurrency(avgPrice)}</strong></span>
+                  <span className="mx-1">|</span>
+                  <span>Marketplace leads: <strong className="text-foreground">{marketplaceCount}</strong></span>
                 </div>
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="overflow-x-auto mt-1 border rounded-lg">
+              <div className="overflow-x-auto border border-t-0 rounded-b-lg">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-10">#</TableHead>
+                    <TableRow className="bg-muted/30">
+                      <TableHead className="w-12">No.</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>State</TableHead>
                       <TableHead>Source</TableHead>
-                      <TableHead>AI Score</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Tier</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>AI Lead Score</TableHead>
+                      <TableHead>Avg. Price/lead</TableHead>
+                      <TableHead className="text-right">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -171,7 +174,7 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, onMoveStage, onVie
                       const srcName = lead.source_id && sourcesMap?.get(lead.source_id)?.name || lead.source || 'Direct';
                       return (
                         <TableRow key={lead.id}>
-                          <TableCell className="text-muted-foreground">{idx + 1}</TableCell>
+                          <TableCell className="text-muted-foreground font-medium">{idx + 1}</TableCell>
                           <TableCell>
                             <div className="flex flex-col">
                               <span className="font-medium">{lead.first_name} {lead.last_name}</span>
@@ -192,9 +195,8 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, onMoveStage, onVie
                             <span className="font-semibold">{lead.ai_quality_score || 'N/A'}</span>
                           </TableCell>
                           <TableCell className="font-medium">{formatCurrency(Number(lead.price))}</TableCell>
-                          <TableCell><TierBadge tier={lead.tier} /></TableCell>
                           <TableCell>
-                            <div className="flex justify-end gap-1">
+                            <div className="flex justify-end gap-1 flex-wrap">
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -204,25 +206,52 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, onMoveStage, onVie
                                   </TooltipTrigger>
                                   <TooltipContent>View Details</TooltipContent>
                                 </Tooltip>
-                                {nextActions.map((action) => {
-                                  const ActionIcon = action.icon;
-                                  return (
-                                    <Tooltip key={action.stage}>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className="h-8 w-8"
-                                          disabled={isMoving}
-                                          onClick={() => onMoveStage(lead.id, action.stage)}
-                                        >
-                                          <ActionIcon className="h-4 w-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>{action.label}</TooltipContent>
-                                    </Tooltip>
-                                  );
-                                })}
+                              </TooltipProvider>
+                              {nextAction && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs h-8 gap-1"
+                                  disabled={isMoving}
+                                  onClick={() => onMoveStage(lead.id, nextAction.stage)}
+                                >
+                                  <nextAction.icon className="h-3.5 w-3.5" />
+                                  {nextAction.label}
+                                </Button>
+                              )}
+                              {prevAction && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        disabled={isMoving}
+                                        onClick={() => onMoveStage(lead.id, prevAction.stage)}
+                                      >
+                                        <ArrowLeft className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>{prevAction.label}</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-destructive hover:text-destructive"
+                                      disabled={isMoving}
+                                      onClick={() => onDump?.(lead.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Send to dump</TooltipContent>
+                                </Tooltip>
                               </TooltipProvider>
                             </div>
                           </TableCell>

@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { usePurchasedLeads, useLeadSources, useUpdatePipelineStage } from '@/hooks/use-leads';
 import { useLeadNotes, useCreateNote, useDeleteNote, useTogglePinNote } from '@/hooks/use-lead-notes';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -111,6 +113,23 @@ export default function MyLeads() {
   const [activeStage, setActiveStage] = useState<PipelineStage>('new_lead');
   const [detailLeadId, setDetailLeadId] = useState<string | null>(null);
 
+  // Fetch marketplace leads count grouped by tort_type
+  const { data: marketplaceCountsByTort } = useQuery({
+    queryKey: ['marketplace-counts-by-tort'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('leads')
+        .select('tort_type')
+        .eq('status', 'available');
+      if (error) throw error;
+      const counts: Record<string, number> = {};
+      data.forEach((l) => {
+        counts[l.tort_type] = (counts[l.tort_type] || 0) + 1;
+      });
+      return counts;
+    },
+  });
+
   const stageCounts: Record<PipelineStage, number> = {
     new_lead: 0,
     call_verification: 0,
@@ -195,8 +214,10 @@ export default function MyLeads() {
                 leads={stageLeads}
                 stage={activeStage}
                 sourcesMap={sourcesMap}
+                marketplaceCountsByTort={marketplaceCountsByTort}
                 onMoveStage={handleMoveStage}
                 onViewDetails={setDetailLeadId}
+                onDump={(leadId) => updateStage.mutate({ leadId, stage: 'new_lead' })}
                 isMoving={updateStage.isPending}
               />
             )}
