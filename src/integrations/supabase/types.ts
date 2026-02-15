@@ -295,6 +295,116 @@ export type Database = {
           },
         ]
       }
+      alert_notifications: {
+        Row: {
+          alert_rule_id: string | null
+          created_at: string
+          firm_id: string
+          id: string
+          is_read: boolean | null
+          message: string
+          metadata: Json | null
+          severity: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          alert_rule_id?: string | null
+          created_at?: string
+          firm_id: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          metadata?: Json | null
+          severity?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          alert_rule_id?: string | null
+          created_at?: string
+          firm_id?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          metadata?: Json | null
+          severity?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_notifications_alert_rule_id_fkey"
+            columns: ["alert_rule_id"]
+            isOneToOne: false
+            referencedRelation: "alert_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alert_notifications_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alert_rules: {
+        Row: {
+          conditions: Json
+          created_at: string
+          firm_id: string
+          id: string
+          is_active: boolean | null
+          last_triggered_at: string | null
+          name: string
+          notify_email: boolean | null
+          notify_in_app: boolean | null
+          rule_type: string
+          trigger_count: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conditions?: Json
+          created_at?: string
+          firm_id: string
+          id?: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          name: string
+          notify_email?: boolean | null
+          notify_in_app?: boolean | null
+          rule_type: string
+          trigger_count?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conditions?: Json
+          created_at?: string
+          firm_id?: string
+          id?: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          name?: string
+          notify_email?: boolean | null
+          notify_in_app?: boolean | null
+          rule_type?: string
+          trigger_count?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_rules_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -707,6 +817,76 @@ export type Database = {
           },
         ]
       }
+      document_analyses: {
+        Row: {
+          ai_summary: string | null
+          analyzed_at: string | null
+          auto_populated_fields: Json | null
+          created_at: string
+          document_type: string | null
+          extracted_facts: Json | null
+          file_name: string
+          file_url: string
+          firm_id: string
+          id: string
+          lead_id: string | null
+          status: string | null
+          statute_risks: Json | null
+        }
+        Insert: {
+          ai_summary?: string | null
+          analyzed_at?: string | null
+          auto_populated_fields?: Json | null
+          created_at?: string
+          document_type?: string | null
+          extracted_facts?: Json | null
+          file_name: string
+          file_url: string
+          firm_id: string
+          id?: string
+          lead_id?: string | null
+          status?: string | null
+          statute_risks?: Json | null
+        }
+        Update: {
+          ai_summary?: string | null
+          analyzed_at?: string | null
+          auto_populated_fields?: Json | null
+          created_at?: string
+          document_type?: string | null
+          extracted_facts?: Json | null
+          file_name?: string
+          file_url?: string
+          firm_id?: string
+          id?: string
+          lead_id?: string | null
+          status?: string | null
+          statute_risks?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_analyses_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_analyses_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_analyses_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firm_branding: {
         Row: {
           accent_color: string | null
@@ -959,6 +1139,77 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_referrals: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          id: string
+          lead_id: string
+          notes: string | null
+          reason: string | null
+          referral_fee: number
+          referred_to_firm_id: string | null
+          referring_firm_id: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          id?: string
+          lead_id: string
+          notes?: string | null
+          reason?: string | null
+          referral_fee?: number
+          referred_to_firm_id?: string | null
+          referring_firm_id: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string
+          notes?: string | null
+          reason?: string | null
+          referral_fee?: number
+          referred_to_firm_id?: string | null
+          referring_firm_id?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_referrals_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_referrals_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_referrals_referred_to_firm_id_fkey"
+            columns: ["referred_to_firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_referrals_referring_firm_id_fkey"
+            columns: ["referring_firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
             referencedColumns: ["id"]
           },
         ]
@@ -2123,6 +2374,67 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      war_room_messages: {
+        Row: {
+          content: string
+          created_at: string
+          firm_id: string
+          id: string
+          lead_id: string
+          message_type: string | null
+          metadata: Json | null
+          tags: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          firm_id: string
+          id?: string
+          lead_id: string
+          message_type?: string | null
+          metadata?: Json | null
+          tags?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          firm_id?: string
+          id?: string
+          lead_id?: string
+          message_type?: string | null
+          metadata?: Json | null
+          tags?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "war_room_messages_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "war_room_messages_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "war_room_messages_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

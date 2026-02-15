@@ -22,6 +22,8 @@ import {
   Target,
   DollarSign,
   Wrench,
+  Bell,
+  Handshake,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -78,6 +80,8 @@ export const navGroups: NavGroup[] = [
     items: [
       { name: 'Intake Form', href: '/intake-builder', icon: Paintbrush },
       { name: 'Teams', href: '/teams', icon: Users },
+      { name: 'Smart Alerts', href: '/smart-alerts', icon: Bell },
+      { name: 'Referral Network', href: '/referral-network', icon: Handshake },
     ],
   },
 ];
