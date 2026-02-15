@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.lead-notification]
 verify_jwt = false
+
+[functions.intake-chatbot]
+verify_jwt = false
