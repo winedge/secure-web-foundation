@@ -27,6 +27,15 @@ import {
   Gavel,
   Brain,
   ShieldCheck as VaultIcon,
+  Sparkles,
+  Flame,
+  Video,
+  Globe,
+  UserSearch,
+  Zap,
+  MapPin,
+  Eye,
+  Layers,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -69,6 +78,20 @@ export const navGroups: NavGroup[] = [
       { name: 'Competitor Intel', href: '/competitor-intelligence', icon: Radar, premium: true },
       { name: 'Market Pulse', href: '/market-pulse', icon: Target, premium: true },
       { name: 'Predictive Leads', href: '/predictive-leads', icon: Brain, premium: true },
+      { name: 'Intent Signals', href: '/intent-signals', icon: Zap, premium: true },
+      { name: 'Lookalike Audience', href: '/lookalike-audience', icon: UserSearch, premium: true },
+      { name: 'Geofence Campaigns', href: '/geofence-campaigns', icon: MapPin, premium: true },
+      { name: 'Dark Funnel', href: '/dark-funnel', icon: Eye, premium: true },
+    ],
+  },
+  {
+    label: 'Creative',
+    icon: Sparkles,
+    items: [
+      { name: 'Creative Studio', href: '/creative-studio', icon: Sparkles, premium: true },
+      { name: 'Viral Content', href: '/viral-content', icon: Flame, premium: true },
+      { name: 'Video Ad Generator', href: '/video-ads', icon: Video, premium: true },
+      { name: 'Dynamic Landing', href: '/dynamic-landing', icon: Globe, premium: true },
     ],
   },
   {
@@ -78,6 +101,7 @@ export const navGroups: NavGroup[] = [
       { name: 'Judge Intel', href: '/judge-intelligence', icon: Gavel, premium: true },
       { name: 'Evidence Vault', href: '/evidence-vault', icon: VaultIcon, premium: true },
       { name: 'Benchmarks', href: '/benchmarks', icon: BarChart3, premium: true },
+      { name: 'Cross-Platform AI', href: '/cross-platform-autopilot', icon: Layers, premium: true },
     ],
   },
   {
