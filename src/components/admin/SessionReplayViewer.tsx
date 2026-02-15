@@ -13,7 +13,8 @@ interface SessionReplayViewerProps {
 }
 
 export function SessionReplayViewer({ recordingPath, leadName }: SessionReplayViewerProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const rrwebRootRef = useRef<HTMLDivElement | null>(null);
   const replayerRef = useRef<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,81 +25,97 @@ export function SessionReplayViewer({ recordingPath, leadName }: SessionReplayVi
   const [fullscreen, setFullscreen] = useState(false);
   const timerRef = useRef<number>();
 
-  const loadRecording = useCallback(async () => {
-    if (!containerRef.current) return;
-    
-    try {
-      setLoading(true);
-      setError(null);
-
-      const { data, error: downloadError } = await supabase.storage
-        .from('session-recordings')
-        .download(recordingPath);
-
-      if (downloadError) throw new Error(downloadError.message);
-
-      const text = await data.text();
-      const events = JSON.parse(text);
-
-      if (!events || events.length < 2) {
-        setError('Recording is too short to replay.');
-        return;
-      }
-
-      const rrwebModule = await import('rrweb');
-      const Replayer = rrwebModule.Replayer;
-
-      if (replayerRef.current) {
-        try { replayerRef.current.destroy(); } catch (_) {}
-      }
-
-      const container = containerRef.current!;
-      container.innerHTML = '';
-
-      const replayer = new Replayer(events, {
-        root: container,
-        skipInactive: true,
-        showWarning: false,
-        showDebug: false,
-        speed: 1,
-        UNSAFE_replayCanvas: false,
-      });
-
-      replayerRef.current = replayer;
-
-      const meta = replayer.getMetaData();
-      setDuration(meta.totalTime);
-
-      replayer.on('finish', () => {
-        setPlaying(false);
-        if (timerRef.current) clearInterval(timerRef.current);
-      });
-
-    } catch (err: any) {
-      console.error('Failed to load recording:', err);
-      setError(err.message || 'Failed to load recording');
-    } finally {
-      setLoading(false);
-    }
-  }, [recordingPath]);
-
-  // Use a separate effect to wait for mount before loading
-  const mountedRef = useRef(false);
   useEffect(() => {
-    if (!mountedRef.current) {
-      mountedRef.current = true;
-      // Defer to next frame so containerRef is populated
-      requestAnimationFrame(() => {
-        loadRecording();
-      });
-    }
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const { data, error: downloadError } = await supabase.storage
+          .from('session-recordings')
+          .download(recordingPath);
+
+        if (downloadError) throw new Error(downloadError.message);
+        if (cancelled) return;
+
+        const text = await data.text();
+        const events = JSON.parse(text);
+
+        if (!events || events.length < 2) {
+          setError('Recording is too short to replay.');
+          return;
+        }
+
+        const rrwebModule = await import('rrweb');
+        const Replayer = rrwebModule.Replayer;
+        if (cancelled) return;
+
+        // Destroy previous replayer
+        if (replayerRef.current) {
+          try { replayerRef.current.destroy(); } catch (_) {}
+          replayerRef.current = null;
+        }
+
+        // Remove old rrweb root if it exists
+        if (rrwebRootRef.current && wrapperRef.current?.contains(rrwebRootRef.current)) {
+          wrapperRef.current.removeChild(rrwebRootRef.current);
+        }
+
+        // Create a standalone div for rrweb - completely outside React's control
+        const rrwebRoot = document.createElement('div');
+        rrwebRoot.style.width = '100%';
+        rrwebRoot.style.height = '100%';
+        rrwebRootRef.current = rrwebRoot;
+
+        if (wrapperRef.current) {
+          wrapperRef.current.appendChild(rrwebRoot);
+        }
+
+        const replayer = new Replayer(events, {
+          root: rrwebRoot,
+          skipInactive: true,
+          showWarning: false,
+          showDebug: false,
+          speed: 1,
+          UNSAFE_replayCanvas: false,
+        });
+
+        replayerRef.current = replayer;
+
+        const meta = replayer.getMetaData();
+        setDuration(meta.totalTime);
+
+        replayer.on('finish', () => {
+          setPlaying(false);
+          if (timerRef.current) clearInterval(timerRef.current);
+        });
+
+      } catch (err: any) {
+        console.error('Failed to load recording:', err);
+        if (!cancelled) setError(err.message || 'Failed to load recording');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    load();
+
     return () => {
+      cancelled = true;
       if (replayerRef.current) {
         try { replayerRef.current.destroy(); } catch (_) {}
+        replayerRef.current = null;
       }
       if (timerRef.current) clearInterval(timerRef.current);
+      // Clean up the rrweb root div
+      if (rrwebRootRef.current && wrapperRef.current?.contains(rrwebRootRef.current)) {
+        wrapperRef.current.removeChild(rrwebRootRef.current);
+        rrwebRootRef.current = null;
+      }
     };
-  }, [loadRecording]);
+  }, [recordingPath]);
 
   const handlePlay = () => {
     if (!replayerRef.current) return;
@@ -164,18 +181,19 @@ export function SessionReplayViewer({ recordingPath, leadName }: SessionReplayVi
           Session Recording {leadName && `- ${leadName}`}
         </CardTitle>
         <div className="flex items-center gap-2">
-          {!loading && <Badge variant="outline" className="font-mono">{formatTime(duration)}</Badge>}
+          {!loading && !error && <Badge variant="outline" className="font-mono">{formatTime(duration)}</Badge>}
           <Button variant="ghost" size="icon" onClick={() => setFullscreen(!fullscreen)}>
             {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </Button>
         </div>
       </CardHeader>
       <CardContent className={fullscreen ? 'flex-1 flex flex-col' : ''}>
-        {/* Replay container - always rendered so ref is available */}
-        <div
-          ref={containerRef}
-          className={`bg-muted rounded-lg overflow-hidden border relative ${fullscreen ? 'flex-1' : 'h-[400px]'} ${loading || error ? '' : ''}`}
-        >
+        {/* Outer wrapper holds both the rrweb root (imperative) and React overlays */}
+        <div className={`relative bg-muted rounded-lg overflow-hidden border ${fullscreen ? 'flex-1' : 'h-[400px]'}`}>
+          {/* rrweb attaches here - React never touches children of this div */}
+          <div ref={wrapperRef} className="absolute inset-0" />
+          
+          {/* React-managed overlays rendered as siblings, not children of rrweb root */}
           {loading && (
             <div className="absolute inset-0 flex items-center justify-center bg-muted z-10">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
