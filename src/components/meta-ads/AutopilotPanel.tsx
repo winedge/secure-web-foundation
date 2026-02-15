@@ -199,10 +199,10 @@ export function AutopilotPanel({ campaignId }: Props) {
             </div>
             {!campaignId && (
               <div><Label>Campaign (optional)</Label>
-                <Select value={form.campaign_id} onValueChange={v => setForm(p => ({ ...p, campaign_id: v }))}>
+                <Select value={form.campaign_id || '__all__'} onValueChange={v => setForm(p => ({ ...p, campaign_id: v === '__all__' ? '' : v }))}>
                   <SelectTrigger><SelectValue placeholder="All campaigns" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Campaigns</SelectItem>
+                    <SelectItem value="__all__">All Campaigns</SelectItem>
                     {(campaigns || []).map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
