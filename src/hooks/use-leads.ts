@@ -102,7 +102,7 @@ export function usePurchasedLeads() {
 
       const { data: purchases, error: purchasesError } = await supabase
         .from('lead_purchases')
-        .select('lead_id, amount, purchased_at')
+        .select('lead_id, amount, purchased_at, pipeline_stage, stage_updated_at')
         .eq('firm_id', firm.id);
 
       if (purchasesError) throw purchasesError;
@@ -123,6 +123,30 @@ export function usePurchasedLeads() {
       }));
     },
     enabled: !!firm,
+  });
+}
+
+export function useUpdatePipelineStage() {
+  const { data: firm } = useFirm();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ leadId, stage }: { leadId: string; stage: string }) => {
+      if (!firm) throw new Error('No firm');
+      const { error } = await supabase
+        .from('lead_purchases')
+        .update({ pipeline_stage: stage, stage_updated_at: new Date().toISOString() })
+        .eq('lead_id', leadId)
+        .eq('firm_id', firm.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchased-leads'] });
+      toast.success('Lead moved successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to move lead: ' + error.message);
+    },
   });
 }
 
