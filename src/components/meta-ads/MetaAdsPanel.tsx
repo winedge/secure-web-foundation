@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Plus, Edit2, Megaphone, Sparkles, Loader2 } from 'lucide-react';
+import { AdPreviewPanel } from './AdPreviewPanel';
 
 interface Props {
   adSetId: string | null;
@@ -133,49 +134,63 @@ export function MetaAdsPanel({ adSetId, onBack }: Props) {
       )}
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editItem ? 'Edit Ad' : 'New Ad'}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex justify-end">
-              <Button variant="outline" size="sm" onClick={generateWithAi} disabled={aiAssistant.isPending} className="gap-2">
-                {aiAssistant.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                Generate with AI
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Form */}
+            <div className="space-y-4">
+              <div className="flex justify-end">
+                <Button variant="outline" size="sm" onClick={generateWithAi} disabled={aiAssistant.isPending} className="gap-2">
+                  {aiAssistant.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  Generate with AI
+                </Button>
+              </div>
+              <div><Label>Ad Name</Label><Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></div>
+              <div><Label>Headline (max 40 chars)</Label><Input value={form.headline} onChange={e => setForm(p => ({ ...p, headline: e.target.value }))} maxLength={40} /></div>
+              <div><Label>Body Text (max 125 chars)</Label><Textarea value={form.body_text} onChange={e => setForm(p => ({ ...p, body_text: e.target.value }))} maxLength={125} rows={3} /></div>
+              <div><Label>Description (max 30 chars)</Label><Input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} maxLength={30} /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Call to Action</Label>
+                  <Select value={form.call_to_action} onValueChange={v => setForm(p => ({ ...p, call_to_action: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="LEARN_MORE">Learn More</SelectItem>
+                      <SelectItem value="SIGN_UP">Sign Up</SelectItem>
+                      <SelectItem value="CONTACT_US">Contact Us</SelectItem>
+                      <SelectItem value="GET_QUOTE">Get Quote</SelectItem>
+                      <SelectItem value="APPLY_NOW">Apply Now</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label>Creative Type</Label>
+                  <Select value={form.creative_type} onValueChange={v => setForm(p => ({ ...p, creative_type: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="image">Image</SelectItem>
+                      <SelectItem value="video">Video</SelectItem>
+                      <SelectItem value="carousel">Carousel</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div><Label>Link URL</Label><Input value={form.link_url} onChange={e => setForm(p => ({ ...p, link_url: e.target.value }))} placeholder="https://..." /></div>
+              <Button onClick={handleSave} disabled={!form.name || createAd.isPending || updateAd.isPending} className="w-full">
+                {editItem ? 'Update Ad' : 'Create Ad'}
               </Button>
             </div>
-            <div><Label>Ad Name</Label><Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></div>
-            <div><Label>Headline (max 40 chars)</Label><Input value={form.headline} onChange={e => setForm(p => ({ ...p, headline: e.target.value }))} maxLength={40} /></div>
-            <div><Label>Body Text (max 125 chars)</Label><Textarea value={form.body_text} onChange={e => setForm(p => ({ ...p, body_text: e.target.value }))} maxLength={125} rows={3} /></div>
-            <div><Label>Description (max 30 chars)</Label><Input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} maxLength={30} /></div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label>Call to Action</Label>
-                <Select value={form.call_to_action} onValueChange={v => setForm(p => ({ ...p, call_to_action: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="LEARN_MORE">Learn More</SelectItem>
-                    <SelectItem value="SIGN_UP">Sign Up</SelectItem>
-                    <SelectItem value="CONTACT_US">Contact Us</SelectItem>
-                    <SelectItem value="GET_QUOTE">Get Quote</SelectItem>
-                    <SelectItem value="APPLY_NOW">Apply Now</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div><Label>Creative Type</Label>
-                <Select value={form.creative_type} onValueChange={v => setForm(p => ({ ...p, creative_type: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="image">Image</SelectItem>
-                    <SelectItem value="video">Video</SelectItem>
-                    <SelectItem value="carousel">Carousel</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+
+            {/* Live Preview */}
+            <div className="lg:border-l lg:pl-6">
+              <AdPreviewPanel
+                headline={form.headline}
+                bodyText={form.body_text}
+                description={form.description}
+                callToAction={form.call_to_action}
+                linkUrl={form.link_url}
+              />
             </div>
-            <div><Label>Link URL</Label><Input value={form.link_url} onChange={e => setForm(p => ({ ...p, link_url: e.target.value }))} placeholder="https://..." /></div>
-            <Button onClick={handleSave} disabled={!form.name || createAd.isPending || updateAd.isPending} className="w-full">
-              {editItem ? 'Update Ad' : 'Create Ad'}
-            </Button>
           </div>
         </DialogContent>
       </Dialog>

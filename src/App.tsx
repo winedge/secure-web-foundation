@@ -8,6 +8,7 @@ import { PostHogProvider, PostHogPageView } from "@/lib/posthog";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { SubscriptionProvider } from "@/components/subscription/SubscriptionProvider";
 import { RouteErrorBoundary } from "@/components/error/RouteErrorBoundary";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import { Suspense, lazy } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -114,6 +115,7 @@ const App = () => (
                 <Route path="/admin/user-roles" element={<ProtectedRoute requireAdmin><LazyRoute><AdminUserRoles /></LazyRoute></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <ChatWidget />
             </BrowserRouter>
           </TooltipProvider>
         </PostHogProvider>
