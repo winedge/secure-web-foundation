@@ -31,7 +31,7 @@ interface SessionDetailViewProps {
 }
 
 function formatDuration(seconds: number): string {
-  if (!seconds) return '—';
+  if (!seconds) return '-';
   if (seconds < 60) return `${Math.round(seconds)}s`;
   const mins = Math.floor(seconds / 60);
   const secs = Math.round(seconds % 60);
@@ -53,7 +53,7 @@ export function SessionDetailView({ metadata, leadName, sessionRecordingUrl }: S
   const consent = metadata.consent_validation;
   const clientInfo = metadata.client_info;
 
-  const userAgent = fingerprint?.user_agent || metadata.user_agent || '—';
+  const userAgent = fingerprint?.user_agent || metadata.user_agent || '-';
   const timeSpent = timing?.total_session_seconds || metadata.time_spent_seconds || 0;
   const formTime = timing?.form_completion_seconds || metadata.time_spent_seconds || 0;
   const sessionStart = timing?.session_start || metadata.session_start;
@@ -64,7 +64,7 @@ export function SessionDetailView({ metadata, leadName, sessionRecordingUrl }: S
         <div>
           <h3 className="text-lg font-semibold">Session Details: {leadName}</h3>
           <p className="text-sm text-muted-foreground">
-            Recorded on {sessionStart ? format(new Date(sessionStart), 'MMM d, yyyy h:mm a') : '—'}
+            Recorded on {sessionStart ? format(new Date(sessionStart), 'MMM d, yyyy h:mm a') : '-'}
           </p>
         </div>
       )}
@@ -109,7 +109,7 @@ export function SessionDetailView({ metadata, leadName, sessionRecordingUrl }: S
               <Clock className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">Page Load</span>
             </div>
-            <p className="text-xl font-bold">{timing?.page_load_time ? `${timing.page_load_time}ms` : '—'}</p>
+            <p className="text-xl font-bold">{timing?.page_load_time ? `${timing.page_load_time}ms` : '-'}</p>
           </CardContent>
         </Card>
       </div>
@@ -127,43 +127,43 @@ export function SessionDetailView({ metadata, leadName, sessionRecordingUrl }: S
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">IP Address</p>
-                <p className="font-medium font-mono">{clientInfo.ip_address || '—'}</p>
+                <p className="font-medium font-mono">{clientInfo.ip_address || '-'}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">City</p>
-                <p className="font-medium">{clientInfo.geolocation?.city || '—'}</p>
+                <p className="font-medium">{clientInfo.geolocation?.city || '-'}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Region</p>
-                <p className="font-medium">{clientInfo.geolocation?.region || '—'}{clientInfo.geolocation?.region_code ? ` (${clientInfo.geolocation.region_code})` : ''}</p>
+                <p className="font-medium">{clientInfo.geolocation?.region || '-'}{clientInfo.geolocation?.region_code ? ` (${clientInfo.geolocation.region_code})` : ''}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Country</p>
-                <p className="font-medium">{clientInfo.geolocation?.country || '—'}{clientInfo.geolocation?.country_code ? ` (${clientInfo.geolocation.country_code})` : ''}</p>
+                <p className="font-medium">{clientInfo.geolocation?.country || '-'}{clientInfo.geolocation?.country_code ? ` (${clientInfo.geolocation.country_code})` : ''}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">ZIP Code</p>
-                <p className="font-medium">{clientInfo.geolocation?.zip || '—'}</p>
+                <p className="font-medium">{clientInfo.geolocation?.zip || '-'}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Timezone</p>
-                <p className="font-medium">{clientInfo.geolocation?.timezone || fingerprint?.timezone || '—'}</p>
+                <p className="font-medium">{clientInfo.geolocation?.timezone || fingerprint?.timezone || '-'}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Coordinates</p>
                 <p className="font-medium">
                   {clientInfo.geolocation?.latitude && clientInfo.geolocation?.longitude
                     ? `${clientInfo.geolocation.latitude}, ${clientInfo.geolocation.longitude}`
-                    : '—'}
+                    : '-'}
                 </p>
               </div>
               <div>
                 <p className="text-muted-foreground">ISP</p>
-                <p className="font-medium">{clientInfo.geolocation?.isp || '—'}</p>
+                <p className="font-medium">{clientInfo.geolocation?.isp || '-'}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Organization</p>
-                <p className="font-medium">{clientInfo.geolocation?.org || '—'}</p>
+                <p className="font-medium">{clientInfo.geolocation?.org || '-'}</p>
               </div>
             </div>
           ) : (
@@ -221,11 +221,11 @@ export function SessionDetailView({ metadata, leadName, sessionRecordingUrl }: S
               </div>
               <div>
                 <p className="text-muted-foreground">CPU Cores</p>
-                <p className="font-medium">{fingerprint.hardware_concurrency || '—'}</p>
+                <p className="font-medium">{fingerprint.hardware_concurrency || '-'}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Connection</p>
-                <p className="font-medium">{fingerprint.connection_type || '—'}</p>
+                <p className="font-medium">{fingerprint.connection_type || '-'}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Do Not Track</p>
@@ -237,7 +237,7 @@ export function SessionDetailView({ metadata, leadName, sessionRecordingUrl }: S
               </div>
               <div>
                 <p className="text-muted-foreground">Device Memory</p>
-                <p className="font-medium">{fingerprint.device_memory ? `${fingerprint.device_memory}GB` : '—'}</p>
+                <p className="font-medium">{fingerprint.device_memory ? `${fingerprint.device_memory}GB` : '-'}</p>
               </div>
             </div>
             <Separator className="my-3" />
@@ -330,7 +330,7 @@ export function SessionDetailView({ metadata, leadName, sessionRecordingUrl }: S
                       <TableCell className="font-medium">{interaction.field_name}</TableCell>
                       <TableCell className="text-muted-foreground">{interaction.field_type}</TableCell>
                       <TableCell className="text-muted-foreground">
-                        {interaction.duration_ms ? `${interaction.duration_ms}ms` : '—'}
+                        {interaction.duration_ms ? `${interaction.duration_ms}ms` : '-'}
                       </TableCell>
                     </TableRow>
                   ))}

@@ -174,7 +174,7 @@ export function SessionReplayViewer({ recordingPath, leadName }: SessionReplayVi
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-base flex items-center gap-2">
           <Play className="h-4 w-4" />
-          Session Recording {leadName && `— ${leadName}`}
+          Session Recording {leadName && `- ${leadName}`}
         </CardTitle>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="font-mono">{formatTime(duration)}</Badge>

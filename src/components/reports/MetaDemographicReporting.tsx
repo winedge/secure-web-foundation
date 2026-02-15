@@ -99,7 +99,7 @@ export function MetaDemographicReporting() {
       </div>
 
       <Badge variant="outline" className="text-xs">
-        Showing demo data — connect Meta API for real demographic metrics
+        Showing demo data - connect Meta API for real demographic metrics
       </Badge>
 
       {/* Gender & Age row */}

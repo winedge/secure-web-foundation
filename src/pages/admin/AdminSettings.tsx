@@ -568,7 +568,7 @@ function StripeConfig() {
               </h5>
               <p className="text-sm text-muted-foreground ml-6">
                 Stripe API keys are stored as encrypted Cloud secrets and are only accessible by backend functions. 
-                The configuration status shown here is for reference only — the actual keys are never exposed in the UI.
+                The configuration status shown here is for reference only - the actual keys are never exposed in the UI.
               </p>
             </div>
           </div>

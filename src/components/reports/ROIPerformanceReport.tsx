@@ -154,7 +154,7 @@ export function ROIPerformanceReport() {
         </div>
 
         <div class="footer">
-          <p>LeadsThru — Confidential Performance Report</p>
+          <p>LeadsThru - Confidential Performance Report</p>
           <p>This report contains estimated projections based on historical data and industry benchmarks.</p>
         </div>
       </body>

@@ -11,7 +11,7 @@ import { RouteErrorBoundary } from "@/components/error/RouteErrorBoundary";
 import { Suspense, lazy } from "react";
 import { Loader2 } from "lucide-react";
 
-// Eager-loaded routes (landing, auth — needed immediately)
+// Eager-loaded routes (landing, auth - needed immediately)
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";

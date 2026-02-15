@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Save, Building, User, Bell, Shield, Link2, Facebook, Instagram, Linkedin, Twitter, Video, CheckCircle, XCircle, Loader2, RefreshCw, ExternalLink, Scale, MessageCircle, Upload } from 'lucide-react';
+import { TwoFactorSetup } from '@/components/auth/TwoFactorSetup';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -759,14 +760,12 @@ export default function Settings() {
                     <p className="text-sm text-muted-foreground mb-3">
                       Update your password to keep your account secure
                     </p>
-                    <Button variant="outline">Change Password</Button>
+                    <Button variant="outline" asChild>
+                      <a href="/reset-password">Change Password</a>
+                    </Button>
                   </div>
                   <div className="border-t pt-4">
-                    <h4 className="font-medium">Two-Factor Authentication</h4>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Add an extra layer of security to your account
-                    </p>
-                    <Button variant="outline">Enable 2FA</Button>
+                    <TwoFactorSetup />
                   </div>
                   <div className="border-t pt-4">
                     <h4 className="font-medium text-destructive">Danger Zone</h4>

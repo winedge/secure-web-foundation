@@ -121,7 +121,7 @@ export default function AdminSessionLogs() {
                             }, 0) / filteredLeads.length,
                         },
                       })
-                    : '—'}
+                    : '-'}
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">Avg Duration</p>
@@ -199,15 +199,15 @@ export default function AdminSessionLogs() {
                           </TableCell>
                           <TableCell>{lead.tort_type}</TableCell>
                           <TableCell className="font-mono text-xs">
-                            {ci?.ip_address || '—'}
+                            {ci?.ip_address || '-'}
                           </TableCell>
                           <TableCell className="whitespace-nowrap">
                             {geo?.city && geo?.region_code
                               ? `${geo.city}, ${geo.region_code}`
-                              : geo?.country || '—'}
+                              : geo?.country || '-'}
                           </TableCell>
                           <TableCell className="text-xs">
-                            {geo?.timezone || meta?.fingerprint?.timezone || '—'}
+                            {geo?.timezone || meta?.fingerprint?.timezone || '-'}
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline">{getDeviceType(meta)}</Badge>

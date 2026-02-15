@@ -2483,8 +2483,86 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_connections_safe: {
+        Row: {
+          connected_at: string | null
+          created_at: string | null
+          firm_id: string | null
+          id: string | null
+          is_active: boolean | null
+          metadata: Json | null
+          page_id: string | null
+          page_name: string | null
+          permissions: string[] | null
+          platform: string | null
+          platform_user_id: string | null
+          platform_username: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          connected_at?: string | null
+          created_at?: string | null
+          firm_id?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          metadata?: Json | null
+          page_id?: string | null
+          page_name?: string | null
+          permissions?: string[] | null
+          platform?: string | null
+          platform_user_id?: string | null
+          platform_username?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          connected_at?: string | null
+          created_at?: string | null
+          firm_id?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          metadata?: Json | null
+          page_id?: string | null
+          page_name?: string | null
+          permissions?: string[] | null
+          platform?: string | null
+          platform_user_id?: string | null
+          platform_username?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_connections_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      get_marketplace_leads: {
+        Args: never
+        Returns: {
+          age_bucket: string
+          ai_quality_score: number
+          created_at: string
+          id: string
+          is_exclusive: boolean
+          is_verified: boolean
+          price: number
+          state: string
+          status: Database["public"]["Enums"]["lead_status"]
+          tier: Database["public"]["Enums"]["lead_tier"]
+          tort_type: string
+        }[]
+      }
       get_user_firm_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {

@@ -53,7 +53,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <>
             <div className="my-4 border-t border-sidebar-border" />
             <p className="px-3 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-              Admin — Overview
+              Admin - Overview
             </p>
             <SidebarNavSection items={adminOverview} variant="admin" onNavigate={onNavigate} />
 

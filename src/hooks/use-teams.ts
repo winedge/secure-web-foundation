@@ -138,7 +138,7 @@ export function useAddTeamMember() {
         .from('team_members')
         .insert({
           team_id: teamId,
-          user_id: user.id, // placeholder — will be updated when user accepts
+          user_id: user.id, // placeholder - will be updated when user accepts
           email,
           full_name: fullName || null,
           permissions,
