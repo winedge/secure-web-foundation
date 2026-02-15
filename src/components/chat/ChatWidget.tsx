@@ -12,6 +12,7 @@ import { useAllFirms, useFirmMemberUsers, useFirmTeamMembers, useProfiles } from
 import {
   useChatConversations, useChatMessages, useSendMessage,
   useCreateConversation, useUnreadCount, useMarkRead,
+  useChatNotifications,
   ChatConversation,
 } from '@/hooks/use-chat';
 import { format, parseISO } from 'date-fns';
@@ -25,6 +26,7 @@ export function ChatWidget() {
   const [activeConv, setActiveConv] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
   const { data: unread } = useUnreadCount();
+  useChatNotifications();
 
   if (!user) return null;
 
