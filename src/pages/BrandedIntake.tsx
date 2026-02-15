@@ -3,7 +3,8 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { CheckCircle, FileText, Shield, ArrowRight, Loader2 } from 'lucide-react';
+import { CheckCircle, FileText, Shield, ArrowRight, Loader2, MessageCircle, ClipboardList } from 'lucide-react';
+import ConversationalIntake from '@/components/intake/ConversationalIntake';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -90,6 +91,7 @@ export default function BrandedIntake() {
 
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [intakeMode, setIntakeMode] = useState<'chat' | 'form'>('chat');
   const recorderRef = useRef(new SessionRecorder());
   const clientInfoRef = useRef<ClientNetworkInfo | null>(null);
 
@@ -377,7 +379,7 @@ export default function BrandedIntake() {
             </p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-4 mb-8">
+          <div className="flex flex-wrap justify-center gap-4 mb-6">
             <div className="flex items-center gap-2 text-sm" style={{ color: '#6b7280' }}>
               <Shield className="h-4 w-4" style={{ color: accentColor }} />
               <span>100% Confidential</span>
@@ -392,6 +394,42 @@ export default function BrandedIntake() {
             </div>
           </div>
 
+          {/* Mode Toggle */}
+          <div className="flex justify-center gap-2 mb-8">
+            <Button
+              variant={intakeMode === 'chat' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setIntakeMode('chat')}
+              className="gap-2"
+              style={intakeMode === 'chat' ? { backgroundColor: primaryColor } : undefined}
+            >
+              <MessageCircle className="h-4 w-4" />
+              Chat with AI
+            </Button>
+            <Button
+              variant={intakeMode === 'form' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setIntakeMode('form')}
+              className="gap-2"
+              style={intakeMode === 'form' ? { backgroundColor: primaryColor } : undefined}
+            >
+              <ClipboardList className="h-4 w-4" />
+              Fill Out Form
+            </Button>
+          </div>
+
+          {intakeMode === 'chat' ? (
+            <ConversationalIntake
+              campaignId={campaignId}
+              branding={{
+                firm_name: firmName,
+                primary_color: primaryColor,
+                accent_color: accentColor,
+                logo_url: logoUrl || undefined,
+              }}
+              onComplete={() => setSubmitted(true)}
+            />
+          ) : (
           <Card>
             <CardHeader>
               <CardTitle style={{ color: primaryColor }}>Your Information</CardTitle>
@@ -532,6 +570,7 @@ export default function BrandedIntake() {
               </form>
             </CardContent>
           </Card>
+          )}
         </div>
       </main>
     </div>

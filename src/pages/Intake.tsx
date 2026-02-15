@@ -3,7 +3,8 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { CheckCircle, FileText, Shield, ArrowRight, Loader2 } from 'lucide-react';
+import { CheckCircle, FileText, Shield, ArrowRight, Loader2, MessageCircle, ClipboardList } from 'lucide-react';
+import ConversationalIntake from '@/components/intake/ConversationalIntake';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -61,6 +62,8 @@ export default function Intake() {
   const [searchParams] = useSearchParams();
   const campaignId = searchParams.get('campaign');
   const preselectedTort = searchParams.get('tort') || '';
+  const defaultMode = searchParams.get('mode') === 'form' ? 'form' : 'chat';
+  const [intakeMode, setIntakeMode] = useState<'chat' | 'form'>(defaultMode);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -276,9 +279,31 @@ export default function Intake() {
           <div className="text-center mb-8">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3">Free Case Evaluation</h1>
             <p className="text-muted-foreground text-base sm:text-lg">
-              Find out if you qualify for compensation. Fill out this confidential form
-              and a legal professional may contact you.
+              Find out if you qualify for compensation. Chat with our AI assistant
+              or fill out the form below.
             </p>
+          </div>
+
+          {/* Mode Toggle */}
+          <div className="flex justify-center gap-2 mb-6">
+            <Button
+              variant={intakeMode === 'chat' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setIntakeMode('chat')}
+              className="gap-2"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Chat with AI
+            </Button>
+            <Button
+              variant={intakeMode === 'form' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setIntakeMode('form')}
+              className="gap-2"
+            >
+              <ClipboardList className="h-4 w-4" />
+              Fill Out Form
+            </Button>
           </div>
 
           <div className="flex flex-wrap justify-center gap-4 mb-8">
@@ -295,6 +320,15 @@ export default function Intake() {
               <span>Free Evaluation</span>
             </div>
           </div>
+
+          {intakeMode === 'chat' ? (
+            <ConversationalIntake
+              campaignId={campaignId}
+              tortTypeHint={preselectedTort}
+              onComplete={() => setSubmitted(true)}
+            />
+          ) : (
+          <>
 
           <Card>
             <CardHeader>
@@ -555,6 +589,8 @@ export default function Intake() {
               </form>
             </CardContent>
           </Card>
+        </>
+          )}
         </div>
       </main>
     </div>
