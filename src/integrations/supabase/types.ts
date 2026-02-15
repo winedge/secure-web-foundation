@@ -405,6 +405,65 @@ export type Database = {
           },
         ]
       }
+      audience_profiles: {
+        Row: {
+          behavioral_signals: Json | null
+          created_at: string
+          demographics: Json | null
+          estimated_reach: number | null
+          firm_id: string
+          id: string
+          match_quality: number | null
+          name: string
+          psychographics: Json | null
+          seed_data: Json | null
+          status: string | null
+          synced_platforms: string[] | null
+          tort_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          behavioral_signals?: Json | null
+          created_at?: string
+          demographics?: Json | null
+          estimated_reach?: number | null
+          firm_id: string
+          id?: string
+          match_quality?: number | null
+          name: string
+          psychographics?: Json | null
+          seed_data?: Json | null
+          status?: string | null
+          synced_platforms?: string[] | null
+          tort_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          behavioral_signals?: Json | null
+          created_at?: string
+          demographics?: Json | null
+          estimated_reach?: number | null
+          firm_id?: string
+          id?: string
+          match_quality?: number | null
+          name?: string
+          psychographics?: Json | null
+          seed_data?: Json | null
+          status?: string | null
+          synced_platforms?: string[] | null
+          tort_type?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audience_profiles_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -999,6 +1058,188 @@ export type Database = {
           },
         ]
       }
+      creative_studio_projects: {
+        Row: {
+          ai_score: number | null
+          best_performer_id: string | null
+          brand_tone: string | null
+          brief: string | null
+          created_at: string
+          firm_id: string
+          generated_variants: Json | null
+          id: string
+          name: string
+          status: string | null
+          target_audience: string | null
+          tort_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          ai_score?: number | null
+          best_performer_id?: string | null
+          brand_tone?: string | null
+          brief?: string | null
+          created_at?: string
+          firm_id: string
+          generated_variants?: Json | null
+          id?: string
+          name: string
+          status?: string | null
+          target_audience?: string | null
+          tort_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ai_score?: number | null
+          best_performer_id?: string | null
+          brand_tone?: string | null
+          brief?: string | null
+          created_at?: string
+          firm_id?: string
+          generated_variants?: Json | null
+          id?: string
+          name?: string
+          status?: string | null
+          target_audience?: string | null
+          tort_type?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creative_studio_projects_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cross_platform_campaigns: {
+        Row: {
+          ai_optimized_allocation: Json | null
+          created_at: string
+          firm_id: string
+          id: string
+          last_optimization_at: string | null
+          name: string
+          performance_summary: Json | null
+          platform_allocation: Json | null
+          platforms_active: string[] | null
+          status: string | null
+          tort_type: string | null
+          total_budget: number | null
+          updated_at: string
+        }
+        Insert: {
+          ai_optimized_allocation?: Json | null
+          created_at?: string
+          firm_id: string
+          id?: string
+          last_optimization_at?: string | null
+          name: string
+          performance_summary?: Json | null
+          platform_allocation?: Json | null
+          platforms_active?: string[] | null
+          status?: string | null
+          tort_type?: string | null
+          total_budget?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ai_optimized_allocation?: Json | null
+          created_at?: string
+          firm_id?: string
+          id?: string
+          last_optimization_at?: string | null
+          name?: string
+          performance_summary?: Json | null
+          platform_allocation?: Json | null
+          platforms_active?: string[] | null
+          status?: string | null
+          tort_type?: string | null
+          total_budget?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cross_platform_campaigns_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dark_funnel_visitors: {
+        Row: {
+          converted: boolean | null
+          created_at: string
+          device_type: string | null
+          estimated_intent: number | null
+          firm_id: string
+          first_seen_at: string
+          geographic_region: string | null
+          id: string
+          last_seen_at: string
+          lead_id: string | null
+          tort_interest: string | null
+          touchpoints: Json | null
+          visitor_hash: string
+        }
+        Insert: {
+          converted?: boolean | null
+          created_at?: string
+          device_type?: string | null
+          estimated_intent?: number | null
+          firm_id: string
+          first_seen_at?: string
+          geographic_region?: string | null
+          id?: string
+          last_seen_at?: string
+          lead_id?: string | null
+          tort_interest?: string | null
+          touchpoints?: Json | null
+          visitor_hash: string
+        }
+        Update: {
+          converted?: boolean | null
+          created_at?: string
+          device_type?: string | null
+          estimated_intent?: number | null
+          firm_id?: string
+          first_seen_at?: string
+          geographic_region?: string | null
+          id?: string
+          last_seen_at?: string
+          lead_id?: string | null
+          tort_interest?: string | null
+          touchpoints?: Json | null
+          visitor_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dark_funnel_visitors_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dark_funnel_visitors_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dark_funnel_visitors_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_analyses: {
         Row: {
           ai_summary: string | null
@@ -1065,6 +1306,81 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dynamic_landing_pages: {
+        Row: {
+          campaign_id: string | null
+          conversion_rate: number | null
+          conversions: number | null
+          created_at: string
+          cta_color: string | null
+          cta_text: string | null
+          firm_id: string
+          headline: string | null
+          id: string
+          is_published: boolean | null
+          page_title: string
+          personalization_rules: Json | null
+          sections: Json | null
+          slug: string
+          subheadline: string | null
+          updated_at: string
+          visits: number | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          conversion_rate?: number | null
+          conversions?: number | null
+          created_at?: string
+          cta_color?: string | null
+          cta_text?: string | null
+          firm_id: string
+          headline?: string | null
+          id?: string
+          is_published?: boolean | null
+          page_title: string
+          personalization_rules?: Json | null
+          sections?: Json | null
+          slug: string
+          subheadline?: string | null
+          updated_at?: string
+          visits?: number | null
+        }
+        Update: {
+          campaign_id?: string | null
+          conversion_rate?: number | null
+          conversions?: number | null
+          created_at?: string
+          cta_color?: string | null
+          cta_text?: string | null
+          firm_id?: string
+          headline?: string | null
+          id?: string
+          is_published?: boolean | null
+          page_title?: string
+          personalization_rules?: Json | null
+          sections?: Json | null
+          slug?: string
+          subheadline?: string | null
+          updated_at?: string
+          visits?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dynamic_landing_pages_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dynamic_landing_pages_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
             referencedColumns: ["id"]
           },
         ]
@@ -1390,6 +1706,110 @@ export type Database = {
           updated_at?: string
           wallet_balance?: number | null
           website?: string | null
+        }
+        Relationships: []
+      }
+      geofence_campaigns: {
+        Row: {
+          ad_creative: Json | null
+          clicks: number | null
+          conversions: number | null
+          created_at: string
+          daily_budget: number | null
+          firm_id: string
+          id: string
+          impressions: number | null
+          is_active: boolean | null
+          locations: Json
+          name: string
+          radius_meters: number | null
+          tort_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          ad_creative?: Json | null
+          clicks?: number | null
+          conversions?: number | null
+          created_at?: string
+          daily_budget?: number | null
+          firm_id: string
+          id?: string
+          impressions?: number | null
+          is_active?: boolean | null
+          locations?: Json
+          name: string
+          radius_meters?: number | null
+          tort_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ad_creative?: Json | null
+          clicks?: number | null
+          conversions?: number | null
+          created_at?: string
+          daily_budget?: number | null
+          firm_id?: string
+          id?: string
+          impressions?: number | null
+          is_active?: boolean | null
+          locations?: Json
+          name?: string
+          radius_meters?: number | null
+          tort_type?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "geofence_campaigns_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intent_signals: {
+        Row: {
+          ai_analysis: Json | null
+          created_at: string
+          detected_at: string
+          id: string
+          intensity: number | null
+          is_active: boolean | null
+          keyword: string | null
+          recommended_action: string | null
+          signal_source: string
+          state: string | null
+          tort_type: string
+          volume_change_pct: number | null
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          created_at?: string
+          detected_at?: string
+          id?: string
+          intensity?: number | null
+          is_active?: boolean | null
+          keyword?: string | null
+          recommended_action?: string | null
+          signal_source: string
+          state?: string | null
+          tort_type: string
+          volume_change_pct?: number | null
+        }
+        Update: {
+          ai_analysis?: Json | null
+          created_at?: string
+          detected_at?: string
+          id?: string
+          intensity?: number | null
+          is_active?: boolean | null
+          keyword?: string | null
+          recommended_action?: string | null
+          signal_source?: string
+          state?: string | null
+          tort_type?: string
+          volume_change_pct?: number | null
         }
         Relationships: []
       }
@@ -2965,6 +3385,115 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      video_ad_projects: {
+        Row: {
+          ai_metadata: Json | null
+          brief: string | null
+          created_at: string
+          duration_seconds: number | null
+          firm_id: string
+          format: string | null
+          id: string
+          script: string | null
+          status: string | null
+          thumbnail_url: string | null
+          title: string
+          tort_type: string | null
+          updated_at: string
+          video_url: string | null
+          voiceover_text: string | null
+        }
+        Insert: {
+          ai_metadata?: Json | null
+          brief?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          firm_id: string
+          format?: string | null
+          id?: string
+          script?: string | null
+          status?: string | null
+          thumbnail_url?: string | null
+          title: string
+          tort_type?: string | null
+          updated_at?: string
+          video_url?: string | null
+          voiceover_text?: string | null
+        }
+        Update: {
+          ai_metadata?: Json | null
+          brief?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          firm_id?: string
+          format?: string | null
+          id?: string
+          script?: string | null
+          status?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          tort_type?: string | null
+          updated_at?: string
+          video_url?: string | null
+          voiceover_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_ad_projects_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      viral_content_library: {
+        Row: {
+          ai_analysis: Json | null
+          created_at: string
+          engagement_score: number | null
+          firm_id: string
+          id: string
+          inspired_variants: Json | null
+          original_ad_summary: string | null
+          source_platform: string | null
+          tort_type: string | null
+          trend_tags: string[] | null
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          created_at?: string
+          engagement_score?: number | null
+          firm_id: string
+          id?: string
+          inspired_variants?: Json | null
+          original_ad_summary?: string | null
+          source_platform?: string | null
+          tort_type?: string | null
+          trend_tags?: string[] | null
+        }
+        Update: {
+          ai_analysis?: Json | null
+          created_at?: string
+          engagement_score?: number | null
+          firm_id?: string
+          id?: string
+          inspired_variants?: Json | null
+          original_ad_summary?: string | null
+          source_platform?: string | null
+          tort_type?: string | null
+          trend_tags?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "viral_content_library_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       war_room_messages: {
         Row: {
