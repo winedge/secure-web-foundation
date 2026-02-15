@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { SubscriptionProvider } from "@/components/subscription/SubscriptionProvider";
 import { RouteErrorBoundary } from "@/components/error/RouteErrorBoundary";
 import { ChatWidget } from "@/components/chat/ChatWidget";
+import { usePresence } from "@/hooks/use-presence";
 import { Suspense, lazy } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -67,6 +68,11 @@ function LazyRoute({ children }: { children: React.ReactNode }) {
   );
 }
 
+function PresenceTracker() {
+  usePresence();
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -115,6 +121,7 @@ const App = () => (
                 <Route path="/admin/user-roles" element={<ProtectedRoute requireAdmin><LazyRoute><AdminUserRoles /></LazyRoute></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <PresenceTracker />
               <ChatWidget />
             </BrowserRouter>
           </TooltipProvider>
