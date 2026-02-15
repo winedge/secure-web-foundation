@@ -56,3 +56,18 @@ verify_jwt = false
 
 [functions.settlement-predictor]
 verify_jwt = false
+
+[functions.market-pulse]
+verify_jwt = false
+
+[functions.judge-intelligence]
+verify_jwt = false
+
+[functions.predictive-leads]
+verify_jwt = false
+
+[functions.cross-firm-benchmarks]
+verify_jwt = false
+
+[functions.campaign-autopilot]
+verify_jwt = false

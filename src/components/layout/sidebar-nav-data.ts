@@ -24,6 +24,9 @@ import {
   Wrench,
   Bell,
   Handshake,
+  Gavel,
+  Brain,
+  ShieldCheck as VaultIcon,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -64,6 +67,17 @@ export const navGroups: NavGroup[] = [
       { name: 'Meta Ads', href: '/meta-ads', icon: Megaphone, premium: true },
       { name: 'Social Calendar', href: '/social-calendar', icon: CalendarDays, premium: true },
       { name: 'Competitor Intel', href: '/competitor-intelligence', icon: Radar, premium: true },
+      { name: 'Market Pulse', href: '/market-pulse', icon: Target, premium: true },
+      { name: 'Predictive Leads', href: '/predictive-leads', icon: Brain, premium: true },
+    ],
+  },
+  {
+    label: 'Intelligence',
+    icon: Gavel,
+    items: [
+      { name: 'Judge Intel', href: '/judge-intelligence', icon: Gavel, premium: true },
+      { name: 'Evidence Vault', href: '/evidence-vault', icon: VaultIcon, premium: true },
+      { name: 'Benchmarks', href: '/benchmarks', icon: BarChart3, premium: true },
     ],
   },
   {

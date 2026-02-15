@@ -670,6 +670,83 @@ export type Database = {
           },
         ]
       }
+      case_simulations: {
+        Row: {
+          created_at: string
+          firm_id: string
+          id: string
+          judge_id: string | null
+          jurisdiction: string
+          lead_id: string | null
+          recommended_strategy: string | null
+          settlement_range_high: number | null
+          settlement_range_low: number | null
+          simulated_at: string
+          simulation_results: Json
+          tort_type: string
+          win_probability: number | null
+        }
+        Insert: {
+          created_at?: string
+          firm_id: string
+          id?: string
+          judge_id?: string | null
+          jurisdiction: string
+          lead_id?: string | null
+          recommended_strategy?: string | null
+          settlement_range_high?: number | null
+          settlement_range_low?: number | null
+          simulated_at?: string
+          simulation_results?: Json
+          tort_type: string
+          win_probability?: number | null
+        }
+        Update: {
+          created_at?: string
+          firm_id?: string
+          id?: string
+          judge_id?: string | null
+          jurisdiction?: string
+          lead_id?: string | null
+          recommended_strategy?: string | null
+          settlement_range_high?: number | null
+          settlement_range_low?: number | null
+          simulated_at?: string
+          simulation_results?: Json
+          tort_type?: string
+          win_probability?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_simulations_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_simulations_judge_id_fkey"
+            columns: ["judge_id"]
+            isOneToOne: false
+            referencedRelation: "judge_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_simulations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_simulations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_conversations: {
         Row: {
           created_at: string
@@ -992,6 +1069,176 @@ export type Database = {
           },
         ]
       }
+      evidence_audit_trail: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          details: Json | null
+          evidence_id: string
+          id: string
+          ip_address: string | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          details?: Json | null
+          evidence_id: string
+          id?: string
+          ip_address?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          details?: Json | null
+          evidence_id?: string
+          id?: string
+          ip_address?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evidence_audit_trail_evidence_id_fkey"
+            columns: ["evidence_id"]
+            isOneToOne: false
+            referencedRelation: "evidence_vault"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evidence_vault: {
+        Row: {
+          chain_position: number
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_url: string
+          firm_id: string
+          id: string
+          integrity_verified: boolean | null
+          lead_id: string | null
+          metadata: Json | null
+          mime_type: string | null
+          previous_hash: string | null
+          sha256_hash: string
+          tamper_detected: boolean | null
+          uploaded_by: string
+          verified_at: string | null
+        }
+        Insert: {
+          chain_position?: number
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          firm_id: string
+          id?: string
+          integrity_verified?: boolean | null
+          lead_id?: string | null
+          metadata?: Json | null
+          mime_type?: string | null
+          previous_hash?: string | null
+          sha256_hash: string
+          tamper_detected?: boolean | null
+          uploaded_by: string
+          verified_at?: string | null
+        }
+        Update: {
+          chain_position?: number
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          firm_id?: string
+          id?: string
+          integrity_verified?: boolean | null
+          lead_id?: string | null
+          metadata?: Json | null
+          mime_type?: string | null
+          previous_hash?: string | null
+          sha256_hash?: string
+          tamper_detected?: boolean | null
+          uploaded_by?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evidence_vault_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evidence_vault_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evidence_vault_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      firm_benchmarks: {
+        Row: {
+          avg_case_value: number | null
+          avg_conversion_rate: number | null
+          avg_cpl: number | null
+          avg_response_time_minutes: number | null
+          created_at: string
+          firm_id: string
+          id: string
+          period: string
+          pipeline_velocity_days: number | null
+          tort_type: string | null
+          total_leads_purchased: number | null
+          total_spend: number | null
+        }
+        Insert: {
+          avg_case_value?: number | null
+          avg_conversion_rate?: number | null
+          avg_cpl?: number | null
+          avg_response_time_minutes?: number | null
+          created_at?: string
+          firm_id: string
+          id?: string
+          period: string
+          pipeline_velocity_days?: number | null
+          tort_type?: string | null
+          total_leads_purchased?: number | null
+          total_spend?: number | null
+        }
+        Update: {
+          avg_case_value?: number | null
+          avg_conversion_rate?: number | null
+          avg_cpl?: number | null
+          avg_response_time_minutes?: number | null
+          created_at?: string
+          firm_id?: string
+          id?: string
+          period?: string
+          pipeline_velocity_days?: number | null
+          tort_type?: string | null
+          total_leads_purchased?: number | null
+          total_spend?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firm_benchmarks_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firm_branding: {
         Row: {
           accent_color: string | null
@@ -1186,6 +1433,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      judge_profiles: {
+        Row: {
+          ai_strategy_notes: string | null
+          appointment_year: number | null
+          avg_case_duration_days: number | null
+          avg_settlement_modifier: number | null
+          court: string | null
+          created_at: string
+          id: string
+          judge_name: string
+          jurisdiction: string
+          last_analyzed_at: string | null
+          notable_rulings: Json | null
+          plaintiff_win_rate: number | null
+          ruling_history: Json | null
+          sentiment_profile: Json | null
+          state: string | null
+          tort_specialties: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          ai_strategy_notes?: string | null
+          appointment_year?: number | null
+          avg_case_duration_days?: number | null
+          avg_settlement_modifier?: number | null
+          court?: string | null
+          created_at?: string
+          id?: string
+          judge_name: string
+          jurisdiction: string
+          last_analyzed_at?: string | null
+          notable_rulings?: Json | null
+          plaintiff_win_rate?: number | null
+          ruling_history?: Json | null
+          sentiment_profile?: Json | null
+          state?: string | null
+          tort_specialties?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          ai_strategy_notes?: string | null
+          appointment_year?: number | null
+          avg_case_duration_days?: number | null
+          avg_settlement_modifier?: number | null
+          court?: string | null
+          created_at?: string
+          id?: string
+          judge_name?: string
+          jurisdiction?: string
+          last_analyzed_at?: string | null
+          notable_rulings?: Json | null
+          plaintiff_win_rate?: number | null
+          ruling_history?: Json | null
+          sentiment_profile?: Json | null
+          state?: string | null
+          tort_specialties?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       lead_purchases: {
         Row: {
@@ -1549,6 +1856,107 @@ export type Database = {
             columns: ["source_id"]
             isOneToOne: false
             referencedRelation: "lead_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      market_pulse_alerts: {
+        Row: {
+          affected_states: string[] | null
+          ai_analysis: Json | null
+          ai_confidence: number | null
+          competition_level: string | null
+          created_at: string
+          description: string | null
+          detected_at: string
+          estimated_market_size: string | null
+          expires_at: string | null
+          id: string
+          is_trending: boolean | null
+          severity: string
+          source_type: string
+          source_url: string | null
+          title: string
+          tort_type: string | null
+        }
+        Insert: {
+          affected_states?: string[] | null
+          ai_analysis?: Json | null
+          ai_confidence?: number | null
+          competition_level?: string | null
+          created_at?: string
+          description?: string | null
+          detected_at?: string
+          estimated_market_size?: string | null
+          expires_at?: string | null
+          id?: string
+          is_trending?: boolean | null
+          severity?: string
+          source_type?: string
+          source_url?: string | null
+          title: string
+          tort_type?: string | null
+        }
+        Update: {
+          affected_states?: string[] | null
+          ai_analysis?: Json | null
+          ai_confidence?: number | null
+          competition_level?: string | null
+          created_at?: string
+          description?: string | null
+          detected_at?: string
+          estimated_market_size?: string | null
+          expires_at?: string | null
+          id?: string
+          is_trending?: boolean | null
+          severity?: string
+          source_type?: string
+          source_url?: string | null
+          title?: string
+          tort_type?: string | null
+        }
+        Relationships: []
+      }
+      market_pulse_watchlist: {
+        Row: {
+          created_at: string
+          firm_id: string
+          id: string
+          keywords: string[]
+          notify_email: boolean | null
+          notify_in_app: boolean | null
+          states: string[]
+          tort_types: string[]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          firm_id: string
+          id?: string
+          keywords?: string[]
+          notify_email?: boolean | null
+          notify_in_app?: boolean | null
+          states?: string[]
+          tort_types?: string[]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          firm_id?: string
+          id?: string
+          keywords?: string[]
+          notify_email?: boolean | null
+          notify_in_app?: boolean | null
+          states?: string[]
+          tort_types?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_pulse_watchlist_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
             referencedColumns: ["id"]
           },
         ]
@@ -2075,6 +2483,57 @@ export type Database = {
           },
         ]
       }
+      predictive_lead_signals: {
+        Row: {
+          ai_reasoning: string | null
+          confidence: number | null
+          created_at: string
+          data_sources: Json | null
+          detected_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          predicted_timeframe: string | null
+          predicted_volume: number | null
+          signal_strength: number
+          signal_type: string
+          state: string
+          tort_type: string
+        }
+        Insert: {
+          ai_reasoning?: string | null
+          confidence?: number | null
+          created_at?: string
+          data_sources?: Json | null
+          detected_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          predicted_timeframe?: string | null
+          predicted_volume?: number | null
+          signal_strength?: number
+          signal_type: string
+          state: string
+          tort_type: string
+        }
+        Update: {
+          ai_reasoning?: string | null
+          confidence?: number | null
+          created_at?: string
+          data_sources?: Json | null
+          detected_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          predicted_timeframe?: string | null
+          predicted_volume?: number | null
+          signal_strength?: number
+          signal_type?: string
+          state?: string
+          tort_type?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2570,6 +3029,21 @@ export type Database = {
       }
     }
     Views: {
+      benchmark_aggregates: {
+        Row: {
+          firm_count: number | null
+          industry_avg_case_value: number | null
+          industry_avg_conversion: number | null
+          industry_avg_cpl: number | null
+          industry_avg_pipeline_velocity: number | null
+          industry_avg_response_time: number | null
+          p25_cpl: number | null
+          p75_cpl: number | null
+          period: string | null
+          tort_type: string | null
+        }
+        Relationships: []
+      }
       leads_marketplace: {
         Row: {
           age_bucket: string | null
