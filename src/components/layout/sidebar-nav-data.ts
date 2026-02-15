@@ -18,6 +18,7 @@ import {
   Monitor,
   History,
   ClipboardList,
+  Radar,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -34,6 +35,7 @@ export const coreNavigation: NavItem[] = [
   { name: 'Wallet', href: '/wallet', icon: Wallet },
   { name: 'Campaigns', href: '/campaigns', icon: TrendingUp },
   { name: 'Meta Ads', href: '/meta-ads', icon: Megaphone, premium: true },
+  { name: 'Competitor Intel', href: '/competitor-intelligence', icon: Radar, premium: true },
   { name: 'Social Calendar', href: '/social-calendar', icon: CalendarDays, premium: true },
   { name: 'Intake Form', href: '/intake-builder', icon: Paintbrush },
   { name: 'Reports', href: '/reports', icon: FileText, premium: true },

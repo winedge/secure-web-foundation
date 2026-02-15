@@ -33,6 +33,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const SocialMediaCalendar = lazy(() => import("./pages/SocialMediaCalendar"));
 const Teams = lazy(() => import("./pages/Teams"));
+const CompetitorIntelligence = lazy(() => import("./pages/CompetitorIntelligence"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminFirms = lazy(() => import("./pages/admin/AdminFirms"));
 const AdminLeads = lazy(() => import("./pages/admin/AdminLeads"));
@@ -94,6 +95,7 @@ const App = () => (
                 <Route path="/social-calendar" element={<ProtectedRoute><LazyRoute><SocialMediaCalendar /></LazyRoute></ProtectedRoute>} />
                 <Route path="/intake-builder" element={<ProtectedRoute><LazyRoute><IntakeFormBuilder /></LazyRoute></ProtectedRoute>} />
                 <Route path="/teams" element={<ProtectedRoute><LazyRoute><Teams /></LazyRoute></ProtectedRoute>} />
+                <Route path="/competitor-intelligence" element={<ProtectedRoute><LazyRoute><CompetitorIntelligence /></LazyRoute></ProtectedRoute>} />
                 <Route path="/pricing" element={<ProtectedRoute><LazyRoute><Pricing /></LazyRoute></ProtectedRoute>} />
 
                 {/* Admin routes */}
