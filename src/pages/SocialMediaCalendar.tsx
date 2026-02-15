@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -39,6 +39,8 @@ export default function SocialMediaCalendar() {
   const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [editingPost, setEditingPost] = useState<SocialPost | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const weekDays = eachDayOfInterval({
     start: currentWeekStart,
@@ -61,21 +63,24 @@ export default function SocialMediaCalendar() {
               <Wand2 className="mr-2 h-4 w-4" />
               AI Generate Week
             </Button>
-            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button><Plus className="mr-2 h-4 w-4" />New Post</Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Create Social Media Post</DialogTitle>
-                </DialogHeader>
-                <CreatePostForm
-                  initialDate={selectedDate}
-                  onCreated={() => setCreateDialogOpen(false)}
-                />
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => { setEditingPost(null); setCreateDialogOpen(true); }}>
+              <Plus className="mr-2 h-4 w-4" />New Post
+            </Button>
           </div>
+
+          {/* Edit / Create dialog */}
+          <Dialog open={createDialogOpen} onOpenChange={(open) => { setCreateDialogOpen(open); if (!open) setEditingPost(null); }}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editingPost ? 'Edit Post' : 'Create Social Media Post'}</DialogTitle>
+              </DialogHeader>
+              <CreatePostForm
+                initialDate={selectedDate}
+                editPost={editingPost}
+                onCreated={() => { setCreateDialogOpen(false); setEditingPost(null); }}
+              />
+            </DialogContent>
+          </Dialog>
         </div>
 
         <Tabs defaultValue="calendar">
@@ -119,7 +124,7 @@ export default function SocialMediaCalendar() {
                     </p>
                     <div className="space-y-1">
                       {dayPosts.map((post) => (
-                        <PostCard key={post.id} post={post} compact />
+                        <PostCard key={post.id} post={post} compact onEdit={(p) => { setEditingPost(p); setCreateDialogOpen(true); }} />
                       ))}
                     </div>
                   </div>
@@ -129,19 +134,36 @@ export default function SocialMediaCalendar() {
           </TabsContent>
 
           <TabsContent value="list" className="mt-4">
-            <div className="space-y-3">
-              {posts?.length === 0 && (
-                <Card>
-                  <CardContent className="py-12 text-center text-muted-foreground">
-                    <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p className="font-medium">No posts yet</p>
-                    <p className="text-sm">Create your first post or let AI generate a content calendar.</p>
-                  </CardContent>
-                </Card>
-              )}
-              {posts?.map((post) => (
-                <PostCard key={post.id} post={post} />
+            {/* Status filter */}
+            <div className="flex gap-2 mb-4 flex-wrap">
+              {['all', 'draft', 'scheduled', 'published', 'failed'].map((s) => (
+                <Button
+                  key={s}
+                  variant={statusFilter === s ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setStatusFilter(s)}
+                  className="capitalize text-xs"
+                >
+                  {s}
+                </Button>
               ))}
+            </div>
+            <div className="space-y-3">
+              {(() => {
+                const filtered = statusFilter === 'all' ? posts : posts?.filter((p) => p.status === statusFilter);
+                if (!filtered?.length) return (
+                  <Card>
+                    <CardContent className="py-12 text-center text-muted-foreground">
+                      <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p className="font-medium">{statusFilter === 'all' ? 'No posts yet' : `No ${statusFilter} posts`}</p>
+                      <p className="text-sm">Create your first post or let AI generate a content calendar.</p>
+                    </CardContent>
+                  </Card>
+                );
+                return filtered.map((post) => (
+                  <PostCard key={post.id} post={post} onEdit={(p) => { setEditingPost(p); setCreateDialogOpen(true); }} />
+                ));
+              })()}
             </div>
           </TabsContent>
         </Tabs>
@@ -150,7 +172,7 @@ export default function SocialMediaCalendar() {
   );
 }
 
-function PostCard({ post, compact }: { post: SocialPost; compact?: boolean }) {
+function PostCard({ post, compact, onEdit }: { post: SocialPost; compact?: boolean; onEdit?: (post: SocialPost) => void }) {
   const deletePost = useDeleteSocialPost();
   const updatePost = useUpdateSocialPost();
   const { toast } = useToast();
@@ -163,6 +185,14 @@ function PostCard({ post, compact }: { post: SocialPost; compact?: boolean }) {
     publishing: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
     published: 'bg-accent/20 text-accent',
     failed: 'bg-destructive/20 text-destructive',
+  };
+
+  const statusIcons: Record<string, React.ReactNode> = {
+    draft: <Edit className="h-3 w-3" />,
+    scheduled: <Clock className="h-3 w-3" />,
+    publishing: <Loader2 className="h-3 w-3 animate-spin" />,
+    published: <CheckCircle className="h-3 w-3" />,
+    failed: <XCircle className="h-3 w-3" />,
   };
 
   const handlePublishNow = async () => {
@@ -204,8 +234,12 @@ function PostCard({ post, compact }: { post: SocialPost; compact?: boolean }) {
 
   if (compact) {
     return (
-      <div className="text-xs p-1.5 rounded bg-card border shadow-sm">
-        <div className="flex gap-1 mb-0.5">
+      <div
+        className="text-xs p-1.5 rounded bg-card border shadow-sm cursor-pointer hover:bg-muted/50 transition-colors"
+        onClick={(e) => { e.stopPropagation(); onEdit?.(post); }}
+      >
+        <div className="flex items-center gap-1 mb-0.5">
+          {statusIcons[post.status]}
           {post.platforms?.map((p) => {
             const platform = PLATFORMS.find((pl) => pl.id === p);
             if (!platform) return null;
@@ -230,7 +264,10 @@ function PostCard({ post, compact }: { post: SocialPost; compact?: boolean }) {
         <div className="flex items-start gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <Badge className={statusColors[post.status] || ''}>{post.status}</Badge>
+              <Badge className={`${statusColors[post.status] || ''} gap-1`}>
+                {statusIcons[post.status]}
+                {post.status}
+              </Badge>
               {post.ai_generated && <Badge variant="outline"><Sparkles className="h-3 w-3 mr-1" />AI</Badge>}
               {post.plagiarism_checked && (
                 <Badge variant={post.plagiarism_score > 30 ? 'destructive' : 'outline'}>
@@ -313,6 +350,9 @@ function PostCard({ post, compact }: { post: SocialPost; compact?: boolean }) {
             <img src={post.media_urls[0]} alt="" className="w-16 h-16 rounded-lg object-cover" />
           )}
           <div className="flex flex-col gap-1">
+            <Button variant="outline" size="icon" onClick={() => onEdit?.(post)} title="Edit Post">
+              <Edit className="h-4 w-4" />
+            </Button>
             {(post.status === 'draft' || post.status === 'scheduled') && (
               <Button variant="outline" size="icon" onClick={handlePublishNow} disabled={publishing} title="Publish Now">
                 {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
@@ -323,8 +363,15 @@ function PostCard({ post, compact }: { post: SocialPost; compact?: boolean }) {
                 {fetchingMetrics ? <Loader2 className="h-4 w-4 animate-spin" /> : <BarChart3 className="h-4 w-4" />}
               </Button>
             )}
-            <Button variant="ghost" size="icon" onClick={() => deletePost.mutate(post.id)}>
-              <Trash2 className="h-4 w-4 text-muted-foreground" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                if (confirm('Delete this post?')) deletePost.mutate(post.id);
+              }}
+              title="Delete Post"
+            >
+              <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
           </div>
         </div>
@@ -333,17 +380,21 @@ function PostCard({ post, compact }: { post: SocialPost; compact?: boolean }) {
   );
 }
 
-function CreatePostForm({ initialDate, onCreated }: { initialDate?: Date | null; onCreated: () => void }) {
+function CreatePostForm({ initialDate, editPost, onCreated }: { initialDate?: Date | null; editPost?: SocialPost | null; onCreated: () => void }) {
   const createPost = useCreateSocialPost();
+  const updatePost = useUpdateSocialPost();
   const contentAI = useSocialContentAI();
   const { toast } = useToast();
 
-  const [content, setContent] = useState('');
-  const [platforms, setPlatforms] = useState<string[]>(['facebook']);
-  const [scheduledDate, setScheduledDate] = useState(initialDate ? format(initialDate, "yyyy-MM-dd'T'HH:mm") : '');
-  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
-  const [mediaType, setMediaType] = useState('none');
-  const [aiPrompt, setAiPrompt] = useState('');
+  const [content, setContent] = useState(editPost?.content || '');
+  const [platforms, setPlatforms] = useState<string[]>(editPost?.platforms || ['facebook']);
+  const [scheduledDate, setScheduledDate] = useState(
+    editPost?.scheduled_at ? format(parseISO(editPost.scheduled_at), "yyyy-MM-dd'T'HH:mm") :
+    initialDate ? format(initialDate, "yyyy-MM-dd'T'HH:mm") : ''
+  );
+  const [mediaUrls, setMediaUrls] = useState<string[]>(editPost?.media_urls || []);
+  const [mediaType, setMediaType] = useState(editPost?.media_type || 'none');
+  const [aiPrompt, setAiPrompt] = useState(editPost?.ai_prompt || '');
   const [generating, setGenerating] = useState(false);
   const [checkingPlagiarism, setCheckingPlagiarism] = useState(false);
   const [plagiarismResult, setPlagiarismResult] = useState<any>(null);
@@ -447,7 +498,7 @@ function CreatePostForm({ initialDate, onCreated }: { initialDate?: Date | null;
       return;
     }
 
-    await createPost.mutateAsync({
+    const payload = {
       content,
       platforms,
       scheduled_at: scheduledDate || null,
@@ -458,7 +509,13 @@ function CreatePostForm({ initialDate, onCreated }: { initialDate?: Date | null;
       plagiarism_score: plagiarismResult?.plagiarism_score || 0,
       plagiarism_checked: !!plagiarismResult,
       ai_prompt: aiPrompt || null,
-    });
+    };
+
+    if (editPost) {
+      await updatePost.mutateAsync({ id: editPost.id, ...payload });
+    } else {
+      await createPost.mutateAsync(payload);
+    }
     onCreated();
   };
 
@@ -653,9 +710,9 @@ function CreatePostForm({ initialDate, onCreated }: { initialDate?: Date | null;
       </div>
 
       <div className="flex gap-3 pt-2">
-        <Button onClick={handleSubmit} disabled={createPost.isPending} className="flex-1">
-          {createPost.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-          {scheduledDate ? 'Schedule Post' : 'Save Draft'}
+        <Button onClick={handleSubmit} disabled={createPost.isPending || updatePost.isPending} className="flex-1">
+          {(createPost.isPending || updatePost.isPending) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+          {editPost ? 'Update Post' : scheduledDate ? 'Schedule Post' : 'Save Draft'}
         </Button>
       </div>
     </div>
