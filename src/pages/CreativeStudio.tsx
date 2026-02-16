@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Palette, Sparkles, Copy, Star } from 'lucide-react';
+import { Loader2, Palette, Sparkles, Copy, Star, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useCreateCampaign } from '@/hooks/use-campaigns';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export default function CreativeStudio() {
   const [brief, setBrief] = useState('');
@@ -16,6 +17,9 @@ export default function CreativeStudio() {
   const [brandTone, setBrandTone] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [creatingId, setCreatingId] = useState<string | null>(null);
+  const createCampaign = useCreateCampaign();
+  const navigate = useNavigate();
 
   const generate = async () => {
     if (!brief) { toast.error('Enter a creative brief'); return; }
@@ -30,6 +34,22 @@ export default function CreativeStudio() {
       toast.success(`Generated ${(data.variants || []).length} creative variants`);
     } catch (err: any) { toast.error(err.message); }
     finally { setIsGenerating(false); }
+  };
+
+  const handleCreateCampaign = async (variant: any) => {
+    setCreatingId(variant.id);
+    try {
+      await createCampaign.mutateAsync({
+        name: `${result.campaign_name} — ${variant.headline}`,
+        tort_type: tortType || 'general',
+        status: 'draft',
+      });
+      toast.success('Campaign created! Redirecting...');
+      setTimeout(() => navigate('/campaigns'), 1000);
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+    setCreatingId(null);
   };
 
   return (
@@ -48,7 +68,7 @@ export default function CreativeStudio() {
         <Card>
           <CardContent className="pt-6 space-y-4">
             <Textarea placeholder="Describe your campaign brief... (e.g. 'We need ads for Camp Lejeune water contamination targeting veterans in NC, VA, and SC')" value={brief} onChange={(e) => setBrief(e.target.value)} rows={3} />
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <Input placeholder="Tort type" value={tortType} onChange={(e) => setTortType(e.target.value)} className="max-w-xs" />
               <Input placeholder="Brand tone (e.g. empathetic, urgent)" value={brandTone} onChange={(e) => setBrandTone(e.target.value)} className="max-w-xs" />
               <Button onClick={generate} disabled={isGenerating} className="gap-2">
@@ -66,8 +86,8 @@ export default function CreativeStudio() {
               <Badge variant="secondary">Brand Score: {result.brand_consistency_score}/100</Badge>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {result.variants.map((v: any, i: number) => (
-                <Card key={i} className="hover:shadow-md transition-shadow">
+              {result.variants.map((v: any) => (
+                <Card key={v.id} className="hover:shadow-md transition-shadow">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <Badge variant="outline">{v.id}</Badge>
@@ -82,7 +102,7 @@ export default function CreativeStudio() {
                       <p className="font-bold text-foreground text-lg">{v.headline}</p>
                       <p className="text-sm text-muted-foreground mt-1">{v.body_short}</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <Badge className="bg-primary/10 text-primary">{v.emotional_angle}</Badge>
                       <Badge variant="outline">{v.best_for_platform}</Badge>
                     </div>
@@ -91,9 +111,31 @@ export default function CreativeStudio() {
                       <p className="text-xs text-muted-foreground mt-1">Hook: {v.target_hook}</p>
                     </div>
                     <p className="text-xs text-muted-foreground italic">A/B: {v.a_b_test_hypothesis}</p>
-                    <Button variant="ghost" size="sm" onClick={() => { navigator.clipboard.writeText(`${v.headline}\n${v.body_short}\n${v.cta}`); toast.success('Copied!'); }}>
-                      <Copy className="h-3 w-3 mr-1" /> Copy
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        className="flex-1 gap-1.5"
+                        onClick={() => handleCreateCampaign(v)}
+                        disabled={creatingId === v.id}
+                      >
+                        {creatingId === v.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Plus className="h-3 w-3" />
+                        )}
+                        Create as Campaign
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          navigator.clipboard.writeText(`${v.headline}\n${v.body_short}\n${v.cta}`);
+                          toast.success('Copied!');
+                        }}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
