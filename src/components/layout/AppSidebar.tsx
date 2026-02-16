@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { Crown, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import logoImg from '@/assets/leadthru-logo-dark.png';
+import logoImg from '@/assets/leadthru-logo.png';
 import { useIsAdmin } from '@/hooks/use-user-role';
 import { useSubscriptionContext } from '@/components/subscription/SubscriptionProvider';
 import { Button } from '@/components/ui/button';
