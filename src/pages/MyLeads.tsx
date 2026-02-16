@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { usePurchasedLeads, useLeadSources, useUpdatePipelineStage } from '@/hooks/use-leads';
 import { useLeadNotes, useCreateNote, useDeleteNote, useTogglePinNote } from '@/hooks/use-lead-notes';
 import { useTeamPermissions } from '@/hooks/use-team-permissions';
@@ -316,8 +317,23 @@ export default function MyLeads() {
 
   const detailLead = leads?.find((l) => l.id === detailLeadId);
 
+  const stageLabels: Record<string, string> = {
+    new_lead: 'New Lead',
+    call_verification: 'Call Verification',
+    medical_records: 'Medical Record Retrieval',
+    retainer: 'Retainer',
+  };
+
   const handleMoveStage = (leadId: string, newStage: PipelineStage) => {
-    updateStage.mutate({ leadId, stage: newStage });
+    updateStage.mutate({ leadId, stage: newStage }, {
+      onSuccess: () => {
+        const lead = leads?.find(l => l.id === leadId);
+        const name = lead ? `${lead.first_name || ''} ${lead.last_name || ''}`.trim() : 'Lead';
+        toast.success(`${name} moved to ${stageLabels[newStage] || newStage}`, {
+          duration: 4000,
+        });
+      },
+    });
   };
 
   return (

@@ -292,8 +292,8 @@ export default function ConversationalIntake({ campaignId, tortTypeHint, brandin
         tier,
       });
 
-      // Upload session recording (non-blocking)
-      uploadRecording(lead.id).catch(console.error);
+      // Upload session recording BEFORE marking complete (component may unmount)
+      await uploadRecording(lead.id).catch(console.error);
 
       setIsComplete(true);
       setProgress(100);

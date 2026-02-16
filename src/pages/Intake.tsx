@@ -218,8 +218,8 @@ export default function Intake() {
         });
       }
 
-      // Upload session recording (non-blocking)
-      uploadRecording(lead.id).catch(console.error);
+      // Upload session recording BEFORE marking as submitted (component unmounts on submit)
+      await uploadRecording(lead.id).catch(console.error);
 
       setSubmitted(true);
       toast.success('Your information has been submitted successfully!');

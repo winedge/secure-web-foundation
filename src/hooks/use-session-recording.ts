@@ -53,8 +53,14 @@ export function useSessionRecording(): UseSessionRecordingReturn {
   }, []);
 
   const uploadRecording = useCallback(async (leadId: string): Promise<string | null> => {
+    // Give rrweb a moment to flush any pending events before stopping
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     const events = stopRecording();
-    if (events.length === 0) return null;
+    if (events.length === 0) {
+      console.warn('Session recording: no events captured');
+      return null;
+    }
 
     try {
       const jsonStr = JSON.stringify(events);
