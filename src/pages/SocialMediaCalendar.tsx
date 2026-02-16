@@ -53,18 +53,21 @@ export default function SocialMediaCalendar() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Social Media Calendar</h1>
-            <p className="text-muted-foreground">Plan, create, and auto-publish content across all platforms</p>
+            <p className="text-muted-foreground text-sm">Plan, create, and auto-publish content across all platforms</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setCreateDialogOpen(true)}>
-              <Wand2 className="mr-2 h-4 w-4" />
-              AI Generate Week
+            <Button variant="outline" size="sm" onClick={() => setCreateDialogOpen(true)}>
+              <Wand2 className="mr-1.5 h-4 w-4" />
+              <span className="hidden sm:inline">AI Generate Week</span>
+              <span className="sm:hidden">AI</span>
             </Button>
-            <Button onClick={() => { setEditingPost(null); setCreateDialogOpen(true); }}>
-              <Plus className="mr-2 h-4 w-4" />New Post
+            <Button size="sm" onClick={() => { setEditingPost(null); setCreateDialogOpen(true); }}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              <span className="hidden sm:inline">New Post</span>
+              <span className="sm:hidden">New</span>
             </Button>
           </div>
 
@@ -104,14 +107,14 @@ export default function SocialMediaCalendar() {
             </div>
 
             {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
               {weekDays.map((day) => {
                 const dayPosts = getPostsForDay(day);
                 const isToday = isSameDay(day, new Date());
                 return (
                   <div
                     key={day.toISOString()}
-                    className={`min-h-[200px] rounded-lg border p-2 cursor-pointer transition-colors hover:bg-muted/30 ${
+                    className={`min-h-[100px] sm:min-h-[200px] rounded-lg border p-2 cursor-pointer transition-colors hover:bg-muted/30 ${
                       isToday ? 'border-accent bg-accent/5' : ''
                     }`}
                     onClick={() => {

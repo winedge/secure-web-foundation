@@ -91,7 +91,6 @@ export const navGroups: NavGroup[] = [
       { name: 'Creative Studio', href: '/creative-studio', icon: Sparkles, premium: true },
       { name: 'Viral Content', href: '/viral-content', icon: Flame, premium: true },
       { name: 'Video Ad Generator', href: '/video-ads', icon: Video, premium: true },
-      { name: 'Dynamic Landing', href: '/dynamic-landing', icon: Globe, premium: true },
     ],
   },
   {

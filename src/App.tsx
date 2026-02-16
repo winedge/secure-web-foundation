@@ -46,7 +46,7 @@ const CrossFirmBenchmarks = lazy(() => import("./pages/CrossFirmBenchmarks"));
 const CreativeStudio = lazy(() => import("./pages/CreativeStudio"));
 const ViralContentEngine = lazy(() => import("./pages/ViralContentEngine"));
 const VideoAdGenerator = lazy(() => import("./pages/VideoAdGenerator"));
-const DynamicLandingPages = lazy(() => import("./pages/DynamicLandingPages"));
+
 const LookalikeAudience = lazy(() => import("./pages/LookalikeAudience"));
 const IntentSignalTracker = lazy(() => import("./pages/IntentSignalTracker"));
 const GeofenceCampaigns = lazy(() => import("./pages/GeofenceCampaigns"));
@@ -130,7 +130,7 @@ const App = () => (
                 <Route path="/creative-studio" element={<ProtectedRoute><LazyRoute><CreativeStudio /></LazyRoute></ProtectedRoute>} />
                 <Route path="/viral-content" element={<ProtectedRoute><LazyRoute><ViralContentEngine /></LazyRoute></ProtectedRoute>} />
                 <Route path="/video-ads" element={<ProtectedRoute><LazyRoute><VideoAdGenerator /></LazyRoute></ProtectedRoute>} />
-                <Route path="/dynamic-landing" element={<ProtectedRoute><LazyRoute><DynamicLandingPages /></LazyRoute></ProtectedRoute>} />
+                
                 <Route path="/lookalike-audience" element={<ProtectedRoute><LazyRoute><LookalikeAudience /></LazyRoute></ProtectedRoute>} />
                 <Route path="/intent-signals" element={<ProtectedRoute><LazyRoute><IntentSignalTracker /></LazyRoute></ProtectedRoute>} />
                 <Route path="/geofence-campaigns" element={<ProtectedRoute><LazyRoute><GeofenceCampaigns /></LazyRoute></ProtectedRoute>} />
