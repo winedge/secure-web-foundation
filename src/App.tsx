@@ -10,6 +10,7 @@ import { SubscriptionProvider } from "@/components/subscription/SubscriptionProv
 import { RouteErrorBoundary } from "@/components/error/RouteErrorBoundary";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { usePresence } from "@/hooks/use-presence";
+import { useSmartAlertListener } from "@/hooks/use-smart-alert-listener";
 import { Suspense, lazy } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -87,6 +88,11 @@ function PresenceTracker() {
   return null;
 }
 
+function SmartAlertTracker() {
+  useSmartAlertListener();
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -150,6 +156,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <PresenceTracker />
+              <SmartAlertTracker />
               <ChatWidget />
             </BrowserRouter>
           </TooltipProvider>
