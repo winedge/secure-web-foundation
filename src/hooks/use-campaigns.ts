@@ -28,6 +28,13 @@ export interface CreateCampaignInput {
   daily_budget?: number;
   total_budget?: number;
   status?: string;
+  ad_headline?: string;
+  ad_body?: string;
+  ad_cta?: string;
+  emotional_angle?: string;
+  target_hook?: string;
+  best_platform?: string;
+  ab_test_hypothesis?: string;
 }
 
 export interface UpdateCampaignInput extends Partial<CreateCampaignInput> {
@@ -74,7 +81,14 @@ export function useCreateCampaign() {
           daily_budget: input.daily_budget,
           total_budget: input.total_budget,
           status: input.status || 'draft',
-        })
+          ad_headline: input.ad_headline || null,
+          ad_body: input.ad_body || null,
+          ad_cta: input.ad_cta || null,
+          emotional_angle: input.emotional_angle || null,
+          target_hook: input.target_hook || null,
+          best_platform: input.best_platform || null,
+          ab_test_hypothesis: input.ab_test_hypothesis || null,
+        } as any)
         .select()
         .single();
 

@@ -43,6 +43,13 @@ export default function CreativeStudio() {
         name: `${result.campaign_name} — ${variant.headline}`,
         tort_type: tortType || 'general',
         status: 'draft',
+        ad_headline: variant.headline,
+        ad_body: variant.body_short,
+        ad_cta: variant.cta,
+        emotional_angle: variant.emotional_angle,
+        target_hook: variant.target_hook,
+        best_platform: variant.best_for_platform,
+        ab_test_hypothesis: variant.a_b_test_hypothesis,
       });
       toast.success('Campaign created! Redirecting...');
       setTimeout(() => navigate('/campaigns'), 1000);
