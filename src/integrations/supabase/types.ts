@@ -678,42 +678,63 @@ export type Database = {
       }
       campaigns: {
         Row: {
+          ab_test_hypothesis: string | null
+          ad_body: string | null
+          ad_cta: string | null
+          ad_headline: string | null
+          best_platform: string | null
           created_at: string
           daily_budget: number | null
+          emotional_angle: string | null
           firm_id: string
           id: string
           name: string
           status: string | null
           target_age_max: number | null
           target_age_min: number | null
+          target_hook: string | null
           target_states: string[] | null
           tort_type: string
           total_budget: number | null
           updated_at: string
         }
         Insert: {
+          ab_test_hypothesis?: string | null
+          ad_body?: string | null
+          ad_cta?: string | null
+          ad_headline?: string | null
+          best_platform?: string | null
           created_at?: string
           daily_budget?: number | null
+          emotional_angle?: string | null
           firm_id: string
           id?: string
           name: string
           status?: string | null
           target_age_max?: number | null
           target_age_min?: number | null
+          target_hook?: string | null
           target_states?: string[] | null
           tort_type: string
           total_budget?: number | null
           updated_at?: string
         }
         Update: {
+          ab_test_hypothesis?: string | null
+          ad_body?: string | null
+          ad_cta?: string | null
+          ad_headline?: string | null
+          best_platform?: string | null
           created_at?: string
           daily_budget?: number | null
+          emotional_angle?: string | null
           firm_id?: string
           id?: string
           name?: string
           status?: string | null
           target_age_max?: number | null
           target_age_min?: number | null
+          target_hook?: string | null
           target_states?: string[] | null
           tort_type?: string
           total_budget?: number | null
@@ -3701,6 +3722,11 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_chat_participant: {
+        Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
       is_firm_owner: {
