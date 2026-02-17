@@ -272,6 +272,51 @@ export function CampaignForm({ open, onOpenChange, campaign, onSubmit, isLoading
                   </Select>
                 </div>
               )}
+
+              {/* AI Creative Content (read-only display when editing) */}
+              {isEditing && (campaign as any)?.ad_headline && (
+                <div className="space-y-4">
+                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                    AI Creative Content
+                  </h4>
+                  <div className="space-y-3 rounded-lg border p-4 bg-muted/30">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Headline</Label>
+                      <p className="font-semibold text-foreground">{(campaign as any).ad_headline}</p>
+                    </div>
+                    {(campaign as any).ad_body && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Ad Body</Label>
+                        <p className="text-sm text-foreground">{(campaign as any).ad_body}</p>
+                      </div>
+                    )}
+                    {(campaign as any).ad_cta && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">CTA</Label>
+                        <p className="text-sm font-medium text-primary">{(campaign as any).ad_cta}</p>
+                      </div>
+                    )}
+                    {(campaign as any).emotional_angle && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Emotional Angle</Label>
+                        <p className="text-sm text-foreground">{(campaign as any).emotional_angle}</p>
+                      </div>
+                    )}
+                    {(campaign as any).target_hook && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Target Hook</Label>
+                        <p className="text-sm text-foreground">{(campaign as any).target_hook}</p>
+                      </div>
+                    )}
+                    {(campaign as any).ab_test_hypothesis && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">A/B Test Hypothesis</Label>
+                        <p className="text-sm text-foreground italic">{(campaign as any).ab_test_hypothesis}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </ScrollArea>
 

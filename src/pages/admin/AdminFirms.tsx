@@ -73,6 +73,7 @@ export default function AdminFirms() {
               View and manage registered law firms
             </p>
           </div>
+          <CreateFirmDialog />
         </div>
 
         {/* Search */}
@@ -375,7 +376,6 @@ function FirmDetailDialog({ firm }: { firm: any }) {
               <Badge>{firm.subscription_plan || 'Free'}</Badge>
             </div>
           </div>
-          
           <div className="space-y-2">
             {firm.contact_email && (
               <div className="flex items-center gap-2">
@@ -398,24 +398,18 @@ function FirmDetailDialog({ firm }: { firm: any }) {
               </div>
             )}
           </div>
-
           <div className="border-t pt-4">
             <p className="text-sm text-muted-foreground mb-2">Operating States</p>
             <div className="flex flex-wrap gap-1">
               {firm.states?.map((state: string) => (
-                <Badge key={state} variant="outline">
-                  {state}
-                </Badge>
+                <Badge key={state} variant="outline">{state}</Badge>
               ))}
             </div>
           </div>
-
           <div className="border-t pt-4 flex justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Wallet Balance</p>
-              <p className="text-xl font-bold text-primary">
-                {formatCurrency(Number(firm.wallet_balance || 0))}
-              </p>
+              <p className="text-xl font-bold text-primary">{formatCurrency(Number(firm.wallet_balance || 0))}</p>
             </div>
             <div className="text-right">
               <p className="text-sm text-muted-foreground">Status</p>
@@ -425,6 +419,147 @@ function FirmDetailDialog({ firm }: { firm: any }) {
             </div>
           </div>
         </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function CreateFirmDialog() {
+  const [open, setOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [formData, setFormData] = useState({
+    firm_name: '',
+    website: '',
+    contact_email: '',
+    contact_phone: '',
+    practice_type: '',
+    states: '',
+    owner_email: '',
+    owner_password: '',
+    owner_full_name: '',
+    subscription_plan: 'basic',
+    wallet_balance: '0',
+  });
+  const queryClient = useQueryClient();
+
+  const handleCreate = async () => {
+    if (!formData.firm_name || !formData.owner_email || !formData.owner_password) {
+      toast.error('Firm name, owner email, and password are required');
+      return;
+    }
+    if (formData.owner_password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+    setIsCreating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-create-firm', {
+        body: {
+          ...formData,
+          states: formData.states ? formData.states.split(',').map(s => s.trim().toUpperCase()) : [],
+          wallet_balance: Number(formData.wallet_balance) || 0,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(data.message || 'Firm created successfully');
+      queryClient.invalidateQueries({ queryKey: ['admin-firms'] });
+      setOpen(false);
+      setFormData({
+        firm_name: '', website: '', contact_email: '', contact_phone: '',
+        practice_type: '', states: '', owner_email: '', owner_password: '',
+        owner_full_name: '', subscription_plan: 'basic', wallet_balance: '0',
+      });
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+    setIsCreating(false);
+  };
+
+  const updateField = (field: string, value: string) => setFormData(prev => ({ ...prev, [field]: value }));
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="gap-2">
+          <Plus className="h-4 w-4" />
+          Add Firm
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            Create New Firm
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="space-y-2">
+            <Label>Firm Name *</Label>
+            <Input value={formData.firm_name} onChange={(e) => updateField('firm_name', e.target.value)} placeholder="Smith & Associates" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Owner Email *</Label>
+              <Input type="email" value={formData.owner_email} onChange={(e) => updateField('owner_email', e.target.value)} placeholder="owner@firm.com" />
+            </div>
+            <div className="space-y-2">
+              <Label>Owner Password *</Label>
+              <Input type="password" value={formData.owner_password} onChange={(e) => updateField('owner_password', e.target.value)} placeholder="Min 6 chars" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Owner Full Name</Label>
+            <Input value={formData.owner_full_name} onChange={(e) => updateField('owner_full_name', e.target.value)} placeholder="John Smith" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Contact Email</Label>
+              <Input value={formData.contact_email} onChange={(e) => updateField('contact_email', e.target.value)} placeholder="info@firm.com" />
+            </div>
+            <div className="space-y-2">
+              <Label>Contact Phone</Label>
+              <Input value={formData.contact_phone} onChange={(e) => updateField('contact_phone', e.target.value)} placeholder="(555) 123-4567" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Website</Label>
+            <Input value={formData.website} onChange={(e) => updateField('website', e.target.value)} placeholder="https://firm.com" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Practice Type</Label>
+              <Input value={formData.practice_type} onChange={(e) => updateField('practice_type', e.target.value)} placeholder="Mass Tort" />
+            </div>
+            <div className="space-y-2">
+              <Label>States (comma-separated)</Label>
+              <Input value={formData.states} onChange={(e) => updateField('states', e.target.value)} placeholder="FL, TX, CA" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Subscription Plan</Label>
+              <Select value={formData.subscription_plan} onValueChange={(v) => updateField('subscription_plan', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="basic">Basic</SelectItem>
+                  <SelectItem value="premium">Premium</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Initial Wallet ($)</Label>
+              <Input type="number" value={formData.wallet_balance} onChange={(e) => updateField('wallet_balance', e.target.value)} placeholder="0" />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+          <Button onClick={handleCreate} disabled={isCreating} className="gap-2">
+            {isCreating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            Create Firm & Account
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
