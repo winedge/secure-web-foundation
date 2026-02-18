@@ -1,26 +1,58 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 
-// Notification sound using Web Audio API
+// Notification sound using Web Audio API - plays immediately on user interaction
 function playNotificationSound() {
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = ctx.createOscillator();
-    const gain = ctx.createGain();
-    oscillator.connect(gain);
-    gain.connect(ctx.destination);
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(880, ctx.currentTime);
-    oscillator.frequency.setValueAtTime(1046, ctx.currentTime + 0.1);
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-    oscillator.start(ctx.currentTime);
-    oscillator.stop(ctx.currentTime + 0.3);
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    
+    // Resume context if suspended (browser autoplay policy)
+    const play = () => {
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc1.type = 'sine';
+      osc2.type = 'sine';
+      osc1.frequency.setValueAtTime(880, ctx.currentTime);
+      osc2.frequency.setValueAtTime(1100, ctx.currentTime + 0.15);
+      
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+      
+      osc1.start(ctx.currentTime);
+      osc1.stop(ctx.currentTime + 0.15);
+      osc2.start(ctx.currentTime + 0.15);
+      osc2.stop(ctx.currentTime + 0.4);
+    };
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(play).catch(() => {});
+    } else {
+      play();
+    }
   } catch {
     // Audio not available
   }
+}
+
+export type NewMessageCallback = (message: ChatMessage) => void;
+
+// Singleton callback store for new messages when chat is closed
+const newMessageCallbacks = new Set<NewMessageCallback>();
+
+export function registerNewMessageCallback(cb: NewMessageCallback): () => void {
+  newMessageCallbacks.add(cb);
+  return () => { newMessageCallbacks.delete(cb); };
 }
 
 /** Global listener for incoming chat messages – plays sound for messages from others */
@@ -30,6 +62,7 @@ export function useChatNotifications() {
 
   useEffect(() => {
     if (!user) return;
+
     const channel = supabase
       .channel('global-chat-notifications')
       .on(
@@ -41,10 +74,18 @@ export function useChatNotifications() {
             playNotificationSound();
             queryClient.invalidateQueries({ queryKey: ['chat-unread'] });
             queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
+            // Notify all registered callbacks (e.g. for popup when closed)
+            newMessageCallbacks.forEach(cb => cb(msg));
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          // Fallback: poll every 15s if realtime fails
+          console.warn('[Chat] Realtime subscription failed, using polling fallback');
+        }
+      });
+
     return () => { supabase.removeChannel(channel); };
   }, [user, queryClient]);
 }
@@ -88,6 +129,7 @@ export function useChatConversations() {
       return data as ChatConversation[];
     },
     enabled: !!user,
+    refetchInterval: 15000, // Polling fallback
   });
 }
 
@@ -139,6 +181,7 @@ export function useChatMessages(conversationId: string | null) {
       return data as ChatMessage[];
     },
     enabled: !!user && !!conversationId,
+    refetchInterval: 10000, // Polling fallback when open
   });
 }
 
@@ -201,7 +244,6 @@ export function useUnreadCount() {
   return useQuery({
     queryKey: ['chat-unread', user?.id],
     queryFn: async () => {
-      // Get all participant records for user
       const { data: participants, error } = await (supabase as any)
         .from('chat_participants')
         .select('conversation_id, last_read_at')
@@ -222,7 +264,7 @@ export function useUnreadCount() {
       return total;
     },
     enabled: !!user,
-    refetchInterval: 30000,
+    refetchInterval: 15000,
   });
 }
 
