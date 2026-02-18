@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMetaCampaigns, useCreateMetaCampaign, useUpdateMetaCampaign, useDeleteMetaCampaign, useSyncFromMeta, MetaCampaign } from '@/hooks/use-meta-campaigns';
+import { useMetaCampaigns, useUpdateMetaCampaign, useDeleteMetaCampaign, useSyncFromMeta, MetaCampaign } from '@/hooks/use-meta-campaigns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,9 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Plus, Search, Play, Pause, Trash2, Edit2, Eye, DollarSign, TrendingUp, Zap, Target, RefreshCw, Loader2, Cloud } from 'lucide-react';
+import { MetaCampaignWizard } from './MetaCampaignWizard';
+import { Plus, Search, Play, Pause, Trash2, Edit2, Eye, DollarSign, TrendingUp, Zap, Target, Loader2, Cloud } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
 const statusColors: Record<string, string> = {
