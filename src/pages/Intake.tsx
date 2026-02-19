@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { getSessionId, getDistinctId, trackEvent } from '@/lib/posthog';
 import { SessionRecorder, ClientNetworkInfo } from '@/lib/session-recorder';
 import { useSessionRecording } from '@/hooks/use-session-recording';
+import { pixelLead, pixelViewContent } from '@/hooks/use-meta-pixel';
 
 const tortTypes = [
   'Camp Lejeune', 'Roundup', 'Talcum Powder', 'AFFF', 'Paraquat',
@@ -195,7 +196,7 @@ export default function Intake() {
 
       if (leadError) throw leadError;
 
-      // Track PostHog event
+      // Track PostHog + Meta Pixel events
       trackEvent('intake_form_submitted', {
         lead_id: lead.id,
         tort_type: data.tort_type,
@@ -203,6 +204,7 @@ export default function Intake() {
         tier,
         quality_score: aiQualityScore,
       });
+      pixelLead({ content_name: data.tort_type, content_category: 'IntakeForm' });
 
       // Log consent records
       const consentTypes = ['tcpa', 'privacy'];
