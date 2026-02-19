@@ -13,6 +13,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useCreateMetaCampaign, useCreateMetaAdSet, useCreateMetaAd } from '@/hooks/use-meta-campaigns';
 import { useFirm } from '@/hooks/use-firm';
 import { useToast } from '@/hooks/use-toast';
+import { useMetaPixel } from '@/hooks/use-meta-pixel';
 import {
   ChevronRight, ChevronLeft, Target, Users, DollarSign, Eye, CheckCircle2,
   Zap, Globe, Smartphone, Monitor, Image, Play, Layers, X, Plus, Loader2, Sparkles
@@ -183,6 +184,7 @@ export function MetaCampaignWizard({ open, onOpenChange, onCreated, prefillData 
   const createCampaign = useCreateMetaCampaign();
   const createAdSet = useCreateMetaAdSet();
   const createAd = useCreateMetaAd();
+  const pixel = useMetaPixel();
 
   const update = (partial: Partial<WizardData>) => setData(prev => ({ ...prev, ...partial }));
 
@@ -244,6 +246,11 @@ export function MetaCampaignWizard({ open, onOpenChange, onCreated, prefillData 
         });
       }
 
+      pixel.launchCampaign({
+        campaign_name: data.campaignName,
+        objective: data.goal,
+        budget: data.budgetType === 'daily' ? data.dailyBudget : data.lifetimeBudget,
+      });
       toast({ title: '🚀 Campaign created!', description: `"${data.campaignName}" is ready to launch.` });
       onCreated?.(campaign.id);
       onOpenChange(false);

@@ -4,15 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Loader2, MapPin, Navigation, Clock, Shield } from 'lucide-react';
+import { Loader2, MapPin, Navigation, Clock, Shield, Rocket } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { MetaCampaignWizard } from '@/components/meta-ads/MetaCampaignWizard';
+import { useMetaPixel } from '@/hooks/use-meta-pixel';
 
 export default function GeofenceCampaigns() {
   const [tortType, setTortType] = useState('');
   const [radius, setRadius] = useState('500');
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [metaWizardOpen, setMetaWizardOpen] = useState(false);
+  const [selectedFence, setSelectedFence] = useState<any>(null);
+  const pixel = useMetaPixel();
 
   const generate = async () => {
     setIsGenerating(true);
@@ -23,9 +28,15 @@ export default function GeofenceCampaigns() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data);
+      pixel.geofenceDesigned({ zone_count: (data.geofences || []).length, tort_type: tortType });
       toast.success(`Designed ${(data.geofences || []).length} geofence zones`);
     } catch (err: any) { toast.error(err.message); }
     finally { setIsGenerating(false); }
+  };
+
+  const handleLaunchToMeta = (fence: any) => {
+    setSelectedFence(fence);
+    setMetaWizardOpen(true);
   };
 
   return (
@@ -86,6 +97,11 @@ export default function GeofenceCampaigns() {
                       <Badge className="bg-accent text-accent-foreground text-xs">{fence.ad_creative.cta}</Badge>
                     </div>
                   )}
+                  <div className="mt-2 pt-2 border-t border-border">
+                    <Button size="sm" variant="outline" className="w-full gap-1.5 border-blue-500/30 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950" onClick={() => handleLaunchToMeta(fence)}>
+                      <Rocket className="h-3 w-3" /> Launch as Meta Campaign
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -103,6 +119,17 @@ export default function GeofenceCampaigns() {
           </Card>
         )}
       </div>
+
+      <MetaCampaignWizard
+        open={metaWizardOpen}
+        onOpenChange={setMetaWizardOpen}
+        prefillData={selectedFence ? {
+          campaignName: `Geofence - ${selectedFence.location_name || 'Campaign'}`,
+          tortType: tortType,
+          goal: 'OUTCOME_LEADS',
+        } : {}}
+        onCreated={() => setMetaWizardOpen(false)}
+      />
     </DashboardLayout>
   );
 }

@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { useMetaCampaigns, useUpdateMetaCampaign, useDeleteMetaCampaign, useSyncFromMeta, MetaCampaign } from '@/hooks/use-meta-campaigns';
+import { useMetaCampaigns, useUpdateMetaCampaign, useDeleteMetaCampaign, useSyncFromMeta, useCreateMetaCampaign, MetaCampaign } from '@/hooks/use-meta-campaigns';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
