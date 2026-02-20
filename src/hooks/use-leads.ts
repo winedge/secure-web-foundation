@@ -15,7 +15,7 @@ export interface Lead {
   is_verified: boolean;
   is_exclusive: boolean;
   price: number;
-  status: 'available' | 'purchased' | 'expired' | 'flagged';
+  status: 'available' | 'purchased' | 'expired' | 'flagged' | 'pending_review';
   created_at: string;
   source?: string | null;
   source_id?: string | null;

@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAdminSetting, useUpsertAdminSetting } from '@/hooks/use-admin-settings';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  Settings, Bot, Globe, Shield, CheckCircle, XCircle, Loader2, Eye, EyeOff, CreditCard, Scale,
+  Settings, Bot, Globe, Shield, CheckCircle, XCircle, Loader2, Eye, EyeOff, CreditCard, Scale, FileInput, Copy, ExternalLink,
 } from 'lucide-react';
 import { TortTypeManager } from '@/components/admin/TortTypeManager';
 
@@ -29,8 +29,12 @@ export default function AdminSettings() {
           <p className="text-muted-foreground">Configure platform-wide integrations and AI</p>
         </div>
 
-        <Tabs defaultValue="meta-api" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-5">
+        <Tabs defaultValue="lead-ingestion" className="space-y-6">
+          <TabsList className="grid w-full max-w-3xl grid-cols-6">
+            <TabsTrigger value="lead-ingestion" className="gap-2">
+              <FileInput className="h-4 w-4" />
+              Ingestion
+            </TabsTrigger>
             <TabsTrigger value="meta-api" className="gap-2">
               <Globe className="h-4 w-4" />
               Meta API
@@ -53,6 +57,7 @@ export default function AdminSettings() {
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="lead-ingestion"><LeadIngestionConfig /></TabsContent>
           <TabsContent value="meta-api"><MetaApiConfig /></TabsContent>
           <TabsContent value="stripe"><StripeConfig /></TabsContent>
           <TabsContent value="tort-types">
@@ -71,6 +76,186 @@ export default function AdminSettings() {
         </Tabs>
       </div>
     </DashboardLayout>
+  );
+}
+
+function LeadIngestionConfig() {
+  const { data: verificationSetting } = useAdminSetting('lead_verification_required');
+  const upsert = useUpsertAdminSetting();
+  const { toast } = useToast();
+
+  const isVerificationEnabled = verificationSetting?.value?.enabled === true;
+  const supabaseProjectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'sdtphgskqpelpbwhipls';
+  const metaWebhookUrl = `https://${supabaseProjectId}.supabase.co/functions/v1/meta-lead-webhook`;
+  const googleWebhookUrl = `https://${supabaseProjectId}.supabase.co/functions/v1/google-lead-webhook`;
+
+  const handleToggleVerification = async (enabled: boolean) => {
+    await upsert.mutateAsync({
+      key: 'lead_verification_required',
+      value: { enabled },
+      description: 'Whether new leads require admin verification before appearing in marketplace',
+    });
+    toast({
+      title: enabled ? 'Verification enabled' : 'Verification disabled',
+      description: enabled
+        ? 'New leads will require admin approval before appearing in the marketplace.'
+        : 'New leads will go directly to the marketplace.',
+    });
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: 'Copied to clipboard' });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Verification Toggle */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Lead Verification
+          </CardTitle>
+          <CardDescription>
+            Control whether leads from all sources require admin approval before being listed on the marketplace.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+            <div>
+              <Label className="text-base">Require Admin Verification</Label>
+              <p className="text-sm text-muted-foreground mt-1">
+                When enabled, leads from ads, webhooks, and CSV uploads will enter a <Badge variant="outline" className="mx-1">Pending Review</Badge> state.
+                An admin must approve each lead before it appears in the marketplace.
+              </p>
+            </div>
+            <Switch
+              checked={isVerificationEnabled}
+              onCheckedChange={handleToggleVerification}
+              disabled={upsert.isPending}
+            />
+          </div>
+          <div className={`p-3 rounded-lg text-sm ${isVerificationEnabled ? 'bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400' : 'bg-accent/10 border border-accent/20 text-accent'}`}>
+            {isVerificationEnabled
+              ? '⚠️ Verification is ON — New leads will NOT appear in the marketplace until approved in Admin → Lead Inventory.'
+              : '✅ Verification is OFF — Leads are auto-scored, auto-priced, and listed immediately.'}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Ingestion Flow */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileInput className="h-5 w-5" />
+            Lead Ingestion Pipeline
+          </CardTitle>
+          <CardDescription>How leads from different platforms are processed and routed to the marketplace.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3">
+            <div className="p-4 rounded-lg border bg-muted/20">
+              <h5 className="font-medium mb-2">Processing Flow</h5>
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <Badge variant="secondary">Lead Received</Badge>
+                <span>→</span>
+                <Badge variant="secondary">Deduplication</Badge>
+                <span>→</span>
+                <Badge variant="secondary">AI Quality Scoring</Badge>
+                <span>→</span>
+                <Badge variant="secondary">Auto Tier & Price</Badge>
+                <span>→</span>
+                {isVerificationEnabled ? (
+                  <>
+                    <Badge variant="outline" className="border-amber-500/50 text-amber-600">Pending Review</Badge>
+                    <span>→</span>
+                    <Badge className="bg-accent/20 text-accent border-accent/30">Admin Approval</Badge>
+                    <span>→</span>
+                  </>
+                ) : null}
+                <Badge className="bg-primary/20 text-primary border-primary/30">Marketplace</Badge>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Webhook URLs */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Platform Webhook URLs</CardTitle>
+          <CardDescription>Use these URLs to receive leads from ad platforms in real-time.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Meta (Facebook/Instagram) Lead Forms</Label>
+            <div className="flex gap-2">
+              <Input readOnly value={metaWebhookUrl} className="font-mono text-xs" />
+              <Button variant="outline" size="icon" onClick={() => copyToClipboard(metaWebhookUrl)}>
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Configure this in Meta Business Manager → Webhooks. Use <code className="px-1 py-0.5 bg-muted rounded">leadgen</code> subscription.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Google Ads Lead Form Extensions</Label>
+            <div className="flex gap-2">
+              <Input readOnly value={googleWebhookUrl} className="font-mono text-xs" />
+              <Button variant="outline" size="icon" onClick={() => copyToClipboard(googleWebhookUrl)}>
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Configure via Google Ads → Lead Form Extensions → Webhook integration, or connect through Zapier/Make.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Generic Webhook (CRM / Dialer / Other)</Label>
+            <div className="flex gap-2">
+              <Input readOnly value={`https://${supabaseProjectId}.supabase.co/functions/v1/webhook-handler`} className="font-mono text-xs" />
+              <Button variant="outline" size="icon" onClick={() => copyToClipboard(`https://${supabaseProjectId}.supabase.co/functions/v1/webhook-handler`)}>
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Supports call dispositions, status updates, notes, and CRM sync. Requires <code className="px-1 py-0.5 bg-muted rounded">x-webhook-secret</code> header.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Supported Sources */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Supported Lead Sources</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { name: 'Meta Lead Forms', desc: 'Real-time via webhook', status: 'active' },
+              { name: 'Google Ads Lead Forms', desc: 'Real-time via webhook', status: 'active' },
+              { name: 'CSV Bulk Upload', desc: 'Manual import in Admin → Data Ingestion', status: 'active' },
+              { name: 'CRM Webhook', desc: 'Bi-directional sync', status: 'active' },
+              { name: 'Dialer Integration', desc: 'Call dispositions', status: 'active' },
+              { name: 'Intake Forms', desc: 'Branded firm intake pages', status: 'active' },
+            ].map((source) => (
+              <div key={source.name} className="flex items-center gap-3 p-3 rounded-lg border">
+                <CheckCircle className="h-4 w-4 text-accent flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">{source.name}</p>
+                  <p className="text-xs text-muted-foreground">{source.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 

@@ -119,3 +119,9 @@ verify_jwt = false
 
 [functions.get-client-info]
 verify_jwt = false
+
+[functions.meta-lead-webhook]
+verify_jwt = false
+
+[functions.google-lead-webhook]
+verify_jwt = false
