@@ -1,5 +1,5 @@
 // Firecrawl-powered background check provider
-// Scrapes free public databases then uses AI to structure findings
+// Uses web search to find real public records, then AI to structure findings
 
 interface LeadInfo {
   fullName: string;
@@ -10,115 +10,64 @@ interface LeadInfo {
   ageBucket: string;
 }
 
-const PUBLIC_SOURCES = [
-  {
-    name: "OFAC Sanctions Search",
-    url: "https://sanctionssearch.ofac.treas.gov/",
-    category: "sanctions",
-  },
-  {
-    name: "National Sex Offender Registry",
-    url: "https://www.nsopw.gov/",
-    category: "sex_offender",
-  },
-  {
-    name: "Federal Court Records (PACER)",
-    url: "https://pcl.uscourts.gov/pcl/pages/search/findCase.jsf",
-    category: "court_records",
-  },
-  {
-    name: "FBI Most Wanted",
-    url: "https://www.fbi.gov/wanted",
-    category: "watchlist",
-  },
+const SEARCH_QUERIES_FOR_LEAD = (name: string, state: string, city: string) => [
+  `"${name}" ${state} court records case filing`,
+  `"${name}" ${state} bankruptcy filing public record`,
+  `"${name}" ${state} criminal records arrest`,
+  `"${name}" ${city} ${state} civil lawsuit litigation`,
+  `"${name}" OFAC sanctions list`,
+  `"${name}" sex offender registry ${state}`,
 ];
 
-function getStateCourtUrl(state: string): { name: string; url: string } {
+const PUBLIC_SOURCE_URLS = [
+  { name: "OFAC Sanctions Search", url: "https://sanctionssearch.ofac.treas.gov/", category: "sanctions" },
+  { name: "National Sex Offender Registry", url: "https://www.nsopw.gov/", category: "sex_offender" },
+  { name: "Federal Court Records (PACER)", url: "https://pcl.uscourts.gov/", category: "court_records" },
+  { name: "FBI Most Wanted", url: "https://www.fbi.gov/wanted", category: "watchlist" },
+];
+
+function getStateCourtUrl(state: string): string {
   const stateUrls: Record<string, string> = {
-    "FL": "https://www.flcourts.gov/Resources-Services/Court-Improvement/Public-Access-to-Court-Records",
-    "CA": "https://www.courts.ca.gov/find-a-court.htm",
-    "TX": "https://www.txcourts.gov/judicial-directory/",
-    "NY": "https://iapps.courts.state.ny.us/webcivil/ecourtsMain",
-    "IL": "https://www.illinoiscourts.gov/",
-    "PA": "https://ujsportal.pacourts.us/",
-    "OH": "https://www.supremecourt.ohio.gov/JCS/casemng/",
-    "GA": "https://www.georgiacourts.gov/",
-    "NJ": "https://www.njcourts.gov/",
-    "NC": "https://www.nccourts.gov/court-dates",
+    FL: "https://www.flcourts.gov/",
+    CA: "https://www.courts.ca.gov/",
+    TX: "https://www.txcourts.gov/",
+    NY: "https://iapps.courts.state.ny.us/webcivil/ecourtsMain",
+    IL: "https://www.illinoiscourts.gov/",
+    PA: "https://ujsportal.pacourts.us/",
+    OH: "https://www.supremecourt.ohio.gov/",
+    GA: "https://www.georgiacourts.gov/",
+    NJ: "https://www.njcourts.gov/",
+    NC: "https://www.nccourts.gov/",
   };
-  const url = stateUrls[state] || `https://www.google.com/search?q=${encodeURIComponent(state + " state court records search")}`;
-  return { name: `${state} State Court Records`, url };
+  return stateUrls[state] || "";
 }
 
-async function scrapeSource(url: string, apiKey: string): Promise<string> {
+async function firecrawlSearch(query: string, apiKey: string, limit = 5): Promise<any[]> {
   try {
-    const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+    const response = await fetch("https://api.firecrawl.dev/v1/search", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        url,
-        formats: ["markdown"],
-        onlyMainContent: true,
-        waitFor: 3000,
+        query,
+        limit,
+        scrapeOptions: { formats: ["markdown"] },
       }),
     });
 
     if (!response.ok) {
-      console.warn(`Firecrawl scrape failed for ${url}: ${response.status}`);
-      return "";
+      console.warn(`Firecrawl search failed for "${query}": ${response.status}`);
+      return [];
     }
 
     const data = await response.json();
-    // Truncate to keep token usage manageable
-    const markdown = data?.data?.markdown || data?.markdown || "";
-    return markdown.slice(0, 3000);
+    return data?.data || [];
   } catch (err) {
-    console.warn(`Firecrawl error for ${url}:`, err);
-    return "";
+    console.warn(`Firecrawl search error for "${query}":`, err);
+    return [];
   }
-}
-
-async function searchPublicRecords(name: string, state: string, apiKey: string): Promise<string[]> {
-  const queries = [
-    `${name} ${state} court records`,
-    `${name} ${state} bankruptcy filing`,
-    `${name} criminal records ${state}`,
-  ];
-
-  const results: string[] = [];
-
-  for (const query of queries) {
-    try {
-      const response = await fetch("https://api.firecrawl.dev/v1/search", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query,
-          limit: 3,
-          scrapeOptions: { formats: ["markdown"] },
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const items = data?.data || [];
-        for (const item of items) {
-          const snippet = `[${item.title || "Result"}](${item.url || ""}):\n${(item.markdown || item.description || "").slice(0, 1500)}`;
-          results.push(snippet);
-        }
-      }
-    } catch (err) {
-      console.warn(`Search error for "${query}":`, err);
-    }
-  }
-
-  return results;
 }
 
 export async function runFirecrawlBackgroundCheck(lead: LeadInfo) {
@@ -129,63 +78,72 @@ export async function runFirecrawlBackgroundCheck(lead: LeadInfo) {
 
   console.log(`Running Firecrawl background check for ${lead.fullName}`);
 
-  // Scrape public sources in parallel
-  const scrapeTasks = PUBLIC_SOURCES.map(src => scrapeSource(src.url, firecrawlKey));
-  const stateCourtInfo = getStateCourtUrl(lead.state);
-  scrapeTasks.push(scrapeSource(stateCourtInfo.url, firecrawlKey));
+  const queries = SEARCH_QUERIES_FOR_LEAD(lead.fullName, lead.state, lead.city);
 
-  const [ofacContent, nsopwContent, pacerContent, fbiContent, stateCourtContent] =
-    await Promise.all(scrapeTasks);
+  // Run all searches in parallel
+  const searchPromises = queries.map((q) => firecrawlSearch(q, firecrawlKey, 5));
+  const allResults = await Promise.all(searchPromises);
 
-  // Search for the person in public records
-  const searchResults = await searchPublicRecords(lead.fullName, lead.state, firecrawlKey);
+  // Flatten and deduplicate by URL
+  const seen = new Set<string>();
+  const uniqueResults: { query: string; title: string; url: string; snippet: string }[] = [];
 
-  // Build context from scraped data
-  const scrapedContext = `
-## OFAC Sanctions Database Content:
-${ofacContent || "Unable to retrieve - search manually"}
+  queries.forEach((query, i) => {
+    for (const item of allResults[i]) {
+      const url = item.url || "";
+      if (url && !seen.has(url)) {
+        seen.add(url);
+        uniqueResults.push({
+          query,
+          title: item.title || "Untitled",
+          url,
+          snippet: (item.markdown || item.description || "").slice(0, 2000),
+        });
+      }
+    }
+  });
 
-## National Sex Offender Registry Content:
-${nsopwContent || "Unable to retrieve - search manually"}
+  console.log(`Found ${uniqueResults.length} unique results across ${queries.length} searches`);
 
-## Federal Court Records (PACER) Content:
-${pacerContent || "Unable to retrieve - search manually"}
+  // Build search results context for AI
+  const searchContext = uniqueResults.length > 0
+    ? uniqueResults.map((r, i) => `### Result ${i + 1} (Query: "${r.query}")\n**Source:** [${r.title}](${r.url})\n${r.snippet}`).join("\n\n---\n\n")
+    : "No specific public records found for this individual in web search.";
 
-## FBI Wanted List Content:
-${fbiContent || "Unable to retrieve - search manually"}
+  // Build list of official databases that should be checked manually
+  const stateCourtUrl = getStateCourtUrl(lead.state);
+  const officialSources = PUBLIC_SOURCE_URLS.map((s) => `- [${s.name}](${s.url})`).join("\n");
+  const stateCourtNote = stateCourtUrl ? `- [${lead.state} State Courts](${stateCourtUrl})` : `- ${lead.state} State Courts (URL not mapped)`;
 
-## ${lead.state} State Court Records Content:
-${stateCourtContent || "Unable to retrieve - search manually"}
+  const prompt = `You are a legal background intelligence analyst. Analyze the following REAL web search results gathered for "${lead.fullName}" in ${lead.city}, ${lead.state}. Their case involves ${lead.tortType}.
 
-## Public Record Search Results for "${lead.fullName}" in ${lead.state}:
-${searchResults.length > 0 ? searchResults.join("\n\n---\n\n") : "No specific results found in web search"}`.trim();
+## WEB SEARCH RESULTS
+${searchContext}
 
-  // Now use AI to analyze the scraped data
-  const prompt = `You are a legal background intelligence analyst. I have scraped the following REAL data from public databases for a person named "${lead.fullName}" located in ${lead.location}, ${lead.state}. Their case involves ${lead.tortType}.
+## OFFICIAL DATABASES (for reference — could not be searched programmatically, note this in your report)
+${officialSources}
+${stateCourtNote}
 
-SCRAPED PUBLIC DATA:
-${scrapedContext}
+## CRITICAL INSTRUCTIONS
+1. ONLY report findings that are actually present in the search results above.
+2. If a search result clearly references this person (matching name AND location/state), report it as a finding.
+3. If results are ambiguous (common name, unclear match), flag them as "possible match — requires manual verification".
+4. Do NOT fabricate or assume any records. If nothing was found, say "No records found in automated search."
+5. For databases that couldn't be searched automatically (OFAC, NSOPW, PACER), note they require manual lookup.
+6. Every finding MUST include the actual source URL from the search results.
 
-IMPORTANT INSTRUCTIONS:
-1. Analyze the scraped data above to determine if there are ANY actual matches or relevant findings for this specific person.
-2. Do NOT fabricate or simulate findings. If the scraped data does not contain specific records matching this person, mark those sections as "not found" with details about what was searched.
-3. For each source, note what was actually found vs. what was searched but came back empty.
-4. The sources MUST reference the actual URLs that were searched (provided above).
-5. Be honest about limitations - if a database couldn't be fully searched, say so.
-
-Lead Info:
+## LEAD INFO
 - Name: ${lead.fullName}
-- Location: ${lead.location}
-- State: ${lead.state}
+- Location: ${lead.city}, ${lead.state}
 - Tort Type: ${lead.tortType}
 - Age Bucket: ${lead.ageBucket}
 
-Return the result in this JSON format:
+Return ONLY valid JSON (no markdown fences) in this format:
 
 {
   "overallRiskLevel": "low" | "medium" | "high" | "critical",
-  "overallScore": <number 0-100, where 100 is lowest risk>,
-  "bankruptcyCheck": { "found": <bool>, "count": <num>, "details": "<what was actually found or not found>", "chapters": [], "mostRecent": null, "history": [], "sources": [{"name": "<source>", "url": "<actual URL searched>", "description": "<what was searched and found>"}] },
+  "overallScore": <0-100, 100=lowest risk>,
+  "bankruptcyCheck": { "found": <bool>, "count": <num>, "details": "<str>", "chapters": [], "mostRecent": null, "history": [], "sources": [{"name":"<source>","url":"<url>","description":"<what was found>"}] },
   "criminalCheck": { "felonies": <bool>, "misdemeanors": <bool>, "felonyCount": <num>, "misdemeanorCount": <num>, "details": "<str>", "charges": [], "history": [], "sources": [] },
   "civilLitigationCheck": { "found": <bool>, "count": <num>, "details": "<str>", "types": [], "history": [], "sources": [] },
   "creditRiskIndicator": { "level": "excellent"|"good"|"fair"|"poor"|"very_poor", "estimatedRange": "<str>", "details": "<str>", "flags": [], "publicRecords": [], "sources": [] },
@@ -195,29 +153,28 @@ Return the result in this JSON format:
   "watchlistCheck": { "found": <bool>, "details": "<str>", "lists": [], "sources": [] },
   "propertyRecords": { "found": <bool>, "count": <num>, "details": "<str>", "records": [], "sources": [] },
   "professionalLicenses": { "found": <bool>, "details": "<str>", "licenses": [], "sources": [] },
-  "recommendation": "<3-4 sentence recommendation based on ACTUAL findings from scraped data>",
+  "recommendation": "<3-4 sentence recommendation based ONLY on actual findings>",
   "generatedAt": "${new Date().toISOString()}",
-  "searchScope": "Live public records search via Firecrawl covering OFAC, NSOPW, PACER, FBI, ${lead.state} state courts, and web search results",
+  "searchScope": "Web search via Firecrawl for public records. Official databases (OFAC, NSOPW, PACER, FBI, ${lead.state} courts) require manual verification.",
   "disclaimers": [
-    "This report aggregates data from publicly accessible databases scraped in real-time.",
-    "Results are NOT FCRA-compliant and should not be used for employment or tenancy decisions.",
-    "Some databases may require manual verification for comprehensive results.",
-    "This report does not constitute legal advice. All findings should be independently verified."
+    "Results are based on automated web searches and may not be comprehensive.",
+    "Official government databases (OFAC, NSOPW, PACER) require manual lookup for definitive results.",
+    "Name matches may be coincidental — verify identity before acting on findings.",
+    "This report is NOT FCRA-compliant and should not be used for employment or tenancy decisions.",
+    "All findings should be independently verified by qualified legal professionals."
   ]
-}
-
-Return ONLY valid JSON, no markdown fences.`;
+}`;
 
   const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`,
+      Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`,
     },
     body: JSON.stringify({
       model: "google/gemini-2.5-flash",
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.3,
+      temperature: 0.2,
     }),
   });
 
