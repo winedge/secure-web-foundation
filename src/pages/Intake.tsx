@@ -184,7 +184,7 @@ export default function Intake() {
           fraud_risk_score: fraudRiskScore,
           tier,
           price: prices[tier],
-          status: 'available',
+          status: 'pending_review' as any,
           is_verified: false,
           is_exclusive: true,
           source: 'intake_form',
