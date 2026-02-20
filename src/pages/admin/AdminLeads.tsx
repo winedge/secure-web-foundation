@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TierBadge } from '@/components/leads/TierBadge';
 import { formatCurrency } from '@/lib/utils';
+
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -18,9 +20,9 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
+
 import { 
-  FileText, Search, Eye, Flag, CheckCircle, XCircle, AlertTriangle, Clock, ShieldCheck, DollarSign, Store,
+  FileText, Search, Eye, Flag, CheckCircle, XCircle, AlertTriangle, Clock, ShieldCheck,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -29,8 +31,6 @@ export default function AdminLeads() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [tierFilter, setTierFilter] = useState<string>('all');
-  const [priceDialogLead, setPriceDialogLead] = useState<any>(null);
-  const [customPrice, setCustomPrice] = useState('');
   const queryClient = useQueryClient();
 
   const { data: leads, isLoading } = useQuery({
@@ -46,12 +46,10 @@ export default function AdminLeads() {
   });
 
   const updateLeadStatus = useMutation({
-    mutationFn: async ({ id, status, price }: { id: string; status: string; price?: number }) => {
-      const updateData: any = { status: status as any };
-      if (price !== undefined) updateData.price = price;
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await supabase
         .from('leads')
-        .update(updateData)
+        .update({ status: status as any })
         .eq('id', id);
       if (error) throw error;
     },
@@ -260,14 +258,11 @@ export default function AdminLeads() {
                                 <Button
                                   variant="default"
                                   size="sm"
-                                  onClick={() => {
-                                    setPriceDialogLead(lead);
-                                    setCustomPrice(String(lead.price || ''));
-                                  }}
+                                  onClick={() => updateLeadStatus.mutate({ id: lead.id, status: 'available' })}
                                   disabled={updateLeadStatus.isPending}
                                 >
-                                  <Store className="h-4 w-4 mr-1" />
-                                  Post to Marketplace
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  Approve
                                 </Button>
                                 <Button
                                   variant="destructive"
@@ -413,68 +408,6 @@ export default function AdminLeads() {
           </TabsContent>
         </Tabs>
 
-        {/* Price Setting Dialog for Marketplace Posting */}
-        <Dialog open={!!priceDialogLead} onOpenChange={(open) => { if (!open) setPriceDialogLead(null); }}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Store className="h-5 w-5" />
-                Post to Marketplace
-              </DialogTitle>
-            </DialogHeader>
-            {priceDialogLead && (
-              <div className="space-y-4">
-                <div className="p-3 rounded-lg bg-muted/50 space-y-1">
-                  <p className="font-medium">{priceDialogLead.first_name} {priceDialogLead.last_name}</p>
-                  <p className="text-sm text-muted-foreground">{priceDialogLead.tort_type} · {priceDialogLead.state}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <TierBadge tier={priceDialogLead.tier} />
-                    <span className="text-sm text-muted-foreground">AI Score: {priceDialogLead.ai_quality_score || '—'}</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="marketplace-price">Marketplace Price ($)</Label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="marketplace-price"
-                      type="number"
-                      min="1"
-                      step="1"
-                      className="pl-9"
-                      value={customPrice}
-                      onChange={(e) => setCustomPrice(e.target.value)}
-                      placeholder="Enter price"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Auto-suggested price: {formatCurrency(Number(priceDialogLead.price))} based on AI scoring
-                  </p>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setPriceDialogLead(null)}>Cancel</Button>
-                  <Button
-                    onClick={() => {
-                      const price = parseFloat(customPrice);
-                      if (!price || price <= 0) {
-                        toast.error('Please enter a valid price');
-                        return;
-                      }
-                      updateLeadStatus.mutate(
-                        { id: priceDialogLead.id, status: 'available', price },
-                        { onSuccess: () => { setPriceDialogLead(null); toast.success('Lead posted to marketplace!'); } }
-                      );
-                    }}
-                    disabled={updateLeadStatus.isPending}
-                  >
-                    <Store className="h-4 w-4 mr-2" />
-                    Post to Marketplace
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
       </div>
     </DashboardLayout>
   );
