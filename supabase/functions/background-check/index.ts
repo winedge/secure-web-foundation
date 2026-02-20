@@ -43,7 +43,20 @@ Lead Info:
 - Tort Type: ${lead.tort_type}
 - Age Bucket: ${lead.age_bucket || "Unknown"}
 
-Generate a detailed background check result in the following JSON format. Make the results realistic — most people should come back clean, but occasionally include minor findings. The results should feel authentic:
+Generate a detailed background check result in the following JSON format. Make the results realistic — most people should come back clean, but occasionally include minor findings. The results should feel authentic.
+
+IMPORTANT: For EVERY check section, include a "sources" array with 1-3 realistic reference sources. Each source must have:
+- "name": The name of the real public database or registry (e.g. "PACER", "OFAC SDN List", "Florida Department of Corrections", "${lead.state} Court Records")
+- "url": A REAL, working URL to the actual public database website (e.g. "https://www.pacer.gov", "https://www.nsopw.gov", "https://sanctionssearch.ofac.treas.gov")
+- "description": What was searched or found in that source
+
+Use real government and public record database URLs that actually exist. Examples:
+- PACER: https://www.pacer.gov
+- National Sex Offender Registry: https://www.nsopw.gov
+- OFAC Sanctions: https://sanctionssearch.ofac.treas.gov
+- Florida courts: https://www.flcourts.gov
+- Federal courts: https://www.uscourts.gov
+- State-specific DOC sites, county clerk sites, etc.
 
 {
   "overallRiskLevel": "low" | "medium" | "high" | "critical",
@@ -53,7 +66,8 @@ Generate a detailed background check result in the following JSON format. Make t
     "count": <number>,
     "details": "<one sentence summary>",
     "chapters": ["Chapter 7", "Chapter 13"] or [],
-    "mostRecent": "<year or null>"
+    "mostRecent": "<year or null>",
+    "sources": [{"name": "<source name e.g. PACER Federal Bankruptcy Records>", "url": "<real public database URL>", "description": "<what was found or searched>"}]
   },
   "criminalCheck": {
     "felonies": <boolean>,
@@ -61,38 +75,45 @@ Generate a detailed background check result in the following JSON format. Make t
     "felonyCount": <number>,
     "misdemeanorCount": <number>,
     "details": "<one sentence summary>",
-    "charges": [] or ["charge description"]
+    "charges": [] or ["charge description"],
+    "sources": [{"name": "<source name e.g. National Criminal Database>", "url": "<real public database URL>", "description": "<what was found or searched>"}]
   },
   "civilLitigationCheck": {
     "found": <boolean>,
     "count": <number>,
     "details": "<one sentence summary>",
-    "types": [] or ["Personal Injury", "Contract Dispute"]
+    "types": [] or ["Personal Injury", "Contract Dispute"],
+    "sources": [{"name": "<source name>", "url": "<real public database URL>", "description": "<what was found or searched>"}]
   },
   "creditRiskIndicator": {
     "level": "excellent" | "good" | "fair" | "poor" | "very_poor",
     "details": "<one sentence summary>",
-    "flags": [] or ["flag descriptions"]
+    "flags": [] or ["flag descriptions"],
+    "sources": [{"name": "<source name>", "url": "<real public database URL>", "description": "<what was found or searched>"}]
   },
   "sanctionsCheck": {
     "found": <boolean>,
     "details": "<one sentence summary>",
-    "lists": []
+    "lists": [],
+    "sources": [{"name": "<source name e.g. OFAC SDN List>", "url": "<real public database URL>", "description": "<what was found or searched>"}]
   },
   "identityVerification": {
     "verified": <boolean>,
     "confidence": <number 0-100>,
     "flags": [] or ["flag"],
-    "details": "<one sentence summary>"
+    "details": "<one sentence summary>",
+    "sources": [{"name": "<source name>", "url": "<real public database URL>", "description": "<what was found or searched>"}]
   },
   "sexOffenderRegistry": {
     "found": <boolean>,
-    "details": "<one sentence summary>"
+    "details": "<one sentence summary>",
+    "sources": [{"name": "<source name e.g. National Sex Offender Public Website>", "url": "<real public database URL>", "description": "<what was found or searched>"}]
   },
   "watchlistCheck": {
     "found": <boolean>,
     "details": "<one sentence summary>",
-    "lists": []
+    "lists": [],
+    "sources": [{"name": "<source name>", "url": "<real public database URL>", "description": "<what was found or searched>"}]
   },
   "recommendation": "<2-3 sentence recommendation for the law firm>",
   "disclaimers": [
