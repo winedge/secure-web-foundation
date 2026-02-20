@@ -1,70 +1,39 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-};
+import { handleCors, jsonResponse, errorResponse } from "../_shared/cors.ts";
+import { createSupabaseClient, getAuthenticatedUser } from "../_shared/auth.ts";
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const corsResp = handleCors(req);
+  if (corsResp) return corsResp;
 
   try {
     const { lead_id } = await req.json();
-    if (!lead_id) {
-      return new Response(JSON.stringify({ error: 'lead_id is required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    if (!lead_id) return errorResponse("lead_id is required");
 
-    // Validate auth
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
+    // Auth via shared helper
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } }
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: req.headers.get("Authorization") || "" } } }
     );
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    const { data: { user }, error: userErr } = await authClient.auth.getUser();
+    if (userErr || !user) return errorResponse("Unauthorized", 401);
 
-    // Fetch lead data for context
-    const adminClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    );
+    // Service role client for data access
+    const adminClient = createSupabaseClient(true);
 
     const { data: lead, error: leadError } = await adminClient
-      .from('leads')
-      .select('first_name, last_name, state, city, email, phone, tort_type, age_bucket')
-      .eq('id', lead_id)
+      .from("leads")
+      .select("first_name, last_name, state, city, email, phone, tort_type, age_bucket")
+      .eq("id", lead_id)
       .single();
 
-    if (leadError || !lead) {
-      return new Response(JSON.stringify({ error: 'Lead not found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    if (leadError || !lead) return errorResponse("Lead not found", 404);
 
-    const fullName = `${lead.first_name || 'Unknown'} ${lead.last_name || ''}`.trim();
-    const location = `${lead.city || ''}, ${lead.state || ''}`.replace(/^, |, $/g, '');
+    const fullName = `${lead.first_name || "Unknown"} ${lead.last_name || ""}`.trim();
+    const location = `${lead.city || ""}, ${lead.state || ""}`.replace(/^, |, $/g, "");
 
     const prompt = `You are a legal background intelligence analyst. Given the following lead information, generate a realistic and comprehensive background check analysis. This is a SIMULATED analysis for a legal lead management platform.
 
@@ -72,7 +41,7 @@ Lead Info:
 - Name: ${fullName}
 - Location: ${location}
 - Tort Type: ${lead.tort_type}
-- Age Bucket: ${lead.age_bucket || 'Unknown'}
+- Age Bucket: ${lead.age_bucket || "Unknown"}
 
 Generate a detailed background check result in the following JSON format. Make the results realistic — most people should come back clean, but occasionally include minor findings. The results should feel authentic:
 
@@ -155,30 +124,23 @@ Return ONLY valid JSON, no markdown fences.`;
     }
 
     const aiData = await aiResponse.json();
-    let content = aiData.choices?.[0]?.message?.content || '';
-    
-    // Clean markdown fences if present
-    content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    let content = aiData.choices?.[0]?.message?.content || "";
+    content = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
 
     const result = JSON.parse(content);
 
     // Log the check
-    await adminClient.from('audit_logs').insert({
-      user_id: claimsData.claims.sub,
-      action: 'background_check',
-      entity_type: 'lead',
+    await adminClient.from("audit_logs").insert({
+      user_id: user.id,
+      action: "background_check",
+      entity_type: "lead",
       entity_id: lead_id,
       details: { risk_level: result.overallRiskLevel, score: result.overallScore },
     });
 
-    return new Response(JSON.stringify({ result }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ result });
   } catch (error) {
-    console.error('Background check error:', error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.error("Background check error:", error);
+    return errorResponse(error instanceof Error ? error.message : "Unknown error", 500);
   }
 });
