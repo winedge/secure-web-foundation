@@ -30,7 +30,7 @@ export default function AdminSettings() {
         </div>
 
         <Tabs defaultValue="lead-ingestion" className="space-y-6">
-          <TabsList className="grid w-full max-w-3xl grid-cols-6">
+          <TabsList className="flex flex-wrap w-full max-w-3xl h-auto gap-1">
             <TabsTrigger value="lead-ingestion" className="gap-2">
               <FileInput className="h-4 w-4" />
               Ingestion
