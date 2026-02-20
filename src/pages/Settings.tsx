@@ -183,7 +183,7 @@ export default function Settings() {
         </div>
 
         <Tabs defaultValue={defaultTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-3xl grid-cols-4 sm:grid-cols-7">
+          <TabsList className="flex flex-wrap w-full max-w-3xl h-auto gap-1">
             <TabsTrigger value="profile" className="gap-1 sm:gap-2">
               <User className="h-4 w-4" />
               <span>Profile</span>

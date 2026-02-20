@@ -34,7 +34,7 @@ export default function MetaAds() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-9 h-auto">
+            <TabsList className="flex flex-wrap w-full h-auto gap-1">
               <TabsTrigger value="campaigns" className="gap-1.5 text-xs sm:text-sm py-2">
                 <LayoutDashboard className="h-4 w-4 hidden sm:block" />
                 Campaigns

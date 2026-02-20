@@ -3,36 +3,52 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import { useEffect, useCallback } from 'react';
 
-// Notification sound using Web Audio API - plays immediately on user interaction
+// Notification sound using Web Audio API - dual tone alert
 function playNotificationSound() {
   try {
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioCtx) return;
     const ctx = new AudioCtx();
     
-    // Resume context if suspended (browser autoplay policy)
     const play = () => {
+      // First tone
       const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      const gain = ctx.createGain();
-      
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(ctx.destination);
-      
+      const gain1 = ctx.createGain();
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
       osc1.type = 'sine';
-      osc2.type = 'sine';
       osc1.frequency.setValueAtTime(880, ctx.currentTime);
-      osc2.frequency.setValueAtTime(1100, ctx.currentTime + 0.15);
-      
-      gain.gain.setValueAtTime(0, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-      
+      gain1.gain.setValueAtTime(0, ctx.currentTime);
+      gain1.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.02);
+      gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
       osc1.start(ctx.currentTime);
-      osc1.stop(ctx.currentTime + 0.15);
+      osc1.stop(ctx.currentTime + 0.2);
+
+      // Second tone (higher pitch, slight delay)
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(1100, ctx.currentTime + 0.15);
+      gain2.gain.setValueAtTime(0, ctx.currentTime + 0.15);
+      gain2.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.17);
+      gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45);
       osc2.start(ctx.currentTime + 0.15);
-      osc2.stop(ctx.currentTime + 0.4);
+      osc2.stop(ctx.currentTime + 0.45);
+
+      // Third confirmation tone
+      const osc3 = ctx.createOscillator();
+      const gain3 = ctx.createGain();
+      osc3.connect(gain3);
+      gain3.connect(ctx.destination);
+      osc3.type = 'sine';
+      osc3.frequency.setValueAtTime(1320, ctx.currentTime + 0.35);
+      gain3.gain.setValueAtTime(0, ctx.currentTime + 0.35);
+      gain3.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.37);
+      gain3.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
+      osc3.start(ctx.currentTime + 0.35);
+      osc3.stop(ctx.currentTime + 0.6);
     };
 
     if (ctx.state === 'suspended') {
@@ -42,6 +58,40 @@ function playNotificationSound() {
     }
   } catch {
     // Audio not available
+  }
+}
+
+// Request browser notification permission on first interaction
+let notificationPermissionRequested = false;
+function requestNotificationPermission() {
+  if (notificationPermissionRequested) return;
+  notificationPermissionRequested = true;
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+// Show browser push notification
+function showBrowserNotification(title: string, body: string) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+  // Only show when tab is not focused
+  if (document.hasFocus()) return;
+  try {
+    const notification = new Notification(title, {
+      body,
+      icon: '/leadthru-logo.png',
+      badge: '/leadthru-logo.png',
+      tag: 'chat-message',
+    } as NotificationOptions);
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
+    // Auto-close after 8 seconds
+    setTimeout(() => notification.close(), 8000);
+  } catch {
+    // Notification not available
   }
 }
 
@@ -55,10 +105,18 @@ export function registerNewMessageCallback(cb: NewMessageCallback): () => void {
   return () => { newMessageCallbacks.delete(cb); };
 }
 
-/** Global listener for incoming chat messages – plays sound for messages from others */
+/** Global listener for incoming chat messages – plays sound + browser notification for messages from others */
 export function useChatNotifications() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  // Request notification permission on mount (requires user gesture context)
+  useEffect(() => {
+    if (!user) return;
+    // Request permission after a short delay to ensure user has interacted
+    const timer = setTimeout(() => requestNotificationPermission(), 3000);
+    return () => clearTimeout(timer);
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -71,7 +129,11 @@ export function useChatNotifications() {
         (payload) => {
           const msg = payload.new as ChatMessage;
           if (msg.sender_id !== user.id) {
+            // Play audible notification sound
             playNotificationSound();
+            // Show browser push notification (when tab not focused)
+            showBrowserNotification('New Message', msg.content.slice(0, 100));
+            // Invalidate queries to update unread counts
             queryClient.invalidateQueries({ queryKey: ['chat-unread'] });
             queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
             // Notify all registered callbacks (e.g. for popup when closed)
@@ -81,7 +143,6 @@ export function useChatNotifications() {
       )
       .subscribe((status) => {
         if (status === 'CHANNEL_ERROR') {
-          // Fallback: poll every 15s if realtime fails
           console.warn('[Chat] Realtime subscription failed, using polling fallback');
         }
       });

@@ -49,10 +49,10 @@ export function ChatWidget() {
           conversationName: conv?.name || 'New Message',
         };
         setPopups(prev => [...prev.slice(-2), notification]); // Keep max 3
-        // Auto-dismiss after 5s
+        // Auto-dismiss after 10s (longer for better visibility)
         setTimeout(() => {
           setPopups(prev => prev.filter(p => p.id !== notification.id));
-        }, 5000);
+        }, 10000);
       }
     });
     return () => { unregister(); };
@@ -69,12 +69,12 @@ export function ChatWidget() {
   return (
     <>
       {/* Popup notifications when chat is closed */}
-      <div className="fixed bottom-24 right-6 z-50 flex flex-col gap-2 items-end">
+      <div className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-50 flex flex-col gap-2 items-end max-w-[calc(100vw-2rem)]">
         {popups.map(popup => (
           <div
             key={popup.id}
             onClick={() => handlePopupClick(popup)}
-            className="flex items-start gap-3 bg-card border shadow-xl rounded-xl p-3 w-72 cursor-pointer hover:bg-muted/50 transition-colors animate-in slide-in-from-right-5 duration-300"
+            className="flex items-start gap-3 bg-card border shadow-xl rounded-xl p-3 w-72 max-w-[calc(100vw-2rem)] cursor-pointer hover:bg-muted/50 transition-colors animate-in slide-in-from-right-5 duration-300"
           >
             <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
               <Bell className="h-4 w-4 text-primary" />
@@ -96,7 +96,7 @@ export function ChatWidget() {
       {/* Chat toggle button */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-center hover:scale-105 transition-transform"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-center hover:scale-105 transition-transform"
       >
         {open ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
         {!open && !!unread && unread > 0 && (
@@ -107,7 +107,7 @@ export function ChatWidget() {
       </button>
 
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-[380px] h-[520px] rounded-2xl border bg-card shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-200">
+        <div className="fixed bottom-0 right-0 sm:bottom-20 sm:right-4 md:bottom-24 md:right-6 z-50 w-full sm:w-[380px] h-[100dvh] sm:h-[520px] sm:rounded-2xl border bg-card shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-200">
           {activeConv ? (
             <ChatView conversationId={activeConv} onBack={() => setActiveConv(null)} />
           ) : showNew ? (
