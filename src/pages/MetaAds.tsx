@@ -9,8 +9,9 @@ import { MetaAiPanel } from '@/components/meta-ads/MetaAiPanel';
 import { AutopilotPanel } from '@/components/meta-ads/AutopilotPanel';
 import { MetaPixelPanel } from '@/components/meta-ads/MetaPixelPanel';
 import { MetaLeadFormsPanel } from '@/components/meta-ads/MetaLeadFormsPanel';
+import { MetaSelfLearningPanel } from '@/components/meta-ads/MetaSelfLearningPanel';
 import { UpgradeGate } from '@/components/subscription/UpgradeGate';
-import { LayoutDashboard, Target, Megaphone, BarChart3, Bot, Zap, Activity, FileText } from 'lucide-react';
+import { LayoutDashboard, Target, Megaphone, BarChart3, Bot, Zap, Activity, FileText, Brain } from 'lucide-react';
 
 export default function MetaAds() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
@@ -33,7 +34,7 @@ export default function MetaAds() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid w-full grid-cols-4 sm:grid-cols-8 h-auto">
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-9 h-auto">
               <TabsTrigger value="campaigns" className="gap-1.5 text-xs sm:text-sm py-2">
                 <LayoutDashboard className="h-4 w-4 hidden sm:block" />
                 Campaigns
@@ -65,6 +66,10 @@ export default function MetaAds() {
               <TabsTrigger value="autopilot" className="gap-1.5 text-xs sm:text-sm py-2">
                 <Zap className="h-4 w-4 hidden sm:block" />
                 Autopilot
+              </TabsTrigger>
+              <TabsTrigger value="learning" className="gap-1.5 text-xs sm:text-sm py-2">
+                <Brain className="h-4 w-4 hidden sm:block" />
+                Self-Learn
               </TabsTrigger>
             </TabsList>
 
@@ -119,6 +124,10 @@ export default function MetaAds() {
 
             <TabsContent value="autopilot">
               <AutopilotPanel campaignId={selectedCampaignId} />
+            </TabsContent>
+
+            <TabsContent value="learning">
+              <MetaSelfLearningPanel campaignId={selectedCampaignId} />
             </TabsContent>
           </Tabs>
         </div>

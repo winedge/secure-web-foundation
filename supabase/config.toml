@@ -101,3 +101,21 @@ verify_jwt = false
 
 [functions.background-check]
 verify_jwt = false
+
+[functions.google-ads-ai]
+verify_jwt = false
+
+[functions.ai-self-learning]
+verify_jwt = false
+
+[functions.generate-video-ad]
+verify_jwt = false
+
+[functions.wallet-subscribe]
+verify_jwt = false
+
+[functions.admin-create-firm]
+verify_jwt = false
+
+[functions.get-client-info]
+verify_jwt = false

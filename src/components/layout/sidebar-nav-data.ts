@@ -74,6 +74,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { name: 'Campaigns', href: '/campaigns', icon: TrendingUp },
       { name: 'Meta Ads', href: '/meta-ads', icon: Megaphone, premium: true },
+      { name: 'Google Ads', href: '/google-ads', icon: Globe, premium: true },
       { name: 'Social Calendar', href: '/social-calendar', icon: CalendarDays, premium: true },
       { name: 'Competitor Intel', href: '/competitor-intelligence', icon: Radar, premium: true },
       { name: 'Market Pulse', href: '/market-pulse', icon: Target, premium: true },
