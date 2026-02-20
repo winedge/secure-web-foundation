@@ -36,6 +36,8 @@ import {
   MapPin,
   Eye,
   Layers,
+  ShieldAlert,
+  Plug,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -121,6 +123,8 @@ export const navGroups: NavGroup[] = [
       { name: 'Teams', href: '/teams', icon: Users },
       { name: 'Smart Alerts', href: '/smart-alerts', icon: Bell },
       { name: 'Referral Network', href: '/referral-network', icon: Handshake },
+      { name: 'Fraud Detection', href: '/fraud-detection', icon: ShieldAlert },
+      { name: 'CRM Integrations', href: '/crm-integrations', icon: Plug },
     ],
   },
 ];
