@@ -98,3 +98,6 @@ verify_jwt = false
 
 [functions.cross-platform-autopilot]
 verify_jwt = false
+
+[functions.background-check]
+verify_jwt = false
