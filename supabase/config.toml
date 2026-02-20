@@ -125,3 +125,9 @@ verify_jwt = false
 
 [functions.google-lead-webhook]
 verify_jwt = false
+
+[functions.fraud-detection]
+verify_jwt = false
+
+[functions.crm-sync]
+verify_jwt = false

@@ -64,6 +64,8 @@ const AdminReporting = lazy(() => import("./pages/admin/AdminReporting"));
 const AdminSessionLogs = lazy(() => import("./pages/admin/AdminSessionLogs"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminUserRoles = lazy(() => import("./pages/admin/AdminUserRoles"));
+const FraudDetection = lazy(() => import("./pages/FraudDetection"));
+const CrmIntegrations = lazy(() => import("./pages/CrmIntegrations"));
 
 const queryClient = new QueryClient();
 
@@ -146,6 +148,8 @@ const App = () => (
                 <Route path="/geofence-campaigns" element={<ProtectedRoute><LazyRoute><GeofenceCampaigns /></LazyRoute></ProtectedRoute>} />
                 <Route path="/dark-funnel" element={<ProtectedRoute><LazyRoute><DarkFunnelIntelligence /></LazyRoute></ProtectedRoute>} />
                 <Route path="/cross-platform-autopilot" element={<ProtectedRoute><LazyRoute><CrossPlatformAutopilot /></LazyRoute></ProtectedRoute>} />
+                <Route path="/fraud-detection" element={<ProtectedRoute><LazyRoute><FraudDetection /></LazyRoute></ProtectedRoute>} />
+                <Route path="/crm-integrations" element={<ProtectedRoute><LazyRoute><CrmIntegrations /></LazyRoute></ProtectedRoute>} />
 
                 {/* Admin routes */}
                 <Route path="/admin" element={<ProtectedRoute requireAdmin><LazyRoute><AdminDashboard /></LazyRoute></ProtectedRoute>} />
