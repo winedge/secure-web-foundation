@@ -15,6 +15,7 @@ import { AiCaseEvaluatorPanel } from '@/components/leads/AiCaseEvaluatorPanel';
 import { DocumentAnalyzerPanel } from '@/components/leads/DocumentAnalyzerPanel';
 import { WarRoomPanel } from '@/components/leads/WarRoomPanel';
 import { SettlementPredictorPanel } from '@/components/leads/SettlementPredictorPanel';
+import { BackgroundCheckerPanel } from '@/components/leads/BackgroundCheckerPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,7 +28,7 @@ import { exportLeadsToCSV } from '@/lib/export-utils';
 import { 
   User, Mail, Phone, MapPin, FileText, Calendar,
   Search, Download, Eye, CheckCircle, Shield, Clock,
-  Pin, Trash2, Plus, X, Video, Brain, Scale, Upload, Users, Gavel, Lock
+  Pin, Trash2, Plus, X, Video, Brain, Scale, Upload, Users, Gavel, Lock, Fingerprint
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -132,8 +133,9 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
 
   return (
     <Tabs defaultValue="details" className="mt-4">
-      <TabsList className="grid w-full grid-cols-3 sm:grid-cols-9">
+      <TabsList className="grid w-full grid-cols-3 sm:grid-cols-10">
         <TabsTrigger value="details">Details</TabsTrigger>
+        <TabsTrigger value="background"><Fingerprint className="h-4 w-4 mr-1" />Background</TabsTrigger>
         <TabsTrigger value="ai-score"><Brain className="h-4 w-4 mr-1" />AI Score</TabsTrigger>
         <TabsTrigger value="case-eval"><Scale className="h-4 w-4 mr-1" />Case Eval</TabsTrigger>
         <TabsTrigger value="settlement"><Gavel className="h-4 w-4 mr-1" />Settlement</TabsTrigger>
@@ -224,6 +226,14 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
             </div>
           )}
         </div>
+      </TabsContent>
+
+      <TabsContent value="background" className="mt-4">
+        <BackgroundCheckerPanel
+          leadId={detailLead.id}
+          leadName={`${detailLead.first_name || ''} ${detailLead.last_name || ''}`.trim()}
+          leadState={detailLead.state}
+        />
       </TabsContent>
 
       <TabsContent value="ai-score" className="mt-4">
