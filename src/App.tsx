@@ -47,6 +47,7 @@ const CrossFirmBenchmarks = lazy(() => import("./pages/CrossFirmBenchmarks"));
 const CreativeStudio = lazy(() => import("./pages/CreativeStudio"));
 const ViralContentEngine = lazy(() => import("./pages/ViralContentEngine"));
 const VideoAdGenerator = lazy(() => import("./pages/VideoAdGenerator"));
+const GoogleAds = lazy(() => import("./pages/GoogleAds"));
 
 const LookalikeAudience = lazy(() => import("./pages/LookalikeAudience"));
 const IntentSignalTracker = lazy(() => import("./pages/IntentSignalTracker"));
@@ -136,6 +137,7 @@ const App = () => (
                 <Route path="/creative-studio" element={<ProtectedRoute><LazyRoute><CreativeStudio /></LazyRoute></ProtectedRoute>} />
                 <Route path="/viral-content" element={<ProtectedRoute><LazyRoute><ViralContentEngine /></LazyRoute></ProtectedRoute>} />
                 <Route path="/video-ads" element={<ProtectedRoute><LazyRoute><VideoAdGenerator /></LazyRoute></ProtectedRoute>} />
+                <Route path="/google-ads" element={<ProtectedRoute><LazyRoute><GoogleAds /></LazyRoute></ProtectedRoute>} />
                 
                 <Route path="/lookalike-audience" element={<ProtectedRoute><LazyRoute><LookalikeAudience /></LazyRoute></ProtectedRoute>} />
                 <Route path="/intent-signals" element={<ProtectedRoute><LazyRoute><IntentSignalTracker /></LazyRoute></ProtectedRoute>} />
