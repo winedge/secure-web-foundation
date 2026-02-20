@@ -66,6 +66,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { name: 'Marketplace', href: '/marketplace', icon: ShoppingCart },
       { name: 'My Leads', href: '/my-leads', icon: Briefcase },
+      { name: 'Intake Submissions', href: '/intake-submissions', icon: ClipboardList },
     ],
   },
   {
