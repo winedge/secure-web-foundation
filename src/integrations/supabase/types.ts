@@ -3765,7 +3765,12 @@ export type Database = {
         | "intake_form"
         | "referral"
         | "other"
-      lead_status: "available" | "purchased" | "expired" | "flagged"
+      lead_status:
+        | "available"
+        | "purchased"
+        | "expired"
+        | "flagged"
+        | "pending_review"
       lead_tier: "A" | "B" | "C" | "D"
       subscription_plan: "basic" | "premium"
       team_permission:
@@ -3945,7 +3950,13 @@ export const Constants = {
         "referral",
         "other",
       ],
-      lead_status: ["available", "purchased", "expired", "flagged"],
+      lead_status: [
+        "available",
+        "purchased",
+        "expired",
+        "flagged",
+        "pending_review",
+      ],
       lead_tier: ["A", "B", "C", "D"],
       subscription_plan: ["basic", "premium"],
       team_permission: [

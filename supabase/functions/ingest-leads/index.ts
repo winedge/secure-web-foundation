@@ -92,6 +92,16 @@ serve(async (req) => {
 
     console.log(`Processing ${leads.length} leads...`);
 
+    // Check if lead verification is required
+    const { data: verificationSetting } = await supabase
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'lead_verification_required')
+      .maybeSingle();
+    
+    const requiresVerification = verificationSetting?.value?.enabled === true;
+    const initialStatus = requiresVerification ? 'pending_review' : 'available';
+
     const { data: sources } = await supabase.from('lead_sources').select('id, source_type');
     const sourceMap = new Map((sources as Array<{ id: string; source_type: string }> || []).map(s => [s.source_type, s.id]));
 
@@ -120,7 +130,7 @@ serve(async (req) => {
             city: lead.city, state: lead.state, zip_code: lead.zip_code,
             tort_type: lead.tort_type, age_bucket: lead.age_bucket,
             diagnosis_details: lead.diagnosis_details, exposure_details: lead.exposure_details,
-            ai_quality_score: qualityScore, tier, price, status: 'available',
+            ai_quality_score: qualityScore, tier, price, status: initialStatus,
             source_id: sourceMap.get(lead.source_type), external_id: lead.external_id,
             ingested_at: new Date().toISOString(), metadata: lead.metadata || {},
             is_verified: false, is_exclusive: true,
