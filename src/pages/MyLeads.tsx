@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { usePurchasedLeads, useLeadSources, useUpdatePipelineStage } from '@/hooks/use-leads';
+import { usePurchasedLeads, useLeadSources, useUpdatePipelineStage, usePostToMarketplace } from '@/hooks/use-leads';
 import { useLeadNotes, useCreateNote, useDeleteNote, useTogglePinNote } from '@/hooks/use-lead-notes';
 import { useTeamPermissions } from '@/hooks/use-team-permissions';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -280,6 +280,7 @@ export default function MyLeads() {
   const { data: leads, isLoading } = usePurchasedLeads();
   const { data: sourcesMap } = useLeadSources();
   const updateStage = useUpdatePipelineStage();
+  const postToMarketplace = usePostToMarketplace();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeStage, setActiveStage] = useState<PipelineStage>('new_lead');
   const [detailLeadId, setDetailLeadId] = useState<string | null>(null);
@@ -404,7 +405,9 @@ export default function MyLeads() {
                 onMoveStage={handleMoveStage}
                 onViewDetails={setDetailLeadId}
                 onDump={(leadId) => updateStage.mutate({ leadId, stage: 'new_lead' })}
+                onPostToMarketplace={(leadId, price) => postToMarketplace.mutate({ leadId, price })}
                 isMoving={updateStage.isPending}
+                isPosting={postToMarketplace.isPending}
               />
             )}
           </CardContent>
