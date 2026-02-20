@@ -159,7 +159,6 @@ export function usePurchaseLead() {
     mutationFn: async (leadId: string) => {
       if (!user || !firm) throw new Error('Not authenticated');
 
-      // Use atomic server-side RPC to prevent race conditions
       const { data, error } = await supabase.rpc('purchase_lead', {
         _lead_id: leadId,
         _user_id: user.id,
@@ -177,6 +176,65 @@ export function usePurchaseLead() {
     },
     onError: (error) => {
       toast.error('Failed to purchase lead: ' + error.message);
+    },
+  });
+}
+
+export function usePostToMarketplace() {
+  const { user } = useAuth();
+  const { data: firm } = useFirm();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ leadId, price }: { leadId: string; price: number }) => {
+      if (!user || !firm) throw new Error('Not authenticated');
+
+      // Update lead status back to available with new price
+      const { error: leadError } = await supabase
+        .from('leads')
+        .update({ 
+          status: 'available' as any, 
+          price, 
+          is_exclusive: false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', leadId);
+
+      if (leadError) throw leadError;
+
+      // Remove the purchase record so it appears in marketplace
+      const { error: purchaseError } = await supabase
+        .from('lead_purchases')
+        .delete()
+        .eq('lead_id', leadId)
+        .eq('firm_id', firm.id);
+
+      if (purchaseError) throw purchaseError;
+
+      // Refund wallet balance
+      const { error: walletError } = await supabase
+        .from('firms')
+        .update({ wallet_balance: firm.wallet_balance + price })
+        .eq('id', firm.id);
+
+      // Audit log
+      await supabase.from('audit_logs').insert({
+        user_id: user.id,
+        action: 'post_to_marketplace',
+        entity_type: 'lead',
+        entity_id: leadId,
+        details: { price, firm_id: firm.id },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      queryClient.invalidateQueries({ queryKey: ['purchased-leads'] });
+      queryClient.invalidateQueries({ queryKey: ['firm'] });
+      queryClient.invalidateQueries({ queryKey: ['marketplace-counts-by-tort'] });
+      toast.success('Lead posted to marketplace successfully!');
+    },
+    onError: (error) => {
+      toast.error('Failed to post lead: ' + error.message);
     },
   });
 }
