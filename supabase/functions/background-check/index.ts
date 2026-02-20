@@ -35,28 +35,46 @@ serve(async (req) => {
     const fullName = `${lead.first_name || "Unknown"} ${lead.last_name || ""}`.trim();
     const location = `${lead.city || ""}, ${lead.state || ""}`.replace(/^, |, $/g, "");
 
-    const prompt = `You are a legal background intelligence analyst. Given the following lead information, generate a realistic and comprehensive background check analysis. This is a SIMULATED analysis for a legal lead management platform.
+    const prompt = `You are a legal background intelligence analyst specializing in deep public records research. Given the following lead information, generate a HIGHLY DETAILED and comprehensive background check analysis. This is a SIMULATED analysis for a legal lead management platform.
 
 Lead Info:
 - Name: ${fullName}
 - Location: ${location}
+- State: ${lead.state || "Unknown"}
 - Tort Type: ${lead.tort_type}
 - Age Bucket: ${lead.age_bucket || "Unknown"}
 
-Generate a detailed background check result in the following JSON format. Make the results realistic — most people should come back clean, but occasionally include minor findings. The results should feel authentic.
+CRITICAL REQUIREMENTS:
 
-IMPORTANT: For EVERY check section, include a "sources" array with 1-3 realistic reference sources. Each source must have:
-- "name": The name of the real public database or registry (e.g. "PACER", "OFAC SDN List", "Florida Department of Corrections", "${lead.state} Court Records")
-- "url": A REAL, working URL to the actual public database website (e.g. "https://www.pacer.gov", "https://www.nsopw.gov", "https://sanctionssearch.ofac.treas.gov")
-- "description": What was searched or found in that source
+1. DETAILED HISTORY: For EVERY section where something is found, provide EXTENSIVE details:
+   - Specific dates (month/year), case numbers, court names, jurisdictions
+   - Dollar amounts for bankruptcies, judgments, liens
+   - Specific charges with disposition (dismissed, convicted, plea deal, etc.)
+   - Timeline of events showing progression
+   - Names of courts, judges (if relevant), and filing details
 
-Use real government and public record database URLs that actually exist. Examples:
-- PACER: https://www.pacer.gov
-- National Sex Offender Registry: https://www.nsopw.gov
-- OFAC Sanctions: https://sanctionssearch.ofac.treas.gov
-- Florida courts: https://www.flcourts.gov
-- Federal courts: https://www.uscourts.gov
-- State-specific DOC sites, county clerk sites, etc.
+2. ACCURATE SOURCE URLS: Do NOT just link to a website's homepage. Link to the SPECIFIC search page or query URL where one would actually look up this person. Examples:
+   - PACER case search: "https://pcl.uscourts.gov/pcl/pages/search/findCase.jsf" (not just pacer.gov)
+   - ${lead.state || "State"} court records search: Use the actual state judiciary case search URL
+   - OFAC sanctions search: "https://sanctionssearch.ofac.treas.gov/Content/search.html" (the actual search page)
+   - Sex offender registry: "https://www.nsopw.gov/search-public-sex-offender-registries" (the search page)
+   - Credit bureaus: "https://www.annualcreditreport.com/index.action"
+   - ${lead.state || "State"} DOC inmate search: Use the real state DOC inmate lookup URL
+   - County clerk records: Use the actual county clerk online records search URL for ${lead.city || "the city"}, ${lead.state || "the state"}
+   - Federal bankruptcy: "https://www.uscourts.gov/court-records/find-case-pacer"
+   - State bar complaints: Use the actual state bar lookup URL
+
+3. For each source, the "description" field must explain EXACTLY what was searched, what parameters were used, and what the finding was. Example: "Searched ${lead.state} Circuit Court electronic records for '${fullName}' from 2010-present. Found 1 civil case filed 03/2019, Case No. 2019-CV-004521, ${lead.city} County Circuit Court."
+
+4. REALISM: 
+   - ~70% of people should come back mostly clean with minor items
+   - ~20% should have 1-2 notable findings (old misdemeanor, dismissed civil case, chapter 7 from 8+ years ago)
+   - ~10% should have significant findings
+   - Always include at least some detail even for clean checks (e.g., "Searched X database covering Y years, no records found matching criteria")
+
+5. Each section MUST have 2-4 sources with SPECIFIC search URLs (not homepages)
+
+Return the result in this JSON format:
 
 {
   "overallRiskLevel": "low" | "medium" | "high" | "critical",
@@ -64,62 +82,84 @@ Use real government and public record database URLs that actually exist. Example
   "bankruptcyCheck": {
     "found": <boolean>,
     "count": <number>,
-    "details": "<one sentence summary>",
-    "chapters": ["Chapter 7", "Chapter 13"] or [],
+    "details": "<DETAILED paragraph: if found, include filing date, case number, court, chapter type, discharge date, total debt amount, current status. If not found, state the search scope and date range covered>",
+    "chapters": [],
     "mostRecent": "<year or null>",
-    "sources": [{"name": "<source name e.g. PACER Federal Bankruptcy Records>", "url": "<real public database URL>", "description": "<what was found or searched>"}]
+    "history": [{"date": "<MM/YYYY>", "event": "<specific event description with case numbers>", "court": "<full court name>", "amount": "<dollar amount if applicable>"}],
+    "sources": [{"name": "<source>", "url": "<SPECIFIC search/query page URL, NOT homepage>", "description": "<detailed description of what was searched and found>"}]
   },
   "criminalCheck": {
     "felonies": <boolean>,
     "misdemeanors": <boolean>,
     "felonyCount": <number>,
     "misdemeanorCount": <number>,
-    "details": "<one sentence summary>",
-    "charges": [] or ["charge description"],
-    "sources": [{"name": "<source name e.g. National Criminal Database>", "url": "<real public database URL>", "description": "<what was found or searched>"}]
+    "details": "<DETAILED paragraph: include jurisdiction, specific charges, dates, case numbers, dispositions, sentences if any. If clean, describe scope of search>",
+    "charges": [],
+    "history": [{"date": "<MM/YYYY>", "charge": "<specific charge>", "jurisdiction": "<court/county>", "caseNumber": "<case number>", "disposition": "<outcome>", "sentence": "<if applicable>"}],
+    "sources": [{"name": "<source>", "url": "<SPECIFIC search page URL>", "description": "<detailed search description>"}]
   },
   "civilLitigationCheck": {
     "found": <boolean>,
     "count": <number>,
-    "details": "<one sentence summary>",
-    "types": [] or ["Personal Injury", "Contract Dispute"],
-    "sources": [{"name": "<source name>", "url": "<real public database URL>", "description": "<what was found or searched>"}]
+    "details": "<DETAILED paragraph with case types, parties, outcomes, amounts>",
+    "types": [],
+    "history": [{"date": "<MM/YYYY>", "caseType": "<type>", "caseNumber": "<number>", "court": "<court>", "parties": "<plaintiff v defendant>", "status": "<outcome/pending>", "amount": "<if applicable>"}],
+    "sources": [{"name": "<source>", "url": "<SPECIFIC search page URL>", "description": "<detailed search description>"}]
   },
   "creditRiskIndicator": {
     "level": "excellent" | "good" | "fair" | "poor" | "very_poor",
-    "details": "<one sentence summary>",
-    "flags": [] or ["flag descriptions"],
-    "sources": [{"name": "<source name>", "url": "<real public database URL>", "description": "<what was found or searched>"}]
+    "estimatedRange": "<e.g. 720-750>",
+    "details": "<DETAILED paragraph about credit indicators, any public financial records, tax liens, judgments>",
+    "flags": [],
+    "publicRecords": [{"type": "<lien/judgment/etc>", "date": "<MM/YYYY>", "amount": "<dollar amount>", "status": "<active/released>", "jurisdiction": "<where filed>"}],
+    "sources": [{"name": "<source>", "url": "<SPECIFIC URL>", "description": "<detailed search description>"}]
   },
   "sanctionsCheck": {
     "found": <boolean>,
-    "details": "<one sentence summary>",
+    "details": "<detailed search description even if clear>",
     "lists": [],
-    "sources": [{"name": "<source name e.g. OFAC SDN List>", "url": "<real public database URL>", "description": "<what was found or searched>"}]
+    "sources": [{"name": "<source>", "url": "<SPECIFIC search page URL>", "description": "<what lists were checked>"}]
   },
   "identityVerification": {
     "verified": <boolean>,
     "confidence": <number 0-100>,
-    "flags": [] or ["flag"],
-    "details": "<one sentence summary>",
-    "sources": [{"name": "<source name>", "url": "<real public database URL>", "description": "<what was found or searched>"}]
+    "flags": [],
+    "details": "<detailed verification steps and results>",
+    "addressHistory": [{"address": "<partial address, city, state>", "dateRange": "<YYYY-YYYY>"}],
+    "sources": [{"name": "<source>", "url": "<SPECIFIC URL>", "description": "<verification method details>"}]
   },
   "sexOffenderRegistry": {
     "found": <boolean>,
-    "details": "<one sentence summary>",
-    "sources": [{"name": "<source name e.g. National Sex Offender Public Website>", "url": "<real public database URL>", "description": "<what was found or searched>"}]
+    "details": "<detailed search scope description>",
+    "sources": [{"name": "<source>", "url": "<SPECIFIC search page URL>", "description": "<search parameters used>"}]
   },
   "watchlistCheck": {
     "found": <boolean>,
-    "details": "<one sentence summary>",
+    "details": "<detailed search scope>",
     "lists": [],
-    "sources": [{"name": "<source name>", "url": "<real public database URL>", "description": "<what was found or searched>"}]
+    "sources": [{"name": "<source>", "url": "<SPECIFIC search page URL>", "description": "<lists checked and results>"}]
   },
-  "recommendation": "<2-3 sentence recommendation for the law firm>",
+  "propertyRecords": {
+    "found": <boolean>,
+    "count": <number>,
+    "details": "<property ownership details if any>",
+    "records": [{"type": "<residential/commercial>", "location": "<city, state>", "estimatedValue": "<dollar amount>", "acquired": "<year>"}],
+    "sources": [{"name": "<source>", "url": "<SPECIFIC URL>", "description": "<search details>"}]
+  },
+  "professionalLicenses": {
+    "found": <boolean>,
+    "details": "<any professional licenses found>",
+    "licenses": [{"type": "<license type>", "status": "<active/expired/revoked>", "issuedBy": "<issuing body>", "number": "<license number>"}],
+    "sources": [{"name": "<source>", "url": "<SPECIFIC URL>", "description": "<search details>"}]
+  },
+  "recommendation": "<3-4 sentence detailed recommendation for the law firm based on all findings, including specific risk factors and suggested next steps>",
+  "generatedAt": "${new Date().toISOString()}",
+  "searchScope": "National multi-jurisdictional search covering federal and ${lead.state || 'state'} records, 7-year lookback for most categories, 10-year for criminal",
   "disclaimers": [
-    "This is an AI-generated analysis for screening purposes only.",
-    "Results should be verified through official background check services before making legal decisions.",
-    "This report does not constitute legal advice or a certified background check."
+    "This is an AI-generated analysis for screening purposes only and does not constitute a certified background check.",
+    "Results are simulated based on publicly available data patterns and should be verified through FCRA-compliant background check services.",
+    "This report does not constitute legal advice. All findings should be independently verified before making legal or business decisions.",
+    "Search covers federal and state-level databases. County-level records may require separate searches for comprehensive coverage."
   ]
 }
 
