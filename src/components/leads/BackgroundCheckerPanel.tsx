@@ -6,13 +6,17 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import {
   Shield, ShieldAlert, ShieldCheck, ShieldX, AlertTriangle, CheckCircle, XCircle,
   Scale, CreditCard, Search, RefreshCw, Info, Ban, Fingerprint, ExternalLink,
-  ChevronDown, Database, Landmark, MapPin, Award, Home, Clock,
+  ChevronDown, Database, Landmark, MapPin, Award, Home, Clock, Globe, Bot, ShieldCheck as ShieldCheckIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+
+type BackgroundProvider = 'firecrawl' | 'ai' | 'checkr';
 
 interface BackgroundCheckerPanelProps {
   leadId: string;
@@ -231,20 +235,22 @@ export function BackgroundCheckerPanel({ leadId, leadName, leadState }: Backgrou
   const [result, setResult] = useState<BackgroundResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasRun, setHasRun] = useState(false);
+  const [provider, setProvider] = useState<BackgroundProvider>('firecrawl');
 
   const runBackgroundCheck = async () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('background-check', {
-        body: { lead_id: leadId },
+        body: { lead_id: leadId, provider },
       });
       if (error) throw error;
       setResult(data?.result || data);
       setHasRun(true);
       toast.success('Background check completed');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Background check error:', err);
-      toast.error('Failed to run background check');
+      const msg = err?.message || err?.context?.message || 'Failed to run background check';
+      toast.error(msg.includes('Checkr') || msg.includes('Firecrawl') ? msg : 'Failed to run background check');
     } finally {
       setIsLoading(false);
     }
@@ -252,24 +258,72 @@ export function BackgroundCheckerPanel({ leadId, leadName, leadState }: Backgrou
 
   if (!hasRun && !isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 space-y-4">
+      <div className="flex flex-col items-center justify-center py-12 space-y-6">
         <div className="p-4 rounded-full bg-muted/50">
           <Fingerprint className="h-12 w-12 text-muted-foreground" />
         </div>
         <div className="text-center space-y-2 max-w-md">
           <h3 className="text-lg font-semibold">AI Background Intelligence</h3>
           <p className="text-sm text-muted-foreground">
-            Run a comprehensive AI-powered background analysis including bankruptcy records,
-            criminal history, civil litigation, credit risk, property records, professional licenses, sanctions screening, and identity verification.
+            Run a comprehensive background analysis including bankruptcy records,
+            criminal history, civil litigation, credit risk, sanctions screening, and more.
           </p>
         </div>
+
+        {/* Provider Selector */}
+        <Card className="w-full max-w-md border">
+          <CardContent className="pt-4 pb-4">
+            <p className="text-sm font-medium mb-3">Data Source</p>
+            <RadioGroup value={provider} onValueChange={(v) => setProvider(v as BackgroundProvider)} className="space-y-3">
+              <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors">
+                <RadioGroupItem value="firecrawl" id="firecrawl" className="mt-0.5" />
+                <Label htmlFor="firecrawl" className="cursor-pointer flex-1">
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-primary" />
+                    <span className="font-medium text-sm">Live Public Records</span>
+                    <Badge variant="secondary" className="text-xs">Recommended</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Scrapes real public databases (OFAC, NSOPW, PACER, state courts) in real-time using Firecrawl
+                  </p>
+                </Label>
+              </div>
+              <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors">
+                <RadioGroupItem value="ai" id="ai" className="mt-0.5" />
+                <Label htmlFor="ai" className="cursor-pointer flex-1">
+                  <div className="flex items-center gap-2">
+                    <Bot className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium text-sm">AI Simulated</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    AI-generated analysis based on patterns — faster but not based on real records
+                  </p>
+                </Label>
+              </div>
+              <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors opacity-60">
+                <RadioGroupItem value="checkr" id="checkr" className="mt-0.5" disabled />
+                <Label htmlFor="checkr" className="cursor-pointer flex-1">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheckIcon className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium text-sm">Checkr (FCRA-Compliant)</span>
+                    <Badge variant="outline" className="text-xs">Coming Soon</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Professional paid background check via Checkr API — requires API key setup
+                  </p>
+                </Label>
+              </div>
+            </RadioGroup>
+          </CardContent>
+        </Card>
+
         <Button onClick={runBackgroundCheck} className="gap-2" size="lg">
           <Search className="h-4 w-4" />
           Run Background Check
         </Button>
         <p className="text-xs text-muted-foreground flex items-center gap-1">
           <Info className="h-3 w-3" />
-          Powered by AI analysis • Results are for informational purposes only
+          {provider === 'firecrawl' ? 'Powered by Firecrawl + AI analysis' : provider === 'checkr' ? 'Powered by Checkr' : 'Powered by AI analysis'} • Results are for informational purposes only
         </p>
       </div>
     );
