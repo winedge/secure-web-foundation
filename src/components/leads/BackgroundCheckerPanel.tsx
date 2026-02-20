@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Shield,
   ShieldAlert,
@@ -23,6 +24,9 @@ import {
   Info,
   Ban,
   Fingerprint,
+  ExternalLink,
+  ChevronDown,
+  Database,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -31,6 +35,12 @@ interface BackgroundCheckerPanelProps {
   leadId: string;
   leadName?: string;
   leadState?: string;
+}
+
+interface SourceReference {
+  name: string;
+  url: string;
+  description: string;
 }
 
 interface BackgroundResult {
@@ -42,6 +52,7 @@ interface BackgroundResult {
     details: string;
     chapters?: string[];
     mostRecent?: string;
+    sources?: SourceReference[];
   };
   criminalCheck: {
     felonies: boolean;
@@ -50,37 +61,44 @@ interface BackgroundResult {
     misdemeanorCount: number;
     details: string;
     charges?: string[];
+    sources?: SourceReference[];
   };
   civilLitigationCheck: {
     found: boolean;
     count: number;
     details: string;
     types?: string[];
+    sources?: SourceReference[];
   };
   creditRiskIndicator: {
     level: 'excellent' | 'good' | 'fair' | 'poor' | 'very_poor';
     details: string;
     flags?: string[];
+    sources?: SourceReference[];
   };
   sanctionsCheck: {
     found: boolean;
     details: string;
     lists?: string[];
+    sources?: SourceReference[];
   };
   identityVerification: {
     verified: boolean;
     confidence: number;
     flags?: string[];
     details: string;
+    sources?: SourceReference[];
   };
   sexOffenderRegistry: {
     found: boolean;
     details: string;
+    sources?: SourceReference[];
   };
   watchlistCheck: {
     found: boolean;
     details: string;
     lists?: string[];
+    sources?: SourceReference[];
   };
   recommendation: string;
   disclaimers: string[];
@@ -110,12 +128,13 @@ const RiskIcon = ({ level }: { level: string }) => {
   }
 };
 
-function CheckCard({ title, icon, status, details, tags, children }: {
+function CheckCard({ title, icon, status, details, tags, sources, children }: {
   title: string;
   icon: React.ReactNode;
   status: 'clear' | 'flagged' | 'warning';
   details: string;
   tags?: string[];
+  sources?: SourceReference[];
   children?: React.ReactNode;
 }) {
   const statusConfig = {
@@ -148,6 +167,33 @@ function CheckCard({ title, icon, status, details, tags, children }: {
                 </div>
               )}
               {children}
+              {sources && sources.length > 0 && (
+                <Collapsible className="mt-3">
+                  <CollapsibleTrigger className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium">
+                    <Database className="h-3 w-3" />
+                    <span>{sources.length} Source{sources.length > 1 ? 's' : ''} Referenced</span>
+                    <ChevronDown className="h-3 w-3" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-2 space-y-1.5">
+                    {sources.map((src, i) => (
+                      <div key={i} className="flex items-start gap-2 p-2 rounded-md bg-muted/30 border border-border/50">
+                        <ExternalLink className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <a
+                            href={src.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-medium text-primary hover:underline"
+                          >
+                            {src.name}
+                          </a>
+                          <p className="text-xs text-muted-foreground mt-0.5">{src.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
             </div>
           </div>
         </div>
@@ -264,6 +310,7 @@ export function BackgroundCheckerPanel({ leadId, leadName, leadState }: Backgrou
           status={result.bankruptcyCheck.found ? 'flagged' : 'clear'}
           details={result.bankruptcyCheck.details}
           tags={result.bankruptcyCheck.chapters}
+          sources={result.bankruptcyCheck.sources}
         />
 
         <CheckCard
@@ -272,6 +319,7 @@ export function BackgroundCheckerPanel({ leadId, leadName, leadState }: Backgrou
           status={result.criminalCheck.felonies ? 'flagged' : result.criminalCheck.misdemeanors ? 'warning' : 'clear'}
           details={result.criminalCheck.details}
           tags={result.criminalCheck.charges}
+          sources={result.criminalCheck.sources}
         >
           {(result.criminalCheck.felonies || result.criminalCheck.misdemeanors) && (
             <div className="flex gap-4 mt-2 text-xs">
@@ -295,6 +343,7 @@ export function BackgroundCheckerPanel({ leadId, leadName, leadState }: Backgrou
           status={result.civilLitigationCheck.found ? 'warning' : 'clear'}
           details={result.civilLitigationCheck.details}
           tags={result.civilLitigationCheck.types}
+          sources={result.civilLitigationCheck.sources}
         />
 
         <CheckCard
@@ -303,6 +352,7 @@ export function BackgroundCheckerPanel({ leadId, leadName, leadState }: Backgrou
           status={result.creditRiskIndicator.level === 'poor' || result.creditRiskIndicator.level === 'very_poor' ? 'flagged' : result.creditRiskIndicator.level === 'fair' ? 'warning' : 'clear'}
           details={result.creditRiskIndicator.details}
           tags={result.creditRiskIndicator.flags}
+          sources={result.creditRiskIndicator.sources}
         />
 
         <CheckCard
@@ -311,6 +361,7 @@ export function BackgroundCheckerPanel({ leadId, leadName, leadState }: Backgrou
           status={result.sanctionsCheck.found || result.watchlistCheck.found ? 'flagged' : 'clear'}
           details={`${result.sanctionsCheck.details} ${result.watchlistCheck.details}`.trim()}
           tags={[...(result.sanctionsCheck.lists || []), ...(result.watchlistCheck.lists || [])]}
+          sources={[...(result.sanctionsCheck.sources || []), ...(result.watchlistCheck.sources || [])]}
         />
 
         <CheckCard
@@ -318,6 +369,7 @@ export function BackgroundCheckerPanel({ leadId, leadName, leadState }: Backgrou
           icon={<ShieldAlert className="h-5 w-5 text-muted-foreground" />}
           status={result.sexOffenderRegistry.found ? 'flagged' : 'clear'}
           details={result.sexOffenderRegistry.details}
+          sources={result.sexOffenderRegistry.sources}
         />
 
         <CheckCard
@@ -326,6 +378,7 @@ export function BackgroundCheckerPanel({ leadId, leadName, leadState }: Backgrou
           status={result.identityVerification.verified ? 'clear' : 'warning'}
           details={result.identityVerification.details}
           tags={result.identityVerification.flags}
+          sources={result.identityVerification.sources}
         >
           <div className="mt-2">
             <div className="flex items-center gap-2 text-xs">
