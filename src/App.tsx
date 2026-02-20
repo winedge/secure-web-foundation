@@ -28,6 +28,7 @@ const BrandedIntake = lazy(() => import("./pages/BrandedIntake"));
 const IntakeFormBuilder = lazy(() => import("./pages/IntakeFormBuilder"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
 const MyLeads = lazy(() => import("./pages/MyLeads"));
+const IntakeSubmissions = lazy(() => import("./pages/IntakeSubmissions"));
 const Wallet = lazy(() => import("./pages/Wallet"));
 const Campaigns = lazy(() => import("./pages/Campaigns"));
 const MetaAds = lazy(() => import("./pages/MetaAds"));
@@ -117,6 +118,7 @@ const App = () => (
                 <Route path="/onboarding" element={<ProtectedRoute><LazyRoute><Onboarding /></LazyRoute></ProtectedRoute>} />
                 <Route path="/marketplace" element={<ProtectedRoute><LazyRoute><Marketplace /></LazyRoute></ProtectedRoute>} />
                 <Route path="/my-leads" element={<ProtectedRoute><LazyRoute><MyLeads /></LazyRoute></ProtectedRoute>} />
+                <Route path="/intake-submissions" element={<ProtectedRoute><LazyRoute><IntakeSubmissions /></LazyRoute></ProtectedRoute>} />
                 <Route path="/wallet" element={<ProtectedRoute><LazyRoute><Wallet /></LazyRoute></ProtectedRoute>} />
                 <Route path="/campaigns" element={<ProtectedRoute><LazyRoute><Campaigns /></LazyRoute></ProtectedRoute>} />
                 <Route path="/meta-ads" element={<ProtectedRoute><LazyRoute><MetaAds /></LazyRoute></ProtectedRoute>} />
