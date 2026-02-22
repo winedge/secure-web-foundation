@@ -1458,6 +1458,85 @@ export type Database = {
           },
         ]
       }
+      document_signatures: {
+        Row: {
+          created_at: string
+          created_by: string
+          document_content: string | null
+          document_name: string
+          firm_id: string
+          id: string
+          ip_address: string | null
+          lead_id: string | null
+          sha256_hash: string | null
+          signature_data: string
+          signed_at: string
+          signer_email: string | null
+          signer_name: string
+          signer_role: string | null
+          status: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          document_content?: string | null
+          document_name: string
+          firm_id: string
+          id?: string
+          ip_address?: string | null
+          lead_id?: string | null
+          sha256_hash?: string | null
+          signature_data: string
+          signed_at?: string
+          signer_email?: string | null
+          signer_name: string
+          signer_role?: string | null
+          status?: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          document_content?: string | null
+          document_name?: string
+          firm_id?: string
+          id?: string
+          ip_address?: string | null
+          lead_id?: string | null
+          sha256_hash?: string | null
+          signature_data?: string
+          signed_at?: string
+          signer_email?: string | null
+          signer_name?: string
+          signer_role?: string | null
+          status?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_signatures_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_signatures_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_signatures_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dynamic_landing_pages: {
         Row: {
           campaign_id: string | null
