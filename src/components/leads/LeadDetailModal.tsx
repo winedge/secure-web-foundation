@@ -50,7 +50,7 @@ export function LeadDetailModal({ lead, open, onOpenChange, isPurchased = false 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div>

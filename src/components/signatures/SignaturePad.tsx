@@ -15,6 +15,8 @@ export function SignaturePad({ onSave, onClear, height = 200, disabled = false }
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
 
+  const lastWidthRef = useRef(0);
+
   const setupCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
@@ -23,9 +25,14 @@ export function SignaturePad({ onSave, onClear, height = 200, disabled = false }
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const rect = container.getBoundingClientRect();
+    const w = container.clientWidth;
+    if (w <= 0) return;
+    
+    // Prevent infinite resize loop - only resize if width actually changed
+    if (Math.abs(w - lastWidthRef.current) < 1) return;
+    lastWidthRef.current = w;
+
     const dpr = window.devicePixelRatio || 1;
-    const w = rect.width;
 
     canvas.width = w * dpr;
     canvas.height = height * dpr;
@@ -110,7 +117,7 @@ export function SignaturePad({ onSave, onClear, height = 200, disabled = false }
 
   return (
     <div className="space-y-3">
-      <div ref={containerRef} className="relative border-2 border-dashed border-border rounded-lg overflow-hidden bg-white">
+      <div ref={containerRef} className="relative border-2 border-dashed border-border rounded-lg overflow-hidden bg-white w-full min-w-0">
         <canvas
           ref={canvasRef}
           className="cursor-crosshair touch-none block w-full"
