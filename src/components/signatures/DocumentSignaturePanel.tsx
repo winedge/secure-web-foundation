@@ -112,7 +112,7 @@ export function DocumentSignaturePanel({ leadId, leadName }: DocumentSignaturePa
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 min-w-0 overflow-hidden">
       {/* Existing Signatures */}
       {isLoading ? (
         <div className="flex justify-center py-4">
