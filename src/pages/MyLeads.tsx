@@ -25,10 +25,11 @@ import { TierBadge } from '@/components/leads/TierBadge';
 import { ScoreIndicator } from '@/components/leads/ScoreIndicator';
 import { formatCurrency } from '@/lib/utils';
 import { exportLeadsToCSV } from '@/lib/export-utils';
+import { DocumentSignaturePanel } from '@/components/signatures/DocumentSignaturePanel';
 import { 
   User, Mail, Phone, MapPin, FileText, Calendar,
   Search, Download, Eye, CheckCircle, Shield, Clock,
-  Pin, Trash2, Plus, X, Video, Brain, Scale, Upload, Users, Gavel, Lock, Fingerprint
+  Pin, Trash2, Plus, X, Video, Brain, Scale, Upload, Users, Gavel, Lock, Fingerprint, PenTool
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -145,6 +146,7 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
           {canViewSessionLogs && <TabsTrigger value="session" className="text-xs sm:text-sm gap-1"><Video className="h-3 w-3 sm:h-4 sm:w-4" />Session</TabsTrigger>}
           <TabsTrigger value="journey" className="text-xs sm:text-sm gap-1"><Clock className="h-3 w-3 sm:h-4 sm:w-4" />Journey</TabsTrigger>
           <TabsTrigger value="notes" className="text-xs sm:text-sm gap-1"><FileText className="h-3 w-3 sm:h-4 sm:w-4" />Notes</TabsTrigger>
+          <TabsTrigger value="esign" className="text-xs sm:text-sm gap-1"><PenTool className="h-3 w-3 sm:h-4 sm:w-4" />E-Sign</TabsTrigger>
         </TabsList>
       </div>
 
@@ -273,6 +275,10 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
 
       <TabsContent value="notes" className="mt-4">
         <LeadNotesPanel leadId={detailLead.id} />
+      </TabsContent>
+
+      <TabsContent value="esign" className="mt-4">
+        <DocumentSignaturePanel leadId={detailLead.id} />
       </TabsContent>
     </Tabs>
   );
