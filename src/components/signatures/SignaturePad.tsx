@@ -5,50 +5,62 @@ import { Eraser, Check } from 'lucide-react';
 interface SignaturePadProps {
   onSave: (dataUrl: string) => void;
   onClear?: () => void;
-  width?: number;
   height?: number;
   disabled?: boolean;
 }
 
-export function SignaturePad({ onSave, onClear, width = 500, height = 200, disabled = false }: SignaturePadProps) {
+export function SignaturePad({ onSave, onClear, height = 200, disabled = false }: SignaturePadProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
 
-  useEffect(() => {
+  const setupCanvas = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set up canvas for high-DPI
+    const rect = container.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = width * dpr;
+    const w = rect.width;
+
+    canvas.width = w * dpr;
     canvas.height = height * dpr;
-    canvas.style.width = `${width}px`;
+    canvas.style.width = `${w}px`;
     canvas.style.height = `${height}px`;
     ctx.scale(dpr, dpr);
 
-    // Style
-    ctx.strokeStyle = 'hsl(var(--foreground))';
+    ctx.strokeStyle = '#000';
     ctx.lineWidth = 2.5;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-  }, [width, height]);
+  }, [height]);
+
+  useEffect(() => {
+    setupCanvas();
+    const observer = new ResizeObserver(() => setupCanvas());
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [setupCanvas]);
 
   const getPos = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / (window.devicePixelRatio || 1) / rect.width;
+    const scaleY = canvas.height / (window.devicePixelRatio || 1) / rect.height;
     if ('touches' in e) {
       return {
-        x: e.touches[0].clientX - rect.left,
-        y: e.touches[0].clientY - rect.top,
+        x: (e.touches[0].clientX - rect.left) * scaleX,
+        y: (e.touches[0].clientY - rect.top) * scaleY,
       };
     }
     return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
     };
   }, []);
 
@@ -83,11 +95,11 @@ export function SignaturePad({ onSave, onClear, width = 500, height = 200, disab
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    const dpr = window.devicePixelRatio || 1;
-    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     setHasDrawn(false);
+    setupCanvas();
     onClear?.();
-  }, [onClear]);
+  }, [onClear, setupCanvas]);
 
   const handleSave = useCallback(() => {
     const canvas = canvasRef.current;
@@ -98,11 +110,10 @@ export function SignaturePad({ onSave, onClear, width = 500, height = 200, disab
 
   return (
     <div className="space-y-3">
-      <div className="relative border-2 border-dashed border-border rounded-lg overflow-hidden bg-background">
+      <div ref={containerRef} className="relative border-2 border-dashed border-border rounded-lg overflow-hidden bg-white">
         <canvas
           ref={canvasRef}
-          className="cursor-crosshair touch-none w-full"
-          style={{ maxWidth: width, height }}
+          className="cursor-crosshair touch-none block w-full"
           onMouseDown={startDraw}
           onMouseMove={draw}
           onMouseUp={stopDraw}
