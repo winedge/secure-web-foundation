@@ -216,7 +216,6 @@ export function DocumentSignaturePanel({ leadId, leadName }: DocumentSignaturePa
               <SignaturePad
                 onSave={handleSign}
                 disabled={isSaving || !signerName.trim()}
-                width={460}
                 height={160}
               />
             </div>
