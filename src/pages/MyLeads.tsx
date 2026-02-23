@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { usePurchasedLeads, useLeadSources, useUpdatePipelineStage } from '@/hooks/use-leads';
+import { usePurchasedLeads, useLeadSources, useUpdatePipelineStage, usePostToMarketplace } from '@/hooks/use-leads';
 import { useLeadNotes, useCreateNote, useDeleteNote, useTogglePinNote } from '@/hooks/use-lead-notes';
 import { useTeamPermissions } from '@/hooks/use-team-permissions';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -15,6 +15,7 @@ import { AiCaseEvaluatorPanel } from '@/components/leads/AiCaseEvaluatorPanel';
 import { DocumentAnalyzerPanel } from '@/components/leads/DocumentAnalyzerPanel';
 import { WarRoomPanel } from '@/components/leads/WarRoomPanel';
 import { SettlementPredictorPanel } from '@/components/leads/SettlementPredictorPanel';
+import { BackgroundCheckerPanel } from '@/components/leads/BackgroundCheckerPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,7 +28,7 @@ import { exportLeadsToCSV } from '@/lib/export-utils';
 import { 
   User, Mail, Phone, MapPin, FileText, Calendar,
   Search, Download, Eye, CheckCircle, Shield, Clock,
-  Pin, Trash2, Plus, X, Video, Brain, Scale, Upload, Users, Gavel, Lock
+  Pin, Trash2, Plus, X, Video, Brain, Scale, Upload, Users, Gavel, Lock, Fingerprint
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -132,17 +133,20 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
 
   return (
     <Tabs defaultValue="details" className="mt-4">
-      <TabsList className="grid w-full grid-cols-3 sm:grid-cols-9">
-        <TabsTrigger value="details">Details</TabsTrigger>
-        <TabsTrigger value="ai-score"><Brain className="h-4 w-4 mr-1" />AI Score</TabsTrigger>
-        <TabsTrigger value="case-eval"><Scale className="h-4 w-4 mr-1" />Case Eval</TabsTrigger>
-        <TabsTrigger value="settlement"><Gavel className="h-4 w-4 mr-1" />Settlement</TabsTrigger>
-        <TabsTrigger value="documents"><Upload className="h-4 w-4 mr-1" />Docs</TabsTrigger>
-        <TabsTrigger value="war-room"><Users className="h-4 w-4 mr-1" />War Room</TabsTrigger>
-        {canViewSessionLogs && <TabsTrigger value="session"><Video className="h-4 w-4 mr-1" />Session</TabsTrigger>}
-        <TabsTrigger value="journey"><Clock className="h-4 w-4 mr-1" />Journey</TabsTrigger>
-        <TabsTrigger value="notes"><FileText className="h-4 w-4 mr-1" />Notes</TabsTrigger>
-      </TabsList>
+      <div className="overflow-x-auto -mx-2 px-2">
+        <TabsList className="inline-flex w-auto min-w-full sm:w-full h-auto flex-wrap sm:flex-nowrap gap-1">
+          <TabsTrigger value="details" className="text-xs sm:text-sm">Details</TabsTrigger>
+          <TabsTrigger value="background" className="text-xs sm:text-sm gap-1"><Fingerprint className="h-3 w-3 sm:h-4 sm:w-4" />Background</TabsTrigger>
+          <TabsTrigger value="ai-score" className="text-xs sm:text-sm gap-1"><Brain className="h-3 w-3 sm:h-4 sm:w-4" />AI Score</TabsTrigger>
+          <TabsTrigger value="case-eval" className="text-xs sm:text-sm gap-1"><Scale className="h-3 w-3 sm:h-4 sm:w-4" />Case Eval</TabsTrigger>
+          <TabsTrigger value="settlement" className="text-xs sm:text-sm gap-1"><Gavel className="h-3 w-3 sm:h-4 sm:w-4" />Settlement</TabsTrigger>
+          <TabsTrigger value="documents" className="text-xs sm:text-sm gap-1"><Upload className="h-3 w-3 sm:h-4 sm:w-4" />Docs</TabsTrigger>
+          <TabsTrigger value="war-room" className="text-xs sm:text-sm gap-1"><Users className="h-3 w-3 sm:h-4 sm:w-4" />War Room</TabsTrigger>
+          {canViewSessionLogs && <TabsTrigger value="session" className="text-xs sm:text-sm gap-1"><Video className="h-3 w-3 sm:h-4 sm:w-4" />Session</TabsTrigger>}
+          <TabsTrigger value="journey" className="text-xs sm:text-sm gap-1"><Clock className="h-3 w-3 sm:h-4 sm:w-4" />Journey</TabsTrigger>
+          <TabsTrigger value="notes" className="text-xs sm:text-sm gap-1"><FileText className="h-3 w-3 sm:h-4 sm:w-4" />Notes</TabsTrigger>
+        </TabsList>
+      </div>
 
       <TabsContent value="details" className="mt-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -226,6 +230,14 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
         </div>
       </TabsContent>
 
+      <TabsContent value="background" className="mt-4">
+        <BackgroundCheckerPanel
+          leadId={detailLead.id}
+          leadName={`${detailLead.first_name || ''} ${detailLead.last_name || ''}`.trim()}
+          leadState={detailLead.state}
+        />
+      </TabsContent>
+
       <TabsContent value="ai-score" className="mt-4">
         <AiScoringPanel leadId={detailLead.id} />
       </TabsContent>
@@ -270,6 +282,7 @@ export default function MyLeads() {
   const { data: leads, isLoading } = usePurchasedLeads();
   const { data: sourcesMap } = useLeadSources();
   const updateStage = useUpdatePipelineStage();
+  const postToMarketplace = usePostToMarketplace();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeStage, setActiveStage] = useState<PipelineStage>('new_lead');
   const [detailLeadId, setDetailLeadId] = useState<string | null>(null);
@@ -394,7 +407,9 @@ export default function MyLeads() {
                 onMoveStage={handleMoveStage}
                 onViewDetails={setDetailLeadId}
                 onDump={(leadId) => updateStage.mutate({ leadId, stage: 'new_lead' })}
+                onPostToMarketplace={(leadId, price) => postToMarketplace.mutate({ leadId, price })}
                 isMoving={updateStage.isPending}
+                isPosting={postToMarketplace.isPending}
               />
             )}
           </CardContent>
@@ -403,7 +418,7 @@ export default function MyLeads() {
         {/* Lead Detail Dialog */}
         <Dialog open={!!detailLead} onOpenChange={(open) => !open && setDetailLeadId(null)}>
           {detailLead && (
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />

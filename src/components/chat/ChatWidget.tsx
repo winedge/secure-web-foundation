@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { MessageCircle, X, Send, Plus, ArrowLeft, Loader2, Circle, Users, Building2 } from 'lucide-react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { MessageCircle, X, Send, Plus, ArrowLeft, Loader2, Circle, Users, Building2, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -12,10 +12,16 @@ import { useAllFirms, useFirmMemberUsers, useFirmTeamMembers, useProfiles } from
 import {
   useChatConversations, useChatMessages, useSendMessage,
   useCreateConversation, useUnreadCount, useMarkRead,
-  useChatNotifications,
-  ChatConversation,
+  useChatNotifications, registerNewMessageCallback,
+  ChatConversation, ChatMessage,
 } from '@/hooks/use-chat';
 import { format, parseISO } from 'date-fns';
+
+interface PopupNotification {
+  id: string;
+  message: ChatMessage;
+  conversationName: string;
+}
 
 export function ChatWidget() {
   const { user } = useAuth();
@@ -25,16 +31,72 @@ export function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [activeConv, setActiveConv] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
+  const [popups, setPopups] = useState<PopupNotification[]>([]);
   const { data: unread } = useUnreadCount();
+  const { data: conversations } = useChatConversations();
   useChatNotifications();
+
+  // Register callback for popup when chat is closed
+  useEffect(() => {
+    if (!user) return undefined;
+    const unregister = registerNewMessageCallback((msg: ChatMessage) => {
+      // Only show popup if chat is closed or not viewing this conversation
+      if (!open || activeConv !== msg.conversation_id) {
+        const conv = conversations?.find(c => c.id === msg.conversation_id);
+        const notification: PopupNotification = {
+          id: `${msg.id}-${Date.now()}`,
+          message: msg,
+          conversationName: conv?.name || 'New Message',
+        };
+        setPopups(prev => [...prev.slice(-2), notification]); // Keep max 3
+        // Auto-dismiss after 10s (longer for better visibility)
+        setTimeout(() => {
+          setPopups(prev => prev.filter(p => p.id !== notification.id));
+        }, 10000);
+      }
+    });
+    return () => { unregister(); };
+  }, [user, open, activeConv, conversations]);
+
+  const handlePopupClick = (popup: PopupNotification) => {
+    setPopups(prev => prev.filter(p => p.id !== popup.id));
+    setOpen(true);
+    setActiveConv(popup.message.conversation_id);
+  };
 
   if (!user) return null;
 
   return (
     <>
+      {/* Popup notifications when chat is closed */}
+      <div className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-50 flex flex-col gap-2 items-end max-w-[calc(100vw-2rem)]">
+        {popups.map(popup => (
+          <div
+            key={popup.id}
+            onClick={() => handlePopupClick(popup)}
+            className="flex items-start gap-3 bg-card border shadow-xl rounded-xl p-3 w-72 max-w-[calc(100vw-2rem)] cursor-pointer hover:bg-muted/50 transition-colors animate-in slide-in-from-right-5 duration-300"
+          >
+            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Bell className="h-4 w-4 text-primary" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-foreground truncate">{popup.conversationName}</p>
+              <p className="text-xs text-muted-foreground truncate mt-0.5">{popup.message.content}</p>
+            </div>
+            <button
+              onClick={e => { e.stopPropagation(); setPopups(prev => prev.filter(p => p.id !== popup.id)); }}
+              className="text-muted-foreground hover:text-foreground shrink-0"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Chat toggle button */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-center hover:scale-105 transition-transform"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-center hover:scale-105 transition-transform"
       >
         {open ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
         {!open && !!unread && unread > 0 && (
@@ -45,7 +107,7 @@ export function ChatWidget() {
       </button>
 
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-[380px] h-[520px] rounded-2xl border bg-card shadow-2xl flex flex-col overflow-hidden animate-scale-in">
+        <div className="fixed bottom-0 right-0 sm:bottom-20 sm:right-4 md:bottom-24 md:right-6 z-50 w-full sm:w-[380px] h-[100dvh] sm:h-[520px] sm:rounded-2xl border bg-card shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-200">
           {activeConv ? (
             <ChatView conversationId={activeConv} onBack={() => setActiveConv(null)} />
           ) : showNew ? (
@@ -87,18 +149,6 @@ function AdminConversationsView({ onSelect, onNew }: { onSelect: (id: string) =>
   const { data: conversations, isLoading: convLoading } = useChatConversations();
   const { data: allFirms, isLoading: firmsLoading } = useAllFirms();
 
-  // Get firm owner user_ids for presence
-  const firmIds = allFirms?.map(f => f.id) || [];
-  // We'll track presence from conversation participants instead — gather unique firm_ids from conversations
-  const firmIdSet = new Set<string>();
-  conversations?.forEach(c => { if (c.firm_id) firmIdSet.add(c.firm_id); });
-
-  // Get all firm member user_ids for presence tracking
-  const allFirmMemberIds = useMemo(() => {
-    // We need a flat list; for admin, show firm-level presence
-    return [] as string[]; // We'll use per-firm presence in the list below
-  }, []);
-
   const isLoading = convLoading || firmsLoading;
 
   return (
@@ -125,11 +175,9 @@ function AdminConversationsView({ onSelect, onNew }: { onSelect: (id: string) =>
           </div>
         ) : (
           <div className="divide-y">
-            {/* Existing conversations */}
             {conversations?.map((c) => (
               <AdminConvRow key={c.id} conversation={c} onSelect={onSelect} />
             ))}
-            {/* Firms without conversations */}
             {allFirms?.filter(f => !conversations?.some(c => c.firm_id === f.id)).map(f => (
               <FirmRowNoConv key={f.id} firm={f} onNew={onNew} />
             ))}
@@ -144,7 +192,6 @@ function AdminConvRow({ conversation, onSelect }: { conversation: ChatConversati
   const { data: firmMembers } = useFirmMemberUsers(conversation.firm_id || undefined);
   const ownerIds = firmMembers?.filter(m => m.is_owner).map(m => m.user_id) || [];
   const { data: presence } = useUserPresence(ownerIds);
-
   const isAnyOnline = ownerIds.some(id => presence?.[id]?.is_online);
 
   return (
@@ -180,12 +227,12 @@ function FirmRowNoConv({ firm, onNew }: { firm: { id: string; name: string }; on
         <OnlineIndicator online={isAnyOnline} />
         <span className="text-sm truncate text-muted-foreground">{firm.name}</span>
       </div>
-      <span className="text-[10px] text-muted-foreground/50">No chat</span>
+      <Button variant="ghost" size="sm" className="text-xs h-7" onClick={onNew}>Start Chat</Button>
     </div>
   );
 }
 
-/* ─── Firm owner view: shows team members with online status ─── */
+/* ─── Firm owner view ─── */
 function FirmConversationsView({ firmId, onSelect, onNew }: { firmId: string; onSelect: (id: string) => void; onNew: () => void }) {
   const { data: conversations, isLoading: convLoading } = useChatConversations();
   const { data: teamMembers, isLoading: tmLoading } = useFirmTeamMembers(firmId);
@@ -206,7 +253,6 @@ function FirmConversationsView({ firmId, onSelect, onNew }: { firmId: string; on
             <Plus className="h-4 w-4" />
           </Button>
         </div>
-        {/* Team member presence strip */}
         {teamMembers && teamMembers.length > 0 && (
           <div className="mt-3 space-y-1">
             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Team</p>
@@ -258,7 +304,7 @@ function FirmConversationsView({ firmId, onSelect, onNew }: { firmId: string; on
   );
 }
 
-/* ─── Default conversations list (fallback) ─── */
+/* ─── Default conversations list ─── */
 function ConversationsList({ onSelect, onNew }: { onSelect: (id: string) => void; onNew: () => void }) {
   const { data: conversations, isLoading } = useChatConversations();
 
@@ -311,10 +357,13 @@ function ConversationsList({ onSelect, onNew }: { onSelect: (id: string) => void
 function ChatView({ conversationId, onBack }: { conversationId: string; onBack: () => void }) {
   const { user } = useAuth();
   const { data: messages, isLoading } = useChatMessages(conversationId);
+  const { data: conversations } = useChatConversations();
   const sendMessage = useSendMessage();
   const markRead = useMarkRead();
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const convName = conversations?.find(c => c.id === conversationId)?.name || 'Chat';
 
   useEffect(() => {
     markRead.mutate(conversationId);
@@ -326,13 +375,12 @@ function ChatView({ conversationId, onBack }: { conversationId: string; onBack: 
     }
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = useCallback(() => {
     if (!input.trim()) return;
     sendMessage.mutate({ conversationId, content: input.trim() });
     setInput('');
-  };
+  }, [input, conversationId, sendMessage]);
 
-  // Get sender profiles for display
   const senderIds = useMemo(() => {
     const ids = new Set<string>();
     messages?.forEach(m => ids.add(m.sender_id));
@@ -351,7 +399,7 @@ function ChatView({ conversationId, onBack }: { conversationId: string; onBack: 
         <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={onBack}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <span className="font-semibold text-sm truncate">Chat</span>
+        <span className="font-semibold text-sm truncate">{convName}</span>
       </div>
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-2">
         {isLoading ? (
@@ -393,15 +441,15 @@ function ChatView({ conversationId, onBack }: { conversationId: string; onBack: 
           className="h-9 text-sm"
           onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
         />
-        <Button size="icon" className="h-9 w-9 shrink-0" onClick={handleSend} disabled={!input.trim()}>
-          <Send className="h-4 w-4" />
+        <Button size="icon" className="h-9 w-9 shrink-0" onClick={handleSend} disabled={!input.trim() || sendMessage.isPending}>
+          {sendMessage.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </div>
     </>
   );
 }
 
-/* ─── New conversation: Admin gets firm picker ─── */
+/* ─── New conversation ─── */
 function NewConversation({ firmId, isAdmin, role, onCreated, onBack }: {
   firmId?: string; isAdmin: boolean; role?: string | null; onCreated: (id: string) => void; onBack: () => void;
 }) {
@@ -411,7 +459,6 @@ function NewConversation({ firmId, isAdmin, role, onCreated, onBack }: {
   const [type, setType] = useState<'team' | 'admin'>(isAdmin ? 'admin' : 'team');
   const [selectedFirmId, setSelectedFirmId] = useState<string>(firmId || '');
 
-  // For admin: show firms with presence
   const { data: firmMembers } = useFirmMemberUsers(selectedFirmId || undefined);
   const ownerIds = firmMembers?.filter(m => m.is_owner).map(m => m.user_id) || [];
   const { data: presence } = useUserPresence(ownerIds);
@@ -431,13 +478,12 @@ function NewConversation({ firmId, isAdmin, role, onCreated, onBack }: {
   return (
     <>
       <div className="p-3 border-b flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onBack}>
+        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={onBack}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <span className="font-semibold text-sm">New Conversation</span>
       </div>
       <div className="p-4 space-y-4 flex-1 overflow-y-auto">
-        {/* Admin: select firm */}
         {isAdmin && (
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Select Firm</label>
@@ -453,13 +499,12 @@ function NewConversation({ firmId, isAdmin, role, onCreated, onBack }: {
             </select>
             {selectedFirmId && ownerIds.length > 0 && (
               <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                <OnlineIndicator online={ownerIds.some(id => presence?.[id]?.is_online)} />
+                <Circle className={`h-2 w-2 shrink-0 ${ownerIds.some(id => presence?.[id]?.is_online) ? 'fill-green-500 text-green-500' : 'fill-muted-foreground/30 text-muted-foreground/30'}`} />
                 <span>{ownerIds.some(id => presence?.[id]?.is_online) ? 'Online' : 'Offline'}</span>
               </div>
             )}
           </div>
         )}
-
         <div>
           <label className="text-xs font-medium text-muted-foreground mb-1 block">Chat Name</label>
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., General Discussion" className="h-9 text-sm" />
@@ -476,6 +521,7 @@ function NewConversation({ firmId, isAdmin, role, onCreated, onBack }: {
           disabled={!name.trim() || createConv.isPending || (isAdmin && !selectedFirmId)}
           className="w-full"
         >
+          {createConv.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
           {createConv.isPending ? 'Creating...' : 'Create Chat'}
         </Button>
       </div>

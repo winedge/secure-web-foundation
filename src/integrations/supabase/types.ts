@@ -1135,6 +1135,133 @@ export type Database = {
           },
         ]
       }
+      crm_integrations: {
+        Row: {
+          config: Json | null
+          created_at: string
+          crm_type: string
+          field_mapping: Json | null
+          firm_id: string
+          id: string
+          is_active: boolean | null
+          last_sync_at: string | null
+          name: string
+          sync_frequency: string | null
+          total_failed: number | null
+          total_synced: number | null
+          updated_at: string
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string
+          crm_type: string
+          field_mapping?: Json | null
+          firm_id: string
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          name: string
+          sync_frequency?: string | null
+          total_failed?: number | null
+          total_synced?: number | null
+          updated_at?: string
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string
+          crm_type?: string
+          field_mapping?: Json | null
+          firm_id?: string
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          name?: string
+          sync_frequency?: string | null
+          total_failed?: number | null
+          total_synced?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_integrations_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_sync_logs: {
+        Row: {
+          created_at: string
+          crm_record_id: string | null
+          error_message: string | null
+          firm_id: string
+          id: string
+          integration_id: string
+          lead_id: string | null
+          request_payload: Json | null
+          response_payload: Json | null
+          status: string
+          sync_type: string
+        }
+        Insert: {
+          created_at?: string
+          crm_record_id?: string | null
+          error_message?: string | null
+          firm_id: string
+          id?: string
+          integration_id: string
+          lead_id?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status?: string
+          sync_type?: string
+        }
+        Update: {
+          created_at?: string
+          crm_record_id?: string | null
+          error_message?: string | null
+          firm_id?: string
+          id?: string
+          integration_id?: string
+          lead_id?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status?: string
+          sync_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_sync_logs_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_sync_logs_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "crm_integrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_sync_logs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_sync_logs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cross_platform_campaigns: {
         Row: {
           ai_optimized_allocation: Json | null
@@ -1324,6 +1451,85 @@ export type Database = {
           },
           {
             foreignKeyName: "document_analyses_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_signatures: {
+        Row: {
+          created_at: string
+          created_by: string
+          document_content: string | null
+          document_name: string
+          firm_id: string
+          id: string
+          ip_address: string | null
+          lead_id: string | null
+          sha256_hash: string | null
+          signature_data: string
+          signed_at: string
+          signer_email: string | null
+          signer_name: string
+          signer_role: string | null
+          status: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          document_content?: string | null
+          document_name: string
+          firm_id: string
+          id?: string
+          ip_address?: string | null
+          lead_id?: string | null
+          sha256_hash?: string | null
+          signature_data: string
+          signed_at?: string
+          signer_email?: string | null
+          signer_name: string
+          signer_role?: string | null
+          status?: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          document_content?: string | null
+          document_name?: string
+          firm_id?: string
+          id?: string
+          ip_address?: string | null
+          lead_id?: string | null
+          sha256_hash?: string | null
+          signature_data?: string
+          signed_at?: string
+          signer_email?: string | null
+          signer_name?: string
+          signer_role?: string | null
+          status?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_signatures_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_signatures_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_signatures_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads_marketplace"
@@ -1729,6 +1935,57 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      fraud_checks: {
+        Row: {
+          check_type: string
+          created_at: string
+          details: Json | null
+          id: string
+          is_confirmed: boolean | null
+          lead_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          severity: string
+        }
+        Insert: {
+          check_type: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          is_confirmed?: boolean | null
+          lead_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          severity?: string
+        }
+        Update: {
+          check_type?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          is_confirmed?: boolean | null
+          lead_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fraud_checks_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fraud_checks_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       geofence_campaigns: {
         Row: {
@@ -3765,7 +4022,12 @@ export type Database = {
         | "intake_form"
         | "referral"
         | "other"
-      lead_status: "available" | "purchased" | "expired" | "flagged"
+      lead_status:
+        | "available"
+        | "purchased"
+        | "expired"
+        | "flagged"
+        | "pending_review"
       lead_tier: "A" | "B" | "C" | "D"
       subscription_plan: "basic" | "premium"
       team_permission:
@@ -3945,7 +4207,13 @@ export const Constants = {
         "referral",
         "other",
       ],
-      lead_status: ["available", "purchased", "expired", "flagged"],
+      lead_status: [
+        "available",
+        "purchased",
+        "expired",
+        "flagged",
+        "pending_review",
+      ],
       lead_tier: ["A", "B", "C", "D"],
       subscription_plan: ["basic", "premium"],
       team_permission: [

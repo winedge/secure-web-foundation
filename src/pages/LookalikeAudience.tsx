@@ -5,16 +5,21 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, Users, Target, Zap } from 'lucide-react';
+import { Loader2, Users, Target, Zap, Rocket } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useFirm } from '@/hooks/use-firm';
 import { toast } from 'sonner';
+import { MetaCampaignWizard } from '@/components/meta-ads/MetaCampaignWizard';
+import { useMetaPixel } from '@/hooks/use-meta-pixel';
 
 export default function LookalikeAudience() {
   const { data: firm } = useFirm();
   const [tortType, setTortType] = useState('');
   const [isBuilding, setIsBuilding] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [metaWizardOpen, setMetaWizardOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<any>(null);
+  const pixel = useMetaPixel();
 
   const build = async () => {
     if (!firm?.id) return;
@@ -26,9 +31,15 @@ export default function LookalikeAudience() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data);
+      pixel.audienceBuilt({ tort_type: tortType, segment_count: (data.audience_profiles || []).length });
       toast.success(`Built ${(data.audience_profiles || []).length} audience segments`);
     } catch (err: any) { toast.error(err.message); }
     finally { setIsBuilding(false); }
+  };
+
+  const handleLaunchToMeta = (profile: any) => {
+    setSelectedProfile(profile);
+    setMetaWizardOpen(true);
   };
 
   return (
@@ -93,10 +104,26 @@ export default function LookalikeAudience() {
                   <p className="text-xs text-muted-foreground">Google: {profile.targeting_instructions.google}</p>
                 </div>
               )}
+              <div className="mt-3 flex justify-end">
+                <Button size="sm" variant="outline" className="gap-1.5 border-blue-500/30 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950" onClick={() => handleLaunchToMeta(profile)}>
+                  <Rocket className="h-3 w-3" /> Launch as Meta Campaign
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      <MetaCampaignWizard
+        open={metaWizardOpen}
+        onOpenChange={setMetaWizardOpen}
+        prefillData={selectedProfile ? {
+          campaignName: `Lookalike - ${selectedProfile.name}`,
+          tortType: tortType,
+          goal: 'OUTCOME_LEADS',
+        } : {}}
+        onCreated={() => setMetaWizardOpen(false)}
+      />
     </DashboardLayout>
   );
 }

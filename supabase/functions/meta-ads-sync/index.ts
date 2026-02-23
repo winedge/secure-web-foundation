@@ -13,6 +13,21 @@ serve(async (req) => {
   try {
     const { action, user_id, ...params } = await req.json();
 
+    // ─── META LEAD FORM WEBHOOK (no auth needed) ───
+    if (action === "lead_form_webhook") {
+      return await handleLeadFormWebhook(supabase, params);
+    }
+
+    // ─── WEBHOOK VERIFICATION (for Meta webhook setup) ───
+    if (action === "verify_webhook") {
+      const { hub_mode, hub_verify_token, hub_challenge } = params;
+      const expectedToken = Deno.env.get("META_WEBHOOK_VERIFY_TOKEN") || "leadthru_meta_verify";
+      if (hub_mode === "subscribe" && hub_verify_token === expectedToken) {
+        return new Response(hub_challenge, { status: 200 });
+      }
+      return errorResponse("Verification failed", 403);
+    }
+
     // Get user's Facebook connection for access token + ad account
     const { data: fbConn } = await supabase
       .from("platform_connections")
@@ -36,12 +51,173 @@ serve(async (req) => {
       );
       const data = await resp.json();
       if (data.error) throw new Error(data.error.message);
-      if (!data.data?.length) throw new Error("No ad accounts found. Ensure your Facebook account has an Ads Manager account.");
+      if (!data.data?.length) throw new Error("No ad accounts found.");
       adAccountId = data.data[0].id;
       await supabase
         .from("platform_connections")
         .update({ metadata: { ...fbConn.metadata, ad_account_id: adAccountId, ad_accounts: data.data } })
         .eq("id", fbConn.id);
+    }
+
+    // ─── VERIFY PIXEL STATUS ───
+    if (action === "verify_pixel") {
+      const { pixel_id } = params;
+      
+      // If pixel_id provided, check that specific pixel
+      if (pixel_id) {
+        const resp = await fetch(
+          `${META_API}/${pixel_id}?fields=id,name,is_unavailable,last_fired_time,data_use_setting,creation_time&access_token=${token}`
+        );
+        const data = await resp.json();
+        if (data.error) return errorResponse(data.error.message);
+
+        // Get recent events
+        const statsResp = await fetch(
+          `${META_API}/${pixel_id}/stats?aggregation=event&access_token=${token}`
+        );
+        const statsData = await statsResp.json();
+
+        return jsonResponse({
+          pixel: {
+            id: data.id,
+            name: data.name,
+            is_active: !data.is_unavailable,
+            last_fired_time: data.last_fired_time,
+            creation_time: data.creation_time,
+            data_use_setting: data.data_use_setting,
+          },
+          recent_events: statsData.data || [],
+          status: data.last_fired_time ? "active" : "inactive",
+        });
+      }
+
+      // List all pixels for the ad account
+      const resp = await fetch(
+        `${META_API}/${adAccountId}/adspixels?fields=id,name,is_unavailable,last_fired_time,creation_time&access_token=${token}`
+      );
+      const data = await resp.json();
+      if (data.error) return errorResponse(data.error.message);
+
+      const pixels = (data.data || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        is_active: !p.is_unavailable,
+        last_fired_time: p.last_fired_time,
+        creation_time: p.creation_time,
+      }));
+
+      return jsonResponse({ pixels, count: pixels.length });
+    }
+
+    // ─── GET LEAD FORMS ───
+    if (action === "get_lead_forms") {
+      // Get pages first
+      const pagesResp = await fetch(
+        `${META_API}/me/accounts?fields=id,name,access_token&access_token=${token}`
+      );
+      const pagesData = await pagesResp.json();
+      if (pagesData.error) return errorResponse(pagesData.error.message);
+
+      const allForms: any[] = [];
+      for (const page of pagesData.data || []) {
+        const formsResp = await fetch(
+          `${META_API}/${page.id}/leadgen_forms?fields=id,name,status,leads_count,created_time,expired_leads_count&access_token=${page.access_token}`
+        );
+        const formsData = await formsResp.json();
+        if (formsData.data) {
+          allForms.push(...formsData.data.map((f: any) => ({
+            ...f,
+            page_id: page.id,
+            page_name: page.name,
+            page_access_token: page.access_token,
+          })));
+        }
+      }
+
+      return jsonResponse({ forms: allForms, count: allForms.length });
+    }
+
+    // ─── FETCH LEADS FROM A LEAD FORM ───
+    if (action === "fetch_form_leads") {
+      const { form_id, page_access_token, firm_id } = params;
+      if (!form_id) return errorResponse("form_id is required");
+
+      const accessToken = page_access_token || token;
+      const resp = await fetch(
+        `${META_API}/${form_id}/leads?fields=id,created_time,field_data,ad_id,ad_name,campaign_id,campaign_name&limit=50&access_token=${accessToken}`
+      );
+      const data = await resp.json();
+      if (data.error) return errorResponse(data.error.message);
+
+      const leads = data.data || [];
+      let ingested = 0;
+
+      for (const metaLead of leads) {
+        const fields: Record<string, string> = {};
+        for (const fd of metaLead.field_data || []) {
+          fields[fd.name] = fd.values?.[0] || "";
+        }
+
+        // Check if already ingested
+        const { data: existing } = await supabase
+          .from("leads")
+          .select("id")
+          .eq("external_id", `meta_lead_${metaLead.id}`)
+          .single();
+
+        if (!existing) {
+          const { error: insertErr } = await supabase.from("leads").insert({
+            external_id: `meta_lead_${metaLead.id}`,
+            first_name: fields.first_name || fields.full_name?.split(" ")[0] || null,
+            last_name: fields.last_name || fields.full_name?.split(" ").slice(1).join(" ") || null,
+            email: fields.email || null,
+            phone: fields.phone_number || fields.phone || null,
+            city: fields.city || null,
+            state: fields.state || fields.region || "Unknown",
+            zip_code: fields.zip_code || fields.zip || null,
+            tort_type: params.tort_type || "General",
+            source: "meta_lead_form",
+            price: 0,
+            status: "available",
+            consent_tcpa: true,
+            consent_privacy: true,
+            metadata: {
+              meta_lead_id: metaLead.id,
+              meta_form_id: form_id,
+              meta_ad_id: metaLead.ad_id,
+              meta_campaign_id: metaLead.campaign_id,
+              meta_campaign_name: metaLead.campaign_name,
+              submitted_at: metaLead.created_time,
+              raw_fields: fields,
+            },
+          });
+
+          if (!insertErr) ingested++;
+        }
+      }
+
+      return jsonResponse({
+        success: true,
+        total_from_meta: leads.length,
+        ingested,
+        already_existed: leads.length - ingested,
+      });
+    }
+
+    // ─── SUBSCRIBE TO LEAD FORM WEBHOOKS ───
+    if (action === "subscribe_lead_updates") {
+      const { page_id, page_access_token } = params;
+      if (!page_id) return errorResponse("page_id is required");
+
+      const accessToken = page_access_token || token;
+      const resp = await fetch(
+        `${META_API}/${page_id}/subscribed_apps?subscribed_fields=leadgen&access_token=${accessToken}`,
+        { method: "POST" }
+      );
+      const data = await resp.json();
+      if (data.error) return errorResponse(data.error.message);
+
+      return jsonResponse({ success: data.success || true, message: "Subscribed to lead form updates" });
     }
 
     // ─── CREATE CAMPAIGN ON META ───
@@ -111,7 +287,7 @@ serve(async (req) => {
     // ─── CREATE AD SET ON META ───
     if (action === "create_adset") {
       const { adset_id, meta_campaign_id, name, daily_budget, age_min, age_max, optimization_event, locations, interests } = params;
-      if (!meta_campaign_id) return errorResponse("Parent campaign not synced to Meta yet. Sync campaign first.");
+      if (!meta_campaign_id) return errorResponse("Parent campaign not synced to Meta yet.");
 
       const targeting: any = {
         age_min: age_min || 18,
@@ -187,7 +363,7 @@ serve(async (req) => {
         .limit(1)
         .single();
 
-      if (!pageConn?.page_id) return errorResponse("No Facebook page connected. Connect a page in Settings → Connections.");
+      if (!pageConn?.page_id) return errorResponse("No Facebook page connected.");
 
       const creativeBody: Record<string, string> = {
         name: `Creative - ${name}`,
@@ -344,6 +520,94 @@ serve(async (req) => {
     return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
   }
 });
+
+// ─── Meta Lead Form Webhook Handler ───
+async function handleLeadFormWebhook(supabase: any, params: any) {
+  const { entry } = params;
+  if (!entry?.length) return jsonResponse({ success: true, message: "No entries" });
+
+  let ingested = 0;
+
+  for (const e of entry) {
+    for (const change of e.changes || []) {
+      if (change.field !== "leadgen") continue;
+      const leadgenId = change.value?.leadgen_id;
+      const formId = change.value?.form_id;
+      const pageId = change.value?.page_id;
+
+      if (!leadgenId) continue;
+
+      // Find page access token
+      const { data: pageConn } = await supabase
+        .from("platform_connections")
+        .select("access_token, metadata, user_id")
+        .eq("platform", "facebook_page")
+        .eq("page_id", String(pageId))
+        .eq("is_active", true)
+        .single();
+
+      const accessToken = pageConn?.access_token;
+      if (!accessToken) {
+        console.warn(`No page connection for page ${pageId}`);
+        continue;
+      }
+
+      // Fetch lead data from Meta
+      const resp = await fetch(
+        `${META_API}/${leadgenId}?fields=id,created_time,field_data,ad_id,campaign_id,campaign_name&access_token=${accessToken}`
+      );
+      const leadData = await resp.json();
+      if (leadData.error) {
+        console.error(`Error fetching lead ${leadgenId}:`, leadData.error);
+        continue;
+      }
+
+      const fields: Record<string, string> = {};
+      for (const fd of leadData.field_data || []) {
+        fields[fd.name] = fd.values?.[0] || "";
+      }
+
+      // Check duplicate
+      const { data: existing } = await supabase
+        .from("leads")
+        .select("id")
+        .eq("external_id", `meta_lead_${leadgenId}`)
+        .single();
+
+      if (!existing) {
+        await supabase.from("leads").insert({
+          external_id: `meta_lead_${leadgenId}`,
+          first_name: fields.first_name || fields.full_name?.split(" ")[0] || null,
+          last_name: fields.last_name || fields.full_name?.split(" ").slice(1).join(" ") || null,
+          email: fields.email || null,
+          phone: fields.phone_number || fields.phone || null,
+          city: fields.city || null,
+          state: fields.state || fields.region || "Unknown",
+          zip_code: fields.zip_code || fields.zip || null,
+          tort_type: "General",
+          source: "meta_lead_form",
+          price: 0,
+          status: "available",
+          consent_tcpa: true,
+          consent_privacy: true,
+          metadata: {
+            meta_lead_id: leadgenId,
+            meta_form_id: formId,
+            meta_page_id: pageId,
+            meta_ad_id: leadData.ad_id,
+            meta_campaign_id: leadData.campaign_id,
+            meta_campaign_name: leadData.campaign_name,
+            submitted_at: leadData.created_time,
+            raw_fields: fields,
+          },
+        });
+        ingested++;
+      }
+    }
+  }
+
+  return jsonResponse({ success: true, ingested });
+}
 
 function mapObjective(obj: string): string {
   const map: Record<string, string> = {

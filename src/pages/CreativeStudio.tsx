@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Palette, Sparkles, Copy, Star, Plus } from 'lucide-react';
+import { Loader2, Palette, Sparkles, Copy, Star, Plus, Target } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCreateCampaign } from '@/hooks/use-campaigns';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { MetaCampaignWizard } from '@/components/meta-ads/MetaCampaignWizard';
+import { useMetaPixel } from '@/hooks/use-meta-pixel';
 
 export default function CreativeStudio() {
   const [brief, setBrief] = useState('');
@@ -18,8 +20,11 @@ export default function CreativeStudio() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [creatingId, setCreatingId] = useState<string | null>(null);
+  const [metaWizardOpen, setMetaWizardOpen] = useState(false);
+  const [metaWizardPrefill, setMetaWizardPrefill] = useState<any>({});
   const createCampaign = useCreateCampaign();
   const navigate = useNavigate();
+  const pixel = useMetaPixel();
 
   const generate = async () => {
     if (!brief) { toast.error('Enter a creative brief'); return; }
@@ -31,9 +36,20 @@ export default function CreativeStudio() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data);
+      pixel.creativeGenerated({ variant_count: (data.variants || []).length, tort_type: tortType });
       toast.success(`Generated ${(data.variants || []).length} creative variants`);
     } catch (err: any) { toast.error(err.message); }
     finally { setIsGenerating(false); }
+  };
+
+  const handleLaunchToMeta = (v: any) => {
+    pixel.viewContent({ content_name: v.headline, content_category: 'MetaAdCreative' });
+    setMetaWizardPrefill({
+      campaignName: `${result?.campaign_name || 'Campaign'} — ${v.headline}`.slice(0, 80),
+      tortType: tortType,
+      goal: 'OUTCOME_LEADS',
+    });
+    setMetaWizardOpen(true);
   };
 
   const handleCreateCampaign = async (variant: any) => {
@@ -118,29 +134,36 @@ export default function CreativeStudio() {
                       <p className="text-xs text-muted-foreground mt-1">Hook: {v.target_hook}</p>
                     </div>
                     <p className="text-xs text-muted-foreground italic">A/B: {v.a_b_test_hypothesis}</p>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-col">
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="flex-1 gap-1.5"
+                          onClick={() => handleCreateCampaign(v)}
+                          disabled={creatingId === v.id}
+                        >
+                          {creatingId === v.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                          Create Draft
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${v.headline}\n${v.body_short}\n${v.cta}`);
+                            toast.success('Copied!');
+                          }}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      </div>
                       <Button
                         size="sm"
-                        className="flex-1 gap-1.5"
-                        onClick={() => handleCreateCampaign(v)}
-                        disabled={creatingId === v.id}
+                        variant="outline"
+                        className="gap-1.5 border-blue-500/30 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950"
+                        onClick={() => handleLaunchToMeta(v)}
                       >
-                        {creatingId === v.id ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <Plus className="h-3 w-3" />
-                        )}
-                        Create as Campaign
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          navigator.clipboard.writeText(`${v.headline}\n${v.body_short}\n${v.cta}`);
-                          toast.success('Copied!');
-                        }}
-                      >
-                        <Copy className="h-3 w-3" />
+                        <Target className="h-3 w-3" />
+                        Launch as Meta Campaign
                       </Button>
                     </div>
                   </CardContent>
@@ -156,6 +179,13 @@ export default function CreativeStudio() {
           </div>
         )}
       </div>
+
+      <MetaCampaignWizard
+        open={metaWizardOpen}
+        onOpenChange={setMetaWizardOpen}
+        prefillData={metaWizardPrefill}
+        onCreated={() => setMetaWizardOpen(false)}
+      />
     </DashboardLayout>
   );
 }

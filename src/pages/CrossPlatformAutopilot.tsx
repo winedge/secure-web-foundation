@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, Cpu, ArrowRight, DollarSign, TrendingUp } from 'lucide-react';
+import { Loader2, Cpu, ArrowRight, DollarSign, TrendingUp, Rocket } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { MetaCampaignWizard } from '@/components/meta-ads/MetaCampaignWizard';
+import { useMetaPixel } from '@/hooks/use-meta-pixel';
 
 const PLATFORMS = ['meta', 'google', 'tiktok', 'linkedin', 'youtube'] as const;
 const PLATFORM_COLORS: Record<string, string> = {
@@ -20,6 +22,8 @@ export default function CrossPlatformAutopilot() {
   const [tortType, setTortType] = useState('');
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [metaWizardOpen, setMetaWizardOpen] = useState(false);
+  const pixel = useMetaPixel();
 
   const optimize = async () => {
     setIsOptimizing(true);
@@ -30,6 +34,7 @@ export default function CrossPlatformAutopilot() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data);
+      pixel.crossPlatformOptimized({ total_budget: parseFloat(budget), tort_type: tortType });
       toast.success('Cross-platform optimization complete');
     } catch (err: any) { toast.error(err.message); }
     finally { setIsOptimizing(false); }
@@ -142,9 +147,35 @@ export default function CrossPlatformAutopilot() {
                 <p className="text-sm text-muted-foreground">{result.risk_assessment}</p>
               </CardContent>
             </Card>
+
+            <Card className="border-blue-500/20 bg-blue-500/5">
+              <CardContent className="pt-4 flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-foreground">Launch Meta Campaign</p>
+                  <p className="text-sm text-muted-foreground">Push the Meta allocation directly into the Meta Ads wizard</p>
+                </div>
+                <Button className="gap-2" onClick={() => setMetaWizardOpen(true)}>
+                  <Rocket className="h-4 w-4" /> Launch to Meta
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>
+
+      <MetaCampaignWizard
+        open={metaWizardOpen}
+        onOpenChange={setMetaWizardOpen}
+        prefillData={{
+          campaignName: `Cross-Platform Meta - ${tortType || 'Campaign'}`,
+          tortType: tortType,
+          goal: 'OUTCOME_LEADS',
+          dailyBudget: result?.optimized_allocation?.meta?.budget_amount
+            ? Math.round(result.optimized_allocation.meta.budget_amount / 30)
+            : 50,
+        }}
+        onCreated={() => setMetaWizardOpen(false)}
+      />
     </DashboardLayout>
   );
 }

@@ -7,8 +7,11 @@ import { MetaAdsPanel } from '@/components/meta-ads/MetaAdsPanel';
 import { MetaAnalyticsPanel } from '@/components/meta-ads/MetaAnalyticsPanel';
 import { MetaAiPanel } from '@/components/meta-ads/MetaAiPanel';
 import { AutopilotPanel } from '@/components/meta-ads/AutopilotPanel';
+import { MetaPixelPanel } from '@/components/meta-ads/MetaPixelPanel';
+import { MetaLeadFormsPanel } from '@/components/meta-ads/MetaLeadFormsPanel';
+import { MetaSelfLearningPanel } from '@/components/meta-ads/MetaSelfLearningPanel';
 import { UpgradeGate } from '@/components/subscription/UpgradeGate';
-import { LayoutDashboard, Target, Megaphone, BarChart3, Bot, Zap } from 'lucide-react';
+import { LayoutDashboard, Target, Megaphone, BarChart3, Bot, Zap, Activity, FileText, Brain } from 'lucide-react';
 
 export default function MetaAds() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
@@ -31,7 +34,7 @@ export default function MetaAds() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 h-auto">
+            <TabsList className="flex flex-wrap w-full h-auto gap-1">
               <TabsTrigger value="campaigns" className="gap-1.5 text-xs sm:text-sm py-2">
                 <LayoutDashboard className="h-4 w-4 hidden sm:block" />
                 Campaigns
@@ -44,6 +47,14 @@ export default function MetaAds() {
                 <Megaphone className="h-4 w-4 hidden sm:block" />
                 Ads
               </TabsTrigger>
+              <TabsTrigger value="pixel" className="gap-1.5 text-xs sm:text-sm py-2">
+                <Activity className="h-4 w-4 hidden sm:block" />
+                Pixel
+              </TabsTrigger>
+              <TabsTrigger value="lead-forms" className="gap-1.5 text-xs sm:text-sm py-2">
+                <FileText className="h-4 w-4 hidden sm:block" />
+                Lead Forms
+              </TabsTrigger>
               <TabsTrigger value="analytics" className="gap-1.5 text-xs sm:text-sm py-2">
                 <BarChart3 className="h-4 w-4 hidden sm:block" />
                 Analytics
@@ -55,6 +66,10 @@ export default function MetaAds() {
               <TabsTrigger value="autopilot" className="gap-1.5 text-xs sm:text-sm py-2">
                 <Zap className="h-4 w-4 hidden sm:block" />
                 Autopilot
+              </TabsTrigger>
+              <TabsTrigger value="learning" className="gap-1.5 text-xs sm:text-sm py-2">
+                <Brain className="h-4 w-4 hidden sm:block" />
+                Self-Learn
               </TabsTrigger>
             </TabsList>
 
@@ -85,6 +100,14 @@ export default function MetaAds() {
               />
             </TabsContent>
 
+            <TabsContent value="pixel">
+              <MetaPixelPanel />
+            </TabsContent>
+
+            <TabsContent value="lead-forms">
+              <MetaLeadFormsPanel />
+            </TabsContent>
+
             <TabsContent value="analytics">
               <MetaAnalyticsPanel campaignId={selectedCampaignId} />
             </TabsContent>
@@ -101,6 +124,10 @@ export default function MetaAds() {
 
             <TabsContent value="autopilot">
               <AutopilotPanel campaignId={selectedCampaignId} />
+            </TabsContent>
+
+            <TabsContent value="learning">
+              <MetaSelfLearningPanel campaignId={selectedCampaignId} />
             </TabsContent>
           </Tabs>
         </div>

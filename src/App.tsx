@@ -28,6 +28,7 @@ const BrandedIntake = lazy(() => import("./pages/BrandedIntake"));
 const IntakeFormBuilder = lazy(() => import("./pages/IntakeFormBuilder"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
 const MyLeads = lazy(() => import("./pages/MyLeads"));
+const IntakeSubmissions = lazy(() => import("./pages/IntakeSubmissions"));
 const Wallet = lazy(() => import("./pages/Wallet"));
 const Campaigns = lazy(() => import("./pages/Campaigns"));
 const MetaAds = lazy(() => import("./pages/MetaAds"));
@@ -47,6 +48,7 @@ const CrossFirmBenchmarks = lazy(() => import("./pages/CrossFirmBenchmarks"));
 const CreativeStudio = lazy(() => import("./pages/CreativeStudio"));
 const ViralContentEngine = lazy(() => import("./pages/ViralContentEngine"));
 const VideoAdGenerator = lazy(() => import("./pages/VideoAdGenerator"));
+const GoogleAds = lazy(() => import("./pages/GoogleAds"));
 
 const LookalikeAudience = lazy(() => import("./pages/LookalikeAudience"));
 const IntentSignalTracker = lazy(() => import("./pages/IntentSignalTracker"));
@@ -62,6 +64,8 @@ const AdminReporting = lazy(() => import("./pages/admin/AdminReporting"));
 const AdminSessionLogs = lazy(() => import("./pages/admin/AdminSessionLogs"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminUserRoles = lazy(() => import("./pages/admin/AdminUserRoles"));
+const FraudDetection = lazy(() => import("./pages/FraudDetection"));
+const CrmIntegrations = lazy(() => import("./pages/CrmIntegrations"));
 
 const queryClient = new QueryClient();
 
@@ -116,6 +120,7 @@ const App = () => (
                 <Route path="/onboarding" element={<ProtectedRoute><LazyRoute><Onboarding /></LazyRoute></ProtectedRoute>} />
                 <Route path="/marketplace" element={<ProtectedRoute><LazyRoute><Marketplace /></LazyRoute></ProtectedRoute>} />
                 <Route path="/my-leads" element={<ProtectedRoute><LazyRoute><MyLeads /></LazyRoute></ProtectedRoute>} />
+                <Route path="/intake-submissions" element={<ProtectedRoute><LazyRoute><IntakeSubmissions /></LazyRoute></ProtectedRoute>} />
                 <Route path="/wallet" element={<ProtectedRoute><LazyRoute><Wallet /></LazyRoute></ProtectedRoute>} />
                 <Route path="/campaigns" element={<ProtectedRoute><LazyRoute><Campaigns /></LazyRoute></ProtectedRoute>} />
                 <Route path="/meta-ads" element={<ProtectedRoute><LazyRoute><MetaAds /></LazyRoute></ProtectedRoute>} />
@@ -136,12 +141,15 @@ const App = () => (
                 <Route path="/creative-studio" element={<ProtectedRoute><LazyRoute><CreativeStudio /></LazyRoute></ProtectedRoute>} />
                 <Route path="/viral-content" element={<ProtectedRoute><LazyRoute><ViralContentEngine /></LazyRoute></ProtectedRoute>} />
                 <Route path="/video-ads" element={<ProtectedRoute><LazyRoute><VideoAdGenerator /></LazyRoute></ProtectedRoute>} />
+                <Route path="/google-ads" element={<ProtectedRoute><LazyRoute><GoogleAds /></LazyRoute></ProtectedRoute>} />
                 
                 <Route path="/lookalike-audience" element={<ProtectedRoute><LazyRoute><LookalikeAudience /></LazyRoute></ProtectedRoute>} />
                 <Route path="/intent-signals" element={<ProtectedRoute><LazyRoute><IntentSignalTracker /></LazyRoute></ProtectedRoute>} />
                 <Route path="/geofence-campaigns" element={<ProtectedRoute><LazyRoute><GeofenceCampaigns /></LazyRoute></ProtectedRoute>} />
                 <Route path="/dark-funnel" element={<ProtectedRoute><LazyRoute><DarkFunnelIntelligence /></LazyRoute></ProtectedRoute>} />
                 <Route path="/cross-platform-autopilot" element={<ProtectedRoute><LazyRoute><CrossPlatformAutopilot /></LazyRoute></ProtectedRoute>} />
+                <Route path="/fraud-detection" element={<ProtectedRoute><LazyRoute><FraudDetection /></LazyRoute></ProtectedRoute>} />
+                <Route path="/crm-integrations" element={<ProtectedRoute><LazyRoute><CrmIntegrations /></LazyRoute></ProtectedRoute>} />
 
                 {/* Admin routes */}
                 <Route path="/admin" element={<ProtectedRoute requireAdmin><LazyRoute><AdminDashboard /></LazyRoute></ProtectedRoute>} />

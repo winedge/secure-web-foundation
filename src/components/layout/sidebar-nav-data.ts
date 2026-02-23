@@ -36,6 +36,8 @@ import {
   MapPin,
   Eye,
   Layers,
+  ShieldAlert,
+  Plug,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -66,6 +68,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { name: 'Marketplace', href: '/marketplace', icon: ShoppingCart },
       { name: 'My Leads', href: '/my-leads', icon: Briefcase },
+      { name: 'Intake Submissions', href: '/intake-submissions', icon: ClipboardList },
     ],
   },
   {
@@ -74,6 +77,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { name: 'Campaigns', href: '/campaigns', icon: TrendingUp },
       { name: 'Meta Ads', href: '/meta-ads', icon: Megaphone, premium: true },
+      { name: 'Google Ads', href: '/google-ads', icon: Globe, premium: true },
       { name: 'Social Calendar', href: '/social-calendar', icon: CalendarDays, premium: true },
       { name: 'Competitor Intel', href: '/competitor-intelligence', icon: Radar, premium: true },
       { name: 'Market Pulse', href: '/market-pulse', icon: Target, premium: true },
@@ -119,6 +123,8 @@ export const navGroups: NavGroup[] = [
       { name: 'Teams', href: '/teams', icon: Users },
       { name: 'Smart Alerts', href: '/smart-alerts', icon: Bell },
       { name: 'Referral Network', href: '/referral-network', icon: Handshake },
+      { name: 'Fraud Detection', href: '/fraud-detection', icon: ShieldAlert },
+      { name: 'CRM Integrations', href: '/crm-integrations', icon: Plug },
     ],
   },
 ];
