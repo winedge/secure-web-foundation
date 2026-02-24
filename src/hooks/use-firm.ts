@@ -68,27 +68,28 @@ export function useCreateFirm() {
     }) => {
       if (!user) throw new Error('Not authenticated');
 
-      // Create the firm
-      const { data: firm, error: firmError } = await supabase
+      // Create the firm - don't use .select() since user can't read it back yet
+      // (no firm_members record exists yet, so SELECT policies fail)
+      const firmId = crypto.randomUUID();
+      const { error: firmError } = await supabase
         .from('firms')
         .insert({
+          id: firmId,
           name: firmData.name,
           website: firmData.website || null,
           states: firmData.states || [],
           practice_type: firmData.practice_type || null,
           contact_email: firmData.contact_email || null,
           contact_phone: firmData.contact_phone || null,
-        })
-        .select()
-        .single();
+        });
 
       if (firmError) throw firmError;
 
-      // Add user as firm owner
+      // Add user as firm owner (now SELECT policies will work)
       const { error: memberError } = await supabase
         .from('firm_members')
         .insert({
-          firm_id: firm.id,
+          firm_id: firmId,
           user_id: user.id,
           is_owner: true,
         });
@@ -105,7 +106,7 @@ export function useCreateFirm() {
 
       if (roleError && !roleError.message.includes('duplicate')) throw roleError;
 
-      return firm;
+      return { id: firmId, name: firmData.name };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['firm'] });
