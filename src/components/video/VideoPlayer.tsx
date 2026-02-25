@@ -187,7 +187,7 @@ export function VideoPlayer({ scenes, frames, title, format, openingHook, closin
         <CardTitle className="text-base flex items-center justify-between">
           <span className="flex items-center gap-2">
             <Play className="h-4 w-4 text-primary" />
-            Video Preview — {title}
+            Video Preview - {title}
           </span>
           <Badge variant="outline">Scene {currentSceneIndex + 1}/{scenes.length}</Badge>
         </CardTitle>

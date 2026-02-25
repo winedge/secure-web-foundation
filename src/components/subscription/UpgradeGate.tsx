@@ -79,7 +79,7 @@ export function UpgradeGate({ feature, children, fallbackTitle, fallbackDescript
             ) : (
               <Crown className="h-4 w-4" />
             )}
-            Upgrade to {requiredTier} — ${tier.price}/mo
+            Upgrade to {requiredTier} - ${tier.price}/mo
           </Button>
         </CardContent>
       </Card>

@@ -64,7 +64,7 @@ export function GoogleCampaignsList({ onSelectCampaign }: Props) {
             </SelectContent>
           </Select>
         </div>
-        <Badge variant="outline" className="text-xs">Mock data — connect Google Ads API for real metrics</Badge>
+        <Badge variant="outline" className="text-xs">Mock data - connect Google Ads API for real metrics</Badge>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

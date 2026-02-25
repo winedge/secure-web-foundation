@@ -1,6 +1,6 @@
-# LeadThru — Human Development Effort Estimate
+# LeadThru - Human Development Effort Estimate
 
-**Platform**: LeadThru — AI-Powered Mass Tort Lead Management & Marketing Platform  
+**Platform**: LeadThru - AI-Powered Mass Tort Lead Management & Marketing Platform  
 **Date**: February 2026  
 **Prepared for**: Stakeholder Review
 
@@ -332,13 +332,13 @@ LeadThru is a full-stack SaaS platform comprising **40+ pages**, **45+ backend f
 
 ## Key Complexity Factors
 
-1. **Multi-Tenant Architecture**: Every table requires RLS policies for firm-level data isolation — this adds 30–40% overhead to backend work.
+1. **Multi-Tenant Architecture**: Every table requires RLS policies for firm-level data isolation - this adds 30–40% overhead to backend work.
 2. **Third-Party API Integrations**: Meta Ads API and Google Ads API are notoriously complex with rate limits, token refresh, webhook verification, and API versioning.
 3. **AI/ML Pipeline**: 10+ distinct AI features requiring prompt engineering, model selection, response parsing, and feedback loops.
-4. **Real-Time Features**: Websocket subscriptions, presence tracking, live chat — all requiring careful state management.
+4. **Real-Time Features**: Websocket subscriptions, presence tracking, live chat - all requiring careful state management.
 5. **Compliance Requirements**: TCPA consent logging, evidence chain-of-custody with SHA-256 cryptographic hashing, blockchain-style linked hash chains for tamper detection, per-file audit trails, document signatures with hashing.
 6. **45 Edge Functions**: Each requiring auth validation, error handling, CORS, and integration testing.
-7. **Stripe Integration**: Subscription management with webhooks, customer portal, credit wallets — requires careful idempotency handling.
+7. **Stripe Integration**: Subscription management with webhooks, customer portal, credit wallets - requires careful idempotency handling.
 
 ---
 

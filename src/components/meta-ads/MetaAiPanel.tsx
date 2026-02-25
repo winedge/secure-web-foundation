@@ -256,7 +256,7 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
                       <div>
                         <p className="text-sm font-medium mt-2">Ad Sets ({aiResult.ad_sets.length}):</p>
                         {aiResult.ad_sets.map((s: any, i: number) => (
-                          <div key={i} className="text-sm ml-4">• {s.name} — Ages {s.age_min}–{s.age_max}, {(s.interests || []).join(', ')}</div>
+                          <div key={i} className="text-sm ml-4">• {s.name} - Ages {s.age_min}–{s.age_max}, {(s.interests || []).join(', ')}</div>
                         ))}
                       </div>
                     )}
@@ -549,7 +549,7 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
                 <div className="p-2 rounded-lg bg-green-500/10"><Zap className="h-5 w-5 text-green-600" /></div>
                 <div>
                   <CardTitle className="text-lg">Full Self-Sufficient Strategy</CardTitle>
-                  <CardDescription>Complete end-to-end Meta Ads plan — campaign architecture, testing, scaling, and optimization rules</CardDescription>
+                  <CardDescription>Complete end-to-end Meta Ads plan - campaign architecture, testing, scaling, and optimization rules</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -602,7 +602,7 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
                             </div>
                             <p className="text-xs text-muted-foreground">Objective: {c.objective}</p>
                             {c.ad_sets?.map((as: any, j: number) => (
-                              <div key={j} className="ml-4 mt-1 text-xs">↳ {as.name} ({as.audience}) — {as.budget_pct}%</div>
+                              <div key={j} className="ml-4 mt-1 text-xs">↳ {as.name} ({as.audience}) - {as.budget_pct}%</div>
                             ))}
                           </div>
                         ))}

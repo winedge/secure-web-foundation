@@ -551,7 +551,7 @@ export default function Settings() {
                                 })()}
                                 {metaVerification && (
                                   <div className={`mt-2 p-2 rounded text-xs ${metaVerification.connected ? 'bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300' : 'bg-destructive/10 text-destructive'}`}>
-                                    {metaVerification.connected ? '✓ Token verified and active' : '✗ Token expired — please reconnect'}
+                                    {metaVerification.connected ? '✓ Token verified and active' : '✗ Token expired - please reconnect'}
                                   </div>
                                 )}
                               </div>

@@ -206,7 +206,7 @@ export default function Dashboard() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <StatCard
             title="Avg. ROI"
-            value={totalSpend > 0 ? `${roi.toFixed(1)}%` : '—'}
+            value={totalSpend > 0 ? `${roi.toFixed(1)}%` : '-'}
             change={totalSpend > 0 ? `${formatCurrency(totalSpend)} spent` : 'No ad spend yet'}
             changeType={roi > 0 ? 'positive' : roi < 0 ? 'negative' : 'neutral'}
             icon={<TrendingUp className="h-6 w-6" />}
@@ -220,7 +220,7 @@ export default function Dashboard() {
           />
           <StatCard
             title="Available Leads"
-            value={availableCount ?? '—'}
+            value={availableCount ?? '-'}
             change={firm?.states?.length ? `in ${firm.states.join(', ')}` : undefined}
             icon={<ShoppingCart className="h-6 w-6" />}
           />
@@ -264,7 +264,7 @@ export default function Dashboard() {
                     <div className="text-center">
                       <p className="text-xs text-muted-foreground">Avg. CPL</p>
                       <p className="text-xl font-bold">
-                        {totalLeadsFromAds > 0 ? formatCurrency(totalSpend / totalLeadsFromAds) : '—'}
+                        {totalLeadsFromAds > 0 ? formatCurrency(totalSpend / totalLeadsFromAds) : '-'}
                       </p>
                     </div>
                   </div>
@@ -383,7 +383,7 @@ export default function Dashboard() {
                           <Briefcase className="h-4 w-4" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium">Lead Purchased — {lead.tort_type}</p>
+                          <p className="text-sm font-medium">Lead Purchased - {lead.tort_type}</p>
                           <p className="text-xs text-muted-foreground">
                             {lead.state} · {new Date(lead.purchaseInfo?.purchased_at || lead.created_at).toLocaleDateString()}
                           </p>

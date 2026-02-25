@@ -403,7 +403,7 @@ export default function BrandedIntake() {
             </div>
           </div>
 
-          {/* Mode Toggle — only show if chatbot is enabled */}
+          {/* Mode Toggle - only show if chatbot is enabled */}
           {chatbotEnabled && (
           <div className="flex justify-center gap-2 mb-8">
             <Button

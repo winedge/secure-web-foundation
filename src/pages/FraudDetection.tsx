@@ -153,14 +153,14 @@ export default function FraudDetection() {
                   </TableCell>
                   <TableCell>
                     <p className="font-medium">{lead?.first_name} {lead?.last_name}</p>
-                    <p className="text-xs text-muted-foreground">{lead?.email || lead?.phone || '—'}</p>
+                    <p className="text-xs text-muted-foreground">{lead?.email || lead?.phone || '-'}</p>
                   </TableCell>
                   <TableCell>
                     <Badge variant={SEVERITY_VARIANT[check.severity] || 'outline'}>
                       {check.severity}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm">{lead?.source || '—'}</TableCell>
+                  <TableCell className="text-sm">{lead?.source || '-'}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {format(new Date(check.created_at), 'MMM d, HH:mm')}
                   </TableCell>

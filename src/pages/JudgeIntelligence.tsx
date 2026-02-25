@@ -88,7 +88,7 @@ export default function JudgeIntelligence() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setSimulation(data.simulation);
-      toast.success('Simulation complete — 1,000 scenarios analyzed');
+      toast.success('Simulation complete - 1,000 scenarios analyzed');
     } catch (err: any) {
       toast.error(err.message || 'Simulation failed');
     } finally {
@@ -142,7 +142,7 @@ export default function JudgeIntelligence() {
                 <Card className="lg:col-span-2">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2"><User className="h-5 w-5" /> {profile.judge_name}</CardTitle>
-                    <CardDescription>{profile.court} — {profile.jurisdiction}{profile.state ? `, ${profile.state}` : ''}</CardDescription>
+                    <CardDescription>{profile.court} - {profile.jurisdiction}{profile.state ? `, ${profile.state}` : ''}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {profile.appointment_year && <p className="text-sm text-muted-foreground">Appointed: {profile.appointment_year}</p>}
@@ -300,7 +300,7 @@ export default function JudgeIntelligence() {
                                   <span className="font-medium text-sm text-foreground">{s.scenario}</span>
                                   <Badge variant="outline">{(s.probability * 100).toFixed(0)}% likely</Badge>
                                 </div>
-                                <p className="text-xs text-muted-foreground">{s.outcome_range} — {s.strategy}</p>
+                                <p className="text-xs text-muted-foreground">{s.outcome_range} - {s.strategy}</p>
                               </CardContent>
                             </Card>
                           ))}

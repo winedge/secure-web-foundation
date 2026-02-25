@@ -296,7 +296,7 @@ export function BackgroundCheckerPanel({ leadId, leadName, leadState }: Backgrou
                     <span className="font-medium text-sm">AI Simulated</span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    AI-generated analysis based on patterns — faster but not based on real records
+                    AI-generated analysis based on patterns - faster but not based on real records
                   </p>
                 </Label>
               </div>
@@ -309,7 +309,7 @@ export function BackgroundCheckerPanel({ leadId, leadName, leadState }: Backgrou
                     <Badge variant="outline" className="text-xs">Coming Soon</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Professional paid background check via Checkr API — requires API key setup
+                    Professional paid background check via Checkr API - requires API key setup
                   </p>
                 </Label>
               </div>

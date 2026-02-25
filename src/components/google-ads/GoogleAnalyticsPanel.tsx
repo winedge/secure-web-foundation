@@ -26,7 +26,7 @@ export function GoogleAnalyticsPanel() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Google Ads Performance</h2>
-        <Badge variant="outline" className="text-xs">Showing demo data — connect Google Ads API for real metrics</Badge>
+        <Badge variant="outline" className="text-xs">Showing demo data - connect Google Ads API for real metrics</Badge>
       </div>
 
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-8">
