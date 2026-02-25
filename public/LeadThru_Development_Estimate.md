@@ -244,18 +244,20 @@ LeadThru is a full-stack SaaS platform comprising **40+ pages**, **45+ backend f
 ---
 
 ### MODULE 14: Evidence & Compliance (Blockchain-Backed)
-**Effort: 3–4 weeks | Developers: 1–2 (Backend + Security/Cryptography)**
+**Effort: 5–6 weeks | Developers: 2 (Backend + Security/Cryptography + Frontend)**
 
 | Feature | Description | Effort |
 |---------|-------------|--------|
 | Evidence Vault | Blockchain-style chain-of-custody file storage with SHA-256 cryptographic hashing | 1.5 weeks |
 | Chain-of-Custody Integrity | Tamper detection via linked hash chains (each document references previous hash), integrity verification system | 1 week |
 | Evidence Audit Trail | Immutable per-file action log with actor tracking, IP logging, and timestamped chain verification | 3 days |
-| Consent Logging | TCPA/GDPR consent tracking with IP/UA capture | 3 days |
+| TCPA/HIPAA/Privacy Consent Logging | Granular consent capture per disclosure type (TCPA, HIPAA, Privacy Policy) with IP address, user agent, SHA-256 hash of exact disclosure text shown at time of submission for legal defensibility, timestamped records | 1 week |
+| Session Recording for Compliance | High-fidelity rrweb session recordings of intake process capturing browser fingerprinting, form interaction events, DOM mutations, 500ms buffer flush to prevent data loss, fullscreen playback with speed controls in admin panel | 1 week |
+| Consent Admin Dashboard | Admin dashboards for viewing/filtering/exporting consent logs and session recordings, CSV export of all compliance data | 3 days |
 | Tort Type Management | Configurable tort categories | 2 days |
 | System Audit Trail | Global immutable action logging across the platform | 3 days |
 
-**Files involved**: `EvidenceVault.tsx`, `ConsentLogsTable.tsx`, `TortTypeManager.tsx`, `LeadSourcesManager.tsx`
+**Files involved**: `EvidenceVault.tsx`, `ConsentLogsTable.tsx`, `TortTypeManager.tsx`, `LeadSourcesManager.tsx`, `SessionAnalyticsDashboard.tsx`, `SessionReplayViewer.tsx`, `SessionDetailView.tsx`, `use-session-recording.ts`, `session-recorder.ts`
 
 ---
 
