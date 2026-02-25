@@ -243,15 +243,17 @@ LeadThru is a full-stack SaaS platform comprising **40+ pages**, **45+ backend f
 
 ---
 
-### MODULE 14: Evidence & Compliance
-**Effort: 2–3 weeks | Developers: 1 (Backend + Security)**
+### MODULE 14: Evidence & Compliance (Blockchain-Backed)
+**Effort: 3–4 weeks | Developers: 1–2 (Backend + Security/Cryptography)**
 
 | Feature | Description | Effort |
 |---------|-------------|--------|
-| Evidence Vault | Blockchain-style chain-of-custody file storage | 1 week |
-| Consent Logging | TCPA/GDPR consent tracking with IP/UA | 3 days |
+| Evidence Vault | Blockchain-style chain-of-custody file storage with SHA-256 cryptographic hashing | 1.5 weeks |
+| Chain-of-Custody Integrity | Tamper detection via linked hash chains (each document references previous hash), integrity verification system | 1 week |
+| Evidence Audit Trail | Immutable per-file action log with actor tracking, IP logging, and timestamped chain verification | 3 days |
+| Consent Logging | TCPA/GDPR consent tracking with IP/UA capture | 3 days |
 | Tort Type Management | Configurable tort categories | 2 days |
-| Audit Trail | Immutable action logging across the system | 3 days |
+| System Audit Trail | Global immutable action logging across the platform | 3 days |
 
 **Files involved**: `EvidenceVault.tsx`, `ConsentLogsTable.tsx`, `TortTypeManager.tsx`, `LeadSourcesManager.tsx`
 
@@ -332,7 +334,7 @@ LeadThru is a full-stack SaaS platform comprising **40+ pages**, **45+ backend f
 2. **Third-Party API Integrations**: Meta Ads API and Google Ads API are notoriously complex with rate limits, token refresh, webhook verification, and API versioning.
 3. **AI/ML Pipeline**: 10+ distinct AI features requiring prompt engineering, model selection, response parsing, and feedback loops.
 4. **Real-Time Features**: Websocket subscriptions, presence tracking, live chat — all requiring careful state management.
-5. **Compliance Requirements**: TCPA consent logging, evidence chain-of-custody, audit trails, document signatures with hashing.
+5. **Compliance Requirements**: TCPA consent logging, evidence chain-of-custody with SHA-256 cryptographic hashing, blockchain-style linked hash chains for tamper detection, per-file audit trails, document signatures with hashing.
 6. **45 Edge Functions**: Each requiring auth validation, error handling, CORS, and integration testing.
 7. **Stripe Integration**: Subscription management with webhooks, customer portal, credit wallets — requires careful idempotency handling.
 
