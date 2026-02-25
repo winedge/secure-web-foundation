@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { RoleModulePermissions } from '@/components/admin/RoleModulePermissions';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -226,6 +227,8 @@ export default function AdminUserRoles() {
             )}
           </CardContent>
         </Card>
+        {/* Module Permissions by Role */}
+        <RoleModulePermissions />
       </div>
     </DashboardLayout>
   );
