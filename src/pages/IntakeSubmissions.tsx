@@ -188,7 +188,7 @@ export default function IntakeSubmissions() {
                               <p className="font-medium">{lead.first_name} {lead.last_name}</p>
                             </TableCell>
                             <TableCell>
-                              <p className="text-sm">{lead.email || '—'}</p>
+                              <p className="text-sm">{lead.email || '-'}</p>
                               <p className="text-xs text-muted-foreground">{lead.phone || ''}</p>
                             </TableCell>
                             <TableCell>{lead.tort_type}</TableCell>
@@ -196,7 +196,7 @@ export default function IntakeSubmissions() {
                             <TableCell><TierBadge tier={lead.tier} /></TableCell>
                             <TableCell>
                               <span className={`font-medium ${(lead.ai_quality_score || 0) >= 70 ? 'text-emerald-600' : (lead.ai_quality_score || 0) >= 40 ? 'text-amber-600' : 'text-destructive'}`}>
-                                {lead.ai_quality_score || '—'}
+                                {lead.ai_quality_score || '-'}
                               </span>
                             </TableCell>
                             <TableCell className="text-sm text-muted-foreground">
@@ -326,7 +326,7 @@ export default function IntakeSubmissions() {
                   <p className="text-sm text-muted-foreground">{priceDialogLead.tort_type} · {priceDialogLead.state}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <TierBadge tier={priceDialogLead.tier} />
-                    <span className="text-sm text-muted-foreground">AI Score: {priceDialogLead.ai_quality_score || '—'}</span>
+                    <span className="text-sm text-muted-foreground">AI Score: {priceDialogLead.ai_quality_score || '-'}</span>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -386,15 +386,15 @@ export default function IntakeSubmissions() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">{detailLead.email || '—'}</p>
+                  <p className="font-medium">{detailLead.email || '-'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Phone</p>
-                  <p className="font-medium">{detailLead.phone || '—'}</p>
+                  <p className="font-medium">{detailLead.phone || '-'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Location</p>
-                  <p className="font-medium">{[detailLead.city, detailLead.state, detailLead.zip_code].filter(Boolean).join(', ') || '—'}</p>
+                  <p className="font-medium">{[detailLead.city, detailLead.state, detailLead.zip_code].filter(Boolean).join(', ') || '-'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Tort Type</p>
@@ -402,12 +402,12 @@ export default function IntakeSubmissions() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Age Range</p>
-                  <p className="font-medium">{detailLead.age_bucket || '—'}</p>
+                  <p className="font-medium">{detailLead.age_bucket || '-'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">AI Score / Tier</p>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">{detailLead.ai_quality_score || '—'}</span>
+                    <span className="font-medium">{detailLead.ai_quality_score || '-'}</span>
                     <TierBadge tier={detailLead.tier} />
                   </div>
                 </div>

@@ -151,9 +151,9 @@ export default function EvidenceVault() {
       queryClient.invalidateQueries({ queryKey: ['evidence-vault'] });
       
       if (isValid) {
-        toast.success('✓ Integrity verified — no tampering detected');
+        toast.success('✓ Integrity verified - no tampering detected');
       } else {
-        toast.error('⚠ TAMPERING DETECTED — hash mismatch!');
+        toast.error('⚠ TAMPERING DETECTED - hash mismatch!');
       }
     } catch (err: any) {
       toast.error('Verification failed: ' + err.message);

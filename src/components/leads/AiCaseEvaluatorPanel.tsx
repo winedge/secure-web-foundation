@@ -63,7 +63,7 @@ export function AiCaseEvaluatorPanel({ leadId }: { leadId: string }) {
               <span className="text-xs text-muted-foreground">Low</span>
               <p className="text-lg font-bold">{formatCurrency(evaluation.settlement_estimate_low || 0)}</p>
             </div>
-            <span className="text-muted-foreground">—</span>
+            <span className="text-muted-foreground">-</span>
             <div className="text-right">
               <span className="text-xs text-muted-foreground">High</span>
               <p className="text-lg font-bold">{formatCurrency(evaluation.settlement_estimate_high || 0)}</p>

@@ -45,7 +45,7 @@ export default function CreativeStudio() {
   const handleLaunchToMeta = (v: any) => {
     pixel.viewContent({ content_name: v.headline, content_category: 'MetaAdCreative' });
     setMetaWizardPrefill({
-      campaignName: `${result?.campaign_name || 'Campaign'} — ${v.headline}`.slice(0, 80),
+      campaignName: `${result?.campaign_name || 'Campaign'} - ${v.headline}`.slice(0, 80),
       tortType: tortType,
       goal: 'OUTCOME_LEADS',
     });
@@ -56,7 +56,7 @@ export default function CreativeStudio() {
     setCreatingId(variant.id);
     try {
       await createCampaign.mutateAsync({
-        name: `${result.campaign_name} — ${variant.headline}`,
+        name: `${result.campaign_name} - ${variant.headline}`,
         tort_type: tortType || 'general',
         status: 'draft',
         ad_headline: variant.headline,

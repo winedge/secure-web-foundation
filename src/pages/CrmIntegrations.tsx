@@ -248,7 +248,7 @@ export default function CrmIntegrations() {
                     syncLogs.map((log: any) => (
                       <TableRow key={log.id}>
                         <TableCell className="font-medium">
-                          {(log.crm_integrations as any)?.name || '—'}
+                          {(log.crm_integrations as any)?.name || '-'}
                         </TableCell>
                         <TableCell>
                           {log.status === 'success' ? (
@@ -259,7 +259,7 @@ export default function CrmIntegrations() {
                         </TableCell>
                         <TableCell className="text-xs font-mono">{log.lead_id?.slice(0, 8)}...</TableCell>
                         <TableCell className="text-xs text-destructive max-w-[200px] truncate">
-                          {log.error_message || '—'}
+                          {log.error_message || '-'}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {format(new Date(log.created_at), 'MMM d, HH:mm')}

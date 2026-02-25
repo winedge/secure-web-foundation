@@ -96,7 +96,7 @@ export default function Pricing() {
         </Button>
         {!canAfford && (
           <p className="text-xs text-muted-foreground text-center">
-            Insufficient balance — <button onClick={() => navigate('/wallet')} className="underline text-primary">add funds</button>
+            Insufficient balance - <button onClick={() => navigate('/wallet')} className="underline text-primary">add funds</button>
           </p>
         )}
       </div>

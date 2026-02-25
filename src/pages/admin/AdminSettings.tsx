@@ -138,8 +138,8 @@ function LeadIngestionConfig() {
           </div>
           <div className={`p-3 rounded-lg text-sm ${isVerificationEnabled ? 'bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400' : 'bg-accent/10 border border-accent/20 text-accent'}`}>
             {isVerificationEnabled
-              ? '⚠️ Verification is ON — New leads will NOT appear in the marketplace until approved in Admin → Lead Inventory.'
-              : '✅ Verification is OFF — Leads are auto-scored, auto-priced, and listed immediately.'}
+              ? '⚠️ Verification is ON - New leads will NOT appear in the marketplace until approved in Admin → Lead Inventory.'
+              : '✅ Verification is OFF - Leads are auto-scored, auto-priced, and listed immediately.'}
           </div>
         </CardContent>
       </Card>
@@ -456,10 +456,10 @@ function MetaApiConfig() {
               </h5>
               <p className="ml-8 text-sm text-muted-foreground">From your App Dashboard, click <strong>"Add Product"</strong> and add each of these:</p>
               <ul className="ml-8 space-y-1 text-sm text-muted-foreground list-disc list-outside">
-                <li><strong>Facebook Login for Business</strong> — Enables OAuth login for users</li>
-                <li><strong>Marketing API</strong> — Required for campaign management, ad sets, and ads</li>
-                <li><strong>Instagram Graph API</strong> — Required for Instagram posting and insights</li>
-                <li><strong>Pages API</strong> — Required for Facebook Page management and posting</li>
+                <li><strong>Facebook Login for Business</strong> - Enables OAuth login for users</li>
+                <li><strong>Marketing API</strong> - Required for campaign management, ad sets, and ads</li>
+                <li><strong>Instagram Graph API</strong> - Required for Instagram posting and insights</li>
+                <li><strong>Pages API</strong> - Required for Facebook Page management and posting</li>
               </ul>
             </div>
 

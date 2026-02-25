@@ -236,7 +236,7 @@ export default function AdminLeads() {
                           <TableRow key={lead.id} className="bg-amber-500/5">
                             <TableCell>
                               <div>
-                                <p className="font-medium">{lead.first_name || '—'} {lead.last_name || ''}</p>
+                                <p className="font-medium">{lead.first_name || '-'} {lead.last_name || ''}</p>
                                 <p className="text-sm text-muted-foreground">{lead.email || lead.phone || 'No contact'}</p>
                               </div>
                             </TableCell>
@@ -247,7 +247,7 @@ export default function AdminLeads() {
                             <TableCell className="font-medium">{formatCurrency(Number(lead.price))}</TableCell>
                             <TableCell>
                               <span className={`font-medium ${(lead.ai_quality_score || 0) >= 70 ? 'text-accent' : (lead.ai_quality_score || 0) >= 40 ? 'text-amber-600' : 'text-destructive'}`}>
-                                {lead.ai_quality_score || '—'}
+                                {lead.ai_quality_score || '-'}
                               </span>
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm">
@@ -422,15 +422,15 @@ function LeadDetailGrid({ lead }: { lead: any }) {
       </div>
       <div>
         <p className="text-sm text-muted-foreground">Email</p>
-        <p className="font-medium">{lead.email || '—'}</p>
+        <p className="font-medium">{lead.email || '-'}</p>
       </div>
       <div>
         <p className="text-sm text-muted-foreground">Phone</p>
-        <p className="font-medium">{lead.phone || '—'}</p>
+        <p className="font-medium">{lead.phone || '-'}</p>
       </div>
       <div>
         <p className="text-sm text-muted-foreground">Location</p>
-        <p className="font-medium">{[lead.city, lead.state, lead.zip_code].filter(Boolean).join(', ') || '—'}</p>
+        <p className="font-medium">{[lead.city, lead.state, lead.zip_code].filter(Boolean).join(', ') || '-'}</p>
       </div>
       <div>
         <p className="text-sm text-muted-foreground">Tort Type</p>

@@ -232,7 +232,7 @@ function AddWalletFundsDialog({ firmId, firmName, currentBalance }: { firmId: st
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wallet className="h-5 w-5" />
-            Add Funds — {firmName}
+            Add Funds - {firmName}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -310,7 +310,7 @@ function ChangePlanDialog({ firmId, firmName, currentPlan }: { firmId: string; f
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Crown className="h-5 w-5 text-accent" />
-            Change Plan — {firmName}
+            Change Plan - {firmName}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -327,8 +327,8 @@ function ChangePlanDialog({ firmId, firmName, currentPlan }: { firmId: string; f
                 <SelectValue placeholder="Select a plan" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="basic">Basic — $99/mo</SelectItem>
-                <SelectItem value="premium">Premium — $249/mo</SelectItem>
+                <SelectItem value="basic">Basic - $99/mo</SelectItem>
+                <SelectItem value="premium">Premium - $249/mo</SelectItem>
               </SelectContent>
             </Select>
           </div>

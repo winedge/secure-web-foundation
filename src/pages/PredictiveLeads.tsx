@@ -113,7 +113,7 @@ export default function PredictiveLeads() {
               <div className="flex flex-wrap gap-3">
                 {hotZones.map((zone, i) => (
                   <Badge key={i} className="bg-destructive/10 text-destructive border-destructive/30 py-2 px-3">
-                    <MapPin className="h-3 w-3 mr-1" /> {zone.state} — {zone.tort_type} ({zone.urgency})
+                    <MapPin className="h-3 w-3 mr-1" /> {zone.state} - {zone.tort_type} ({zone.urgency})
                   </Badge>
                 ))}
               </div>

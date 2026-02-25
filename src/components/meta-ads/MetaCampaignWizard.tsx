@@ -694,7 +694,7 @@ export function MetaCampaignWizard({ open, onOpenChange, onCreated, prefillData 
                   <div className="grid grid-cols-2 gap-1 text-sm">
                     <span className="text-muted-foreground">Name</span><span className="font-medium">{data.campaignName}</span>
                     <span className="text-muted-foreground">Goal</span><span><Badge variant="outline">{CAMPAIGN_GOALS.find(g => g.id === data.goal)?.label}</Badge></span>
-                    <span className="text-muted-foreground">Tort Type</span><span>{data.tortType || '—'}</span>
+                    <span className="text-muted-foreground">Tort Type</span><span>{data.tortType || '-'}</span>
                   </div>
                 </CardContent></Card>
 

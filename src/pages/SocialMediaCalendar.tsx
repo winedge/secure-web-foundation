@@ -99,7 +99,7 @@ export default function SocialMediaCalendar() {
                 <ChevronLeft className="h-5 w-5" />
               </Button>
               <h3 className="font-semibold">
-                {format(weekDays[0], 'MMM d')} — {format(weekDays[6], 'MMM d, yyyy')}
+                {format(weekDays[0], 'MMM d')} - {format(weekDays[6], 'MMM d, yyyy')}
               </h3>
               <Button variant="ghost" size="icon" onClick={() => setCurrentWeekStart(addDays(currentWeekStart, 7))}>
                 <ChevronRight className="h-5 w-5" />
@@ -621,7 +621,7 @@ function CreatePostForm({ initialDate, editPost, onCreated }: { initialDate?: Da
               <Textarea
                 value={imageDescription}
                 onChange={(e) => setImageDescription(e.target.value)}
-                placeholder="Describe the image you want — e.g., 'A professional photo of a lawyer meeting clients in a modern office, warm lighting'"
+                placeholder="Describe the image you want - e.g., 'A professional photo of a lawyer meeting clients in a modern office, warm lighting'"
                 rows={2}
               />
             </div>
@@ -664,10 +664,10 @@ function CreatePostForm({ initialDate, editPost, onCreated }: { initialDate?: Da
                 <Select value={imageAspect} onValueChange={setImageAspect}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1:1">Square (1:1) — Instagram/Facebook</SelectItem>
-                    <SelectItem value="16:9">Landscape (16:9) — Twitter/LinkedIn</SelectItem>
-                    <SelectItem value="9:16">Portrait (9:16) — Stories/Reels</SelectItem>
-                    <SelectItem value="4:5">Tall (4:5) — Instagram Feed</SelectItem>
+                    <SelectItem value="1:1">Square (1:1) - Instagram/Facebook</SelectItem>
+                    <SelectItem value="16:9">Landscape (16:9) - Twitter/LinkedIn</SelectItem>
+                    <SelectItem value="9:16">Portrait (9:16) - Stories/Reels</SelectItem>
+                    <SelectItem value="4:5">Tall (4:5) - Instagram Feed</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

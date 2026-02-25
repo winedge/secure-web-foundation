@@ -396,7 +396,7 @@ export function useMetaAiAssistant() {
   });
 }
 
-// Sync from Meta — pull all campaigns from your Meta ad account
+// Sync from Meta - pull all campaigns from your Meta ad account
 export function useSyncFromMeta() {
   const qc = useQueryClient();
   const { toast } = useToast();

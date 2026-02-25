@@ -243,7 +243,7 @@ export function ReportScheduleManager() {
                     </div>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {s.next_send_at ? new Date(s.next_send_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric' }) : '—'}
+                    {s.next_send_at ? new Date(s.next_send_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric' }) : '-'}
                   </TableCell>
                   <TableCell>
                     <Switch

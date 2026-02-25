@@ -72,7 +72,7 @@ export default function VideoAdGenerator() {
             </div>
             AI Video Ad Generator
           </h1>
-          <p className="text-muted-foreground mt-1">Generate professional video ads with AI — script, visuals, and voiceover.</p>
+          <p className="text-muted-foreground mt-1">Generate professional video ads with AI - script, visuals, and voiceover.</p>
         </div>
 
         <Card>
@@ -124,7 +124,7 @@ export default function VideoAdGenerator() {
                         Generate Video with Voiceover
                       </h3>
                       <p className="text-sm text-muted-foreground mt-1">
-                        AI generates cinematic frames for each scene. Then play as a video with synchronized voiceover narration — completely free, no extra API key.
+                        AI generates cinematic frames for each scene. Then play as a video with synchronized voiceover narration - completely free, no extra API key.
                       </p>
                     </div>
                     <Button onClick={generateFrames} disabled={isGeneratingFrames} size="lg" className="gap-2 whitespace-nowrap">

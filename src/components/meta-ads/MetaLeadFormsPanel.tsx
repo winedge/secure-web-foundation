@@ -263,19 +263,19 @@ export function MetaLeadFormsPanel() {
         <CardContent className="space-y-3 text-sm text-muted-foreground">
           <div className="flex items-start gap-3">
             <Badge variant="outline" className="mt-0.5">1</Badge>
-            <p><strong>Load Forms</strong> — Click "Load Forms" to fetch all lead forms from your connected Facebook pages.</p>
+            <p><strong>Load Forms</strong> - Click "Load Forms" to fetch all lead forms from your connected Facebook pages.</p>
           </div>
           <div className="flex items-start gap-3">
             <Badge variant="outline" className="mt-0.5">2</Badge>
-            <p><strong>Import Leads</strong> — Click "Import Leads" on any form to pull submissions into your lead pipeline. Duplicates are automatically skipped.</p>
+            <p><strong>Import Leads</strong> - Click "Import Leads" on any form to pull submissions into your lead pipeline. Duplicates are automatically skipped.</p>
           </div>
           <div className="flex items-start gap-3">
             <Badge variant="outline" className="mt-0.5">3</Badge>
-            <p><strong>Real-time Updates</strong> — Subscribe to a page to receive new lead form submissions automatically as they come in via webhook.</p>
+            <p><strong>Real-time Updates</strong> - Subscribe to a page to receive new lead form submissions automatically as they come in via webhook.</p>
           </div>
           <div className="flex items-start gap-3">
             <Badge variant="outline" className="mt-0.5">4</Badge>
-            <p><strong>AI Processing</strong> — Imported leads are automatically scored by AI, deduplicated, and placed in your pipeline for review.</p>
+            <p><strong>AI Processing</strong> - Imported leads are automatically scored by AI, deduplicated, and placed in your pipeline for review.</p>
           </div>
         </CardContent>
       </Card>

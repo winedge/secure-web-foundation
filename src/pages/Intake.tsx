@@ -85,7 +85,7 @@ export default function Intake() {
     // Fetch client IP/geo info from edge function
     supabase.functions.invoke('get-client-info').then(({ data }) => {
       if (data) clientInfoRef.current = data as ClientNetworkInfo;
-    }).catch(() => { /* silently fail — not critical */ });
+    }).catch(() => { /* silently fail - not critical */ });
 
     const handleBeforeUnload = () => {
       const timing = recorderRef.current.getTimingData();

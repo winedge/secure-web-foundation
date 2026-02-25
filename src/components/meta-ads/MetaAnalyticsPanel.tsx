@@ -102,7 +102,7 @@ export function MetaAnalyticsPanel({ campaignId }: Props) {
       </div>
 
       {!analytics?.length && (
-        <Badge variant="outline" className="text-xs">Showing demo data — connect Meta API for real metrics</Badge>
+        <Badge variant="outline" className="text-xs">Showing demo data - connect Meta API for real metrics</Badge>
       )}
 
       {/* Summary cards */}
