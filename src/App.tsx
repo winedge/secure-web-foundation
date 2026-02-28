@@ -66,7 +66,7 @@ const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminUserRoles = lazy(() => import("./pages/admin/AdminUserRoles"));
 const FraudDetection = lazy(() => import("./pages/FraudDetection"));
 const CrmIntegrations = lazy(() => import("./pages/CrmIntegrations"));
-
+const LandingPage = lazy(() => import("./pages/LandingPage"));
 const queryClient = new QueryClient();
 
 function PageLoader() {
@@ -114,6 +114,7 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/intake" element={<LazyRoute><Intake /></LazyRoute>} />
                 <Route path="/intake/:slug" element={<LazyRoute><BrandedIntake /></LazyRoute>} />
+                <Route path="/lp/:slug" element={<LazyRoute><LandingPage /></LazyRoute>} />
 
                 {/* Protected routes */}
                 <Route path="/dashboard" element={<ProtectedRoute><LazyRoute><Dashboard /></LazyRoute></ProtectedRoute>} />
