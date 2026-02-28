@@ -3110,6 +3110,48 @@ export type Database = {
           },
         ]
       }
+      pipeline_charges: {
+        Row: {
+          amount: number
+          created_at: string
+          firm_id: string
+          from_stage: string
+          id: string
+          lead_id: string
+          payment_method: string
+          status: string
+          stripe_session_id: string | null
+          to_stage: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          firm_id: string
+          from_stage: string
+          id?: string
+          lead_id: string
+          payment_method?: string
+          status?: string
+          stripe_session_id?: string | null
+          to_stage: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          firm_id?: string
+          from_stage?: string
+          id?: string
+          lead_id?: string
+          payment_method?: string
+          status?: string
+          stripe_session_id?: string | null
+          to_stage?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       platform_connections: {
         Row: {
           access_token: string | null
@@ -3987,6 +4029,17 @@ export type Database = {
       }
     }
     Functions: {
+      charge_and_move_stage: {
+        Args: {
+          _charge_amount: number
+          _firm_id: string
+          _from_stage: string
+          _lead_id: string
+          _to_stage: string
+          _user_id: string
+        }
+        Returns: Json
+      }
       get_marketplace_leads: {
         Args: never
         Returns: {

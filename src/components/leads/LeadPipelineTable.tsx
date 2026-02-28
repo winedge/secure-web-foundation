@@ -17,9 +17,10 @@ import {
 } from '@/components/ui/dialog';
 import { 
   ChevronDown, ChevronRight, PhoneCall, FileText, Scale, Eye,
-  ArrowLeft, Globe, Facebook, Search as SearchIcon, Trash2, Store, DollarSign,
+  ArrowLeft, Globe, Facebook, Search as SearchIcon, Trash2, Store, DollarSign, Lock,
 } from 'lucide-react';
 import { PipelineStage } from './PipelineStageCards';
+import { getStageTransitionFee } from '@/hooks/use-pipeline-charges';
 
 interface PurchasedLead {
   id: string;
@@ -58,11 +59,20 @@ function getSourceIcon(sourceName?: string) {
   return <Globe className="h-3.5 w-3.5" />;
 }
 
-function getNextAction(currentStage: PipelineStage): { stage: PipelineStage; label: string; icon: React.ElementType } | null {
+function getNextAction(currentStage: PipelineStage): { stage: PipelineStage; label: string; icon: React.ElementType; fee: number } | null {
   switch (currentStage) {
-    case 'new_lead': return { stage: 'call_verification', label: 'Send for call verification', icon: PhoneCall };
-    case 'call_verification': return { stage: 'medical_records', label: 'Send for medical records', icon: FileText };
-    case 'medical_records': return { stage: 'retainer', label: 'Send to retainer', icon: Scale };
+    case 'new_lead': {
+      const fee = getStageTransitionFee('new_lead', 'call_verification');
+      return { stage: 'call_verification', label: fee > 0 ? `Verify Call ($${fee})` : 'Send for call verification', icon: PhoneCall, fee };
+    }
+    case 'call_verification': {
+      const fee = getStageTransitionFee('call_verification', 'medical_records');
+      return { stage: 'medical_records', label: fee > 0 ? `Get Records ($${fee})` : 'Send for medical records', icon: FileText, fee };
+    }
+    case 'medical_records': {
+      const fee = getStageTransitionFee('medical_records', 'retainer');
+      return { stage: 'retainer', label: fee > 0 ? `Retainer ($${fee})` : 'Send to retainer', icon: Scale, fee };
+    }
     case 'retainer': return null;
     default: return null;
   }
@@ -78,6 +88,7 @@ function getPrevAction(currentStage: PipelineStage): { stage: PipelineStage; lab
 }
 
 export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsByTort, onMoveStage, onViewDetails, onDump, onPostToMarketplace, isMoving, isPosting }: LeadPipelineTableProps) {
+  const isPiiRestricted = stage === 'new_lead';
   const [postDialogLead, setPostDialogLead] = useState<PurchasedLead | null>(null);
   const [listPrice, setListPrice] = useState('');
 
@@ -167,7 +178,14 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsB
                             <TableCell className="text-muted-foreground font-medium">{idx + 1}</TableCell>
                             <TableCell>
                               <div className="flex flex-col">
-                                <span className="font-medium">{lead.first_name} {lead.last_name}</span>
+                                {isPiiRestricted ? (
+                                  <span className="font-medium flex items-center gap-1.5 text-muted-foreground">
+                                    <Lock className="h-3 w-3" />
+                                    {lead.first_name?.[0] || '?'}**** {lead.last_name?.[0] || '?'}****
+                                  </span>
+                                ) : (
+                                  <span className="font-medium">{lead.first_name} {lead.last_name}</span>
+                                )}
                                 <div className="flex gap-1 mt-0.5">
                                   {lead.is_verified && <Badge variant="secondary" className="text-[10px] px-1 py-0">Verified</Badge>}
                                   {lead.is_exclusive && <Badge variant="secondary" className="text-[10px] px-1 py-0">Exclusive</Badge>}

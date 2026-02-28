@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
-import { MapPin, Users, DollarSign, Calendar, MoreVertical, Edit, Trash2, Play, Pause } from 'lucide-react';
+import { MapPin, Users, DollarSign, Calendar, MoreVertical, Edit, Trash2, Play, Pause, Globe, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useGenerateLandingPage } from '@/hooks/use-landing-pages';
 
 interface CampaignCardProps {
   campaign: Campaign;
@@ -20,6 +21,7 @@ interface CampaignCardProps {
 }
 
 export function CampaignCard({ campaign, onEdit, onDelete, onToggleStatus }: CampaignCardProps) {
+  const generateLandingPage = useGenerateLandingPage();
   const getStatusColor = (status: string | null) => {
     switch (status) {
       case 'active':
@@ -71,6 +73,18 @@ export function CampaignCard({ campaign, onEdit, onDelete, onToggleStatus }: Cam
                     Activate Campaign
                   </>
                 )}
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => generateLandingPage.mutate({
+                  campaignId: campaign.id,
+                  tortType: campaign.tort_type,
+                  campaignName: campaign.name,
+                  targetStates: campaign.target_states || undefined,
+                })}
+                disabled={generateLandingPage.isPending}
+              >
+                {generateLandingPage.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Globe className="h-4 w-4 mr-2" />}
+                {generateLandingPage.isPending ? 'Generating...' : 'Generate Landing Page'}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem 

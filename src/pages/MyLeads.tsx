@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { usePurchasedLeads, useLeadSources, useUpdatePipelineStage, usePostToMarketplace } from '@/hooks/use-leads';
+import { useChargeAndMoveStage, getStageTransitionFee } from '@/hooks/use-pipeline-charges';
 import { useLeadNotes, useCreateNote, useDeleteNote, useTogglePinNote } from '@/hooks/use-lead-notes';
 import { useTeamPermissions } from '@/hooks/use-team-permissions';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -26,6 +27,7 @@ import { ScoreIndicator } from '@/components/leads/ScoreIndicator';
 import { formatCurrency } from '@/lib/utils';
 import { exportLeadsToCSV } from '@/lib/export-utils';
 import { DocumentSignaturePanel } from '@/components/signatures/DocumentSignaturePanel';
+import { MedicalRecordsUpload } from '@/components/leads/MedicalRecordsUpload';
 import { 
   User, Mail, Phone, MapPin, FileText, Calendar,
   Search, Download, Eye, CheckCircle, Shield, Clock,
@@ -142,6 +144,7 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
           <TabsTrigger value="case-eval" className="text-xs sm:text-sm gap-1"><Scale className="h-3 w-3 sm:h-4 sm:w-4" />Case Eval</TabsTrigger>
           <TabsTrigger value="settlement" className="text-xs sm:text-sm gap-1"><Gavel className="h-3 w-3 sm:h-4 sm:w-4" />Settlement</TabsTrigger>
           <TabsTrigger value="documents" className="text-xs sm:text-sm gap-1"><Upload className="h-3 w-3 sm:h-4 sm:w-4" />Docs</TabsTrigger>
+          <TabsTrigger value="medical-records" className="text-xs sm:text-sm gap-1"><FileText className="h-3 w-3 sm:h-4 sm:w-4" />Medical</TabsTrigger>
           <TabsTrigger value="war-room" className="text-xs sm:text-sm gap-1"><Users className="h-3 w-3 sm:h-4 sm:w-4" />War Room</TabsTrigger>
           {canViewSessionLogs && <TabsTrigger value="session" className="text-xs sm:text-sm gap-1"><Video className="h-3 w-3 sm:h-4 sm:w-4" />Session</TabsTrigger>}
           <TabsTrigger value="journey" className="text-xs sm:text-sm gap-1"><Clock className="h-3 w-3 sm:h-4 sm:w-4" />Journey</TabsTrigger>
@@ -260,6 +263,10 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
         <WarRoomPanel leadId={detailLead.id} />
       </TabsContent>
 
+      <TabsContent value="medical-records" className="mt-4">
+        <MedicalRecordsUpload leadId={detailLead.id} />
+      </TabsContent>
+
       {canViewSessionLogs && (
         <TabsContent value="session" className="mt-4">
           <SessionAnalytics
@@ -288,6 +295,7 @@ export default function MyLeads() {
   const { data: leads, isLoading } = usePurchasedLeads();
   const { data: sourcesMap } = useLeadSources();
   const updateStage = useUpdatePipelineStage();
+  const chargeAndMove = useChargeAndMoveStage();
   const postToMarketplace = usePostToMarketplace();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeStage, setActiveStage] = useState<PipelineStage>('new_lead');
@@ -344,15 +352,25 @@ export default function MyLeads() {
   };
 
   const handleMoveStage = (leadId: string, newStage: PipelineStage) => {
-    updateStage.mutate({ leadId, stage: newStage }, {
-      onSuccess: () => {
-        const lead = leads?.find(l => l.id === leadId);
-        const name = lead ? `${lead.first_name || ''} ${lead.last_name || ''}`.trim() : 'Lead';
-        toast.success(`${name} moved to ${stageLabels[newStage] || newStage}`, {
-          duration: 4000,
-        });
-      },
-    });
+    const lead = leads?.find(l => l.id === leadId);
+    const currentStage = (lead?.purchaseInfo?.pipeline_stage as PipelineStage) || 'new_lead';
+    const name = lead ? `${lead.first_name || ''} ${lead.last_name || ''}`.trim() : 'Lead';
+    const fee = getStageTransitionFee(currentStage, newStage);
+
+    // Moving backward or to dump = free, use simple update
+    const stageOrder = ['new_lead', 'call_verification', 'medical_records', 'retainer'];
+    const isBackward = stageOrder.indexOf(newStage) < stageOrder.indexOf(currentStage);
+
+    if (isBackward || fee === 0) {
+      updateStage.mutate({ leadId, stage: newStage }, {
+        onSuccess: () => {
+          toast.success(`${name} moved to ${stageLabels[newStage] || newStage}`);
+        },
+      });
+    } else {
+      // Forward move with charge
+      chargeAndMove.mutate({ leadId, fromStage: currentStage, toStage: newStage });
+    }
   };
 
   return (
@@ -414,7 +432,7 @@ export default function MyLeads() {
                 onViewDetails={setDetailLeadId}
                 onDump={(leadId) => updateStage.mutate({ leadId, stage: 'new_lead' })}
                 onPostToMarketplace={(leadId, price) => postToMarketplace.mutate({ leadId, price })}
-                isMoving={updateStage.isPending}
+                isMoving={updateStage.isPending || chargeAndMove.isPending}
                 isPosting={postToMarketplace.isPending}
               />
             )}
