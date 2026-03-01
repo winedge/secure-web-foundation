@@ -7,8 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { CheckCircle, Shield, Phone, Mail, User, MapPin, FileText, Loader2 } from 'lucide-react';
+import { CheckCircle, Shield, Phone, Mail, User, MapPin, FileText, Loader2, MessageCircle } from 'lucide-react';
+import ConversationalIntake from '@/components/intake/ConversationalIntake';
 
 export default function LandingPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -99,6 +101,8 @@ export default function LandingPage() {
   }
 
   const sections = (page.sections as any[]) || [];
+  const tortType = (page as any).campaigns?.tort_type || 'Unknown';
+  const campaignId = page.campaign_id;
 
   if (submitted) {
     return (
@@ -152,45 +156,71 @@ export default function LandingPage() {
           ))}
         </div>
 
-        {/* Intake Form */}
+        {/* Intake: Form + AI Chatbot Tabs */}
         <div className="md:col-span-2">
           <Card className="sticky top-8 border-primary/20">
             <CardContent className="pt-6">
-              <h3 className="text-lg font-bold mb-1">{page.cta_text || 'Get Your Free Case Review'}</h3>
-              <p className="text-sm text-muted-foreground mb-4">Fill out the form below and we'll get back to you within 24 hours.</p>
+              <Tabs defaultValue="form">
+                <TabsList className="w-full mb-4">
+                  <TabsTrigger value="form" className="flex-1 gap-1.5">
+                    <FileText className="h-4 w-4" />
+                    Form
+                  </TabsTrigger>
+                  <TabsTrigger value="chatbot" className="flex-1 gap-1.5">
+                    <MessageCircle className="h-4 w-4" />
+                    AI Assistant
+                  </TabsTrigger>
+                </TabsList>
 
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input required placeholder="First Name" className="pl-9" value={form.first_name} onChange={(e) => setForm(p => ({ ...p, first_name: e.target.value }))} />
+                <TabsContent value="form">
+                  <h3 className="text-lg font-bold mb-1">{page.cta_text || 'Get Your Free Case Review'}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Fill out the form below and we'll get back to you within 24 hours.</p>
+
+                  <form onSubmit={handleSubmit} className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input required placeholder="First Name" className="pl-9" value={form.first_name} onChange={(e) => setForm(p => ({ ...p, first_name: e.target.value }))} />
+                      </div>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input required placeholder="Last Name" className="pl-9" value={form.last_name} onChange={(e) => setForm(p => ({ ...p, last_name: e.target.value }))} />
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input required type="email" placeholder="Email Address" className="pl-9" value={form.email} onChange={(e) => setForm(p => ({ ...p, email: e.target.value }))} />
+                    </div>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input placeholder="Phone Number" className="pl-9" value={form.phone} onChange={(e) => setForm(p => ({ ...p, phone: e.target.value }))} />
+                    </div>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input required placeholder="State" className="pl-9" value={form.state} onChange={(e) => setForm(p => ({ ...p, state: e.target.value }))} />
+                    </div>
+                    <Textarea placeholder="Briefly describe your situation..." rows={3} value={form.details} onChange={(e) => setForm(p => ({ ...p, details: e.target.value }))} />
+                    <Button type="submit" className="w-full" size="lg" disabled={submitting}>
+                      {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+                      {submitting ? 'Submitting...' : page.cta_text || 'Submit'}
+                    </Button>
+                    <p className="text-xs text-muted-foreground text-center">
+                      By submitting, you agree to our privacy policy and consent to be contacted about your case.
+                    </p>
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="chatbot">
+                  <h3 className="text-lg font-bold mb-1">Chat with our AI Assistant</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Answer a few quick questions and we'll evaluate your case.</p>
+                  <div className="h-[400px]">
+                    <ConversationalIntake
+                      campaignId={campaignId}
+                      tortTypeHint={tortType}
+                    />
                   </div>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input required placeholder="Last Name" className="pl-9" value={form.last_name} onChange={(e) => setForm(p => ({ ...p, last_name: e.target.value }))} />
-                  </div>
-                </div>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input required type="email" placeholder="Email Address" className="pl-9" value={form.email} onChange={(e) => setForm(p => ({ ...p, email: e.target.value }))} />
-                </div>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Phone Number" className="pl-9" value={form.phone} onChange={(e) => setForm(p => ({ ...p, phone: e.target.value }))} />
-                </div>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input required placeholder="State" className="pl-9" value={form.state} onChange={(e) => setForm(p => ({ ...p, state: e.target.value }))} />
-                </div>
-                <Textarea placeholder="Briefly describe your situation..." rows={3} value={form.details} onChange={(e) => setForm(p => ({ ...p, details: e.target.value }))} />
-                <Button type="submit" className="w-full" size="lg" disabled={submitting}>
-                  {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
-                  {submitting ? 'Submitting...' : page.cta_text || 'Submit'}
-                </Button>
-                <p className="text-xs text-muted-foreground text-center">
-                  By submitting, you agree to our privacy policy and consent to be contacted about your case.
-                </p>
-              </form>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
         </div>
