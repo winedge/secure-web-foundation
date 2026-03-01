@@ -39,8 +39,13 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  Sheet, SheetContent, SheetHeader, SheetTitle,
+} from '@/components/ui/sheet';
+import {
   Tabs, TabsContent, TabsList, TabsTrigger,
 } from '@/components/ui/tabs';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -138,23 +143,24 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
 
   return (
     <Tabs defaultValue="details" className="mt-4">
-      <div className="overflow-x-auto -mx-2 px-2">
-        <TabsList className="inline-flex w-auto min-w-full sm:w-full h-auto flex-wrap sm:flex-nowrap gap-1">
-          <TabsTrigger value="details" className="text-xs sm:text-sm">Details</TabsTrigger>
-          <TabsTrigger value="background" className="text-xs sm:text-sm gap-1"><Fingerprint className="h-3 w-3 sm:h-4 sm:w-4" />Background</TabsTrigger>
-          <TabsTrigger value="ai-score" className="text-xs sm:text-sm gap-1"><Brain className="h-3 w-3 sm:h-4 sm:w-4" />AI Score</TabsTrigger>
-          <TabsTrigger value="case-eval" className="text-xs sm:text-sm gap-1"><Scale className="h-3 w-3 sm:h-4 sm:w-4" />Case Eval</TabsTrigger>
-          <TabsTrigger value="settlement" className="text-xs sm:text-sm gap-1"><Gavel className="h-3 w-3 sm:h-4 sm:w-4" />Settlement</TabsTrigger>
-          <TabsTrigger value="documents" className="text-xs sm:text-sm gap-1"><Upload className="h-3 w-3 sm:h-4 sm:w-4" />Docs</TabsTrigger>
-          <TabsTrigger value="medical-records" className="text-xs sm:text-sm gap-1"><FileText className="h-3 w-3 sm:h-4 sm:w-4" />Medical</TabsTrigger>
-          <TabsTrigger value="war-room" className="text-xs sm:text-sm gap-1"><Users className="h-3 w-3 sm:h-4 sm:w-4" />War Room</TabsTrigger>
-          {canViewSessionLogs && <TabsTrigger value="session" className="text-xs sm:text-sm gap-1"><Video className="h-3 w-3 sm:h-4 sm:w-4" />Session</TabsTrigger>}
-          <TabsTrigger value="journey" className="text-xs sm:text-sm gap-1"><Clock className="h-3 w-3 sm:h-4 sm:w-4" />Journey</TabsTrigger>
-          <TabsTrigger value="notes" className="text-xs sm:text-sm gap-1"><FileText className="h-3 w-3 sm:h-4 sm:w-4" />Notes</TabsTrigger>
-          <TabsTrigger value="esign" className="text-xs sm:text-sm gap-1"><PenTool className="h-3 w-3 sm:h-4 sm:w-4" />E-Sign</TabsTrigger>
-          <TabsTrigger value="activity" className="text-xs sm:text-sm gap-1"><Clock className="h-3 w-3 sm:h-4 sm:w-4" />Activity Log</TabsTrigger>
+      <ScrollArea className="w-full">
+        <TabsList className="inline-flex w-max h-auto gap-1 p-1">
+          <TabsTrigger value="details" className="text-xs whitespace-nowrap">Details</TabsTrigger>
+          <TabsTrigger value="background" className="text-xs whitespace-nowrap gap-1"><Fingerprint className="h-3.5 w-3.5" />Background</TabsTrigger>
+          <TabsTrigger value="ai-score" className="text-xs whitespace-nowrap gap-1"><Brain className="h-3.5 w-3.5" />AI Score</TabsTrigger>
+          <TabsTrigger value="case-eval" className="text-xs whitespace-nowrap gap-1"><Scale className="h-3.5 w-3.5" />Case Eval</TabsTrigger>
+          <TabsTrigger value="settlement" className="text-xs whitespace-nowrap gap-1"><Gavel className="h-3.5 w-3.5" />Settlement</TabsTrigger>
+          <TabsTrigger value="documents" className="text-xs whitespace-nowrap gap-1"><Upload className="h-3.5 w-3.5" />Docs</TabsTrigger>
+          <TabsTrigger value="medical-records" className="text-xs whitespace-nowrap gap-1"><FileText className="h-3.5 w-3.5" />Medical</TabsTrigger>
+          <TabsTrigger value="war-room" className="text-xs whitespace-nowrap gap-1"><Users className="h-3.5 w-3.5" />War Room</TabsTrigger>
+          {canViewSessionLogs && <TabsTrigger value="session" className="text-xs whitespace-nowrap gap-1"><Video className="h-3.5 w-3.5" />Session</TabsTrigger>}
+          <TabsTrigger value="journey" className="text-xs whitespace-nowrap gap-1"><Clock className="h-3.5 w-3.5" />Journey</TabsTrigger>
+          <TabsTrigger value="notes" className="text-xs whitespace-nowrap gap-1"><FileText className="h-3.5 w-3.5" />Notes</TabsTrigger>
+          <TabsTrigger value="esign" className="text-xs whitespace-nowrap gap-1"><PenTool className="h-3.5 w-3.5" />E-Sign</TabsTrigger>
+          <TabsTrigger value="activity" className="text-xs whitespace-nowrap gap-1"><Clock className="h-3.5 w-3.5" />Activity</TabsTrigger>
         </TabsList>
-      </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
 
       <TabsContent value="details" className="mt-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -312,6 +318,7 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
 }
 
 export default function MyLeads() {
+  const isMobile = useIsMobile();
   const { data: leads, isLoading } = usePurchasedLeads();
   const { data: sourcesMap } = useLeadSources();
   const updateStage = useUpdatePipelineStage();
@@ -478,24 +485,42 @@ export default function MyLeads() {
           </CardContent>
         </Card>
 
-        {/* Lead Detail Dialog */}
-        <Dialog open={!!detailLead} onOpenChange={(open) => !open && setDetailLeadId(null)}>
-          {detailLead && (
-            <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  {detailLead.first_name} {detailLead.last_name}
-                  <Badge variant="outline" className="ml-auto text-xs">
-                    {stageLabels[(detailLead.purchaseInfo?.pipeline_stage as string) || 'new_lead'] || 'New Lead'}
-                  </Badge>
-                </DialogTitle>
-              </DialogHeader>
-
-              <LeadDetailWithPermissions detailLead={detailLead} />
-            </DialogContent>
-          )}
-        </Dialog>
+        {/* Lead Detail - Sheet on mobile, Dialog on desktop */}
+        {isMobile ? (
+          <Sheet open={!!detailLead} onOpenChange={(open) => !open && setDetailLeadId(null)}>
+            {detailLead && (
+              <SheetContent side="bottom" className="h-[95vh] overflow-y-auto rounded-t-2xl px-4 pt-6 pb-8">
+                <SheetHeader className="pb-2">
+                  <SheetTitle className="flex items-center gap-2 text-left">
+                    <User className="h-5 w-5 shrink-0" />
+                    <span className="truncate">{detailLead.first_name} {detailLead.last_name}</span>
+                    <Badge variant="outline" className="ml-auto text-xs shrink-0">
+                      {stageLabels[(detailLead.purchaseInfo?.pipeline_stage as string) || 'new_lead'] || 'New Lead'}
+                    </Badge>
+                  </SheetTitle>
+                </SheetHeader>
+                <LeadDetailWithPermissions detailLead={detailLead} />
+              </SheetContent>
+            )}
+          </Sheet>
+        ) : (
+          <Dialog open={!!detailLead} onOpenChange={(open) => !open && setDetailLeadId(null)}>
+            {detailLead && (
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5 shrink-0" />
+                    <span className="truncate">{detailLead.first_name} {detailLead.last_name}</span>
+                    <Badge variant="outline" className="ml-auto text-xs shrink-0">
+                      {stageLabels[(detailLead.purchaseInfo?.pipeline_stage as string) || 'new_lead'] || 'New Lead'}
+                    </Badge>
+                  </DialogTitle>
+                </DialogHeader>
+                <LeadDetailWithPermissions detailLead={detailLead} />
+              </DialogContent>
+            )}
+          </Dialog>
+        )}
       </div>
     </DashboardLayout>
   );
