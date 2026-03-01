@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/lib/utils';
+import { useFirm } from '@/hooks/use-firm';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -17,7 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { 
   ChevronDown, ChevronRight, PhoneCall, FileText, Scale, Eye,
-  ArrowLeft, Globe, Facebook, Search as SearchIcon, Trash2, Store, DollarSign, Lock,
+  ArrowLeft, Globe, Facebook, Search as SearchIcon, Trash2, Store, DollarSign, Lock, Wallet, CheckCircle,
 } from 'lucide-react';
 import { PipelineStage } from './PipelineStageCards';
 import { getStageTransitionFee } from '@/hooks/use-pipeline-charges';
@@ -89,6 +90,8 @@ function getPrevAction(currentStage: PipelineStage): { stage: PipelineStage; lab
 
 export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsByTort, onMoveStage, onViewDetails, onDump, onPostToMarketplace, isMoving, isPosting }: LeadPipelineTableProps) {
   const isPiiRestricted = stage === 'new_lead';
+  const { data: firm } = useFirm();
+  const walletBalance = firm?.wallet_balance ?? 0;
   const [postDialogLead, setPostDialogLead] = useState<PurchasedLead | null>(null);
   const [listPrice, setListPrice] = useState('');
   const [confirmDialog, setConfirmDialog] = useState<{ lead: PurchasedLead; nextStage: PipelineStage; fee: number; label: string } | null>(null);
@@ -161,15 +164,16 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsB
                 <div className="overflow-x-auto border border-t-0 rounded-b-lg">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-muted/30">
-                        <TableHead className="w-12">No.</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead>State</TableHead>
-                        <TableHead>Source</TableHead>
-                        <TableHead>AI Lead Score</TableHead>
-                        <TableHead>Avg. Price/lead</TableHead>
-                        <TableHead className="text-right">Action</TableHead>
-                      </TableRow>
+                     <TableRow className="bg-muted/30">
+                         <TableHead className="w-12">No.</TableHead>
+                         <TableHead>Name</TableHead>
+                         <TableHead>State</TableHead>
+                         <TableHead>Source</TableHead>
+                         <TableHead>AI Lead Score</TableHead>
+                         <TableHead>Cost/Lead</TableHead>
+                         <TableHead>ROI</TableHead>
+                         <TableHead className="text-right">Action</TableHead>
+                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {tortLeads.map((lead, idx) => {
@@ -204,6 +208,20 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsB
                               <span className="font-semibold">{lead.ai_quality_score || 'N/A'}</span>
                             </TableCell>
                             <TableCell className="font-medium">{formatCurrency(Number(lead.price))}</TableCell>
+                            <TableCell>
+                              {(() => {
+                                const cost = Number(lead.purchaseInfo?.amount || lead.price || 0);
+                                const score = lead.ai_quality_score || 0;
+                                // Estimated value based on score: higher score = higher potential ROI
+                                const estimatedValue = score > 0 ? (score / 100) * 5000 : 0;
+                                const roi = cost > 0 && estimatedValue > 0 ? ((estimatedValue - cost) / cost * 100).toFixed(0) : 'N/A';
+                                return (
+                                  <span className={`text-xs font-semibold ${typeof roi === 'string' && roi !== 'N/A' && Number(roi) > 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                                    {roi === 'N/A' ? roi : `${roi}%`}
+                                  </span>
+                                );
+                              })()}
+                            </TableCell>
                             <TableCell>
                               <div className="flex justify-end gap-1 flex-wrap">
                                 <TooltipProvider>
@@ -313,14 +331,28 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsB
                   <span className="text-sm text-muted-foreground">State</span>
                   <span className="text-sm">{confirmDialog.lead.state}</span>
                 </div>
-                <div className="border-t pt-3 mt-3">
+                <div className="border-t pt-3 mt-3 space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="font-semibold">Fee Amount</span>
                     <span className="text-lg font-bold text-primary">${confirmDialog.fee.toFixed(2)}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    This amount will be deducted from your firm's wallet balance. If insufficient funds, you'll be redirected to add funds via Stripe.
-                  </p>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground flex items-center gap-1"><Wallet className="h-3.5 w-3.5" />Wallet Balance</span>
+                    <span className={`font-medium ${walletBalance >= confirmDialog.fee ? 'text-green-600' : 'text-destructive'}`}>
+                      {formatCurrency(walletBalance)}
+                    </span>
+                  </div>
+                  {walletBalance >= confirmDialog.fee ? (
+                    <div className="flex items-center gap-1.5 text-xs text-green-600 bg-green-500/10 rounded p-2">
+                      <CheckCircle className="h-3.5 w-3.5" />
+                      Sufficient balance - fee will be deducted from your wallet.
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-500/10 rounded p-2">
+                      <DollarSign className="h-3.5 w-3.5" />
+                      Insufficient balance - you'll be redirected to add funds via Stripe.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

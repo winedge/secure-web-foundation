@@ -159,17 +159,30 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
       <TabsContent value="details" className="mt-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {canViewContact ? (
-            <div className="space-y-4">
-              <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Contact Information</h4>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /><span>{detailLead.email}</span></div>
-                <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /><span>{detailLead.phone}</span></div>
-                <div className="flex items-start gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <div><p>{detailLead.address}</p><p>{detailLead.city}, {detailLead.state} {detailLead.zip_code}</p></div>
+            (() => {
+              const isPiiLocked = (detailLead.purchaseInfo?.pipeline_stage || 'new_lead') === 'new_lead';
+              return (
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Contact Information</h4>
+                  {isPiiLocked ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-muted-foreground"><Lock className="h-4 w-4" /><span>Contact details are locked until Call Verification is completed.</span></div>
+                      <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">{detailLead.email ? detailLead.email.replace(/(.{2}).*(@.*)/, '$1****$2') : 'N/A'}</span></div>
+                      <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">{detailLead.phone ? detailLead.phone.replace(/(\d{3})\d{4}(\d{3,4})/, '$1****$2') : 'N/A'}</span></div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /><span>{detailLead.email}</span></div>
+                      <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /><span>{detailLead.phone}</span></div>
+                      <div className="flex items-start gap-2">
+                        <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                        <div><p>{detailLead.address}</p><p>{detailLead.city}, {detailLead.state} {detailLead.zip_code}</p></div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
+              );
+            })()
           ) : (
             <div className="space-y-4">
               <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Contact Information</h4>
@@ -473,6 +486,9 @@ export default function MyLeads() {
                 <DialogTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
                   {detailLead.first_name} {detailLead.last_name}
+                  <Badge variant="outline" className="ml-auto text-xs">
+                    {stageLabels[(detailLead.purchaseInfo?.pipeline_stage as string) || 'new_lead'] || 'New Lead'}
+                  </Badge>
                 </DialogTitle>
               </DialogHeader>
 
