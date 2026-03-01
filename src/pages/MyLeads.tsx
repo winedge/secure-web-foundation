@@ -48,6 +48,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { usePiiMasking } from '@/hooks/use-pii-masking';
 
 function LeadNotesPanel({ leadId }: { leadId: string }) {
   const { data: notes, isLoading } = useLeadNotes(leadId);
@@ -133,7 +134,7 @@ function PermissionRestricted({ fallbackMessage }: { fallbackMessage?: string })
   );
 }
 
-const isLeadPiiLocked = (lead: any) => (lead?.purchaseInfo?.pipeline_stage || 'new_lead') === 'new_lead';
+const isLeadPiiLocked = (lead: any, piiEnabled: boolean) => piiEnabled && (lead?.purchaseInfo?.pipeline_stage || 'new_lead') === 'new_lead';
 
 const maskNamePart = (name?: string | null) => {
   if (!name) return '****';
@@ -160,20 +161,21 @@ const maskLeadPhone = (phone?: string | null) => {
 
 const getMaskedLeadName = (lead: any) => `${maskNamePart(lead?.first_name)} ${maskNamePart(lead?.last_name)}`.trim();
 
-const getDisplayLeadName = (lead: any) => {
+const getDisplayLeadName = (lead: any, piiEnabled: boolean) => {
   const fullName = `${lead?.first_name || ''} ${lead?.last_name || ''}`.trim();
-  return isLeadPiiLocked(lead) ? getMaskedLeadName(lead) : (fullName || 'Lead');
+  return isLeadPiiLocked(lead, piiEnabled) ? getMaskedLeadName(lead) : (fullName || 'Lead');
 };
 
 function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
   const { hasPermission } = useTeamPermissions();
+  const { isPiiMaskingEnabled } = usePiiMasking();
   const canViewContact = hasPermission('view_lead_contact_info');
   const canViewCase = hasPermission('view_lead_case_details');
   const canViewFinancials = hasPermission('view_lead_financials');
   const canViewSessionLogs = hasPermission('view_session_logs');
   const canViewRecordings = hasPermission('view_session_recordings');
-  const isPiiLocked = isLeadPiiLocked(detailLead);
-  const displayLeadName = getDisplayLeadName(detailLead);
+  const isPiiLocked = isLeadPiiLocked(detailLead, isPiiMaskingEnabled);
+  const displayLeadName = getDisplayLeadName(detailLead, isPiiMaskingEnabled);
 
   return (
     <Tabs defaultValue="details" className="mt-4">
@@ -385,6 +387,7 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
 
 export default function MyLeads() {
   const isMobile = useIsMobile();
+  const { isPiiMaskingEnabled } = usePiiMasking();
   const { data: leads, isLoading } = usePurchasedLeads();
   const { data: sourcesMap } = useLeadSources();
   const updateStage = useUpdatePipelineStage();
@@ -437,7 +440,7 @@ export default function MyLeads() {
   }) || [];
 
   const detailLead = leads?.find((l) => l.id === detailLeadId);
-  const detailLeadDisplayName = detailLead ? getDisplayLeadName(detailLead) : 'Lead';
+  const detailLeadDisplayName = detailLead ? getDisplayLeadName(detailLead, isPiiMaskingEnabled) : 'Lead';
 
   const stageLabels: Record<string, string> = {
     new_lead: 'New Lead',
