@@ -143,24 +143,46 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
 
   return (
     <Tabs defaultValue="details" className="mt-4">
-      <ScrollArea className="w-full">
-        <TabsList className="inline-flex w-max h-auto gap-1 p-1">
-          <TabsTrigger value="details" className="text-xs whitespace-nowrap">Details</TabsTrigger>
-          <TabsTrigger value="background" className="text-xs whitespace-nowrap gap-1"><Fingerprint className="h-3.5 w-3.5" />Background</TabsTrigger>
-          <TabsTrigger value="ai-score" className="text-xs whitespace-nowrap gap-1"><Brain className="h-3.5 w-3.5" />AI Score</TabsTrigger>
-          <TabsTrigger value="case-eval" className="text-xs whitespace-nowrap gap-1"><Scale className="h-3.5 w-3.5" />Case Eval</TabsTrigger>
-          <TabsTrigger value="settlement" className="text-xs whitespace-nowrap gap-1"><Gavel className="h-3.5 w-3.5" />Settlement</TabsTrigger>
-          <TabsTrigger value="documents" className="text-xs whitespace-nowrap gap-1"><Upload className="h-3.5 w-3.5" />Docs</TabsTrigger>
-          <TabsTrigger value="medical-records" className="text-xs whitespace-nowrap gap-1"><FileText className="h-3.5 w-3.5" />Medical</TabsTrigger>
-          <TabsTrigger value="war-room" className="text-xs whitespace-nowrap gap-1"><Users className="h-3.5 w-3.5" />War Room</TabsTrigger>
-          {canViewSessionLogs && <TabsTrigger value="session" className="text-xs whitespace-nowrap gap-1"><Video className="h-3.5 w-3.5" />Session</TabsTrigger>}
-          <TabsTrigger value="journey" className="text-xs whitespace-nowrap gap-1"><Clock className="h-3.5 w-3.5" />Journey</TabsTrigger>
-          <TabsTrigger value="notes" className="text-xs whitespace-nowrap gap-1"><FileText className="h-3.5 w-3.5" />Notes</TabsTrigger>
-          <TabsTrigger value="esign" className="text-xs whitespace-nowrap gap-1"><PenTool className="h-3.5 w-3.5" />E-Sign</TabsTrigger>
-          <TabsTrigger value="activity" className="text-xs whitespace-nowrap gap-1"><Clock className="h-3.5 w-3.5" />Activity</TabsTrigger>
+      {/* Mobile: horizontal scroll tabs */}
+      <div className="md:hidden">
+        <ScrollArea className="w-full">
+          <TabsList className="inline-flex w-max h-auto gap-1 p-1">
+            <TabsTrigger value="details" className="text-xs whitespace-nowrap">Details</TabsTrigger>
+            <TabsTrigger value="background" className="text-xs whitespace-nowrap gap-1"><Fingerprint className="h-3.5 w-3.5" />Background</TabsTrigger>
+            <TabsTrigger value="ai-score" className="text-xs whitespace-nowrap gap-1"><Brain className="h-3.5 w-3.5" />AI</TabsTrigger>
+            <TabsTrigger value="case-eval" className="text-xs whitespace-nowrap gap-1"><Scale className="h-3.5 w-3.5" />Case</TabsTrigger>
+            <TabsTrigger value="settlement" className="text-xs whitespace-nowrap gap-1"><Gavel className="h-3.5 w-3.5" />Settlement</TabsTrigger>
+            <TabsTrigger value="documents" className="text-xs whitespace-nowrap gap-1"><Upload className="h-3.5 w-3.5" />Docs</TabsTrigger>
+            <TabsTrigger value="medical-records" className="text-xs whitespace-nowrap gap-1"><FileText className="h-3.5 w-3.5" />Medical</TabsTrigger>
+            <TabsTrigger value="war-room" className="text-xs whitespace-nowrap gap-1"><Users className="h-3.5 w-3.5" />War Room</TabsTrigger>
+            {canViewSessionLogs && <TabsTrigger value="session" className="text-xs whitespace-nowrap gap-1"><Video className="h-3.5 w-3.5" />Session</TabsTrigger>}
+            <TabsTrigger value="journey" className="text-xs whitespace-nowrap gap-1"><Clock className="h-3.5 w-3.5" />Journey</TabsTrigger>
+            <TabsTrigger value="notes" className="text-xs whitespace-nowrap gap-1"><FileText className="h-3.5 w-3.5" />Notes</TabsTrigger>
+            <TabsTrigger value="esign" className="text-xs whitespace-nowrap gap-1"><PenTool className="h-3.5 w-3.5" />E-Sign</TabsTrigger>
+            <TabsTrigger value="activity" className="text-xs whitespace-nowrap gap-1"><Clock className="h-3.5 w-3.5" />Activity</TabsTrigger>
+          </TabsList>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+      </div>
+
+      {/* Desktop: grid layout tabs */}
+      <div className="hidden md:block">
+        <TabsList className="grid grid-cols-7 h-auto gap-1 p-1">
+          <TabsTrigger value="details" className="text-xs gap-1"><User className="h-3.5 w-3.5" />Details</TabsTrigger>
+          <TabsTrigger value="background" className="text-xs gap-1"><Fingerprint className="h-3.5 w-3.5" />Background</TabsTrigger>
+          <TabsTrigger value="ai-score" className="text-xs gap-1"><Brain className="h-3.5 w-3.5" />AI Score</TabsTrigger>
+          <TabsTrigger value="case-eval" className="text-xs gap-1"><Scale className="h-3.5 w-3.5" />Case Eval</TabsTrigger>
+          <TabsTrigger value="settlement" className="text-xs gap-1"><Gavel className="h-3.5 w-3.5" />Settlement</TabsTrigger>
+          <TabsTrigger value="documents" className="text-xs gap-1"><Upload className="h-3.5 w-3.5" />Docs</TabsTrigger>
+          <TabsTrigger value="medical-records" className="text-xs gap-1"><FileText className="h-3.5 w-3.5" />Medical</TabsTrigger>
+          <TabsTrigger value="war-room" className="text-xs gap-1"><Users className="h-3.5 w-3.5" />War Room</TabsTrigger>
+          {canViewSessionLogs && <TabsTrigger value="session" className="text-xs gap-1"><Video className="h-3.5 w-3.5" />Session</TabsTrigger>}
+          <TabsTrigger value="journey" className="text-xs gap-1"><Clock className="h-3.5 w-3.5" />Journey</TabsTrigger>
+          <TabsTrigger value="notes" className="text-xs gap-1"><FileText className="h-3.5 w-3.5" />Notes</TabsTrigger>
+          <TabsTrigger value="esign" className="text-xs gap-1"><PenTool className="h-3.5 w-3.5" />E-Sign</TabsTrigger>
+          <TabsTrigger value="activity" className="text-xs gap-1"><Clock className="h-3.5 w-3.5" />Activity</TabsTrigger>
         </TabsList>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+      </div>
 
       <TabsContent value="details" className="mt-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
