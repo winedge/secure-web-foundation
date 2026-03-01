@@ -926,35 +926,93 @@ function AiConfiguration() {
 }
 
 function SecurityConfig() {
+  const { data: piiSetting } = useAdminSetting('pii_masking_enabled');
+  const upsert = useUpsertAdminSetting();
+  const { toast } = useToast();
+
+  const isPiiMaskingEnabled = piiSetting?.value?.enabled === true;
+
+  const handleTogglePiiMasking = async (enabled: boolean) => {
+    await upsert.mutateAsync({
+      key: 'pii_masking_enabled',
+      value: { enabled },
+      description: 'When enabled, PII (name, email, phone, address) is masked for leads in the New Lead pipeline stage until Call Verification is completed.',
+    });
+    toast({
+      title: enabled ? 'PII Masking Enabled' : 'PII Masking Disabled',
+      description: enabled
+        ? 'Contact details will be masked for new leads until Call Verification.'
+        : 'All contact details will be visible regardless of pipeline stage.',
+    });
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Security & Compliance</CardTitle>
-        <CardDescription>Data handling and privacy settings</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <Label>Encrypt Access Tokens</Label>
-            <p className="text-sm text-muted-foreground">Encrypt OAuth tokens at rest (recommended)</p>
+    <div className="space-y-6">
+      {/* PII Masking */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Eye className="h-5 w-5" />
+            PII Masking
+          </CardTitle>
+          <CardDescription>
+            Control whether personally identifiable information is hidden for leads before verification.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+            <div>
+              <Label className="text-base">Mask PII for New Leads</Label>
+              <p className="text-sm text-muted-foreground mt-1">
+                When enabled, contact details (name, email, phone, address) are masked with asterisks for leads in the{' '}
+                <Badge variant="outline" className="mx-1">New Lead</Badge> stage. Full details are revealed after{' '}
+                <Badge variant="outline" className="mx-1">Call Verification</Badge>.
+              </p>
+            </div>
+            <Switch
+              checked={isPiiMaskingEnabled}
+              onCheckedChange={handleTogglePiiMasking}
+              disabled={upsert.isPending}
+            />
           </div>
-          <Switch defaultChecked />
-        </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <Label>Auto-Revoke Expired Tokens</Label>
-            <p className="text-sm text-muted-foreground">Automatically revoke tokens past expiration</p>
+          <div className={`p-3 rounded-lg text-sm ${isPiiMaskingEnabled ? 'bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400' : 'bg-accent/10 border border-accent/20 text-accent'}`}>
+            {isPiiMaskingEnabled
+              ? '🔒 PII Masking is ON — Names, emails, phones, and addresses are hidden until Call Verification.'
+              : '🔓 PII Masking is OFF — All contact details are visible at every pipeline stage.'}
           </div>
-          <Switch defaultChecked />
-        </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <Label>Audit All API Calls</Label>
-            <p className="text-sm text-muted-foreground">Log all external API calls for compliance</p>
+        </CardContent>
+      </Card>
+
+      {/* Other Security Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Security & Compliance</CardTitle>
+          <CardDescription>Data handling and privacy settings</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Encrypt Access Tokens</Label>
+              <p className="text-sm text-muted-foreground">Encrypt OAuth tokens at rest (recommended)</p>
+            </div>
+            <Switch defaultChecked />
           </div>
-          <Switch defaultChecked />
-        </div>
-      </CardContent>
-    </Card>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Auto-Revoke Expired Tokens</Label>
+              <p className="text-sm text-muted-foreground">Automatically revoke tokens past expiration</p>
+            </div>
+            <Switch defaultChecked />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Audit All API Calls</Label>
+              <p className="text-sm text-muted-foreground">Log all external API calls for compliance</p>
+            </div>
+            <Switch defaultChecked />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
