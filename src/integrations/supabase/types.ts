@@ -2192,6 +2192,42 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_activity_logs: {
+        Row: {
+          activity_type: string
+          created_at: string
+          description: string | null
+          firm_id: string
+          id: string
+          lead_id: string
+          metadata: Json | null
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          description?: string | null
+          firm_id: string
+          id?: string
+          lead_id: string
+          metadata?: Json | null
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          description?: string | null
+          firm_id?: string
+          id?: string
+          lead_id?: string
+          metadata?: Json | null
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       lead_purchases: {
         Row: {
           amount: number
