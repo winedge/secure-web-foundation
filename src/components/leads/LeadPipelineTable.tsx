@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { PipelineStage } from './PipelineStageCards';
 import { getStageTransitionFee } from '@/hooks/use-pipeline-charges';
+import { usePiiMasking } from '@/hooks/use-pii-masking';
 
 interface PurchasedLead {
   id: string;
@@ -89,7 +90,8 @@ function getPrevAction(currentStage: PipelineStage): { stage: PipelineStage; lab
 }
 
 export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsByTort, onMoveStage, onViewDetails, onDump, onPostToMarketplace, isMoving, isPosting }: LeadPipelineTableProps) {
-  const isPiiRestricted = stage === 'new_lead';
+  const { isPiiMaskingEnabled } = usePiiMasking();
+  const isPiiRestricted = isPiiMaskingEnabled && stage === 'new_lead';
   const { data: firm } = useFirm();
   const walletBalance = firm?.wallet_balance ?? 0;
   const [postDialogLead, setPostDialogLead] = useState<PurchasedLead | null>(null);
