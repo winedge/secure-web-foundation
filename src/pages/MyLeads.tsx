@@ -189,17 +189,40 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
           {canViewContact ? (
             (() => {
               const isPiiLocked = (detailLead.purchaseInfo?.pipeline_stage || 'new_lead') === 'new_lead';
+              const maskEmail = (email: string) => {
+                const [local, domain] = email.split('@');
+                const maskedLocal = local.length > 1 ? local[0] + '****' : '****';
+                const domainParts = domain?.split('.') || [];
+                const maskedDomain = domainParts.length > 1
+                  ? domainParts[0][0] + '****.' + domainParts.slice(1).join('.')
+                  : '****';
+                return `${maskedLocal}@${maskedDomain}`;
+              };
+              const maskPhone = (phone: string) => {
+                const digits = phone.replace(/\D/g, '');
+                if (digits.length <= 4) return '****';
+                return digits.slice(0, 2) + '*'.repeat(digits.length - 4) + digits.slice(-2);
+              };
+              const maskName = (name: string) => {
+                if (!name) return '****';
+                return name[0] + '*'.repeat(Math.max(name.length - 1, 3));
+              };
               return (
                 <div className="space-y-4">
                   <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Contact Information</h4>
                   {isPiiLocked ? (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-muted-foreground"><Lock className="h-4 w-4" /><span>Contact details are locked until Call Verification is completed.</span></div>
-                      <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">{detailLead.email ? detailLead.email.replace(/(.{2}).*(@.*)/, '$1****$2') : 'N/A'}</span></div>
-                      <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">{detailLead.phone ? detailLead.phone.replace(/(\d{3})\d{4}(\d{3,4})/, '$1****$2') : 'N/A'}</span></div>
+                      <div className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">{maskName(detailLead.first_name || '')} {maskName(detailLead.last_name || '')}</span></div>
+                      <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">{detailLead.email ? maskEmail(detailLead.email) : 'N/A'}</span></div>
+                      <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">{detailLead.phone ? maskPhone(detailLead.phone) : 'N/A'}</span></div>
+                      {detailLead.address && (
+                        <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">****, {detailLead.state || '**'}</span></div>
+                      )}
                     </div>
                   ) : (
                     <div className="space-y-2">
+                      <div className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /><span>{detailLead.first_name} {detailLead.last_name}</span></div>
                       <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /><span>{detailLead.email}</span></div>
                       <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /><span>{detailLead.phone}</span></div>
                       <div className="flex items-start gap-2">
