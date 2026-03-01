@@ -192,7 +192,6 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
             <TabsTrigger value="medical-records" className="text-xs whitespace-nowrap gap-1"><FileText className="h-3.5 w-3.5" />Medical</TabsTrigger>
             <TabsTrigger value="war-room" className="text-xs whitespace-nowrap gap-1"><Users className="h-3.5 w-3.5" />War Room</TabsTrigger>
             {canViewSessionLogs && <TabsTrigger value="session" className="text-xs whitespace-nowrap gap-1"><Video className="h-3.5 w-3.5" />Session</TabsTrigger>}
-            <TabsTrigger value="journey" className="text-xs whitespace-nowrap gap-1"><Clock className="h-3.5 w-3.5" />Journey</TabsTrigger>
             <TabsTrigger value="notes" className="text-xs whitespace-nowrap gap-1"><FileText className="h-3.5 w-3.5" />Notes</TabsTrigger>
             <TabsTrigger value="esign" className="text-xs whitespace-nowrap gap-1"><PenTool className="h-3.5 w-3.5" />E-Sign</TabsTrigger>
             <TabsTrigger value="activity" className="text-xs whitespace-nowrap gap-1"><Clock className="h-3.5 w-3.5" />Activity</TabsTrigger>
@@ -213,7 +212,6 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
           <TabsTrigger value="medical-records" className="text-xs gap-1"><FileText className="h-3.5 w-3.5" />Medical</TabsTrigger>
           <TabsTrigger value="war-room" className="text-xs gap-1"><Users className="h-3.5 w-3.5" />War Room</TabsTrigger>
           {canViewSessionLogs && <TabsTrigger value="session" className="text-xs gap-1"><Video className="h-3.5 w-3.5" />Session</TabsTrigger>}
-          <TabsTrigger value="journey" className="text-xs gap-1"><Clock className="h-3.5 w-3.5" />Journey</TabsTrigger>
           <TabsTrigger value="notes" className="text-xs gap-1"><FileText className="h-3.5 w-3.5" />Notes</TabsTrigger>
           <TabsTrigger value="esign" className="text-xs gap-1"><PenTool className="h-3.5 w-3.5" />E-Sign</TabsTrigger>
           <TabsTrigger value="activity" className="text-xs gap-1"><Clock className="h-3.5 w-3.5" />Activity</TabsTrigger>
@@ -366,9 +364,8 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
         </TabsContent>
       )}
 
-      <TabsContent value="journey" className="mt-4">
-        <ContactJourneyTimeline leadId={detailLead.id} />
-      </TabsContent>
+
+
 
       <TabsContent value="notes" className="mt-4">
         <LeadNotesPanel leadId={detailLead.id} />
