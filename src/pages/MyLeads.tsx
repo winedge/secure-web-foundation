@@ -133,6 +133,38 @@ function PermissionRestricted({ fallbackMessage }: { fallbackMessage?: string })
   );
 }
 
+const isLeadPiiLocked = (lead: any) => (lead?.purchaseInfo?.pipeline_stage || 'new_lead') === 'new_lead';
+
+const maskNamePart = (name?: string | null) => {
+  if (!name) return '****';
+  return `${name[0]}${'*'.repeat(Math.max(name.length - 1, 3))}`;
+};
+
+const maskLeadEmail = (email?: string | null) => {
+  if (!email) return 'N/A';
+  const [local, domain] = email.split('@');
+  const maskedLocal = local?.length > 0 ? `${local[0]}****` : '****';
+  const domainParts = domain?.split('.') || [];
+  const maskedDomain = domainParts.length > 1
+    ? `${domainParts[0][0] || '*'}****.${domainParts.slice(1).join('.')}`
+    : '****';
+  return `${maskedLocal}@${maskedDomain}`;
+};
+
+const maskLeadPhone = (phone?: string | null) => {
+  if (!phone) return 'N/A';
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length <= 4) return '****';
+  return `${digits.slice(0, 2)}${'*'.repeat(digits.length - 4)}${digits.slice(-2)}`;
+};
+
+const getMaskedLeadName = (lead: any) => `${maskNamePart(lead?.first_name)} ${maskNamePart(lead?.last_name)}`.trim();
+
+const getDisplayLeadName = (lead: any) => {
+  const fullName = `${lead?.first_name || ''} ${lead?.last_name || ''}`.trim();
+  return isLeadPiiLocked(lead) ? getMaskedLeadName(lead) : (fullName || 'Lead');
+};
+
 function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
   const { hasPermission } = useTeamPermissions();
   const canViewContact = hasPermission('view_lead_contact_info');
@@ -140,6 +172,8 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
   const canViewFinancials = hasPermission('view_lead_financials');
   const canViewSessionLogs = hasPermission('view_session_logs');
   const canViewRecordings = hasPermission('view_session_recordings');
+  const isPiiLocked = isLeadPiiLocked(detailLead);
+  const displayLeadName = getDisplayLeadName(detailLead);
 
   return (
     <Tabs defaultValue="details" className="mt-4">
@@ -148,7 +182,7 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
         <ScrollArea className="w-full">
           <TabsList className="inline-flex w-max h-auto gap-1 p-1">
             <TabsTrigger value="details" className="text-xs whitespace-nowrap">Details</TabsTrigger>
-            <TabsTrigger value="background" className="text-xs whitespace-nowrap gap-1"><Fingerprint className="h-3.5 w-3.5" />Background</TabsTrigger>
+            <TabsTrigger value="background" disabled={isPiiLocked} className="text-xs whitespace-nowrap gap-1"><Fingerprint className="h-3.5 w-3.5" />Background</TabsTrigger>
             <TabsTrigger value="ai-score" className="text-xs whitespace-nowrap gap-1"><Brain className="h-3.5 w-3.5" />AI</TabsTrigger>
             <TabsTrigger value="case-eval" className="text-xs whitespace-nowrap gap-1"><Scale className="h-3.5 w-3.5" />Case</TabsTrigger>
             <TabsTrigger value="settlement" className="text-xs whitespace-nowrap gap-1"><Gavel className="h-3.5 w-3.5" />Settlement</TabsTrigger>
@@ -169,7 +203,7 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
       <div className="hidden md:block">
         <TabsList className="grid grid-cols-7 h-auto gap-1 p-1">
           <TabsTrigger value="details" className="text-xs gap-1"><User className="h-3.5 w-3.5" />Details</TabsTrigger>
-          <TabsTrigger value="background" className="text-xs gap-1"><Fingerprint className="h-3.5 w-3.5" />Background</TabsTrigger>
+          <TabsTrigger value="background" disabled={isPiiLocked} className="text-xs gap-1"><Fingerprint className="h-3.5 w-3.5" />Background</TabsTrigger>
           <TabsTrigger value="ai-score" className="text-xs gap-1"><Brain className="h-3.5 w-3.5" />AI Score</TabsTrigger>
           <TabsTrigger value="case-eval" className="text-xs gap-1"><Scale className="h-3.5 w-3.5" />Case Eval</TabsTrigger>
           <TabsTrigger value="settlement" className="text-xs gap-1"><Gavel className="h-3.5 w-3.5" />Settlement</TabsTrigger>
@@ -187,53 +221,33 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
       <TabsContent value="details" className="mt-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {canViewContact ? (
-            (() => {
-              const isPiiLocked = (detailLead.purchaseInfo?.pipeline_stage || 'new_lead') === 'new_lead';
-              const maskEmail = (email: string) => {
-                const [local, domain] = email.split('@');
-                const maskedLocal = local.length > 1 ? local[0] + '****' : '****';
-                const domainParts = domain?.split('.') || [];
-                const maskedDomain = domainParts.length > 1
-                  ? domainParts[0][0] + '****.' + domainParts.slice(1).join('.')
-                  : '****';
-                return `${maskedLocal}@${maskedDomain}`;
-              };
-              const maskPhone = (phone: string) => {
-                const digits = phone.replace(/\D/g, '');
-                if (digits.length <= 4) return '****';
-                return digits.slice(0, 2) + '*'.repeat(digits.length - 4) + digits.slice(-2);
-              };
-              const maskName = (name: string) => {
-                if (!name) return '****';
-                return name[0] + '*'.repeat(Math.max(name.length - 1, 3));
-              };
-              return (
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Contact Information</h4>
-                  {isPiiLocked ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-muted-foreground"><Lock className="h-4 w-4" /><span>Contact details are locked until Call Verification is completed.</span></div>
-                      <div className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">{maskName(detailLead.first_name || '')} {maskName(detailLead.last_name || '')}</span></div>
-                      <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">{detailLead.email ? maskEmail(detailLead.email) : 'N/A'}</span></div>
-                      <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">{detailLead.phone ? maskPhone(detailLead.phone) : 'N/A'}</span></div>
-                      {detailLead.address && (
-                        <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">****, {detailLead.state || '**'}</span></div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /><span>{detailLead.first_name} {detailLead.last_name}</span></div>
-                      <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /><span>{detailLead.email}</span></div>
-                      <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /><span>{detailLead.phone}</span></div>
-                      <div className="flex items-start gap-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                        <div><p>{detailLead.address}</p><p>{detailLead.city}, {detailLead.state} {detailLead.zip_code}</p></div>
-                      </div>
-                    </div>
+            <div className="space-y-4">
+              <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Contact Information</h4>
+              {isPiiLocked ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-muted-foreground"><Lock className="h-4 w-4" /><span>Contact details are locked until Call Verification is completed.</span></div>
+                  <div className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">{displayLeadName}</span></div>
+                  <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">{maskLeadEmail(detailLead.email)}</span></div>
+                  <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">{maskLeadPhone(detailLead.phone)}</span></div>
+                  {(detailLead.address || detailLead.city || detailLead.zip_code || detailLead.state) && (
+                    <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">****, {detailLead.state || '**'}</span></div>
                   )}
                 </div>
-              );
-            })()
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /><span>{detailLead.first_name} {detailLead.last_name}</span></div>
+                  <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /><span>{detailLead.email || 'N/A'}</span></div>
+                  <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /><span>{detailLead.phone || 'N/A'}</span></div>
+                  <div className="flex items-start gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p>{detailLead.address || 'N/A'}</p>
+                      <p>{detailLead.city || 'N/A'}, {detailLead.state || 'N/A'} {detailLead.zip_code || ''}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <div className="space-y-4">
               <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Contact Information</h4>
@@ -303,11 +317,18 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
       </TabsContent>
 
       <TabsContent value="background" className="mt-4">
-        <BackgroundCheckerPanel
-          leadId={detailLead.id}
-          leadName={`${detailLead.first_name || ''} ${detailLead.last_name || ''}`.trim()}
-          leadState={detailLead.state}
-        />
+        {isPiiLocked ? (
+          <div className="flex items-center gap-2 p-4 rounded-lg bg-muted/50 text-muted-foreground">
+            <Lock className="h-4 w-4" />
+            <span className="text-sm">Background check is locked until Call Verification is completed.</span>
+          </div>
+        ) : (
+          <BackgroundCheckerPanel
+            leadId={detailLead.id}
+            leadName={displayLeadName}
+            leadState={detailLead.state}
+          />
+        )}
       </TabsContent>
 
       <TabsContent value="ai-score" className="mt-4">
@@ -416,6 +437,7 @@ export default function MyLeads() {
   }) || [];
 
   const detailLead = leads?.find((l) => l.id === detailLeadId);
+  const detailLeadDisplayName = detailLead ? getDisplayLeadName(detailLead) : 'Lead';
 
   const stageLabels: Record<string, string> = {
     new_lead: 'New Lead',
@@ -538,11 +560,7 @@ export default function MyLeads() {
                 <SheetHeader className="pb-2">
                   <SheetTitle className="flex items-center gap-2 text-left">
                     <User className="h-5 w-5 shrink-0" />
-                    <span className="truncate">
-                      {((detailLead.purchaseInfo?.pipeline_stage || 'new_lead') === 'new_lead')
-                        ? `${(detailLead.first_name?.[0] || '') + '****'} ${(detailLead.last_name?.[0] || '') + '****'}`
-                        : `${detailLead.first_name} ${detailLead.last_name}`}
-                    </span>
+                    <span className="truncate">{detailLeadDisplayName}</span>
                     <Badge variant="outline" className="ml-auto text-xs shrink-0">
                       {stageLabels[(detailLead.purchaseInfo?.pipeline_stage as string) || 'new_lead'] || 'New Lead'}
                     </Badge>
@@ -559,11 +577,7 @@ export default function MyLeads() {
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <User className="h-5 w-5 shrink-0" />
-                    <span className="truncate">
-                      {((detailLead.purchaseInfo?.pipeline_stage || 'new_lead') === 'new_lead')
-                        ? `${(detailLead.first_name?.[0] || '') + '****'} ${(detailLead.last_name?.[0] || '') + '****'}`
-                        : `${detailLead.first_name} ${detailLead.last_name}`}
-                    </span>
+                    <span className="truncate">{detailLeadDisplayName}</span>
                     <Badge variant="outline" className="ml-auto text-xs shrink-0">
                       {stageLabels[(detailLead.purchaseInfo?.pipeline_stage as string) || 'new_lead'] || 'New Lead'}
                     </Badge>
