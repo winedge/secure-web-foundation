@@ -538,7 +538,11 @@ export default function MyLeads() {
                 <SheetHeader className="pb-2">
                   <SheetTitle className="flex items-center gap-2 text-left">
                     <User className="h-5 w-5 shrink-0" />
-                    <span className="truncate">{detailLead.first_name} {detailLead.last_name}</span>
+                    <span className="truncate">
+                      {((detailLead.purchaseInfo?.pipeline_stage || 'new_lead') === 'new_lead')
+                        ? `${(detailLead.first_name?.[0] || '') + '****'} ${(detailLead.last_name?.[0] || '') + '****'}`
+                        : `${detailLead.first_name} ${detailLead.last_name}`}
+                    </span>
                     <Badge variant="outline" className="ml-auto text-xs shrink-0">
                       {stageLabels[(detailLead.purchaseInfo?.pipeline_stage as string) || 'new_lead'] || 'New Lead'}
                     </Badge>
@@ -555,7 +559,11 @@ export default function MyLeads() {
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <User className="h-5 w-5 shrink-0" />
-                    <span className="truncate">{detailLead.first_name} {detailLead.last_name}</span>
+                    <span className="truncate">
+                      {((detailLead.purchaseInfo?.pipeline_stage || 'new_lead') === 'new_lead')
+                        ? `${(detailLead.first_name?.[0] || '') + '****'} ${(detailLead.last_name?.[0] || '') + '****'}`
+                        : `${detailLead.first_name} ${detailLead.last_name}`}
+                    </span>
                     <Badge variant="outline" className="ml-auto text-xs shrink-0">
                       {stageLabels[(detailLead.purchaseInfo?.pipeline_stage as string) || 'new_lead'] || 'New Lead'}
                     </Badge>
