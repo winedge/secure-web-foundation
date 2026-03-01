@@ -91,6 +91,7 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsB
   const isPiiRestricted = stage === 'new_lead';
   const [postDialogLead, setPostDialogLead] = useState<PurchasedLead | null>(null);
   const [listPrice, setListPrice] = useState('');
+  const [confirmDialog, setConfirmDialog] = useState<{ lead: PurchasedLead; nextStage: PipelineStage; fee: number; label: string } | null>(null);
 
   const grouped = leads.reduce<Record<string, PurchasedLead[]>>((acc, lead) => {
     const key = lead.tort_type || 'Other';
@@ -217,7 +218,13 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsB
                                 </TooltipProvider>
                                 {nextAction && (
                                   <Button variant="outline" size="sm" className="text-xs h-8 gap-1" disabled={isMoving}
-                                    onClick={() => onMoveStage(lead.id, nextAction.stage)}>
+                                    onClick={() => {
+                                      if (nextAction.fee > 0) {
+                                        setConfirmDialog({ lead, nextStage: nextAction.stage, fee: nextAction.fee, label: nextAction.label });
+                                      } else {
+                                        onMoveStage(lead.id, nextAction.stage);
+                                      }
+                                    }}>
                                     <nextAction.icon className="h-3.5 w-3.5" />
                                     {nextAction.label}
                                   </Button>
@@ -273,56 +280,65 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsB
         })}
       </div>
 
-      {/* Post to Marketplace Dialog */}
-      <Dialog open={!!postDialogLead} onOpenChange={(open) => !open && setPostDialogLead(null)}>
+      {/* Fee Confirmation Dialog */}
+      <Dialog open={!!confirmDialog} onOpenChange={(open) => !open && setConfirmDialog(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Store className="h-5 w-5" />
-              Post Lead to Marketplace
+              <DollarSign className="h-5 w-5 text-primary" />
+              Confirm Service Fee
             </DialogTitle>
             <DialogDescription>
-              Re-list this lead on the marketplace for other firms to purchase. Set your asking price below.
+              A fee will be deducted from your firm's wallet for this service. Please review the details below.
             </DialogDescription>
           </DialogHeader>
-          {postDialogLead && (
+          {confirmDialog && (
             <div className="space-y-4">
-              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
-                <p className="font-medium">{postDialogLead.first_name} {postDialogLead.last_name}</p>
-                <div className="flex gap-3 text-sm text-muted-foreground">
-                  <span>{postDialogLead.tort_type}</span>
-                  <span>•</span>
-                  <span>{postDialogLead.state}</span>
-                  <span>•</span>
-                  <span>Score: {postDialogLead.ai_quality_score || 'N/A'}</span>
+              <div className="p-4 rounded-lg border bg-muted/30 space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Lead</span>
+                  <span className="font-medium">
+                    {confirmDialog.lead.first_name} {confirmDialog.lead.last_name}
+                  </span>
                 </div>
-                <p className="text-xs text-muted-foreground">Originally purchased for {formatCurrency(Number(postDialogLead.purchaseInfo?.amount || postDialogLead.price))}</p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Listing Price</label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="number"
-                    min="1"
-                    step="0.01"
-                    value={listPrice}
-                    onChange={(e) => setListPrice(e.target.value)}
-                    className="pl-9"
-                    placeholder="Enter price"
-                  />
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Service</span>
+                  <Badge variant="secondary">{confirmDialog.label}</Badge>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  This lead will be listed as non-exclusive since it was previously purchased.
-                </p>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Tort Type</span>
+                  <span className="text-sm">{confirmDialog.lead.tort_type}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">State</span>
+                  <span className="text-sm">{confirmDialog.lead.state}</span>
+                </div>
+                <div className="border-t pt-3 mt-3">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">Fee Amount</span>
+                    <span className="text-lg font-bold text-primary">${confirmDialog.fee.toFixed(2)}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    This amount will be deducted from your firm's wallet balance. If insufficient funds, you'll be redirected to add funds via Stripe.
+                  </p>
+                </div>
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPostDialogLead(null)}>Cancel</Button>
-            <Button onClick={handlePostConfirm} disabled={!listPrice || parseFloat(listPrice) <= 0 || isPosting} className="gap-2">
-              <Store className="h-4 w-4" />
-              {isPosting ? 'Posting...' : 'Post to Marketplace'}
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setConfirmDialog(null)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                if (confirmDialog) {
+                  onMoveStage(confirmDialog.lead.id, confirmDialog.nextStage);
+                  setConfirmDialog(null);
+                }
+              }}
+              disabled={isMoving}
+              className="gap-2"
+            >
+              <DollarSign className="h-4 w-4" />
+              {isMoving ? 'Processing...' : `Confirm & Pay $${confirmDialog?.fee.toFixed(2)}`}
             </Button>
           </DialogFooter>
         </DialogContent>

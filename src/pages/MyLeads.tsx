@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { usePurchasedLeads, useLeadSources, useUpdatePipelineStage, usePostToMarketplace } from '@/hooks/use-leads';
 import { useChargeAndMoveStage, getStageTransitionFee } from '@/hooks/use-pipeline-charges';
+import { useCreateActivityLog } from '@/hooks/use-lead-activity-logs';
 import { useLeadNotes, useCreateNote, useDeleteNote, useTogglePinNote } from '@/hooks/use-lead-notes';
 import { useTeamPermissions } from '@/hooks/use-team-permissions';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -27,6 +28,7 @@ import { ScoreIndicator } from '@/components/leads/ScoreIndicator';
 import { formatCurrency } from '@/lib/utils';
 import { exportLeadsToCSV } from '@/lib/export-utils';
 import { DocumentSignaturePanel } from '@/components/signatures/DocumentSignaturePanel';
+import { LeadActivityLogsPanel } from '@/components/leads/LeadActivityLogsPanel';
 import { MedicalRecordsUpload } from '@/components/leads/MedicalRecordsUpload';
 import { 
   User, Mail, Phone, MapPin, FileText, Calendar,
@@ -150,6 +152,7 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
           <TabsTrigger value="journey" className="text-xs sm:text-sm gap-1"><Clock className="h-3 w-3 sm:h-4 sm:w-4" />Journey</TabsTrigger>
           <TabsTrigger value="notes" className="text-xs sm:text-sm gap-1"><FileText className="h-3 w-3 sm:h-4 sm:w-4" />Notes</TabsTrigger>
           <TabsTrigger value="esign" className="text-xs sm:text-sm gap-1"><PenTool className="h-3 w-3 sm:h-4 sm:w-4" />E-Sign</TabsTrigger>
+          <TabsTrigger value="activity" className="text-xs sm:text-sm gap-1"><Clock className="h-3 w-3 sm:h-4 sm:w-4" />Activity Log</TabsTrigger>
         </TabsList>
       </div>
 
@@ -287,6 +290,10 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
       <TabsContent value="esign" className="mt-4">
         <DocumentSignaturePanel leadId={detailLead.id} />
       </TabsContent>
+
+      <TabsContent value="activity" className="mt-4">
+        <LeadActivityLogsPanel leadId={detailLead.id} />
+      </TabsContent>
     </Tabs>
   );
 }
@@ -296,6 +303,7 @@ export default function MyLeads() {
   const { data: sourcesMap } = useLeadSources();
   const updateStage = useUpdatePipelineStage();
   const chargeAndMove = useChargeAndMoveStage();
+  const createActivityLog = useCreateActivityLog();
   const postToMarketplace = usePostToMarketplace();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeStage, setActiveStage] = useState<PipelineStage>('new_lead');
@@ -365,11 +373,29 @@ export default function MyLeads() {
       updateStage.mutate({ leadId, stage: newStage }, {
         onSuccess: () => {
           toast.success(`${name} moved to ${stageLabels[newStage] || newStage}`);
+          createActivityLog.mutate({
+            leadId,
+            activityType: 'stage_change',
+            title: `Moved to ${stageLabels[newStage] || newStage}`,
+            description: `${name} was moved from ${stageLabels[currentStage] || currentStage} to ${stageLabels[newStage] || newStage}`,
+          });
         },
       });
     } else {
       // Forward move with charge
-      chargeAndMove.mutate({ leadId, fromStage: currentStage, toStage: newStage });
+      chargeAndMove.mutate({ leadId, fromStage: currentStage, toStage: newStage }, {
+        onSuccess: (result) => {
+          if (result.success && result.amount && result.amount > 0) {
+            createActivityLog.mutate({
+              leadId,
+              activityType: 'charge',
+              title: `${stageLabels[newStage] || newStage} Fee Charged`,
+              description: `$${result.amount.toFixed(2)} was deducted from wallet for ${stageLabels[newStage] || newStage}`,
+              metadata: { amount: result.amount, from_stage: currentStage, to_stage: newStage },
+            });
+          }
+        },
+      });
     }
   };
 
