@@ -136,7 +136,7 @@ export function ZeroKnowledgeSetup() {
             zip_code: encryptedLead.zip_code,
             diagnosis_details: encryptedLead.diagnosis_details,
             exposure_details: encryptedLead.exposure_details,
-            metadata: { ...(lead.metadata || {}), _zk_encrypted: true, _zk_algorithm: 'AES-256-GCM+ML-KEM-1024' },
+            metadata: { ...((lead.metadata as Record<string, any>) || {}), _zk_encrypted: true, _zk_algorithm: 'AES-256-GCM+ML-KEM-1024' },
           } as any)
           .eq('id', lead.id);
         if (!error) encrypted++;
