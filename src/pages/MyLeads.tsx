@@ -384,6 +384,10 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
       <TabsContent value="activity" className="mt-4">
         <LeadActivityLogsPanel leadId={detailLead.id} />
       </TabsContent>
+
+      <TabsContent value="ai-compliance" className="mt-4">
+        <AiTransparencyPanel leadId={detailLead.id} />
+      </TabsContent>
     </Tabs>
   );
 }
