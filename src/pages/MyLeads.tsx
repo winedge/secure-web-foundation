@@ -444,14 +444,12 @@ export default function MyLeads() {
     );
   }) || [];
 
-  // When AI search is active, sort by relevance score
+  // When AI search is active, filter to only matching leads (score >= 50) and sort by relevance
   if (aiSearchResults && aiSearchResults.length > 0) {
     const scoreMap = new Map(aiSearchResults.map(r => [r.lead_id, r.relevance_score]));
-    stageLeads = [...stageLeads].sort((a, b) => {
-      const scoreA = scoreMap.get(a.id) ?? 0;
-      const scoreB = scoreMap.get(b.id) ?? 0;
-      return scoreB - scoreA;
-    });
+    stageLeads = stageLeads
+      .filter(lead => (scoreMap.get(lead.id) ?? 0) >= 50)
+      .sort((a, b) => (scoreMap.get(b.id) ?? 0) - (scoreMap.get(a.id) ?? 0));
   }
 
   const detailLead = leads?.find((l) => l.id === detailLeadId);
