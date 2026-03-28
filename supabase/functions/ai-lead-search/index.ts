@@ -204,6 +204,19 @@ ${truncatedSummaries.join("\n")}`,
       }))
       .sort((a: any, b: any) => b.relevance_score - a.relevance_score);
 
+    // AI Transparency logging
+    const topResults = results.slice(0, 5);
+    serviceClient.from("ai_transparency_logs").insert({
+      firm_id: firmMember.firm_id,
+      action_type: "search_ranking",
+      model_name: "google/gemini-3-flash-preview",
+      input_summary: `Search query: "${query}" across ${leads.length} leads`,
+      output_summary: `Returned ${results.length} ranked results. Top match: ${topResults[0]?.relevance_score || 0}%`,
+      confidence_score: topResults[0]?.relevance_score || 0,
+      decision_factors: { query, total_leads: leads.length, results_returned: results.length, tags: interpretation.tags },
+      compliant_frameworks: ["ABA-512", "GDPR", "EU-AI-Act"],
+    }).catch(() => {}); // Non-blocking
+
     return new Response(JSON.stringify({ results, interpretation }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
