@@ -531,11 +531,17 @@ export default function MyLeads() {
           onStageChange={setActiveStage}
         />
 
-        {/* Search */}
+        {/* AI Search Bar */}
+        <AiSearchBar
+          onResults={handleAiSearchResults}
+          isActive={!!aiSearchResults}
+        />
+
+        {/* Legacy Search */}
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by name, tort type, or state..."
+            placeholder="Quick filter by name, tort type, or state..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
