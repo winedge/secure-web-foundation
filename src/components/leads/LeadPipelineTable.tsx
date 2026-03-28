@@ -91,7 +91,7 @@ function getPrevAction(currentStage: PipelineStage): { stage: PipelineStage; lab
   }
 }
 
-export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsByTort, onMoveStage, onViewDetails, onDump, onPostToMarketplace, isMoving, isPosting }: LeadPipelineTableProps) {
+export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsByTort, aiSearchResults, onMoveStage, onViewDetails, onDump, onPostToMarketplace, isMoving, isPosting }: LeadPipelineTableProps) {
   const { isPiiMaskingEnabled } = usePiiMasking();
   const isPiiRestricted = isPiiMaskingEnabled && stage === 'new_lead';
   const { data: firm } = useFirm();
