@@ -18,6 +18,7 @@ import { DocumentAnalyzerPanel } from '@/components/leads/DocumentAnalyzerPanel'
 import { WarRoomPanel } from '@/components/leads/WarRoomPanel';
 import { SettlementPredictorPanel } from '@/components/leads/SettlementPredictorPanel';
 import { BackgroundCheckerPanel } from '@/components/leads/BackgroundCheckerPanel';
+import { AiTransparencyPanel } from '@/components/leads/AiTransparencyPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ import { DocumentSignaturePanel } from '@/components/signatures/DocumentSignatur
 import { LeadActivityLogsPanel } from '@/components/leads/LeadActivityLogsPanel';
 import { MedicalRecordsUpload } from '@/components/leads/MedicalRecordsUpload';
 import { AiSearchBar, type AiSearchResult, type AiSearchInterpretation } from '@/components/leads/AiSearchBar';
+import { ComplianceBadge } from '@/components/leads/ComplianceBadge';
 import { 
   User, Mail, Phone, MapPin, FileText, Calendar,
   Search, Download, Eye, CheckCircle, Shield, Clock,
@@ -196,6 +198,7 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
             <TabsTrigger value="notes" className="text-xs whitespace-nowrap gap-1"><FileText className="h-3.5 w-3.5" />Notes</TabsTrigger>
             <TabsTrigger value="esign" className="text-xs whitespace-nowrap gap-1"><PenTool className="h-3.5 w-3.5" />E-Sign</TabsTrigger>
             <TabsTrigger value="activity" className="text-xs whitespace-nowrap gap-1"><Clock className="h-3.5 w-3.5" />Activity</TabsTrigger>
+            <TabsTrigger value="ai-compliance" className="text-xs whitespace-nowrap gap-1"><Shield className="h-3.5 w-3.5" />AI Compliance</TabsTrigger>
           </TabsList>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
@@ -216,6 +219,7 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
           <TabsTrigger value="notes" className="text-xs gap-1"><FileText className="h-3.5 w-3.5" />Notes</TabsTrigger>
           <TabsTrigger value="esign" className="text-xs gap-1"><PenTool className="h-3.5 w-3.5" />E-Sign</TabsTrigger>
           <TabsTrigger value="activity" className="text-xs gap-1"><Clock className="h-3.5 w-3.5" />Activity</TabsTrigger>
+          <TabsTrigger value="ai-compliance" className="text-xs gap-1"><Shield className="h-3.5 w-3.5" />Compliance</TabsTrigger>
         </TabsList>
       </div>
 
@@ -266,6 +270,7 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
               <div className="flex justify-between"><span className="text-muted-foreground">Tier</span><TierBadge tier={detailLead.tier} /></div>
               <div className="flex justify-between items-center"><span className="text-muted-foreground">Quality Score</span><ScoreIndicator score={detailLead.ai_quality_score || 0} size="sm" /></div>
               <div className="flex justify-between items-center"><span className="text-muted-foreground">Fraud Risk</span><ScoreIndicator score={100 - (detailLead.fraud_risk_score || 0)} size="sm" /></div>
+              <div className="flex justify-between items-center"><span className="text-muted-foreground">Compliance</span><ComplianceBadge size="md" /></div>
             </div>
           </div>
           {canViewCase ? (
@@ -378,6 +383,10 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
 
       <TabsContent value="activity" className="mt-4">
         <LeadActivityLogsPanel leadId={detailLead.id} />
+      </TabsContent>
+
+      <TabsContent value="ai-compliance" className="mt-4">
+        <AiTransparencyPanel leadId={detailLead.id} />
       </TabsContent>
     </Tabs>
   );

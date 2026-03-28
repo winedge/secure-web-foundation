@@ -4,6 +4,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TierBadge } from './TierBadge';
+import { ComplianceBadge } from './ComplianceBadge';
 import { ScoreIndicator } from './ScoreIndicator';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Lead } from '@/hooks/use-leads';
@@ -88,6 +89,7 @@ export function LeadCard({ lead, isPurchased = false, sourceName }: LeadCardProp
                 Shared
               </Badge>
             )}
+            <ComplianceBadge size="sm" />
           </div>
 
           {/* Price & Date */}

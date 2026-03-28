@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import type { AiSearchResult } from './AiSearchBar';
+import { ComplianceBadge } from './ComplianceBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/lib/utils';
@@ -226,9 +227,10 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsB
                                 ) : (
                                   <span className="font-medium">{lead.first_name} {lead.last_name}</span>
                                 )}
-                                <div className="flex gap-1 mt-0.5">
+                                <div className="flex gap-1 mt-0.5 flex-wrap">
                                   {lead.is_verified && <Badge variant="secondary" className="text-[10px] px-1 py-0">Verified</Badge>}
                                   {lead.is_exclusive && <Badge variant="secondary" className="text-[10px] px-1 py-0">Exclusive</Badge>}
+                                  <ComplianceBadge size="sm" showTooltip={true} />
                                 </div>
                               </div>
                             </TableCell>

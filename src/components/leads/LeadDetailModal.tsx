@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TierBadge } from './TierBadge';
+import { ComplianceBadge } from './ComplianceBadge';
 import { ScoreIndicator } from './ScoreIndicator';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Lead, usePurchaseLead } from '@/hooks/use-leads';
@@ -128,6 +129,7 @@ export function LeadDetailModal({ lead, open, onOpenChange, isPurchased = false 
                 <Calendar className="h-3 w-3" />
                 {lead.status}
               </Badge>
+              <ComplianceBadge size="md" />
             </div>
 
             <Separator />

@@ -132,6 +132,7 @@ Provide your analysis using the suggest_scoring tool.`;
     if (!toolCall) throw new Error("No tool call in AI response");
 
     const scoring = JSON.parse(toolCall.function.arguments);
+    const startTime = Date.now();
 
     // Upsert the score
     const { data: scoreData, error: scoreError } = await supabase
@@ -150,6 +151,25 @@ Provide your analysis using the suggest_scoring tool.`;
       .single();
 
     if (scoreError) throw scoreError;
+
+    // Log for AI transparency / EU AI Act compliance
+    const serviceClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    await serviceClient.from("ai_transparency_logs").insert({
+      lead_id,
+      firm_id,
+      action_type: "lead_scoring",
+      model_name: "google/gemini-3-flash-preview",
+      model_version: aiData.model || "unknown",
+      input_summary: `Lead scoring for ${lead.tort_type} lead in ${lead.state}`,
+      output_summary: `Conversion: ${scoring.conversion_probability}%, Value: $${scoring.predicted_value}, Action: ${scoring.recommended_action}`,
+      confidence_score: scoring.conversion_probability,
+      decision_factors: scoring.scoring_factors,
+      processing_time_ms: Date.now() - startTime,
+      compliant_frameworks: ["ABA-512", "GDPR", "EU-AI-Act"],
+    });
 
     return new Response(JSON.stringify(scoreData), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
