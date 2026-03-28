@@ -977,8 +977,8 @@ function SecurityConfig() {
           </div>
           <div className={`p-3 rounded-lg text-sm ${isPiiMaskingEnabled ? 'bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400' : 'bg-accent/10 border border-accent/20 text-accent'}`}>
             {isPiiMaskingEnabled
-              ? '🔒 PII Masking is ON — Names, emails, phones, and addresses are hidden until Call Verification.'
-              : '🔓 PII Masking is OFF — All contact details are visible at every pipeline stage.'}
+               ? '🔒 PII Masking is ON - Names, emails, phones, and addresses are hidden until Call Verification.'
+               : '🔓 PII Masking is OFF - All contact details are visible at every pipeline stage.'}
           </div>
         </CardContent>
       </Card>

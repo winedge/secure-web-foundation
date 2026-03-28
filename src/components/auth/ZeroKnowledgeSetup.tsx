@@ -111,7 +111,7 @@ export function ZeroKnowledgeSetup() {
             Zero-Knowledge Encryption
           </h4>
           <p className="text-sm text-muted-foreground mt-1">
-            Client-side encryption — your servers never hold the keys to client data.
+            Client-side encryption - your servers never hold the keys to client data.
             Compliant with ABA Rule 1.6.
           </p>
         </div>

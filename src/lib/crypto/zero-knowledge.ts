@@ -6,7 +6,7 @@
  * 1. Each firm has a master key (AES-256) for encrypting lead data
  * 2. The master key is wrapped with ML-KEM-1024 for quantum-resistant key exchange
  * 3. The master key is also password-encrypted for storage on the server
- * 4. The server NEVER sees plaintext PII — only encrypted blobs
+ * 4. The server NEVER sees plaintext PII - only encrypted blobs
  */
 
 import {

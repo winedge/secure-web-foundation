@@ -758,7 +758,7 @@ export default function Settings() {
                   </CardTitle>
                   <CardDescription>
                     Enterprise-grade security with zero-knowledge encryption, biometric authentication,
-                    and quantum-resistant cryptography — compliant with ABA Rule 1.6.
+                    and quantum-resistant cryptography - compliant with ABA Rule 1.6.
                   </CardDescription>
                 </CardHeader>
               </Card>
@@ -820,7 +820,7 @@ export default function Settings() {
                   </CardTitle>
                   <CardDescription>
                     All encryption uses AES-256-GCM with ML-KEM-1024 (FIPS 203) post-quantum
-                    key encapsulation — future-proof against quantum computing threats.
+                    key encapsulation - future-proof against quantum computing threats.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
