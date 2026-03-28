@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import type { AiSearchResult } from './AiSearchBar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/lib/utils';
@@ -46,6 +47,7 @@ interface LeadPipelineTableProps {
   stage: PipelineStage;
   sourcesMap?: Map<string, { name: string; type: string }>;
   marketplaceCountsByTort?: Record<string, number>;
+  aiSearchResults?: AiSearchResult[] | null;
   onMoveStage: (leadId: string, newStage: PipelineStage) => void;
   onViewDetails: (leadId: string) => void;
   onDump?: (leadId: string) => void;
@@ -89,7 +91,7 @@ function getPrevAction(currentStage: PipelineStage): { stage: PipelineStage; lab
   }
 }
 
-export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsByTort, onMoveStage, onViewDetails, onDump, onPostToMarketplace, isMoving, isPosting }: LeadPipelineTableProps) {
+export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsByTort, aiSearchResults, onMoveStage, onViewDetails, onDump, onPostToMarketplace, isMoving, isPosting }: LeadPipelineTableProps) {
   const { isPiiMaskingEnabled } = usePiiMasking();
   const isPiiRestricted = isPiiMaskingEnabled && stage === 'new_lead';
   const { data: firm } = useFirm();
@@ -97,6 +99,13 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsB
   const [postDialogLead, setPostDialogLead] = useState<PurchasedLead | null>(null);
   const [listPrice, setListPrice] = useState('');
   const [confirmDialog, setConfirmDialog] = useState<{ lead: PurchasedLead; nextStage: PipelineStage; fee: number; label: string } | null>(null);
+
+  // AI search results map for quick lookup
+  const aiResultsMap = new Map<string, AiSearchResult>();
+  if (aiSearchResults) {
+    aiSearchResults.forEach(r => aiResultsMap.set(r.lead_id, r));
+  }
+  const isAiActive = !!aiSearchResults && aiSearchResults.length > 0;
 
   const grouped = leads.reduce<Record<string, PurchasedLead[]>>((acc, lead) => {
     const key = lead.tort_type || 'Other';
@@ -168,6 +177,8 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsB
                     <TableHeader>
                      <TableRow className="bg-muted/30">
                          <TableHead className="w-12">No.</TableHead>
+                         {isAiActive && <TableHead>Relevance</TableHead>}
+                         {isAiActive && <TableHead>Match Reason</TableHead>}
                          <TableHead>Name</TableHead>
                          <TableHead>State</TableHead>
                          <TableHead>Source</TableHead>
@@ -183,6 +194,28 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsB
                         return (
                           <TableRow key={lead.id}>
                             <TableCell className="text-muted-foreground font-medium">{idx + 1}</TableCell>
+                            {isAiActive && (() => {
+                              const aiResult = aiResultsMap.get(lead.id);
+                              const score = aiResult?.relevance_score ?? 0;
+                              const color = score >= 80 ? 'text-green-600' : score >= 50 ? 'text-amber-600' : 'text-muted-foreground';
+                              return (
+                                <TableCell>
+                                  <div className="flex items-center gap-1.5">
+                                    <div className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold" style={{ borderColor: score >= 80 ? 'hsl(var(--primary))' : score >= 50 ? 'hsl(var(--accent))' : 'hsl(var(--border))' }}>
+                                      {score}
+                                    </div>
+                                    <span className={`text-xs font-medium ${color}`}>%</span>
+                                  </div>
+                                </TableCell>
+                              );
+                            })()}
+                            {isAiActive && (
+                              <TableCell>
+                                <span className="text-xs text-muted-foreground italic">
+                                  {aiResultsMap.get(lead.id)?.match_reason || 'No match data'}
+                                </span>
+                              </TableCell>
+                            )}
                             <TableCell>
                               <div className="flex flex-col">
                                 {isPiiRestricted ? (

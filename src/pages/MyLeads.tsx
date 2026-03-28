@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -30,6 +30,7 @@ import { exportLeadsToCSV } from '@/lib/export-utils';
 import { DocumentSignaturePanel } from '@/components/signatures/DocumentSignaturePanel';
 import { LeadActivityLogsPanel } from '@/components/leads/LeadActivityLogsPanel';
 import { MedicalRecordsUpload } from '@/components/leads/MedicalRecordsUpload';
+import { AiSearchBar, type AiSearchResult, type AiSearchInterpretation } from '@/components/leads/AiSearchBar';
 import { 
   User, Mail, Phone, MapPin, FileText, Calendar,
   Search, Download, Eye, CheckCircle, Shield, Clock,
@@ -394,6 +395,13 @@ export default function MyLeads() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeStage, setActiveStage] = useState<PipelineStage>('new_lead');
   const [detailLeadId, setDetailLeadId] = useState<string | null>(null);
+  const [aiSearchResults, setAiSearchResults] = useState<AiSearchResult[] | null>(null);
+  const [aiInterpretation, setAiInterpretation] = useState<AiSearchInterpretation | null>(null);
+
+  const handleAiSearchResults = useCallback((results: AiSearchResult[] | null, interpretation: AiSearchInterpretation | null) => {
+    setAiSearchResults(results);
+    setAiInterpretation(interpretation);
+  }, []);
 
   // Fetch marketplace leads count grouped by tort_type
   const { data: marketplaceCountsByTort } = useQuery({
@@ -424,7 +432,7 @@ export default function MyLeads() {
     if (stageCounts[stage] !== undefined) stageCounts[stage]++;
   });
 
-  const stageLeads = leads?.filter((lead) => {
+  let stageLeads = leads?.filter((lead) => {
     const stage = (lead.purchaseInfo?.pipeline_stage as PipelineStage) || 'new_lead';
     if (stage !== activeStage) return false;
     if (!searchTerm) return true;
@@ -435,6 +443,16 @@ export default function MyLeads() {
       lead.state.toLowerCase().includes(q)
     );
   }) || [];
+
+  // When AI search is active, sort by relevance score
+  if (aiSearchResults && aiSearchResults.length > 0) {
+    const scoreMap = new Map(aiSearchResults.map(r => [r.lead_id, r.relevance_score]));
+    stageLeads = [...stageLeads].sort((a, b) => {
+      const scoreA = scoreMap.get(a.id) ?? 0;
+      const scoreB = scoreMap.get(b.id) ?? 0;
+      return scoreB - scoreA;
+    });
+  }
 
   const detailLead = leads?.find((l) => l.id === detailLeadId);
   const detailLeadDisplayName = detailLead ? getDisplayLeadName(detailLead, isPiiMaskingEnabled) : 'Lead';
@@ -513,11 +531,17 @@ export default function MyLeads() {
           onStageChange={setActiveStage}
         />
 
-        {/* Search */}
+        {/* AI Search Bar */}
+        <AiSearchBar
+          onResults={handleAiSearchResults}
+          isActive={!!aiSearchResults}
+        />
+
+        {/* Legacy Search */}
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by name, tort type, or state..."
+            placeholder="Quick filter by name, tort type, or state..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -541,6 +565,7 @@ export default function MyLeads() {
                 stage={activeStage}
                 sourcesMap={sourcesMap}
                 marketplaceCountsByTort={marketplaceCountsByTort}
+                aiSearchResults={aiSearchResults}
                 onMoveStage={handleMoveStage}
                 onViewDetails={setDetailLeadId}
                 onDump={(leadId) => updateStage.mutate({ leadId, stage: 'new_lead' })}
