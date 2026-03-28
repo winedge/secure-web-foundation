@@ -131,3 +131,6 @@ verify_jwt = false
 
 [functions.crm-sync]
 verify_jwt = false
+
+[functions.ai-lead-search]
+verify_jwt = false
