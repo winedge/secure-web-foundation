@@ -565,6 +565,7 @@ export default function MyLeads() {
                 stage={activeStage}
                 sourcesMap={sourcesMap}
                 marketplaceCountsByTort={marketplaceCountsByTort}
+                aiSearchResults={aiSearchResults}
                 onMoveStage={handleMoveStage}
                 onViewDetails={setDetailLeadId}
                 onDump={(leadId) => updateStage.mutate({ leadId, stage: 'new_lead' })}
