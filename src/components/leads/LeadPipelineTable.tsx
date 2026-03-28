@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import type { AiSearchResult } from './AiSearchBar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/lib/utils';
@@ -46,6 +47,7 @@ interface LeadPipelineTableProps {
   stage: PipelineStage;
   sourcesMap?: Map<string, { name: string; type: string }>;
   marketplaceCountsByTort?: Record<string, number>;
+  aiSearchResults?: AiSearchResult[] | null;
   onMoveStage: (leadId: string, newStage: PipelineStage) => void;
   onViewDetails: (leadId: string) => void;
   onDump?: (leadId: string) => void;
