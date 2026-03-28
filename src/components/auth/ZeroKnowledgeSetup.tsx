@@ -205,19 +205,35 @@ export function ZeroKnowledgeSetup() {
 
       {encryptionEnabled ? (
         <div className="border rounded-lg p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-500" />
-            <span className="font-medium text-green-700 dark:text-green-400">Encryption Active</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              <span className="font-medium text-green-700 dark:text-green-400">Encryption Active</span>
+            </div>
+            {keyMeta && (
+              <Badge variant="outline" className="text-xs font-mono">
+                Key v{keyMeta.key_version}
+              </Badge>
+            )}
           </div>
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="grid grid-cols-3 gap-3 text-sm">
             <div className="bg-muted/50 rounded p-2">
-              <span className="text-muted-foreground block text-xs">Algorithm</span>
-              <span className="font-mono text-xs">AES-256-GCM</span>
+              <span className="text-muted-foreground block text-xs">Symmetric</span>
+              <span className="font-mono text-xs font-bold">AES-256-GCM</span>
+              <span className="text-muted-foreground block text-xs mt-0.5">NIST Approved</span>
             </div>
             <div className="bg-muted/50 rounded p-2">
               <span className="text-muted-foreground block text-xs">Key Exchange</span>
-              <span className="font-mono text-xs">ML-KEM-1024 (FIPS 203)</span>
+              <span className="font-mono text-xs font-bold">ML-KEM-1024</span>
+              <span className="text-muted-foreground block text-xs mt-0.5">FIPS 203 (Kyber)</span>
             </div>
+            <div className="bg-muted/50 rounded p-2">
+              <span className="text-muted-foreground block text-xs">Key Derivation</span>
+              <span className="font-mono text-xs font-bold">PBKDF2-SHA256</span>
+              <span className="text-muted-foreground block text-xs mt-0.5">600K iterations</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3 text-sm">
             <div className="bg-muted/50 rounded p-2">
               <span className="text-muted-foreground block text-xs">Session Status</span>
               <span className="font-mono text-xs">
@@ -225,12 +241,23 @@ export function ZeroKnowledgeSetup() {
               </span>
             </div>
             <div className="bg-muted/50 rounded p-2">
-              <span className="text-muted-foreground block text-xs">Quantum Resistance</span>
+              <span className="text-muted-foreground block text-xs">PQC Status</span>
               <span className="font-mono text-xs">
-                {status.pqcEnabled ? '✅ PQC Enabled' : '⚠️ Classical Only'}
+                {status.pqcEnabled ? '✅ Active' : '⚠️ Classical Only'}
+              </span>
+            </div>
+            <div className="bg-muted/50 rounded p-2">
+              <span className="text-muted-foreground block text-xs">Encrypted Leads</span>
+              <span className="font-mono text-xs font-bold">
+                {encryptedLeadCount !== null ? encryptedLeadCount : '...'}
               </span>
             </div>
           </div>
+          {keyMeta && (
+            <p className="text-xs text-muted-foreground">
+              Initialized: {new Date(keyMeta.created_at).toLocaleDateString()}
+            </p>
+          )}
           {status.active && (
             <Button
               onClick={handleEncryptExistingLeads}
