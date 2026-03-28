@@ -67,9 +67,60 @@ export default function Auth() {
         setShowMFA(true);
         return;
       }
+
+      // Check if user has WebAuthn credentials
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData?.user && isWebAuthnSupported()) {
+        const { data: creds } = await (supabase as any)
+          .from('webauthn_credentials')
+          .select('id')
+          .eq('user_id', userData.user.id)
+          .limit(1);
+        
+        if (creds?.length > 0) {
+          setShowWebAuthn(true);
+          return;
+        }
+      }
+
+      // Try to unlock ZK encryption if configured
+      if (userData?.user) {
+        try {
+          const { data: encKey } = await (supabase as any)
+            .from('firm_encryption_keys')
+            .select('encrypted_master_key, key_salt')
+            .eq('user_id', userData.user.id)
+            .maybeSingle();
+          
+          if (encKey) {
+            const pqcSk = localStorage.getItem(`zk_pqc_sk_${userData.user.id}`);
+            await unlockEncryption(encKey.encrypted_master_key, encKey.key_salt, data.password, pqcSk || undefined);
+          }
+        } catch {}
+      }
+
       toast.success('Welcome back!');
       navigate('/dashboard');
     }
+  };
+
+  const handleWebAuthnVerify = async () => {
+    setIsLoading(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) throw new Error('Not authenticated');
+      
+      const result = await authenticateWithWebAuthn(userData.user.id);
+      if (result.success) {
+        toast.success('Biometric verified!');
+        navigate('/dashboard');
+      } else {
+        toast.error(result.error || 'Verification failed');
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+    setIsLoading(false);
   };
 
   const handleSignUp = async (data: z.infer<typeof signUpSchema>) => {
