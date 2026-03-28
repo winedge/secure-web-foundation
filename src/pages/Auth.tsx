@@ -11,6 +11,9 @@ import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 import logoImg from '@/assets/leadthru-logo.png';
 import { supabase } from '@/integrations/supabase/client';
+import { Fingerprint } from 'lucide-react';
+import { isWebAuthnSupported, authenticateWithWebAuthn } from '@/lib/webauthn';
+import { unlockEncryption } from '@/lib/crypto/zero-knowledge';
 
 const signInSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -30,6 +33,7 @@ export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(searchParams.get('mode') === 'signup');
   const [isLoading, setIsLoading] = useState(false);
   const [showMFA, setShowMFA] = useState(false);
+  const [showWebAuthn, setShowWebAuthn] = useState(false);
   const navigate = useNavigate();
   const { signIn, signUp, user } = useAuth();
 
