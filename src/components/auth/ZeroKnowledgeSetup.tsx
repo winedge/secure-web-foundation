@@ -92,6 +92,62 @@ export function ZeroKnowledgeSetup() {
     }
     setInitializing(false);
   };
+  const handleEncryptExistingLeads = async () => {
+    if (!firm || !isEncryptionActive()) return;
+    setEncrypting(true);
+    try {
+      // Get all purchased leads for this firm
+      const { data: purchases } = await supabase
+        .from('lead_purchases')
+        .select('lead_id')
+        .eq('firm_id', firm.id);
+
+      if (!purchases?.length) {
+        toast.info('No purchased leads to encrypt');
+        setEncrypting(false);
+        return;
+      }
+
+      const leadIds = purchases.map(p => p.lead_id);
+      const { data: leads } = await supabase
+        .from('leads')
+        .select('*')
+        .in('id', leadIds);
+
+      if (!leads?.length) {
+        toast.info('No leads found');
+        setEncrypting(false);
+        return;
+      }
+
+      let encrypted = 0;
+      for (const lead of leads) {
+        if ((lead as any)._zk_encrypted) continue; // Already encrypted
+        const encryptedLead = await encryptLeadData(lead as Record<string, any>);
+        const { error } = await supabase
+          .from('leads')
+          .update({
+            first_name: encryptedLead.first_name,
+            last_name: encryptedLead.last_name,
+            email: encryptedLead.email,
+            phone: encryptedLead.phone,
+            address: encryptedLead.address,
+            city: encryptedLead.city,
+            zip_code: encryptedLead.zip_code,
+            diagnosis_details: encryptedLead.diagnosis_details,
+            exposure_details: encryptedLead.exposure_details,
+            metadata: { ...(lead.metadata || {}), _zk_encrypted: true, _zk_algorithm: 'AES-256-GCM+ML-KEM-1024' },
+          } as any)
+          .eq('id', lead.id);
+        if (!error) encrypted++;
+      }
+
+      toast.success(`Encrypted PII for ${encrypted} leads`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to encrypt leads');
+    }
+    setEncrypting(false);
+  };
 
   const status = getEncryptionStatus();
 
