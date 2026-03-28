@@ -123,6 +123,71 @@ export type Database = {
           },
         ]
       }
+      ai_decision_consents: {
+        Row: {
+          acknowledged_at: string
+          action_type: string
+          firm_id: string | null
+          id: string
+          ip_address: string | null
+          lead_id: string | null
+          transparency_log_id: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string
+          action_type: string
+          firm_id?: string | null
+          id?: string
+          ip_address?: string | null
+          lead_id?: string | null
+          transparency_log_id?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string
+          action_type?: string
+          firm_id?: string | null
+          id?: string
+          ip_address?: string | null
+          lead_id?: string | null
+          transparency_log_id?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_decision_consents_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_decision_consents_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_decision_consents_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_decision_consents_transparency_log_id_fkey"
+            columns: ["transparency_log_id"]
+            isOneToOne: false
+            referencedRelation: "ai_transparency_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_feedback: {
         Row: {
           action_type: string
@@ -291,6 +356,76 @@ export type Database = {
             columns: ["firm_id"]
             isOneToOne: false
             referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_transparency_logs: {
+        Row: {
+          action_type: string
+          compliant_frameworks: string[] | null
+          confidence_score: number | null
+          created_at: string
+          decision_factors: Json | null
+          firm_id: string | null
+          id: string
+          input_summary: string | null
+          lead_id: string | null
+          model_name: string
+          model_version: string | null
+          output_summary: string | null
+          processing_time_ms: number | null
+        }
+        Insert: {
+          action_type: string
+          compliant_frameworks?: string[] | null
+          confidence_score?: number | null
+          created_at?: string
+          decision_factors?: Json | null
+          firm_id?: string | null
+          id?: string
+          input_summary?: string | null
+          lead_id?: string | null
+          model_name: string
+          model_version?: string | null
+          output_summary?: string | null
+          processing_time_ms?: number | null
+        }
+        Update: {
+          action_type?: string
+          compliant_frameworks?: string[] | null
+          confidence_score?: number | null
+          created_at?: string
+          decision_factors?: Json | null
+          firm_id?: string | null
+          id?: string
+          input_summary?: string | null
+          lead_id?: string | null
+          model_name?: string
+          model_version?: string | null
+          output_summary?: string | null
+          processing_time_ms?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_transparency_logs_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_transparency_logs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_transparency_logs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
             referencedColumns: ["id"]
           },
         ]
