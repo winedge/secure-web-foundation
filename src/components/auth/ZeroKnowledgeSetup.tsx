@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Lock, Fingerprint, Atom, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
+import { Shield, Lock, Fingerprint, Atom, CheckCircle, AlertTriangle, Loader2, Database } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import {
   unlockEncryption,
   isEncryptionActive,
   getEncryptionStatus,
+  encryptLeadData,
 } from '@/lib/crypto/zero-knowledge';
 
 export function ZeroKnowledgeSetup() {
@@ -27,6 +28,7 @@ export function ZeroKnowledgeSetup() {
   const [passphrase, setPassphrase] = useState('');
   const [confirmPassphrase, setConfirmPassphrase] = useState('');
   const [initializing, setInitializing] = useState(false);
+  const [encrypting, setEncrypting] = useState(false);
 
   useEffect(() => {
     checkEncryptionStatus();
@@ -145,6 +147,27 @@ export function ZeroKnowledgeSetup() {
               </span>
             </div>
           </div>
+          {status.active && (
+            <Button
+              onClick={handleEncryptExistingLeads}
+              disabled={encrypting}
+              size="sm"
+              variant="outline"
+              className="w-full"
+            >
+              {encrypting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Encrypting leads...
+                </>
+              ) : (
+                <>
+                  <Database className="h-4 w-4 mr-2" />
+                  Encrypt Existing Lead Data
+                </>
+              )}
+            </Button>
+          )}
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Atom className="h-3 w-3" />
             Future-proof against quantum computing threats (NIST PQC standard)
