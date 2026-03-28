@@ -31,6 +31,7 @@ import { DocumentSignaturePanel } from '@/components/signatures/DocumentSignatur
 import { LeadActivityLogsPanel } from '@/components/leads/LeadActivityLogsPanel';
 import { MedicalRecordsUpload } from '@/components/leads/MedicalRecordsUpload';
 import { AiSearchBar, type AiSearchResult, type AiSearchInterpretation } from '@/components/leads/AiSearchBar';
+import { ComplianceBadge } from '@/components/leads/ComplianceBadge';
 import { 
   User, Mail, Phone, MapPin, FileText, Calendar,
   Search, Download, Eye, CheckCircle, Shield, Clock,
