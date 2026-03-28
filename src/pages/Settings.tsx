@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Save, Building, User, Bell, Shield, Link2, Facebook, Instagram, Linkedin, Twitter, Video, CheckCircle, XCircle, Loader2, RefreshCw, ExternalLink, Scale, MessageCircle, Upload } from 'lucide-react';
 import { TwoFactorSetup } from '@/components/auth/TwoFactorSetup';
+import { WebAuthnSetup } from '@/components/auth/WebAuthnSetup';
+import { ZeroKnowledgeSetup } from '@/components/auth/ZeroKnowledgeSetup';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
