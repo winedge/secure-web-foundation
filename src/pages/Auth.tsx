@@ -143,7 +143,13 @@ export default function Auth() {
           <img src={logoImg} alt="LeadThru" className="h-10" />
         </Link>
 
-        {showWebAuthn ? (
+        {showMFA ? (
+          <MFAChallenge onVerified={() => {
+            setShowMFA(false);
+            toast.success('Welcome back!');
+            navigate('/dashboard');
+          }} />
+        ) : showWebAuthn ? (
           <Card>
             <CardHeader className="text-center">
               <CardTitle className="flex items-center justify-center gap-2">
