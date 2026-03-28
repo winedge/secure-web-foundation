@@ -143,6 +143,32 @@ export default function Auth() {
           <img src={logoImg} alt="LeadThru" className="h-10" />
         </Link>
 
+        {showWebAuthn ? (
+          <Card>
+            <CardHeader className="text-center">
+              <CardTitle className="flex items-center justify-center gap-2">
+                <Fingerprint className="h-5 w-5" />
+                Biometric Verification
+              </CardTitle>
+              <CardDescription>
+                Please verify your identity with your registered passkey or hardware key.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button onClick={handleWebAuthnVerify} className="w-full" disabled={isLoading}>
+                <Fingerprint className="h-4 w-4 mr-2" />
+                {isLoading ? 'Verifying...' : 'Verify with Passkey'}
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() => { setShowWebAuthn(false); navigate('/dashboard'); }}
+              >
+                Skip for now
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
         <Card>
           <CardHeader className="text-center">
             <CardTitle>{isSignUp ? 'Create an Account' : 'Welcome Back'}</CardTitle>
