@@ -432,7 +432,7 @@ export default function MyLeads() {
     if (stageCounts[stage] !== undefined) stageCounts[stage]++;
   });
 
-  const stageLeads = leads?.filter((lead) => {
+  let stageLeads = leads?.filter((lead) => {
     const stage = (lead.purchaseInfo?.pipeline_stage as PipelineStage) || 'new_lead';
     if (stage !== activeStage) return false;
     if (!searchTerm) return true;
@@ -443,6 +443,16 @@ export default function MyLeads() {
       lead.state.toLowerCase().includes(q)
     );
   }) || [];
+
+  // When AI search is active, sort by relevance score
+  if (aiSearchResults && aiSearchResults.length > 0) {
+    const scoreMap = new Map(aiSearchResults.map(r => [r.lead_id, r.relevance_score]));
+    stageLeads = [...stageLeads].sort((a, b) => {
+      const scoreA = scoreMap.get(a.id) ?? 0;
+      const scoreB = scoreMap.get(b.id) ?? 0;
+      return scoreB - scoreA;
+    });
+  }
 
   const detailLead = leads?.find((l) => l.id === detailLeadId);
   const detailLeadDisplayName = detailLead ? getDisplayLeadName(detailLead, isPiiMaskingEnabled) : 'Lead';
