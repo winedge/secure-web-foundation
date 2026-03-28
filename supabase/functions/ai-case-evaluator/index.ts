@@ -132,6 +132,24 @@ Consider jurisdiction-specific laws, statute of limitations, precedent cases, an
 
     if (evalError) throw evalError;
 
+    // AI Transparency logging for EU AI Act compliance
+    const serviceClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    await serviceClient.from("ai_transparency_logs").insert({
+      lead_id,
+      firm_id,
+      action_type: "case_evaluation",
+      model_name: "google/gemini-3-flash-preview",
+      model_version: "latest",
+      input_summary: `Case evaluation for ${lead.tort_type} lead in ${lead.state}`,
+      output_summary: `Viability: ${evaluation.viability_score}%, Settlement: $${evaluation.settlement_estimate_low}-$${evaluation.settlement_estimate_high}`,
+      confidence_score: evaluation.viability_score,
+      decision_factors: { strengths: evaluation.strengths?.length || 0, weaknesses: evaluation.weaknesses?.length || 0, recommendations: evaluation.recommendations?.length || 0 },
+      compliant_frameworks: ["ABA-512", "GDPR", "EU-AI-Act"],
+    }).catch(() => {});  // Non-blocking
+
     return new Response(JSON.stringify(evalData), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
