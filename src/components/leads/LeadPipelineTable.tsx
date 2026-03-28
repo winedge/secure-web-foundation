@@ -100,6 +100,13 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsB
   const [listPrice, setListPrice] = useState('');
   const [confirmDialog, setConfirmDialog] = useState<{ lead: PurchasedLead; nextStage: PipelineStage; fee: number; label: string } | null>(null);
 
+  // AI search results map for quick lookup
+  const aiResultsMap = new Map<string, AiSearchResult>();
+  if (aiSearchResults) {
+    aiSearchResults.forEach(r => aiResultsMap.set(r.lead_id, r));
+  }
+  const isAiActive = !!aiSearchResults && aiSearchResults.length > 0;
+
   const grouped = leads.reduce<Record<string, PurchasedLead[]>>((acc, lead) => {
     const key = lead.tort_type || 'Other';
     if (!acc[key]) acc[key] = [];
