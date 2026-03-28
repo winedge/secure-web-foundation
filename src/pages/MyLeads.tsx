@@ -395,6 +395,13 @@ export default function MyLeads() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeStage, setActiveStage] = useState<PipelineStage>('new_lead');
   const [detailLeadId, setDetailLeadId] = useState<string | null>(null);
+  const [aiSearchResults, setAiSearchResults] = useState<AiSearchResult[] | null>(null);
+  const [aiInterpretation, setAiInterpretation] = useState<AiSearchInterpretation | null>(null);
+
+  const handleAiSearchResults = useCallback((results: AiSearchResult[] | null, interpretation: AiSearchInterpretation | null) => {
+    setAiSearchResults(results);
+    setAiInterpretation(interpretation);
+  }, []);
 
   // Fetch marketplace leads count grouped by tort_type
   const { data: marketplaceCountsByTort } = useQuery({
