@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import { useFirm } from './use-firm';
 import { toast } from 'sonner';
-import { decryptLeadData, isEncryptionActive } from '@/lib/crypto/zero-knowledge';
+import { decryptLeadData, encryptLeadData, isEncryptionActive } from '@/lib/crypto/zero-knowledge';
 
 export interface Lead {
   id: string;
@@ -183,6 +183,35 @@ export function usePurchaseLead() {
       });
 
       if (error) throw new Error(error.message);
+
+      // Auto-encrypt PII after purchase if ZK encryption is active
+      if (isEncryptionActive()) {
+        const { data: leadData } = await supabase
+          .from('leads')
+          .select('*')
+          .eq('id', leadId)
+          .single();
+
+        if (leadData) {
+          const encrypted = await encryptLeadData(leadData as Record<string, any>);
+          await supabase
+            .from('leads')
+            .update({
+              first_name: encrypted.first_name,
+              last_name: encrypted.last_name,
+              email: encrypted.email,
+              phone: encrypted.phone,
+              address: encrypted.address,
+              city: encrypted.city,
+              zip_code: encrypted.zip_code,
+              diagnosis_details: encrypted.diagnosis_details,
+              exposure_details: encrypted.exposure_details,
+              metadata: { ...((leadData.metadata as Record<string, any>) || {}), _zk_encrypted: true, _zk_algorithm: 'AES-256-GCM+ML-KEM-1024' },
+            } as any)
+            .eq('id', leadId);
+        }
+      }
+
       return { leadId, amount: (data as any)?.amount };
     },
     onSuccess: () => {

@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { SubscriptionProvider } from "@/components/subscription/SubscriptionProvider";
 import { RouteErrorBoundary } from "@/components/error/RouteErrorBoundary";
 import { ChatWidget } from "@/components/chat/ChatWidget";
+import { ZKUnlockDialog } from "@/components/auth/ZKUnlockDialog";
 import { usePresence } from "@/hooks/use-presence";
 import { useSmartAlertListener } from "@/hooks/use-smart-alert-listener";
 import { Suspense, lazy } from "react";
@@ -167,6 +168,7 @@ const App = () => (
               <PresenceTracker />
               <SmartAlertTracker />
               <ChatWidget />
+              <ZKUnlockDialog />
             </BrowserRouter>
           </TooltipProvider>
         </PostHogProvider>
