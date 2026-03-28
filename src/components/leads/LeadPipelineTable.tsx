@@ -194,6 +194,28 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsB
                         return (
                           <TableRow key={lead.id}>
                             <TableCell className="text-muted-foreground font-medium">{idx + 1}</TableCell>
+                            {isAiActive && (() => {
+                              const aiResult = aiResultsMap.get(lead.id);
+                              const score = aiResult?.relevance_score ?? 0;
+                              const color = score >= 80 ? 'text-green-600' : score >= 50 ? 'text-amber-600' : 'text-muted-foreground';
+                              return (
+                                <TableCell>
+                                  <div className="flex items-center gap-1.5">
+                                    <div className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold" style={{ borderColor: score >= 80 ? 'hsl(var(--primary))' : score >= 50 ? 'hsl(var(--accent))' : 'hsl(var(--border))' }}>
+                                      {score}
+                                    </div>
+                                    <span className={`text-xs font-medium ${color}`}>%</span>
+                                  </div>
+                                </TableCell>
+                              );
+                            })()}
+                            {isAiActive && (
+                              <TableCell>
+                                <span className="text-xs text-muted-foreground italic">
+                                  {aiResultsMap.get(lead.id)?.match_reason || 'No match data'}
+                                </span>
+                              </TableCell>
+                            )}
                             <TableCell>
                               <div className="flex flex-col">
                                 {isPiiRestricted ? (
