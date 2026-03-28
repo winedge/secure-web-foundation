@@ -266,6 +266,7 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
               <div className="flex justify-between"><span className="text-muted-foreground">Tier</span><TierBadge tier={detailLead.tier} /></div>
               <div className="flex justify-between items-center"><span className="text-muted-foreground">Quality Score</span><ScoreIndicator score={detailLead.ai_quality_score || 0} size="sm" /></div>
               <div className="flex justify-between items-center"><span className="text-muted-foreground">Fraud Risk</span><ScoreIndicator score={100 - (detailLead.fraud_risk_score || 0)} size="sm" /></div>
+              <div className="flex justify-between items-center"><span className="text-muted-foreground">Compliance</span><ComplianceBadge size="md" /></div>
             </div>
           </div>
           {canViewCase ? (
