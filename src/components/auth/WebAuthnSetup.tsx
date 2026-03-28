@@ -45,8 +45,14 @@ export function WebAuthnSetup() {
     setLoading(false);
   };
 
+  const isInIframe = window.self !== window.top;
+
   const handleRegister = async () => {
     if (!user?.id || !user?.email) return;
+    if (isInIframe) {
+      toast.error('Passkey registration is not available in preview mode. Please use the published site.');
+      return;
+    }
     setRegistering(true);
     try {
       const result = await registerWebAuthnCredential(
@@ -63,7 +69,12 @@ export function WebAuthnSetup() {
         toast.error(result.error || 'Failed to register passkey');
       }
     } catch (err: any) {
-      toast.error(err.message || 'Registration failed');
+      const msg = err.message || 'Registration failed';
+      if (msg.includes('publickey-credentials') || msg.includes('NotAllowedError')) {
+        toast.error('Passkey registration requires the published site. It cannot work in preview/iframe mode.');
+      } else {
+        toast.error(msg);
+      }
     }
     setRegistering(false);
   };
