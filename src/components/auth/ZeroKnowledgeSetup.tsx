@@ -29,6 +29,8 @@ export function ZeroKnowledgeSetup() {
   const [confirmPassphrase, setConfirmPassphrase] = useState('');
   const [initializing, setInitializing] = useState(false);
   const [encrypting, setEncrypting] = useState(false);
+  const [keyMeta, setKeyMeta] = useState<{ key_version: number; created_at: string; algorithm: string } | null>(null);
+  const [encryptedLeadCount, setEncryptedLeadCount] = useState<number | null>(null);
 
   useEffect(() => {
     checkEncryptionStatus();
@@ -46,6 +48,32 @@ export function ZeroKnowledgeSetup() {
         .maybeSingle();
 
       setEncryptionEnabled(!!data);
+      if (data) {
+        setKeyMeta({ key_version: data.key_version, created_at: data.created_at, algorithm: data.algorithm });
+      }
+
+      // Count encrypted leads
+      if (data) {
+        const { data: purchases } = await supabase
+          .from('lead_purchases')
+          .select('lead_id')
+          .eq('firm_id', firm.id);
+        
+        if (purchases?.length) {
+          const leadIds = purchases.map(p => p.lead_id);
+          const { data: leads } = await supabase
+            .from('leads')
+            .select('id, metadata')
+            .in('id', leadIds);
+          
+          const count = leads?.filter(l => 
+            l.metadata && typeof l.metadata === 'object' && (l.metadata as any)._zk_encrypted
+          ).length || 0;
+          setEncryptedLeadCount(count);
+        } else {
+          setEncryptedLeadCount(0);
+        }
+      }
     } catch {}
     setLoading(false);
   };
