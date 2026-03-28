@@ -165,7 +165,15 @@ export async function encryptLeadData<T extends Record<string, any>>(
 export async function decryptLeadData<T extends Record<string, any>>(
   data: T
 ): Promise<T> {
-  if (!encryptionState.masterKey || !data._zk_encrypted) {
+  if (!encryptionState.masterKey) {
+    return data;
+  }
+
+  // Check both top-level flag and metadata flag
+  const isEncrypted = data._zk_encrypted || 
+    (data.metadata && typeof data.metadata === 'object' && (data.metadata as any)._zk_encrypted);
+  
+  if (!isEncrypted) {
     return data;
   }
 

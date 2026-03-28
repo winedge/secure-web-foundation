@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import { useFirm } from './use-firm';
 import { toast } from 'sonner';
+import { decryptLeadData, isEncryptionActive } from '@/lib/crypto/zero-knowledge';
 
 export interface Lead {
   id: string;
@@ -117,10 +118,26 @@ export function usePurchasedLeads() {
 
       if (leadsError) throw leadsError;
 
-      return leads.map((lead) => ({
+      // Decrypt PII if ZK encryption is active
+      const mappedLeads = leads.map((lead) => ({
         ...lead,
         purchaseInfo: purchases.find((p) => p.lead_id === lead.id),
       }));
+
+      if (isEncryptionActive()) {
+        const decrypted = await Promise.all(
+          mappedLeads.map(async (lead) => {
+            try {
+              return await decryptLeadData(lead);
+            } catch {
+              return lead; // Return as-is if decryption fails
+            }
+          })
+        );
+        return decrypted;
+      }
+
+      return mappedLeads;
     },
     enabled: !!firm,
   });

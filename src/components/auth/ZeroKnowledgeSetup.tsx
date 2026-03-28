@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Lock, Fingerprint, Atom, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
+import { Shield, Lock, Fingerprint, Atom, CheckCircle, AlertTriangle, Loader2, Database } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import {
   unlockEncryption,
   isEncryptionActive,
   getEncryptionStatus,
+  encryptLeadData,
 } from '@/lib/crypto/zero-knowledge';
 
 export function ZeroKnowledgeSetup() {
@@ -27,6 +28,7 @@ export function ZeroKnowledgeSetup() {
   const [passphrase, setPassphrase] = useState('');
   const [confirmPassphrase, setConfirmPassphrase] = useState('');
   const [initializing, setInitializing] = useState(false);
+  const [encrypting, setEncrypting] = useState(false);
 
   useEffect(() => {
     checkEncryptionStatus();
@@ -90,6 +92,62 @@ export function ZeroKnowledgeSetup() {
     }
     setInitializing(false);
   };
+  const handleEncryptExistingLeads = async () => {
+    if (!firm || !isEncryptionActive()) return;
+    setEncrypting(true);
+    try {
+      // Get all purchased leads for this firm
+      const { data: purchases } = await supabase
+        .from('lead_purchases')
+        .select('lead_id')
+        .eq('firm_id', firm.id);
+
+      if (!purchases?.length) {
+        toast.info('No purchased leads to encrypt');
+        setEncrypting(false);
+        return;
+      }
+
+      const leadIds = purchases.map(p => p.lead_id);
+      const { data: leads } = await supabase
+        .from('leads')
+        .select('*')
+        .in('id', leadIds);
+
+      if (!leads?.length) {
+        toast.info('No leads found');
+        setEncrypting(false);
+        return;
+      }
+
+      let encrypted = 0;
+      for (const lead of leads) {
+        if ((lead as any)._zk_encrypted) continue; // Already encrypted
+        const encryptedLead = await encryptLeadData(lead as Record<string, any>);
+        const { error } = await supabase
+          .from('leads')
+          .update({
+            first_name: encryptedLead.first_name,
+            last_name: encryptedLead.last_name,
+            email: encryptedLead.email,
+            phone: encryptedLead.phone,
+            address: encryptedLead.address,
+            city: encryptedLead.city,
+            zip_code: encryptedLead.zip_code,
+            diagnosis_details: encryptedLead.diagnosis_details,
+            exposure_details: encryptedLead.exposure_details,
+            metadata: { ...((lead.metadata as Record<string, any>) || {}), _zk_encrypted: true, _zk_algorithm: 'AES-256-GCM+ML-KEM-1024' },
+          } as any)
+          .eq('id', lead.id);
+        if (!error) encrypted++;
+      }
+
+      toast.success(`Encrypted PII for ${encrypted} leads`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to encrypt leads');
+    }
+    setEncrypting(false);
+  };
 
   const status = getEncryptionStatus();
 
@@ -145,6 +203,27 @@ export function ZeroKnowledgeSetup() {
               </span>
             </div>
           </div>
+          {status.active && (
+            <Button
+              onClick={handleEncryptExistingLeads}
+              disabled={encrypting}
+              size="sm"
+              variant="outline"
+              className="w-full"
+            >
+              {encrypting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Encrypting leads...
+                </>
+              ) : (
+                <>
+                  <Database className="h-4 w-4 mr-2" />
+                  Encrypt Existing Lead Data
+                </>
+              )}
+            </Button>
+          )}
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Atom className="h-3 w-3" />
             Future-proof against quantum computing threats (NIST PQC standard)
