@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -30,6 +30,7 @@ import { exportLeadsToCSV } from '@/lib/export-utils';
 import { DocumentSignaturePanel } from '@/components/signatures/DocumentSignaturePanel';
 import { LeadActivityLogsPanel } from '@/components/leads/LeadActivityLogsPanel';
 import { MedicalRecordsUpload } from '@/components/leads/MedicalRecordsUpload';
+import { AiSearchBar, type AiSearchResult, type AiSearchInterpretation } from '@/components/leads/AiSearchBar';
 import { 
   User, Mail, Phone, MapPin, FileText, Calendar,
   Search, Download, Eye, CheckCircle, Shield, Clock,
