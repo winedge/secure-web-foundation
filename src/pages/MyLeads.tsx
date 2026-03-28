@@ -18,6 +18,7 @@ import { DocumentAnalyzerPanel } from '@/components/leads/DocumentAnalyzerPanel'
 import { WarRoomPanel } from '@/components/leads/WarRoomPanel';
 import { SettlementPredictorPanel } from '@/components/leads/SettlementPredictorPanel';
 import { BackgroundCheckerPanel } from '@/components/leads/BackgroundCheckerPanel';
+import { AiTransparencyPanel } from '@/components/leads/AiTransparencyPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
