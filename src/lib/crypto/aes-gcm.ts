@@ -1,7 +1,7 @@
 /**
  * AES-256-GCM Encryption Utilities
  * Zero-Knowledge client-side encryption for lead PII data.
- * Keys never leave the browser — server only stores ciphertext.
+ * Keys never leave the browser - server only stores ciphertext.
  */
 
 const ALGORITHM = 'AES-GCM';
