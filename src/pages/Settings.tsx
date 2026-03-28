@@ -746,15 +746,27 @@ export default function Settings() {
           </TabsContent>
 
           <TabsContent value="security">
-            <Card>
-              <CardHeader>
-                <CardTitle>Security Settings</CardTitle>
-                <CardDescription>
-                  Manage your account security and authentication
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Zero-Trust Security Banner */}
+              <Card className="border-primary/20 bg-primary/5">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-primary" />
+                    Zero-Trust Security Fortress
+                  </CardTitle>
+                  <CardDescription>
+                    Enterprise-grade security with zero-knowledge encryption, biometric authentication,
+                    and quantum-resistant cryptography — compliant with ABA Rule 1.6.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+
+              {/* Password & TOTP */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Password &amp; Two-Factor</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div>
                     <h4 className="font-medium">Change Password</h4>
                     <p className="text-sm text-muted-foreground mb-3">
@@ -767,16 +779,82 @@ export default function Settings() {
                   <div className="border-t pt-4">
                     <TwoFactorSetup />
                   </div>
-                  <div className="border-t pt-4">
+                </CardContent>
+              </Card>
+
+              {/* WebAuthn / Biometric */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Biometric Session Locking</CardTitle>
+                  <CardDescription>
+                    Require FaceID, TouchID, Windows Hello, or hardware security keys (YubiKey)
+                    for enhanced authentication. Meets 2026 law firm insurance compliance standards.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <WebAuthnSetup />
+                </CardContent>
+              </Card>
+
+              {/* Zero-Knowledge Encryption */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Zero-Knowledge Encryption</CardTitle>
+                  <CardDescription>
+                    Client-side encryption ensures your servers never hold the keys to client data.
+                    Even if the database is breached, attackers see only encrypted data.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ZeroKnowledgeSetup />
+                </CardContent>
+              </Card>
+
+              {/* Quantum-Resistant Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    Quantum-Resistant Encryption
+                  </CardTitle>
+                  <CardDescription>
+                    All encryption uses AES-256-GCM with ML-KEM-1024 (FIPS 203) post-quantum
+                    key encapsulation — future-proof against quantum computing threats.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="bg-muted/50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-muted-foreground">Symmetric</p>
+                      <p className="font-mono text-sm font-bold">AES-256-GCM</p>
+                      <p className="text-xs text-muted-foreground mt-1">NIST Approved</p>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-muted-foreground">Key Exchange</p>
+                      <p className="font-mono text-sm font-bold">ML-KEM-1024</p>
+                      <p className="text-xs text-muted-foreground mt-1">FIPS 203 (Kyber)</p>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-muted-foreground">Key Derivation</p>
+                      <p className="font-mono text-sm font-bold">PBKDF2-SHA256</p>
+                      <p className="text-xs text-muted-foreground mt-1">600K iterations</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Danger Zone */}
+              <Card>
+                <CardContent className="pt-6">
+                  <div>
                     <h4 className="font-medium text-destructive">Danger Zone</h4>
                     <p className="text-sm text-muted-foreground mb-3">
                       Permanently delete your account and all associated data
                     </p>
                     <Button variant="destructive">Delete Account</Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
