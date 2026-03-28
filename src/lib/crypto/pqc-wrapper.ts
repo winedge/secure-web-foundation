@@ -4,23 +4,20 @@
  * Uses @noble/post-quantum for NIST-approved ML-KEM (Kyber).
  */
 
+// @ts-ignore - noble post-quantum uses .js extension exports
 import { ml_kem1024 } from '@noble/post-quantum/ml-kem';
 import { toBase64, fromBase64 } from './aes-gcm';
 
 export interface PQCKeyPair {
-  publicKey: string;  // base64-encoded
-  secretKey: string;  // base64-encoded
+  publicKey: string;
+  secretKey: string;
 }
 
 export interface PQCEncapsulation {
-  ciphertext: string;       // base64-encoded ML-KEM ciphertext
-  sharedSecret: Uint8Array; // 32-byte shared secret for AES-256-GCM
+  ciphertext: string;
+  sharedSecret: Uint8Array;
 }
 
-/**
- * Generate an ML-KEM-1024 key pair.
- * The public key is stored on the server; the secret key stays client-side.
- */
 export function generatePQCKeyPair(seed?: Uint8Array): PQCKeyPair {
   const keys = seed ? ml_kem1024.keygen(seed) : ml_kem1024.keygen();
   return {
@@ -29,10 +26,6 @@ export function generatePQCKeyPair(seed?: Uint8Array): PQCKeyPair {
   };
 }
 
-/**
- * Encapsulate: Generate a shared secret using the recipient's public key.
- * Returns the ciphertext (to send) and the shared secret (to use for AES).
- */
 export function encapsulate(publicKeyB64: string, seed?: Uint8Array): PQCEncapsulation {
   const publicKey = fromBase64(publicKeyB64);
   const result = seed
@@ -45,9 +38,6 @@ export function encapsulate(publicKeyB64: string, seed?: Uint8Array): PQCEncapsu
   };
 }
 
-/**
- * Decapsulate: Recover the shared secret using our secret key.
- */
 export function decapsulate(
   ciphertextB64: string,
   secretKeyB64: string
@@ -57,29 +47,24 @@ export function decapsulate(
   return ml_kem1024.decapsulate(cipherText, secretKey);
 }
 
-/**
- * Derive an AES-256-GCM key from the ML-KEM shared secret using HKDF.
- */
 export async function deriveAESKeyFromSharedSecret(
   sharedSecret: Uint8Array,
   info: string = 'leadthru-zk-encryption'
 ): Promise<CryptoKey> {
-  // Import shared secret as HKDF key material
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
-    sharedSecret,
+    sharedSecret as BufferSource,
     'HKDF',
     false,
     ['deriveKey']
   );
 
-  // Derive AES-256-GCM key
   return crypto.subtle.deriveKey(
     {
       name: 'HKDF',
       hash: 'SHA-256',
-      salt: new Uint8Array(32), // fixed salt for deterministic key
-      info: new TextEncoder().encode(info),
+      salt: new Uint8Array(32) as BufferSource,
+      info: new TextEncoder().encode(info) as BufferSource,
     },
     keyMaterial,
     { name: 'AES-GCM', length: 256 },

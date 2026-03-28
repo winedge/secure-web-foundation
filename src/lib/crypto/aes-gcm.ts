@@ -8,41 +8,40 @@ const ALGORITHM = 'AES-GCM';
 const KEY_LENGTH = 256;
 const IV_LENGTH = 12;
 const SALT_LENGTH = 16;
-const PBKDF2_ITERATIONS = 600_000; // OWASP 2024 recommendation
+const PBKDF2_ITERATIONS = 600_000;
 
-/** Encode string to Uint8Array */
 function encode(text: string): Uint8Array {
   return new TextEncoder().encode(text);
 }
 
-/** Decode Uint8Array to string */
 function decode(buffer: ArrayBuffer): string {
   return new TextDecoder().decode(buffer);
 }
 
-/** Generate random bytes */
 export function randomBytes(length: number): Uint8Array {
   return crypto.getRandomValues(new Uint8Array(length));
 }
 
-/** Convert Uint8Array to base64 */
 export function toBase64(bytes: Uint8Array): string {
-  return btoa(String.fromCharCode(...bytes));
+  let str = '';
+  for (let i = 0; i < bytes.length; i++) str += String.fromCharCode(bytes[i]);
+  return btoa(str);
 }
 
-/** Convert base64 to Uint8Array */
 export function fromBase64(b64: string): Uint8Array {
-  return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
 }
 
-/** Derive a CryptoKey from a passphrase using PBKDF2 */
 export async function deriveKey(
   passphrase: string,
   salt: Uint8Array
 ): Promise<CryptoKey> {
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
-    encode(passphrase),
+    encode(passphrase) as BufferSource,
     'PBKDF2',
     false,
     ['deriveKey']
@@ -51,7 +50,7 @@ export async function deriveKey(
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt,
+      salt: salt as BufferSource,
       iterations: PBKDF2_ITERATIONS,
       hash: 'SHA-256',
     },
@@ -62,24 +61,21 @@ export async function deriveKey(
   );
 }
 
-/** Import a raw AES-256-GCM key */
 export async function importKey(rawKey: Uint8Array): Promise<CryptoKey> {
   return crypto.subtle.importKey(
     'raw',
-    rawKey,
+    rawKey as BufferSource,
     { name: ALGORITHM, length: KEY_LENGTH },
     true,
     ['encrypt', 'decrypt']
   );
 }
 
-/** Export a CryptoKey to raw bytes */
 export async function exportKey(key: CryptoKey): Promise<Uint8Array> {
   const raw = await crypto.subtle.exportKey('raw', key);
   return new Uint8Array(raw);
 }
 
-/** Generate a fresh AES-256 master key */
 export async function generateMasterKey(): Promise<CryptoKey> {
   return crypto.subtle.generateKey(
     { name: ALGORITHM, length: KEY_LENGTH },
@@ -88,22 +84,17 @@ export async function generateMasterKey(): Promise<CryptoKey> {
   );
 }
 
-/**
- * Encrypt plaintext with AES-256-GCM.
- * Returns base64 string: IV (12 bytes) || ciphertext || auth tag (16 bytes)
- */
 export async function encrypt(
   plaintext: string,
   key: CryptoKey
 ): Promise<string> {
   const iv = randomBytes(IV_LENGTH);
   const ciphertext = await crypto.subtle.encrypt(
-    { name: ALGORITHM, iv },
+    { name: ALGORITHM, iv: iv as BufferSource },
     key,
-    encode(plaintext)
+    encode(plaintext) as BufferSource
   );
 
-  // Prepend IV to ciphertext
   const combined = new Uint8Array(iv.length + ciphertext.byteLength);
   combined.set(iv, 0);
   combined.set(new Uint8Array(ciphertext), iv.length);
@@ -111,10 +102,6 @@ export async function encrypt(
   return toBase64(combined);
 }
 
-/**
- * Decrypt AES-256-GCM ciphertext.
- * Input: base64 string of IV || ciphertext || auth tag
- */
 export async function decrypt(
   ciphertextB64: string,
   key: CryptoKey
@@ -124,18 +111,14 @@ export async function decrypt(
   const ciphertext = combined.slice(IV_LENGTH);
 
   const plaintext = await crypto.subtle.decrypt(
-    { name: ALGORITHM, iv },
+    { name: ALGORITHM, iv: iv as BufferSource },
     key,
-    ciphertext
+    ciphertext as BufferSource
   );
 
   return decode(plaintext);
 }
 
-/**
- * Encrypt a master key with a password-derived key.
- * Returns { encryptedKey: base64, salt: base64 }
- */
 export async function encryptMasterKey(
   masterKey: CryptoKey,
   passphrase: string
@@ -151,9 +134,6 @@ export async function encryptMasterKey(
   };
 }
 
-/**
- * Decrypt a master key using a password-derived key.
- */
 export async function decryptMasterKey(
   encryptedKey: string,
   salt: string,
