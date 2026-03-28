@@ -198,6 +198,7 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
             <TabsTrigger value="notes" className="text-xs whitespace-nowrap gap-1"><FileText className="h-3.5 w-3.5" />Notes</TabsTrigger>
             <TabsTrigger value="esign" className="text-xs whitespace-nowrap gap-1"><PenTool className="h-3.5 w-3.5" />E-Sign</TabsTrigger>
             <TabsTrigger value="activity" className="text-xs whitespace-nowrap gap-1"><Clock className="h-3.5 w-3.5" />Activity</TabsTrigger>
+            <TabsTrigger value="ai-compliance" className="text-xs whitespace-nowrap gap-1"><Shield className="h-3.5 w-3.5" />AI Compliance</TabsTrigger>
           </TabsList>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
@@ -218,6 +219,7 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
           <TabsTrigger value="notes" className="text-xs gap-1"><FileText className="h-3.5 w-3.5" />Notes</TabsTrigger>
           <TabsTrigger value="esign" className="text-xs gap-1"><PenTool className="h-3.5 w-3.5" />E-Sign</TabsTrigger>
           <TabsTrigger value="activity" className="text-xs gap-1"><Clock className="h-3.5 w-3.5" />Activity</TabsTrigger>
+          <TabsTrigger value="ai-compliance" className="text-xs gap-1"><Shield className="h-3.5 w-3.5" />Compliance</TabsTrigger>
         </TabsList>
       </div>
 
