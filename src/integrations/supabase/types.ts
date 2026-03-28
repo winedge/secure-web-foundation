@@ -1850,6 +1850,53 @@ export type Database = {
           },
         ]
       }
+      firm_encryption_keys: {
+        Row: {
+          algorithm: string
+          created_at: string
+          encrypted_master_key: string
+          firm_id: string
+          id: string
+          key_salt: string
+          key_version: number
+          pqc_public_key: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          algorithm?: string
+          created_at?: string
+          encrypted_master_key: string
+          firm_id: string
+          id?: string
+          key_salt: string
+          key_version?: number
+          pqc_public_key?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          algorithm?: string
+          created_at?: string
+          encrypted_master_key?: string
+          firm_id?: string
+          id?: string
+          key_salt?: string
+          key_version?: number
+          pqc_public_key?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firm_encryption_keys_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firm_members: {
         Row: {
           created_at: string
@@ -3941,6 +3988,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      webauthn_challenges: {
+        Row: {
+          challenge: string
+          created_at: string
+          expires_at: string
+          id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          challenge: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          challenge?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      webauthn_credentials: {
+        Row: {
+          counter: number
+          created_at: string
+          credential_id: string
+          device_name: string | null
+          id: string
+          last_used_at: string | null
+          public_key: string
+          transports: string[] | null
+          user_id: string
+        }
+        Insert: {
+          counter?: number
+          created_at?: string
+          credential_id: string
+          device_name?: string | null
+          id?: string
+          last_used_at?: string | null
+          public_key: string
+          transports?: string[] | null
+          user_id: string
+        }
+        Update: {
+          counter?: number
+          created_at?: string
+          credential_id?: string
+          device_name?: string | null
+          id?: string
+          last_used_at?: string | null
+          public_key?: string
+          transports?: string[] | null
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

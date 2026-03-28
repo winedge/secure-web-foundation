@@ -11,6 +11,9 @@ import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 import logoImg from '@/assets/leadthru-logo.png';
 import { supabase } from '@/integrations/supabase/client';
+import { Fingerprint } from 'lucide-react';
+import { isWebAuthnSupported, authenticateWithWebAuthn } from '@/lib/webauthn';
+import { unlockEncryption } from '@/lib/crypto/zero-knowledge';
 
 const signInSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -30,6 +33,7 @@ export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(searchParams.get('mode') === 'signup');
   const [isLoading, setIsLoading] = useState(false);
   const [showMFA, setShowMFA] = useState(false);
+  const [showWebAuthn, setShowWebAuthn] = useState(false);
   const navigate = useNavigate();
   const { signIn, signUp, user } = useAuth();
 
@@ -63,9 +67,60 @@ export default function Auth() {
         setShowMFA(true);
         return;
       }
+
+      // Check if user has WebAuthn credentials
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData?.user && isWebAuthnSupported()) {
+        const { data: creds } = await (supabase as any)
+          .from('webauthn_credentials')
+          .select('id')
+          .eq('user_id', userData.user.id)
+          .limit(1);
+        
+        if (creds?.length > 0) {
+          setShowWebAuthn(true);
+          return;
+        }
+      }
+
+      // Try to unlock ZK encryption if configured
+      if (userData?.user) {
+        try {
+          const { data: encKey } = await (supabase as any)
+            .from('firm_encryption_keys')
+            .select('encrypted_master_key, key_salt')
+            .eq('user_id', userData.user.id)
+            .maybeSingle();
+          
+          if (encKey) {
+            const pqcSk = localStorage.getItem(`zk_pqc_sk_${userData.user.id}`);
+            await unlockEncryption(encKey.encrypted_master_key, encKey.key_salt, data.password, pqcSk || undefined);
+          }
+        } catch {}
+      }
+
       toast.success('Welcome back!');
       navigate('/dashboard');
     }
+  };
+
+  const handleWebAuthnVerify = async () => {
+    setIsLoading(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) throw new Error('Not authenticated');
+      
+      const result = await authenticateWithWebAuthn(userData.user.id);
+      if (result.success) {
+        toast.success('Biometric verified!');
+        navigate('/dashboard');
+      } else {
+        toast.error(result.error || 'Verification failed');
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+    setIsLoading(false);
   };
 
   const handleSignUp = async (data: z.infer<typeof signUpSchema>) => {
@@ -88,6 +143,32 @@ export default function Auth() {
           <img src={logoImg} alt="LeadThru" className="h-10" />
         </Link>
 
+        {showWebAuthn ? (
+          <Card>
+            <CardHeader className="text-center">
+              <CardTitle className="flex items-center justify-center gap-2">
+                <Fingerprint className="h-5 w-5" />
+                Biometric Verification
+              </CardTitle>
+              <CardDescription>
+                Please verify your identity with your registered passkey or hardware key.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button onClick={handleWebAuthnVerify} className="w-full" disabled={isLoading}>
+                <Fingerprint className="h-4 w-4 mr-2" />
+                {isLoading ? 'Verifying...' : 'Verify with Passkey'}
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() => { setShowWebAuthn(false); navigate('/dashboard'); }}
+              >
+                Skip for now
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
         <Card>
           <CardHeader className="text-center">
             <CardTitle>{isSignUp ? 'Create an Account' : 'Welcome Back'}</CardTitle>
@@ -239,6 +320,7 @@ export default function Auth() {
             </div>
           </CardContent>
         </Card>
+        )}
       </div>
     </div>
   );

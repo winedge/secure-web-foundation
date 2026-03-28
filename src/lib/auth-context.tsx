@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { lockEncryption } from '@/lib/crypto/zero-knowledge';
 
 interface AuthContextType {
   user: User | null;
@@ -63,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    lockEncryption(); // Clear ZK keys from memory
     await supabase.auth.signOut();
   };
 
