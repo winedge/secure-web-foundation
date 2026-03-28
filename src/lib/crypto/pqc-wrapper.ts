@@ -4,8 +4,7 @@
  * Uses @noble/post-quantum for NIST-approved ML-KEM (Kyber).
  */
 
-// @ts-ignore - noble post-quantum uses .js extension exports
-import { ml_kem1024 } from '@noble/post-quantum/ml-kem';
+import { ml_kem1024 } from '@noble/post-quantum/ml-kem.js';
 import { toBase64, fromBase64 } from './aes-gcm';
 
 export interface PQCKeyPair {
