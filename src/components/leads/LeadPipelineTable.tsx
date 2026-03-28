@@ -177,6 +177,8 @@ export function LeadPipelineTable({ leads, stage, sourcesMap, marketplaceCountsB
                     <TableHeader>
                      <TableRow className="bg-muted/30">
                          <TableHead className="w-12">No.</TableHead>
+                         {isAiActive && <TableHead>Relevance</TableHead>}
+                         {isAiActive && <TableHead>Match Reason</TableHead>}
                          <TableHead>Name</TableHead>
                          <TableHead>State</TableHead>
                          <TableHead>Source</TableHead>
