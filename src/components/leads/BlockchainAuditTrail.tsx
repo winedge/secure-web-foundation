@@ -87,7 +87,7 @@ export function BlockchainAuditTrail({ leadId }: BlockchainAuditTrailProps) {
       if (error) throw error;
       setVerification(data as VerificationResult);
       if (data.valid) {
-        toast.success('Chain integrity verified — all blocks valid');
+        toast.success('Chain integrity verified  |  all blocks valid');
       } else if (data.self_healed) {
         toast.warning('Chain break detected and remediation logged');
         refetch();
@@ -147,7 +147,7 @@ export function BlockchainAuditTrail({ leadId }: BlockchainAuditTrailProps) {
     doc.setTextColor(255);
     doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
-    doc.text('VERIFIED ASSET — BLOCKCHAIN AUDIT TRAIL', margin, 20);
+    doc.text('VERIFIED ASSET  |  BLOCKCHAIN AUDIT TRAIL', margin, 20);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
     doc.text('Court-Ready Chain of Custody & Data Lineage Report', margin, 30);
@@ -240,7 +240,7 @@ export function BlockchainAuditTrail({ leadId }: BlockchainAuditTrailProps) {
     // === BLOCK-BY-BLOCK DETAIL ===
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('CHAIN OF CUSTODY — BLOCK DETAIL', margin, y); y += 8;
+    doc.text('CHAIN OF CUSTODY  |  BLOCK DETAIL', margin, y); y += 8;
 
     blocks.forEach((block) => {
       checkPage(45);
@@ -250,7 +250,7 @@ export function BlockchainAuditTrail({ leadId }: BlockchainAuditTrailProps) {
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(15, 23, 42);
       const eventLabel = EVENT_CONFIG[block.event_type]?.label || block.event_type;
-      doc.text(`Block #${block.block_number} — ${eventLabel}`, margin + 2, y);
+      doc.text(`Block #${block.block_number}  |  ${eventLabel}`, margin + 2, y);
       doc.setFont('helvetica', 'normal');
       doc.text(new Date(block.created_at).toLocaleString(), pageW - margin - 2, y, { align: 'right' });
       y += 7;
@@ -359,7 +359,7 @@ export function BlockchainAuditTrail({ leadId }: BlockchainAuditTrailProps) {
       doc.setFontSize(8);
       doc.setTextColor(150);
       doc.text(`Page ${i} of ${totalPages}`, pageW / 2, pageH - 10, { align: 'center' });
-      doc.text('CONFIDENTIAL — ATTORNEY WORK PRODUCT', pageW / 2, pageH - 6, { align: 'center' });
+      doc.text('CONFIDENTIAL  |  ATTORNEY WORK PRODUCT', pageW / 2, pageH - 6, { align: 'center' });
     }
 
     doc.save(`blockchain-audit-${leadId.slice(0, 8)}.pdf`);
@@ -392,7 +392,7 @@ export function BlockchainAuditTrail({ leadId }: BlockchainAuditTrailProps) {
       <div className="p-3 rounded-lg bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20">
         <div className="flex items-center gap-2 mb-2">
           <ShieldCheck className="h-5 w-5 text-primary" />
-          <h4 className="font-bold text-sm">Verified Asset — Self-Healing Data Lineage</h4>
+          <h4 className="font-bold text-sm">Verified Asset  |  Self-Healing Data Lineage</h4>
         </div>
         <p className="text-xs text-muted-foreground">
           Every opt-in, AI interaction, signature, and lifecycle event is cryptographically chained. Trial-ready evidence.
@@ -455,7 +455,7 @@ export function BlockchainAuditTrail({ leadId }: BlockchainAuditTrailProps) {
           <div>
             <p className="font-medium">
               {verification.valid ? 'Chain Integrity Verified ✓' : `Chain Broken at Block #${verification.break_at}`}
-              {verification.self_healed && ' — Remediation Logged'}
+              {verification.self_healed && '  |  Remediation Logged'}
             </p>
             <p className="text-xs opacity-80">
               {verification.valid
@@ -540,7 +540,7 @@ export function BlockchainAuditTrail({ leadId }: BlockchainAuditTrailProps) {
                                   <span className="font-medium capitalize">{subKey.replace(/_/g, ' ')}:</span>
                                   <span className="truncate">
                                     {typeof subVal === 'object' 
-                                      ? `${(subVal as any)?.from ?? '—'} → ${(subVal as any)?.to ?? '—'}`
+                                      ? `${(subVal as any)?.from ?? ' | '} → ${(subVal as any)?.to ?? ' | '}`
                                       : String(subVal ?? 'N/A')}
                                   </span>
                                 </div>

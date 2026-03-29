@@ -253,7 +253,7 @@ serve(async (req) => {
     // ─── UPDATE CAMPAIGN ON META ───
     if (action === "update_campaign") {
       const { meta_campaign_id, name, daily_budget, status, bid_strategy } = params;
-      if (!meta_campaign_id) return errorResponse("No meta_campaign_id — campaign not synced to Meta yet");
+      if (!meta_campaign_id) return errorResponse("No meta_campaign_id  |  campaign not synced to Meta yet");
 
       const body: Record<string, string> = { access_token: token };
       if (name) body.name = name;
@@ -454,7 +454,7 @@ serve(async (req) => {
       return jsonResponse({ success: true, data: analyticsRows, count: analyticsRows.length });
     }
 
-    // ─── SYNC ALL — pull campaigns from Meta into local DB ───
+    // ─── SYNC ALL  |  pull campaigns from Meta into local DB ───
     if (action === "sync_from_meta") {
       const { firm_id } = params;
 

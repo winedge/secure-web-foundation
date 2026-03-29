@@ -97,7 +97,7 @@ export default function Auth() {
 
       const { challenge, challenge_id } = challengeRes.data;
 
-      // Step 2: Browser discovers passkeys automatically — no allowCredentials
+      // Step 2: Browser discovers passkeys automatically  |  no allowCredentials
       const assertion = await navigator.credentials.get({
         publicKey: {
           challenge: base64urlToBuffer(challenge),
@@ -113,7 +113,7 @@ export default function Auth() {
       const userHandle = (assertion.response as AuthenticatorAssertionResponse).userHandle;
       const userIdStr = userHandle ? new TextDecoder().decode(userHandle) : undefined;
 
-      // Step 3: Verify with server — server looks up user by credential_id
+      // Step 3: Verify with server  |  server looks up user by credential_id
       const verifyRes = await supabase.functions.invoke('webauthn-login', {
         body: {
           action: 'verify_and_login',
