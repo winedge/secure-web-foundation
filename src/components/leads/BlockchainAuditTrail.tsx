@@ -530,14 +530,29 @@ export function BlockchainAuditTrail({ leadId }: BlockchainAuditTrailProps) {
 
                     {block.event_data && Object.keys(block.event_data).length > 0 && (
                       <div className="mt-2 text-xs text-muted-foreground space-y-0.5">
-                        {Object.entries(block.event_data).slice(0, 4).map(([key, val]) => (
-                          <div key={key} className="flex gap-1">
-                            <span className="font-medium capitalize">{key.replace(/_/g, ' ')}:</span>
-                            <span className="truncate">
-                              {typeof val === 'object' ? JSON.stringify(val) : String(val ?? 'N/A')}
-                            </span>
-                          </div>
-                        ))}
+                        {Object.entries(block.event_data).slice(0, 6).map(([key, val]) => {
+                          // For nested objects like "changes", flatten one level
+                          if (val && typeof val === 'object' && !Array.isArray(val)) {
+                            return Object.entries(val as Record<string, unknown>)
+                              .filter(([, v]) => v !== null)
+                              .map(([subKey, subVal]) => (
+                                <div key={`${key}-${subKey}`} className="flex gap-1">
+                                  <span className="font-medium capitalize">{subKey.replace(/_/g, ' ')}:</span>
+                                  <span className="truncate">
+                                    {typeof subVal === 'object' 
+                                      ? `${(subVal as any)?.from ?? '—'} → ${(subVal as any)?.to ?? '—'}`
+                                      : String(subVal ?? 'N/A')}
+                                  </span>
+                                </div>
+                              ));
+                          }
+                          return (
+                            <div key={key} className="flex gap-1">
+                              <span className="font-medium capitalize">{key.replace(/_/g, ' ')}:</span>
+                              <span className="truncate">{String(val ?? 'N/A')}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
