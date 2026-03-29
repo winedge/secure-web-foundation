@@ -132,9 +132,16 @@ export function AiSearchBar({ onResults, isActive }: AiSearchBarProps) {
       }
     };
 
-    recognition.onerror = () => {
+    recognition.onerror = (event: any) => {
       setIsListening(false);
-      toast.error('Voice recognition failed');
+      const errType = event?.error || 'unknown';
+      if (errType === 'not-allowed') {
+        toast.error('Microphone access denied. If using the preview, open the published site for voice search.', { duration: 5000 });
+      } else if (errType === 'no-speech') {
+        toast.info('No speech detected. Try again.');
+      } else {
+        toast.error(`Voice recognition error: ${errType}`);
+      }
     };
 
     recognition.onend = () => setIsListening(false);
