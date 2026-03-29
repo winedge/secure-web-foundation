@@ -68,6 +68,7 @@ const AdminUserRoles = lazy(() => import("./pages/admin/AdminUserRoles"));
 const FraudDetection = lazy(() => import("./pages/FraudDetection"));
 const CrmIntegrations = lazy(() => import("./pages/CrmIntegrations"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
+const VerifyChain = lazy(() => import("./pages/VerifyChain"));
 const queryClient = new QueryClient();
 
 function PageLoader() {
