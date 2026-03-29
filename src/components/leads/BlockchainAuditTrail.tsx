@@ -147,11 +147,11 @@ export function BlockchainAuditTrail({ leadId }: BlockchainAuditTrailProps) {
     doc.setTextColor(255);
     doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
-    doc.text('VERIFIED ASSET  |  BLOCKCHAIN AUDIT TRAIL', margin, 20);
+    doc.text('VERIFIED ASSET  |  BLOCKCHAIN AUDIT TRAIL', pageW / 2, 20, { align: 'center' });
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text('Chain of Custody & Data Lineage Report', margin, 30);
-    doc.text(`Lead ID: ${leadId}`, margin, 38);
+    doc.text('Chain of Custody & Data Lineage Report', pageW / 2, 30, { align: 'center' });
+    doc.text(`Lead ID: ${leadId}`, pageW / 2, 38, { align: 'center' });
 
     y = 65;
     doc.setTextColor(0);
