@@ -77,7 +77,9 @@ export default function Auth() {
   });
 
   const handlePasskeyLogin = async () => {
-    if (!passkeyEmail) {
+    // Use email from form field directly
+    const loginEmail = passkeyEmail || signInForm.getValues('email');
+    if (!loginEmail) {
       toast.error('Please enter your email first');
       return;
     }
@@ -90,7 +92,7 @@ export default function Auth() {
     try {
       // Step 1: Get challenge and credential IDs from server
       const challengeRes = await supabase.functions.invoke('webauthn-login', {
-        body: { action: 'get_challenge', email: passkeyEmail },
+        body: { action: 'get_challenge', email: loginEmail },
       });
 
       if (challengeRes.error || challengeRes.data?.error) {
@@ -100,11 +102,18 @@ export default function Auth() {
       const { challenge, user_id, credentials } = challengeRes.data;
 
       // Step 2: Prompt browser for passkey authentication
-      const allowCredentials = credentials.map((c: any) => ({
-        id: base64urlToBuffer(c.credential_id),
-        type: 'public-key' as const,
-        transports: c.transports || [],
-      }));
+      // Only include transports if they exist to avoid QR code fallback
+      const allowCredentials = credentials.map((c: any) => {
+        const cred: PublicKeyCredentialDescriptor = {
+          id: base64urlToBuffer(c.credential_id),
+          type: 'public-key',
+        };
+        // Only set transports if we have specific ones — omitting prevents QR prompt
+        if (c.transports?.length > 0) {
+          cred.transports = c.transports as AuthenticatorTransport[];
+        }
+        return cred;
+      });
 
       const assertion = await navigator.credentials.get({
         publicKey: {
@@ -133,7 +142,7 @@ export default function Auth() {
         throw new Error(verifyRes.data?.error || 'Verification failed');
       }
 
-      const { token_hash, email } = verifyRes.data;
+      const { token_hash } = verifyRes.data;
 
       // Step 4: Use the token to sign in
       const { error: otpError } = await supabase.auth.verifyOtp({
