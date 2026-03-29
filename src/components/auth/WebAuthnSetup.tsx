@@ -55,6 +55,10 @@ export function WebAuthnSetup() {
       toast.error('Passkey registration requires the published site. Open your app at its published URL (not the Lovable preview) to register biometrics.', { duration: 6000 });
       return;
     }
+    if (!window.isSecureContext) {
+      toast.error('Passkey registration requires a secure HTTPS page.');
+      return;
+    }
     setRegistering(true);
     try {
       const result = await registerWebAuthnCredential(
@@ -73,7 +77,7 @@ export function WebAuthnSetup() {
     } catch (err: any) {
       const msg = err.message || 'Registration failed';
       if (msg.includes('publickey-credentials') || msg.includes('NotAllowedError')) {
-        toast.error('Passkey registration requires the published site. It cannot work in preview/iframe mode.');
+        toast.error('Passkey setup was cancelled or blocked. On Mac, enable Touch ID and iCloud Keychain passkeys, then try again.');
       } else {
         toast.error(msg);
       }
