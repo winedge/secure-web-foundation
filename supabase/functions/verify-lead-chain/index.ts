@@ -18,6 +18,13 @@ Deno.serve(async (req) => {
       });
     }
 
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(lead_id)) {
+      return new Response(JSON.stringify({ error: 'lead_id must be a valid UUID (e.g. b26f724d-1234-5678-9abc-def012345678)' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
