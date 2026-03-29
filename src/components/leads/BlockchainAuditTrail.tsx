@@ -353,10 +353,15 @@ export function BlockchainAuditTrail({ leadId }: BlockchainAuditTrailProps) {
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     y += 10;
+    doc.setFont('helvetica', 'italic');
+    doc.text('Digitally signed via LeadThru Platform', margin, y);
+    y += 6;
     doc.line(margin, y, margin + 70, y);
-    doc.text('Authorized Signature', margin, y + 5);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Authorized Signature: System-Generated', margin, y + 5);
+    const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     doc.line(pageW - margin - 70, y, pageW - margin, y);
-    doc.text('Date', pageW - margin - 70, y + 5);
+    doc.text(`Date: ${dateStr}`, pageW - margin - 70, y + 5);
 
     const totalPages = doc.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
