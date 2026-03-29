@@ -49,13 +49,13 @@ export function BlockchainAuditTrail({ leadId }: BlockchainAuditTrailProps) {
   const { data: blocks, isLoading } = useQuery({
     queryKey: ['lead-blockchain', leadId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('lead_blockchain' as string)
+      const { data, error } = await (supabase as any)
+        .from('lead_blockchain')
         .select('*')
         .eq('lead_id', leadId)
         .order('block_number', { ascending: true });
       if (error) throw error;
-      return (data || []) as unknown as Block[];
+      return (data || []) as Block[];
     },
   });
 
