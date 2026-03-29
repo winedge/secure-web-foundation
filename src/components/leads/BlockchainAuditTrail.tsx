@@ -201,8 +201,15 @@ export function BlockchainAuditTrail({ leadId }: BlockchainAuditTrailProps) {
     meta.forEach(([label, value]) => {
       doc.setFont('helvetica', 'bold');
       doc.text(`${label}:`, margin, y);
-      doc.setFont('helvetica', 'normal');
-      doc.text(value, margin + 40, y);
+      if (label === 'Chain Status' && value === 'VERIFIED ✓') {
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0, 153, 0);
+        doc.text(value, margin + 40, y);
+        doc.setTextColor(0);
+      } else {
+        doc.setFont('helvetica', 'normal');
+        doc.text(value, margin + 40, y);
+      }
       y += 5;
     });
     y += 4;
