@@ -78,8 +78,8 @@ export default function Auth() {
 
   const handlePasskeyLogin = async () => {
     // Use email from form field directly
-    const email = passkeyEmail || signInForm.getValues('email');
-    if (!email) {
+    const loginEmail = passkeyEmail || signInForm.getValues('email');
+    if (!loginEmail) {
       toast.error('Please enter your email first');
       return;
     }
@@ -92,7 +92,7 @@ export default function Auth() {
     try {
       // Step 1: Get challenge and credential IDs from server
       const challengeRes = await supabase.functions.invoke('webauthn-login', {
-        body: { action: 'get_challenge', email },
+        body: { action: 'get_challenge', email: loginEmail },
       });
 
       if (challengeRes.error || challengeRes.data?.error) {
