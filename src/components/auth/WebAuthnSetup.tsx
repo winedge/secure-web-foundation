@@ -109,6 +109,11 @@ export function WebAuthnSetup() {
 
   return (
     <div className="space-y-4">
+      {isInIframe && (
+        <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-700 dark:text-yellow-400">
+          ⚠️ Biometric registration requires the <strong>published site</strong>. Passkeys, FaceID, and TouchID cannot work inside the preview iframe due to browser security restrictions.
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h4 className="font-medium flex items-center gap-2">
