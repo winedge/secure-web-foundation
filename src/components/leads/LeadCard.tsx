@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MapPin, Calendar, Lock, Unlock, CheckCircle, Eye, Globe } from 'lucide-react';
+import { MapPin, Calendar, Lock, Unlock, CheckCircle, Eye, Globe, Link2 } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -90,6 +90,10 @@ export function LeadCard({ lead, isPurchased = false, sourceName }: LeadCardProp
               </Badge>
             )}
             <ComplianceBadge size="sm" />
+            <Badge variant="outline" className="gap-1" title="Blockchain-verified audit trail">
+              <Link2 className="h-3 w-3 text-primary" />
+              Chain
+            </Badge>
           </div>
 
           {/* Price & Date */}

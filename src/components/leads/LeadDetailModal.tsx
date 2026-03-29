@@ -32,6 +32,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DocumentSignaturePanel } from '@/components/signatures/DocumentSignaturePanel';
+import { BlockchainAuditTrail } from './BlockchainAuditTrail';
 
 interface LeadDetailModalProps {
   lead: Lead;
@@ -66,10 +67,13 @@ export function LeadDetailModal({ lead, open, onOpenChange, isPurchased = false 
         </DialogHeader>
         
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="w-full grid grid-cols-2">
+          <TabsList className="w-full grid grid-cols-3">
             <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="signatures" className="gap-1">
               <PenLine className="h-3.5 w-3.5" /> E-Sign
+            </TabsTrigger>
+            <TabsTrigger value="blockchain" className="gap-1">
+              <Shield className="h-3.5 w-3.5" /> Chain
             </TabsTrigger>
           </TabsList>
 
@@ -230,6 +234,19 @@ export function LeadDetailModal({ lead, open, onOpenChange, isPurchased = false 
                 <Lock className="h-8 w-8 text-muted-foreground/40 mb-3" />
                 <p className="text-sm text-muted-foreground">
                   Purchase this lead to access e-signature capabilities.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="blockchain" className="py-2">
+            {isPurchased ? (
+              <BlockchainAuditTrail leadId={lead.id} />
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <Lock className="h-8 w-8 text-muted-foreground/40 mb-3" />
+                <p className="text-sm text-muted-foreground">
+                  Purchase this lead to access the blockchain audit trail.
                 </p>
               </div>
             )}
