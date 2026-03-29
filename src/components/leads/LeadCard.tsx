@@ -90,7 +90,7 @@ export function LeadCard({ lead, isPurchased = false, sourceName }: LeadCardProp
               </Badge>
             )}
             <ComplianceBadge size="sm" />
-            <Badge variant="secondary" className="gap-1 bg-primary/10 text-primary border-primary/20" title="Verified Asset — Self-healing blockchain audit trail with complete data lineage">
+            <Badge variant="secondary" className="gap-1 bg-primary/10 text-primary border-primary/20" title="Verified Asset  |  Self-healing blockchain audit trail with complete data lineage">
               <Link2 className="h-3 w-3" />
               Verified Asset
             </Badge>

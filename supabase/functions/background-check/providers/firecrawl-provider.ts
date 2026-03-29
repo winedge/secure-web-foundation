@@ -120,14 +120,14 @@ export async function runFirecrawlBackgroundCheck(lead: LeadInfo) {
 ## WEB SEARCH RESULTS
 ${searchContext}
 
-## OFFICIAL DATABASES (for reference — could not be searched programmatically, note this in your report)
+## OFFICIAL DATABASES (for reference  |  could not be searched programmatically, note this in your report)
 ${officialSources}
 ${stateCourtNote}
 
 ## CRITICAL INSTRUCTIONS
 1. ONLY report findings that are actually present in the search results above.
 2. If a search result clearly references this person (matching name AND location/state), report it as a finding.
-3. If results are ambiguous (common name, unclear match), flag them as "possible match — requires manual verification".
+3. If results are ambiguous (common name, unclear match), flag them as "possible match  |  requires manual verification".
 4. Do NOT fabricate or assume any records. If nothing was found, say "No records found in automated search."
 5. For databases that couldn't be searched automatically (OFAC, NSOPW, PACER), note they require manual lookup.
 6. Every finding MUST include the actual source URL from the search results.
@@ -159,7 +159,7 @@ Return ONLY valid JSON (no markdown fences) in this format:
   "disclaimers": [
     "Results are based on automated web searches and may not be comprehensive.",
     "Official government databases (OFAC, NSOPW, PACER) require manual lookup for definitive results.",
-    "Name matches may be coincidental — verify identity before acting on findings.",
+    "Name matches may be coincidental  |  verify identity before acting on findings.",
     "This report is NOT FCRA-compliant and should not be used for employment or tenancy decisions.",
     "All findings should be independently verified by qualified legal professionals."
   ]
