@@ -2410,6 +2410,60 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_blockchain: {
+        Row: {
+          actor_id: string | null
+          block_number: number
+          created_at: string
+          event_data: Json
+          event_type: string
+          id: string
+          lead_id: string
+          nonce: string
+          previous_hash: string | null
+          sha256_hash: string
+        }
+        Insert: {
+          actor_id?: string | null
+          block_number: number
+          created_at?: string
+          event_data?: Json
+          event_type: string
+          id?: string
+          lead_id: string
+          nonce: string
+          previous_hash?: string | null
+          sha256_hash: string
+        }
+        Update: {
+          actor_id?: string | null
+          block_number?: number
+          created_at?: string
+          event_data?: Json
+          event_type?: string
+          id?: string
+          lead_id?: string
+          nonce?: string
+          previous_hash?: string | null
+          sha256_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_blockchain_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_blockchain_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_marketplace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_purchases: {
         Row: {
           amount: number
@@ -4310,6 +4364,15 @@ export type Database = {
       }
     }
     Functions: {
+      append_lead_block: {
+        Args: {
+          _actor_id?: string
+          _event_data: Json
+          _event_type: string
+          _lead_id: string
+        }
+        Returns: string
+      }
       charge_and_move_stage: {
         Args: {
           _charge_amount: number
