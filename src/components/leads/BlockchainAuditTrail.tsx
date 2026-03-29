@@ -356,8 +356,11 @@ export function BlockchainAuditTrail({ leadId }: BlockchainAuditTrailProps) {
           </Badge>
         </div>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={handleExport} disabled={!blocks?.length}>
-            <Download className="h-3.5 w-3.5 mr-1" /> Export
+          <Button size="sm" variant="outline" onClick={handleExportJSON} disabled={!blocks?.length}>
+            <Download className="h-3.5 w-3.5 mr-1" /> JSON
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleExportPDF} disabled={!blocks?.length}>
+            <FileText className="h-3.5 w-3.5 mr-1" /> PDF
           </Button>
           <Button size="sm" onClick={handleVerify} disabled={verifying || !blocks?.length}>
             {verifying ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 mr-1" />}
