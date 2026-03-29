@@ -19,6 +19,7 @@ import { WarRoomPanel } from '@/components/leads/WarRoomPanel';
 import { SettlementPredictorPanel } from '@/components/leads/SettlementPredictorPanel';
 import { BackgroundCheckerPanel } from '@/components/leads/BackgroundCheckerPanel';
 import { AiTransparencyPanel } from '@/components/leads/AiTransparencyPanel';
+import { BlockchainAuditTrail } from '@/components/leads/BlockchainAuditTrail';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,7 +37,7 @@ import { ComplianceBadge } from '@/components/leads/ComplianceBadge';
 import { 
   User, Mail, Phone, MapPin, FileText, Calendar,
   Search, Download, Eye, CheckCircle, Shield, Clock,
-  Pin, Trash2, Plus, X, Video, Brain, Scale, Upload, Users, Gavel, Lock, Fingerprint, PenTool
+  Pin, Trash2, Plus, X, Video, Brain, Scale, Upload, Users, Gavel, Lock, Fingerprint, PenTool, Link2
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -199,6 +200,7 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
             <TabsTrigger value="esign" className="text-xs whitespace-nowrap gap-1"><PenTool className="h-3.5 w-3.5" />E-Sign</TabsTrigger>
             <TabsTrigger value="activity" className="text-xs whitespace-nowrap gap-1"><Clock className="h-3.5 w-3.5" />Activity</TabsTrigger>
             <TabsTrigger value="ai-compliance" className="text-xs whitespace-nowrap gap-1"><Shield className="h-3.5 w-3.5" />AI Compliance</TabsTrigger>
+            <TabsTrigger value="blockchain" className="text-xs whitespace-nowrap gap-1"><Link2 className="h-3.5 w-3.5" />Blockchain</TabsTrigger>
           </TabsList>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
@@ -219,7 +221,8 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
           <TabsTrigger value="notes" className="text-xs gap-1"><FileText className="h-3.5 w-3.5" />Notes</TabsTrigger>
           <TabsTrigger value="esign" className="text-xs gap-1"><PenTool className="h-3.5 w-3.5" />E-Sign</TabsTrigger>
           <TabsTrigger value="activity" className="text-xs gap-1"><Clock className="h-3.5 w-3.5" />Activity</TabsTrigger>
-          <TabsTrigger value="ai-compliance" className="text-xs gap-1"><Shield className="h-3.5 w-3.5" />Compliance</TabsTrigger>
+           <TabsTrigger value="ai-compliance" className="text-xs gap-1"><Shield className="h-3.5 w-3.5" />Compliance</TabsTrigger>
+           <TabsTrigger value="blockchain" className="text-xs gap-1"><Link2 className="h-3.5 w-3.5" />Blockchain</TabsTrigger>
         </TabsList>
       </div>
 
@@ -387,6 +390,10 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
 
       <TabsContent value="ai-compliance" className="mt-4">
         <AiTransparencyPanel leadId={detailLead.id} />
+      </TabsContent>
+
+      <TabsContent value="blockchain" className="mt-4">
+        <BlockchainAuditTrail leadId={detailLead.id} />
       </TabsContent>
     </Tabs>
   );
