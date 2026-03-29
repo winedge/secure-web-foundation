@@ -150,10 +150,8 @@ export function BlockchainAuditTrail({ leadId }: BlockchainAuditTrailProps) {
     doc.text('VERIFIED ASSET  |  BLOCKCHAIN AUDIT TRAIL', margin, 20);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text('Court-Ready Chain of Custody & Data Lineage Report', margin, 30);
+    doc.text('Chain of Custody & Data Lineage Report', margin, 30);
     doc.text(`Lead ID: ${leadId}`, margin, 38);
-    doc.setFontSize(9);
-    doc.text('Self-Healing Cryptographic Ledger • Trial-Ready Evidence', margin, 48);
 
     y = 65;
     doc.setTextColor(0);
