@@ -67,6 +67,11 @@ export default function VerifyChain() {
       setError('Please enter a Lead ID');
       return;
     }
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(leadId)) {
+      setError('Please enter a valid UUID (e.g. b26f724d-1234-5678-9abc-def012345678)');
+      return;
+    }
     setLoading(true);
     setError('');
     setResult(null);
