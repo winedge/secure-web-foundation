@@ -409,6 +409,181 @@ export function BlockchainAuditTrail({ leadId }: BlockchainAuditTrailProps) {
     doc.text('Authorized Signature', margin, y + 4);
     doc.text(`Date: ${dateStr}`, pageW - margin - 70, y + 4);
 
+    // === VERIFICATION GUIDE PAGE ===
+    addPage();
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, pageW, 40, 'F');
+    doc.setTextColor(255);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('INDEPENDENT HASH VERIFICATION GUIDE', pageW / 2, 18, { align: 'center' });
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Step-by-step instructions for reproducing and verifying each SHA-256 hash', pageW / 2, 28, { align: 'center' });
+
+    y = 50;
+    doc.setTextColor(0);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('OVERVIEW', margin, y); y += 6;
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal');
+    const overviewText = 'Each block in this chain contains a SHA-256 hash computed from a deterministic input string. ' +
+      'This means any party with access to the raw block data can independently recompute the hash and ' +
+      'verify that the stored hash matches. If any block has been altered, the recomputed hash will differ, ' +
+      'immediately revealing the tampering.';
+    const overviewLines = doc.splitTextToSize(overviewText, contentW);
+    doc.text(overviewLines, margin, y);
+    y += overviewLines.length * 4 + 6;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('HASH FORMULA', margin, y); y += 6;
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal');
+    doc.text('The input to the SHA-256 function is constructed as follows:', margin, y); y += 5;
+
+    doc.setFillColor(240, 240, 245);
+    doc.rect(margin, y - 3, contentW, 10, 'F');
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(7.5);
+    doc.text('block_number | event_type | event_data_json | previous_hash_or_GENESIS | nonce | timestamp', margin + 3, y + 2);
+    y += 14;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    const fieldDescs = [
+      ['block_number', 'Integer sequence (1, 2, 3...)'],
+      ['event_type', 'e.g. "lead_created", "consent_recorded", "ai_decision"'],
+      ['event_data_json', 'JSON object cast to text (PostgreSQL ::text)'],
+      ['previous_hash', 'SHA-256 hex of the previous block, or "GENESIS" for block #1'],
+      ['nonce', 'Random 16-byte hex salt (unique per block)'],
+      ['timestamp', 'PostgreSQL timestamptz as text (e.g. "2025-06-28 14:30:00.123456+00")'],
+    ];
+    fieldDescs.forEach(([field, desc]) => {
+      doc.setFont('courier', 'bold');
+      doc.text(field, margin + 2, y);
+      doc.setFont('helvetica', 'normal');
+      doc.text(desc, margin + 42, y);
+      y += 4.5;
+    });
+    y += 4;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('STEP-BY-STEP VERIFICATION', margin, y); y += 7;
+    doc.setFontSize(8.5);
+
+    const steps = [
+      {
+        title: 'Step 1: Export the Raw Chain Data',
+        desc: 'Click the "JSON" export button on the Blockchain Audit Trail panel. This downloads a file ' +
+              'containing every block with its hash, previous_hash, nonce, timestamp, and event data.',
+      },
+      {
+        title: 'Step 2: Construct the Hash Input String',
+        desc: 'For each block, concatenate the fields with "|" as separator:\n' +
+              '   {block_number}|{event_type}|{event_data}|{previous_hash or GENESIS}|{nonce}|{timestamp}',
+      },
+      {
+        title: 'Step 3: Compute the SHA-256 Hash',
+        desc: 'Use any SHA-256 tool. The command below uses OpenSSL (available on macOS, Linux, Windows WSL):',
+      },
+    ];
+
+    steps.forEach((step) => {
+      checkPage(20);
+      doc.setFont('helvetica', 'bold');
+      doc.text(step.title, margin, y); y += 5;
+      doc.setFont('helvetica', 'normal');
+      const stepLines = doc.splitTextToSize(step.desc, contentW - 4);
+      doc.text(stepLines, margin + 2, y);
+      y += stepLines.length * 4 + 4;
+    });
+
+    // OpenSSL command example
+    checkPage(25);
+    doc.setFillColor(240, 240, 245);
+    doc.rect(margin, y - 3, contentW, 18, 'F');
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(7);
+    doc.text('# Example for Block #1 (Genesis):', margin + 3, y);
+    y += 4;
+    const exampleBlock = blocks[0];
+    if (exampleBlock) {
+      const exInput = `${exampleBlock.block_number}|${exampleBlock.event_type}|${JSON.stringify(exampleBlock.event_data)}|GENESIS|${exampleBlock.nonce}|${exampleBlock.created_at}`;
+      const truncatedInput = exInput.length > 120 ? exInput.slice(0, 120) + '...' : exInput;
+      doc.text(`echo -n "${truncatedInput}" \\`, margin + 3, y);
+      y += 4;
+      doc.text('  | openssl dgst -sha256', margin + 3, y);
+      y += 5;
+      doc.text(`# Expected output: ${exampleBlock.sha256_hash}`, margin + 3, y);
+    }
+    y += 10;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    const step4 = {
+      title: 'Step 4: Compare the Result',
+      desc: 'The hex output from openssl must exactly match the "sha256_hash" field in the JSON export. ' +
+            'If they match, the block is authentic and unaltered.',
+    };
+    const step5 = {
+      title: 'Step 5: Verify Chain Linkage',
+      desc: 'For each block after #1, verify that its "previous_hash" field equals the "sha256_hash" of the ' +
+            'preceding block. This ensures unbroken chain continuity.',
+    };
+
+    [step4, step5].forEach((step) => {
+      checkPage(15);
+      doc.setFont('helvetica', 'bold');
+      doc.text(step.title, margin, y); y += 5;
+      doc.setFont('helvetica', 'normal');
+      const sLines = doc.splitTextToSize(step.desc, contentW - 4);
+      doc.text(sLines, margin + 2, y);
+      y += sLines.length * 4 + 5;
+    });
+
+    y += 3;
+    checkPage(30);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('ALTERNATIVE VERIFICATION METHODS', margin, y); y += 7;
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal');
+    const altMethods = [
+      ['Python', 'import hashlib; hashlib.sha256(input_string.encode()).hexdigest()'],
+      ['Node.js', "require('crypto').createHash('sha256').update(input).digest('hex')"],
+      ['Online', 'Use any trusted SHA-256 calculator website with the exact input string'],
+      ['Web App', `Visit ${typeof window !== 'undefined' ? window.location.origin : 'https://leadthru.com'}/verify/${leadId.slice(0, 8)}`],
+    ];
+    altMethods.forEach(([method, cmd]) => {
+      checkPage(8);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${method}:`, margin + 2, y);
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(7);
+      const cmdLines = doc.splitTextToSize(cmd, contentW - 30);
+      doc.text(cmdLines, margin + 22, y);
+      doc.setFontSize(8.5);
+      y += Math.max(cmdLines.length * 3.5, 5) + 2;
+    });
+
+    y += 5;
+    checkPage(15);
+    doc.setDrawColor(200);
+    doc.line(margin, y, pageW - margin, y);
+    y += 6;
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.setTextColor(100);
+    const noteText = 'Note: The hash computation uses PostgreSQL\'s native text casting for event_data (jsonb::text). ' +
+      'Minor formatting differences in JSON serialization (key ordering, spacing) between PostgreSQL and other ' +
+      'tools may produce different hashes. For exact reproduction, use the raw text values as provided in the JSON export.';
+    const noteLines = doc.splitTextToSize(noteText, contentW);
+    doc.text(noteLines, margin, y);
+    doc.setTextColor(0);
+
     const totalPages = doc.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
