@@ -359,10 +359,6 @@ export default function Auth() {
                       type="email"
                       placeholder="you@lawfirm.com"
                       {...signInForm.register('email')}
-                      onChange={(e) => {
-                        signInForm.register('email').onChange(e);
-                        setPasskeyEmail(e.target.value);
-                      }}
                     />
                     {signInForm.formState.errors.email && (
                       <p className="text-sm font-medium text-destructive">
