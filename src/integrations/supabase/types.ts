@@ -2418,6 +2418,8 @@ export type Database = {
           event_data: Json
           event_type: string
           id: string
+          integrity_status: string | null
+          last_verified_at: string | null
           lead_id: string
           nonce: string
           previous_hash: string | null
@@ -2430,6 +2432,8 @@ export type Database = {
           event_data?: Json
           event_type: string
           id?: string
+          integrity_status?: string | null
+          last_verified_at?: string | null
           lead_id: string
           nonce: string
           previous_hash?: string | null
@@ -2442,6 +2446,8 @@ export type Database = {
           event_data?: Json
           event_type?: string
           id?: string
+          integrity_status?: string | null
+          last_verified_at?: string | null
           lead_id?: string
           nonce?: string
           previous_hash?: string | null
