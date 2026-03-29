@@ -111,6 +111,11 @@ export function AiSearchBar({ onResults, isActive }: AiSearchBarProps) {
       return;
     }
 
+    if (!window.isSecureContext) {
+      toast.error('Voice search requires a secure HTTPS page.');
+      return;
+    }
+
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       toast.error('Voice search is not supported in this browser');
@@ -136,7 +141,9 @@ export function AiSearchBar({ onResults, isActive }: AiSearchBarProps) {
       setIsListening(false);
       const errType = event?.error || 'unknown';
       if (errType === 'not-allowed') {
-        toast.error('Microphone access denied. If using the preview, open the published site for voice search.', { duration: 5000 });
+        toast.error('Microphone access was blocked. Please allow microphone permission in your browser settings and try again.', { duration: 5000 });
+      } else if (errType === 'service-not-allowed') {
+        toast.error('Speech recognition is disabled for this browser/profile. Check site permissions and OS microphone access.', { duration: 5000 });
       } else if (errType === 'no-speech') {
         toast.info('No speech detected. Try again.');
       } else {
