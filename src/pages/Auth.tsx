@@ -55,7 +55,6 @@ export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [showMFA, setShowMFA] = useState(false);
   const [showWebAuthn, setShowWebAuthn] = useState(false);
-  const [passkeyEmail, setPasskeyEmail] = useState('');
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const navigate = useNavigate();
   const { signIn, signUp, user } = useAuth();
@@ -77,12 +76,6 @@ export default function Auth() {
   });
 
   const handlePasskeyLogin = async () => {
-    // Use email from form field directly
-    const loginEmail = passkeyEmail || signInForm.getValues('email');
-    if (!loginEmail) {
-      toast.error('Please enter your email first');
-      return;
-    }
     if (!isWebAuthnSupported()) {
       toast.error('Passkeys are not supported in this browser');
       return;
@@ -90,37 +83,23 @@ export default function Auth() {
 
     setPasskeyLoading(true);
     try {
-      // Step 1: Get challenge and credential IDs from server
+      // Step 1: Get a challenge from the server (no email needed)
       const challengeRes = await supabase.functions.invoke('webauthn-login', {
-        body: { action: 'get_challenge', email: loginEmail },
+        body: { action: 'get_discoverable_challenge' },
       });
 
       if (challengeRes.error || challengeRes.data?.error) {
         throw new Error(challengeRes.data?.error || 'Failed to get challenge');
       }
 
-      const { challenge, user_id, credentials } = challengeRes.data;
+      const { challenge, challenge_id } = challengeRes.data;
 
-      // Step 2: Prompt browser for passkey authentication
-      // Only include transports if they exist to avoid QR code fallback
-      const allowCredentials = credentials.map((c: any) => {
-        const cred: PublicKeyCredentialDescriptor = {
-          id: base64urlToBuffer(c.credential_id),
-          type: 'public-key',
-        };
-        // Only set transports if we have specific ones — omitting prevents QR prompt
-        if (c.transports?.length > 0) {
-          cred.transports = c.transports as AuthenticatorTransport[];
-        }
-        return cred;
-      });
-
+      // Step 2: Browser discovers passkeys automatically — no allowCredentials
       const assertion = await navigator.credentials.get({
         publicKey: {
           challenge: base64urlToBuffer(challenge),
           rpId: window.location.hostname,
-          allowCredentials,
-          userVerification: 'preferred',
+          userVerification: 'required',
           timeout: 60000,
         },
       }) as PublicKeyCredential | null;
@@ -128,13 +107,16 @@ export default function Auth() {
       if (!assertion) throw new Error('Authentication cancelled');
 
       const credentialId = bufferToBase64url(assertion.rawId);
+      const userHandle = (assertion.response as AuthenticatorAssertionResponse).userHandle;
+      const userIdStr = userHandle ? new TextDecoder().decode(userHandle) : undefined;
 
-      // Step 3: Verify with server and get sign-in token
+      // Step 3: Verify with server — server looks up user by credential_id
       const verifyRes = await supabase.functions.invoke('webauthn-login', {
         body: {
           action: 'verify_and_login',
-          user_id,
           credential_id: credentialId,
+          challenge_id,
+          user_id_hint: userIdStr,
         },
       });
 
@@ -144,7 +126,6 @@ export default function Auth() {
 
       const { token_hash } = verifyRes.data;
 
-      // Step 4: Use the token to sign in
       const { error: otpError } = await supabase.auth.verifyOtp({
         token_hash,
         type: 'magiclink',
@@ -378,10 +359,6 @@ export default function Auth() {
                       type="email"
                       placeholder="you@lawfirm.com"
                       {...signInForm.register('email')}
-                      onChange={(e) => {
-                        signInForm.register('email').onChange(e);
-                        setPasskeyEmail(e.target.value);
-                      }}
                     />
                     {signInForm.formState.errors.email && (
                       <p className="text-sm font-medium text-destructive">

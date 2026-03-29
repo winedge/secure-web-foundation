@@ -8,24 +8,43 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
     const { action } = body;
-    
+
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Discoverable flow: generate a challenge without needing an email
+    if (action === "get_discoverable_challenge") {
+      const challengeBytes = new Uint8Array(32);
+      crypto.getRandomValues(challengeBytes);
+      const challenge = btoa(String.fromCharCode(...challengeBytes))
+        .replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+
+      const challengeId = crypto.randomUUID();
+
+      // Store challenge with no user_id (discoverable)
+      await supabaseAdmin.from("webauthn_challenges").insert({
+        id: challengeId,
+        user_id: "00000000-0000-0000-0000-000000000000", // placeholder for discoverable
+        challenge,
+        type: "discoverable_login",
+      });
+
+      return jsonResponse({ challenge, challenge_id: challengeId });
+    }
+
+    // Legacy email-based flow (kept for backwards compat)
     if (action === "get_challenge") {
       const { email } = body;
       if (!email) return errorResponse("Email is required");
 
-      // Look up user by email
       const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
       if (userError) throw userError;
 
       const user = userData.users.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
       if (!user) return errorResponse("No account found with that email", 404);
 
-      // Get registered credentials
       const { data: credentials, error: credError } = await supabaseAdmin
         .from("webauthn_credentials")
         .select("credential_id, transports")
@@ -34,13 +53,11 @@ Deno.serve(async (req) => {
       if (credError) throw credError;
       if (!credentials?.length) return errorResponse("No passkeys registered for this account", 404);
 
-      // Generate and store challenge
       const challengeBytes = new Uint8Array(32);
       crypto.getRandomValues(challengeBytes);
       const challenge = btoa(String.fromCharCode(...challengeBytes))
         .replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 
-      // Clean old challenges then insert new one
       await supabaseAdmin.from("webauthn_challenges")
         .delete().eq("user_id", user.id).eq("type", "login");
 
@@ -61,19 +78,20 @@ Deno.serve(async (req) => {
     }
 
     if (action === "verify_and_login") {
-      const { user_id, credential_id } = body;
-      if (!user_id || !credential_id) return errorResponse("Missing user_id or credential_id");
+      const { credential_id, user_id, challenge_id, user_id_hint } = body;
+      if (!credential_id) return errorResponse("Missing credential_id");
 
-      // Verify the credential exists for this user
+      // Look up the credential to find the user
       const { data: cred, error: credError } = await supabaseAdmin
         .from("webauthn_credentials")
-        .select("id, credential_id, counter")
-        .eq("user_id", user_id)
+        .select("id, credential_id, counter, user_id")
         .eq("credential_id", credential_id)
         .maybeSingle();
 
       if (credError) throw credError;
-      if (!cred) return errorResponse("Invalid credential", 401);
+      if (!cred) return errorResponse("Unknown passkey credential", 401);
+
+      const resolvedUserId = cred.user_id;
 
       // Update last_used_at
       await supabaseAdmin
@@ -81,15 +99,18 @@ Deno.serve(async (req) => {
         .update({ last_used_at: new Date().toISOString(), counter: (cred.counter || 0) + 1 })
         .eq("id", cred.id);
 
-      // Clean up challenge
+      // Clean up challenges
+      if (challenge_id) {
+        await supabaseAdmin.from("webauthn_challenges").delete().eq("id", challenge_id);
+      }
       await supabaseAdmin.from("webauthn_challenges")
-        .delete().eq("user_id", user_id).eq("type", "login");
+        .delete().eq("user_id", resolvedUserId).in("type", ["login", "discoverable_login"]);
 
-      // Generate a magic link for the user to sign in
-      const { data: userData } = await supabaseAdmin.auth.admin.getUserById(user_id);
+      // Get user email for magic link
+      const { data: userData } = await supabaseAdmin.auth.admin.getUserById(resolvedUserId);
       if (!userData?.user?.email) return errorResponse("User not found", 404);
 
-      // Generate a one-time sign-in link
+      // Generate sign-in link
       const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
         type: "magiclink",
         email: userData.user.email,
@@ -97,23 +118,18 @@ Deno.serve(async (req) => {
 
       if (linkError) throw linkError;
 
-      // Extract the token from the link
-      const properties = linkData?.properties;
-      
-      // Log audit
+      // Audit log
       await supabaseAdmin.from("audit_logs").insert({
-        user_id,
+        user_id: resolvedUserId,
         action: "webauthn_login",
         entity_type: "auth",
-        entity_id: user_id,
+        entity_id: resolvedUserId,
         details: { method: "passkey", credential_id },
       });
 
       return jsonResponse({
         success: true,
-        // Return the hashed token so client can use verifyOtp
-        token_hash: properties?.hashed_token,
-        email: userData.user.email,
+        token_hash: linkData?.properties?.hashed_token,
       });
     }
 

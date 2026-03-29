@@ -102,8 +102,8 @@ export async function registerWebAuthnCredential(
           { alg: -257, type: 'public-key' },  // RS256
         ],
         authenticatorSelection: {
-          authenticatorAttachment: undefined, // Allow both platform & cross-platform
-          residentKey: 'preferred',
+          residentKey: 'required',
+          requireResidentKey: true,
           userVerification: 'preferred',
         },
         timeout: 60000,
