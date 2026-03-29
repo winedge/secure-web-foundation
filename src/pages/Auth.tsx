@@ -11,9 +11,10 @@ import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 import logoImg from '@/assets/leadthru-logo.png';
 import { supabase } from '@/integrations/supabase/client';
-import { Fingerprint } from 'lucide-react';
+import { Fingerprint, Loader2 } from 'lucide-react';
 import { isWebAuthnSupported, authenticateWithWebAuthn } from '@/lib/webauthn';
 import { unlockEncryption } from '@/lib/crypto/zero-knowledge';
+import { Separator } from '@/components/ui/separator';
 
 const signInSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -28,12 +29,34 @@ const signUpSchema = signInSchema.extend({
   path: ['confirmPassword'],
 });
 
+/**
+ * Helper: base64url string to ArrayBuffer
+ */
+function base64urlToBuffer(b64url: string): ArrayBuffer {
+  const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
+  const pad = b64.length % 4;
+  const padded = pad ? b64 + '='.repeat(4 - pad) : b64;
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
+
+function bufferToBase64url(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let str = '';
+  for (const byte of bytes) str += String.fromCharCode(byte);
+  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const [isSignUp, setIsSignUp] = useState(searchParams.get('mode') === 'signup');
   const [isLoading, setIsLoading] = useState(false);
   const [showMFA, setShowMFA] = useState(false);
   const [showWebAuthn, setShowWebAuthn] = useState(false);
+  const [passkeyEmail, setPasskeyEmail] = useState('');
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
   const navigate = useNavigate();
   const { signIn, signUp, user } = useAuth();
 
@@ -52,6 +75,86 @@ export default function Auth() {
     resolver: zodResolver(signUpSchema),
     defaultValues: { email: '', password: '', confirmPassword: '', fullName: '' },
   });
+
+  const handlePasskeyLogin = async () => {
+    if (!passkeyEmail) {
+      toast.error('Please enter your email first');
+      return;
+    }
+    if (!isWebAuthnSupported()) {
+      toast.error('Passkeys are not supported in this browser');
+      return;
+    }
+
+    setPasskeyLoading(true);
+    try {
+      // Step 1: Get challenge and credential IDs from server
+      const challengeRes = await supabase.functions.invoke('webauthn-login', {
+        body: { action: 'get_challenge', email: passkeyEmail },
+      });
+
+      if (challengeRes.error || challengeRes.data?.error) {
+        throw new Error(challengeRes.data?.error || 'Failed to get challenge');
+      }
+
+      const { challenge, user_id, credentials } = challengeRes.data;
+
+      // Step 2: Prompt browser for passkey authentication
+      const allowCredentials = credentials.map((c: any) => ({
+        id: base64urlToBuffer(c.credential_id),
+        type: 'public-key' as const,
+        transports: c.transports || [],
+      }));
+
+      const assertion = await navigator.credentials.get({
+        publicKey: {
+          challenge: base64urlToBuffer(challenge),
+          rpId: window.location.hostname,
+          allowCredentials,
+          userVerification: 'preferred',
+          timeout: 60000,
+        },
+      }) as PublicKeyCredential | null;
+
+      if (!assertion) throw new Error('Authentication cancelled');
+
+      const credentialId = bufferToBase64url(assertion.rawId);
+
+      // Step 3: Verify with server and get sign-in token
+      const verifyRes = await supabase.functions.invoke('webauthn-login', {
+        body: {
+          action: 'verify_and_login',
+          user_id,
+          credential_id: credentialId,
+        },
+      });
+
+      if (verifyRes.error || verifyRes.data?.error) {
+        throw new Error(verifyRes.data?.error || 'Verification failed');
+      }
+
+      const { token_hash, email } = verifyRes.data;
+
+      // Step 4: Use the token to sign in
+      const { error: otpError } = await supabase.auth.verifyOtp({
+        token_hash,
+        type: 'magiclink',
+      });
+
+      if (otpError) throw otpError;
+
+      toast.success('Signed in with passkey!');
+      navigate('/dashboard');
+    } catch (err: any) {
+      const msg = err.message || 'Passkey login failed';
+      if (msg.includes('NotAllowedError') || msg.includes('cancelled')) {
+        toast.error('Passkey authentication was cancelled');
+      } else {
+        toast.error(msg);
+      }
+    }
+    setPasskeyLoading(false);
+  };
 
   const handleSignIn = async (data: z.infer<typeof signInSchema>) => {
     setIsLoading(true);
@@ -255,48 +358,82 @@ export default function Auth() {
                 </Button>
               </form>
             ) : (
-              <form onSubmit={signInForm.handleSubmit(handleSignIn)} className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="signInEmail" className="text-sm font-medium leading-none">
-                    Email
-                  </label>
-                  <Input
-                    id="signInEmail"
-                    type="email"
-                    placeholder="you@lawfirm.com"
-                    {...signInForm.register('email')}
-                  />
-                  {signInForm.formState.errors.email && (
-                    <p className="text-sm font-medium text-destructive">
-                      {signInForm.formState.errors.email.message}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="signInPassword" className="text-sm font-medium leading-none">
-                    Password
-                  </label>
-                  <Input
-                    id="signInPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    {...signInForm.register('password')}
-                  />
-                  {signInForm.formState.errors.password && (
-                    <p className="text-sm font-medium text-destructive">
-                      {signInForm.formState.errors.password.message}
-                    </p>
-                  )}
-                </div>
-                <div className="flex justify-end">
-                  <Link to="/reset-password" className="text-sm text-primary hover:underline">
-                    Forgot password?
-                  </Link>
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Signing in...' : 'Sign In'}
-                </Button>
-              </form>
+              <div className="space-y-4">
+                <form onSubmit={signInForm.handleSubmit(handleSignIn)} className="space-y-4">
+                  <div className="space-y-2">
+                    <label htmlFor="signInEmail" className="text-sm font-medium leading-none">
+                      Email
+                    </label>
+                    <Input
+                      id="signInEmail"
+                      type="email"
+                      placeholder="you@lawfirm.com"
+                      {...signInForm.register('email')}
+                      onChange={(e) => {
+                        signInForm.register('email').onChange(e);
+                        setPasskeyEmail(e.target.value);
+                      }}
+                    />
+                    {signInForm.formState.errors.email && (
+                      <p className="text-sm font-medium text-destructive">
+                        {signInForm.formState.errors.email.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="signInPassword" className="text-sm font-medium leading-none">
+                      Password
+                    </label>
+                    <Input
+                      id="signInPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      {...signInForm.register('password')}
+                    />
+                    {signInForm.formState.errors.password && (
+                      <p className="text-sm font-medium text-destructive">
+                        {signInForm.formState.errors.password.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex justify-end">
+                    <Link to="/reset-password" className="text-sm text-primary hover:underline">
+                      Forgot password?
+                    </Link>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Signing in...' : 'Sign In'}
+                  </Button>
+                </form>
+
+                {isWebAuthnSupported() && (
+                  <>
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <Separator className="w-full" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-card px-2 text-muted-foreground">or</span>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full gap-2"
+                      disabled={passkeyLoading}
+                      onClick={handlePasskeyLogin}
+                    >
+                      {passkeyLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Fingerprint className="h-4 w-4" />
+                      )}
+                      {passkeyLoading ? 'Authenticating...' : 'Sign in with Passkey'}
+                    </Button>
+                  </>
+                )}
+              </div>
             )}
 
             <div className="mt-6 text-center text-sm">
