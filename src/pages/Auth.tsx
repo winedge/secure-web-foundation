@@ -142,7 +142,7 @@ export default function Auth() {
         throw new Error(verifyRes.data?.error || 'Verification failed');
       }
 
-      const { token_hash, email } = verifyRes.data;
+      const { token_hash } = verifyRes.data;
 
       // Step 4: Use the token to sign in
       const { error: otpError } = await supabase.auth.verifyOtp({
