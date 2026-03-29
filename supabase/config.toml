@@ -134,3 +134,6 @@ verify_jwt = false
 
 [functions.ai-lead-search]
 verify_jwt = false
+
+[functions.verify-lead-chain]
+verify_jwt = false
