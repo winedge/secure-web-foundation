@@ -56,14 +56,17 @@ export default function Auth() {
   const [showMFA, setShowMFA] = useState(false);
   const [showWebAuthn, setShowWebAuthn] = useState(false);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
   const navigate = useNavigate();
   const { signIn, signUp, user } = useAuth();
 
   useEffect(() => {
-    if (user) {
+    // Only auto-redirect if user is already logged in on mount,
+    // NOT during active login (which needs MFA/WebAuthn checks first)
+    if (user && !isAuthenticating && !showMFA && !showWebAuthn) {
       navigate('/dashboard');
     }
-  }, [user, navigate]);
+  }, [user, navigate, isAuthenticating, showMFA, showWebAuthn]);
 
   const signInForm = useForm<z.infer<typeof signInSchema>>({
     resolver: zodResolver(signInSchema),
@@ -147,11 +150,13 @@ export default function Auth() {
   };
 
   const handleSignIn = async (data: z.infer<typeof signInSchema>) => {
+    setIsAuthenticating(true);
     setIsLoading(true);
     const { error } = await signIn(data.email, data.password);
     setIsLoading(false);
     
     if (error) {
+      setIsAuthenticating(false);
       toast.error(error.message);
     } else {
       // Check if MFA is required
@@ -192,6 +197,7 @@ export default function Auth() {
         } catch {}
       }
 
+      setIsAuthenticating(false);
       toast.success('Welcome back!');
       navigate('/dashboard');
     }
