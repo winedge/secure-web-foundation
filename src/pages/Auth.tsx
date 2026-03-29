@@ -55,7 +55,6 @@ export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [showMFA, setShowMFA] = useState(false);
   const [showWebAuthn, setShowWebAuthn] = useState(false);
-  const [passkeyEmail, setPasskeyEmail] = useState('');
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const navigate = useNavigate();
   const { signIn, signUp, user } = useAuth();
