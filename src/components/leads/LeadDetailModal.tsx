@@ -42,12 +42,14 @@ interface LeadDetailModalProps {
   isPurchased?: boolean;
 }
 
-export function LeadDetailModal({ lead, open, onOpenChange, isPurchased = false }: LeadDetailModalProps) {
+export function LeadDetailModal({ lead, open, onOpenChange, isPurchased: isPurchasedProp = false }: LeadDetailModalProps) {
+  const [justPurchased, setJustPurchased] = useState(false);
+  const isPurchased = isPurchasedProp || justPurchased;
   const { mutate: purchaseLead, isPending } = usePurchaseLead();
 
   const handlePurchase = () => {
     purchaseLead(lead.id, {
-      onSuccess: () => onOpenChange(false),
+      onSuccess: () => setJustPurchased(true),
     });
   };
 
