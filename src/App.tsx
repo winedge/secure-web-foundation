@@ -68,6 +68,7 @@ const AdminUserRoles = lazy(() => import("./pages/admin/AdminUserRoles"));
 const FraudDetection = lazy(() => import("./pages/FraudDetection"));
 const CrmIntegrations = lazy(() => import("./pages/CrmIntegrations"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
+const VerifyChain = lazy(() => import("./pages/VerifyChain"));
 const queryClient = new QueryClient();
 
 function PageLoader() {
@@ -116,6 +117,8 @@ const App = () => (
                 <Route path="/intake" element={<LazyRoute><Intake /></LazyRoute>} />
                 <Route path="/intake/:slug" element={<LazyRoute><BrandedIntake /></LazyRoute>} />
                 <Route path="/lp/:slug" element={<LazyRoute><LandingPage /></LazyRoute>} />
+                <Route path="/verify" element={<LazyRoute><VerifyChain /></LazyRoute>} />
+                <Route path="/verify/:leadId" element={<LazyRoute><VerifyChain /></LazyRoute>} />
 
                 {/* Protected routes */}
                 <Route path="/dashboard" element={<ProtectedRoute><LazyRoute><Dashboard /></LazyRoute></ProtectedRoute>} />
