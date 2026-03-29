@@ -197,6 +197,7 @@ export default function Auth() {
         } catch {}
       }
 
+      setIsAuthenticating(false);
       toast.success('Welcome back!');
       navigate('/dashboard');
     }
