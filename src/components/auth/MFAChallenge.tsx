@@ -48,8 +48,8 @@ export function MFAChallenge({ onVerified }: MFAChallengeProps) {
   };
 
   return (
-    <div className="min-h-screen gradient-bg flex items-center justify-center p-6">
-      <Card className="w-full max-w-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <Card className="w-full max-w-sm mx-4 shadow-2xl border-border">
         <CardHeader className="text-center">
           <div className="mx-auto w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
             <Shield className="h-7 w-7 text-primary" />
