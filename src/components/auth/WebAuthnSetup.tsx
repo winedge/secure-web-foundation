@@ -45,12 +45,14 @@ export function WebAuthnSetup() {
     setLoading(false);
   };
 
-  const isInIframe = window.self !== window.top;
+  const isInIframe = (() => {
+    try { return window.self !== window.top; } catch { return true; }
+  })();
 
   const handleRegister = async () => {
     if (!user?.id || !user?.email) return;
     if (isInIframe) {
-      toast.error('Passkey registration is not available in preview mode. Please use the published site.');
+      toast.error('Passkey registration requires the published site. Open your app at its published URL (not the Lovable preview) to register biometrics.', { duration: 6000 });
       return;
     }
     setRegistering(true);
