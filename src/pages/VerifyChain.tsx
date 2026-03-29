@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -84,13 +84,13 @@ export default function VerifyChain() {
     }
   };
 
-  // Auto-verify if leadId is in URL
-  useState(() => {
+  useEffect(() => {
     if (paramLeadId) {
       setInputId(paramLeadId);
       handleVerify(paramLeadId);
     }
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paramLeadId]);
 
   return (
     <div className="min-h-screen bg-background">
