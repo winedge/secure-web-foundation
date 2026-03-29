@@ -4,7 +4,6 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { toBase64, fromBase64 } from './crypto/aes-gcm';
 
 const RP_NAME = 'LeadThru';
 const RP_ID = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
@@ -53,6 +52,34 @@ function base64urlToBuffer(b64url: string): ArrayBuffer {
   return bytes.buffer;
 }
 
+function getWebAuthnErrorMessage(error: unknown): string {
+  const err = error as { name?: string; message?: string } | null;
+  const name = err?.name || '';
+  const message = err?.message || '';
+
+  if (!window.isSecureContext) {
+    return 'Passkeys require a secure HTTPS page.';
+  }
+
+  if (name === 'InvalidStateError') {
+    return 'This passkey is already registered on this device.';
+  }
+
+  if (name === 'NotSupportedError') {
+    return 'This browser or device does not support the selected passkey method.';
+  }
+
+  if (name === 'NotAllowedError') {
+    return 'Passkey setup was cancelled or blocked. On Mac, make sure Touch ID and iCloud Keychain passkeys are enabled.';
+  }
+
+  if (message.includes('getPublicKey') || message.includes('public key')) {
+    return 'Your browser created the passkey, but did not expose the public key in the expected format. Please try again.';
+  }
+
+  return message || 'Passkey registration failed';
+}
+
 /**
  * Request a registration challenge from the server, then create a credential.
  */
@@ -62,6 +89,14 @@ export async function registerWebAuthnCredential(
   deviceName: string = 'My Passkey'
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    if (!isWebAuthnSupported()) {
+      throw new Error('Passkeys are not supported in this browser');
+    }
+
+    if (!window.isSecureContext) {
+      throw new Error('Passkeys require a secure HTTPS page');
+    }
+
     // 1. Generate challenge locally and store in DB
     const challenge = crypto.getRandomValues(new Uint8Array(32));
     const challengeB64 = bufferToBase64url(challenge.buffer);
@@ -102,8 +137,7 @@ export async function registerWebAuthnCredential(
           { alg: -257, type: 'public-key' },  // RS256
         ],
         authenticatorSelection: {
-          residentKey: 'required',
-          requireResidentKey: true,
+          residentKey: 'preferred',
           userVerification: 'preferred',
         },
         timeout: 60000,
@@ -118,7 +152,9 @@ export async function registerWebAuthnCredential(
 
     // 4. Store credential in database
     const credentialId = bufferToBase64url(credential.rawId);
-    const publicKey = bufferToBase64url(attestationResponse.getPublicKey()!);
+    const rawPublicKey = attestationResponse.getPublicKey?.();
+    const publicKeySource = rawPublicKey ?? attestationResponse.attestationObject;
+    const publicKey = bufferToBase64url(publicKeySource);
     const transports = attestationResponse.getTransports?.() || [];
 
     const { error: saveError } = await (supabase as any)
@@ -144,7 +180,7 @@ export async function registerWebAuthnCredential(
     return { success: true };
   } catch (err: any) {
     console.error('[WebAuthn] Registration error:', err);
-    return { success: false, error: err.message || 'Registration failed' };
+    return { success: false, error: getWebAuthnErrorMessage(err) };
   }
 }
 
