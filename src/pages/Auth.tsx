@@ -150,11 +150,13 @@ export default function Auth() {
   };
 
   const handleSignIn = async (data: z.infer<typeof signInSchema>) => {
+    setIsAuthenticating(true);
     setIsLoading(true);
     const { error } = await signIn(data.email, data.password);
     setIsLoading(false);
     
     if (error) {
+      setIsAuthenticating(false);
       toast.error(error.message);
     } else {
       // Check if MFA is required
