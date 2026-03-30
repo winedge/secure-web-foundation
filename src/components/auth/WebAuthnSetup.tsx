@@ -253,6 +253,13 @@ export function WebAuthnSetup() {
           ))}
         </div>
       )}
+
+      <BackupCodesDisplay
+        codes={backupCodes}
+        open={showBackupCodes}
+        onClose={() => setShowBackupCodes(false)}
+        source="webauthn"
+      />
     </div>
   );
 }
