@@ -16,6 +16,8 @@ import {
   deleteWebAuthnCredential,
 } from '@/lib/webauthn';
 import { formatDistanceToNow } from 'date-fns';
+import { BackupCodesDisplay } from './BackupCodesDisplay';
+import { generateRecoveryCodes, storeRecoveryCodes } from '@/lib/recovery-codes';
 
 export function WebAuthnSetup() {
   const { user } = useAuth();
@@ -26,6 +28,8 @@ export function WebAuthnSetup() {
   const [hasPlatform, setHasPlatform] = useState(false);
   const [deviceName, setDeviceName] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [showBackupCodes, setShowBackupCodes] = useState(false);
 
   useEffect(() => {
     setSupported(isWebAuthnSupported());

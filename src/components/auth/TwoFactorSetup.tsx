@@ -288,6 +288,13 @@ export function TwoFactorSetup() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <BackupCodesDisplay
+        codes={backupCodes}
+        open={showBackupCodes}
+        onClose={() => setShowBackupCodes(false)}
+        source="totp"
+      />
     </div>
   );
 }
