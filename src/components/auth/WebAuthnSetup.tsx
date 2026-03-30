@@ -16,6 +16,8 @@ import {
   deleteWebAuthnCredential,
 } from '@/lib/webauthn';
 import { formatDistanceToNow } from 'date-fns';
+import { BackupCodesDisplay } from './BackupCodesDisplay';
+import { generateRecoveryCodes, storeRecoveryCodes } from '@/lib/recovery-codes';
 
 export function WebAuthnSetup() {
   const { user } = useAuth();
@@ -26,6 +28,8 @@ export function WebAuthnSetup() {
   const [hasPlatform, setHasPlatform] = useState(false);
   const [deviceName, setDeviceName] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [showBackupCodes, setShowBackupCodes] = useState(false);
 
   useEffect(() => {
     setSupported(isWebAuthnSupported());
@@ -71,6 +75,17 @@ export function WebAuthnSetup() {
         setDialogOpen(false);
         setDeviceName('');
         await loadCredentials();
+        // Generate backup codes on first passkey
+        if (credentials.length === 0) {
+          const codes = generateRecoveryCodes(10);
+          try {
+            await storeRecoveryCodes(user.id, codes, 'webauthn');
+          } catch (e) {
+            console.error('Failed to store recovery codes:', e);
+          }
+          setBackupCodes(codes);
+          setShowBackupCodes(true);
+        }
       } else {
         toast.error(result.error || 'Failed to register passkey');
       }
@@ -238,6 +253,13 @@ export function WebAuthnSetup() {
           ))}
         </div>
       )}
+
+      <BackupCodesDisplay
+        codes={backupCodes}
+        open={showBackupCodes}
+        onClose={() => setShowBackupCodes(false)}
+        source="webauthn"
+      />
     </div>
   );
 }

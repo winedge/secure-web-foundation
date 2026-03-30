@@ -9,6 +9,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Shield, ShieldCheck, ShieldOff, Loader2, Copy, CheckCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { BackupCodesDisplay } from './BackupCodesDisplay';
+import { generateRecoveryCodes, storeRecoveryCodes } from '@/lib/recovery-codes';
 
 type MFAStatus = 'loading' | 'disabled' | 'enabled';
 
@@ -24,6 +26,8 @@ export function TwoFactorSetup() {
   const [disableCode, setDisableCode] = useState('');
   const [disabling, setDisabling] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [showBackupCodes, setShowBackupCodes] = useState(false);
 
   useEffect(() => {
     checkMFAStatus();
@@ -93,11 +97,22 @@ export function TwoFactorSetup() {
       });
       if (verifyError) throw verifyError;
 
+      // Generate and store recovery codes
+      const codes = generateRecoveryCodes(10);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) await storeRecoveryCodes(user.id, codes, 'totp');
+      } catch (e) {
+        console.error('Failed to store recovery codes:', e);
+      }
+
       toast.success('Two-factor authentication enabled successfully!');
       setStatus('enabled');
       setQrCode('');
       setSecret('');
       setVerifyCode('');
+      setBackupCodes(codes);
+      setShowBackupCodes(true);
     } catch (err: any) {
       toast.error(err.message || 'Invalid verification code');
     } finally {
@@ -273,6 +288,13 @@ export function TwoFactorSetup() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <BackupCodesDisplay
+        codes={backupCodes}
+        open={showBackupCodes}
+        onClose={() => setShowBackupCodes(false)}
+        source="totp"
+      />
     </div>
   );
 }
