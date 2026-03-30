@@ -75,6 +75,17 @@ export function WebAuthnSetup() {
         setDialogOpen(false);
         setDeviceName('');
         await loadCredentials();
+        // Generate backup codes on first passkey
+        if (credentials.length === 0) {
+          const codes = generateRecoveryCodes(10);
+          try {
+            await storeRecoveryCodes(user.id, codes, 'webauthn');
+          } catch (e) {
+            console.error('Failed to store recovery codes:', e);
+          }
+          setBackupCodes(codes);
+          setShowBackupCodes(true);
+        }
       } else {
         toast.error(result.error || 'Failed to register passkey');
       }
