@@ -1,4 +1,5 @@
 import {
+  Scale,
   LayoutDashboard,
   ShoppingCart,
   Briefcase,
@@ -101,6 +102,7 @@ export const navGroups: NavGroup[] = [
     label: 'Intelligence',
     icon: Gavel,
     items: [
+      { name: 'AI Case Evaluator', href: '/ai-case-evaluator', icon: Scale },
       { name: 'Judge Intel', href: '/judge-intelligence', icon: Gavel, premium: true },
       { name: 'Evidence Vault', href: '/evidence-vault', icon: VaultIcon, premium: true },
       { name: 'Benchmarks', href: '/benchmarks', icon: BarChart3, premium: true },

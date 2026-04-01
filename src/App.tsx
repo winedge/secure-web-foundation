@@ -69,6 +69,7 @@ const FraudDetection = lazy(() => import("./pages/FraudDetection"));
 const CrmIntegrations = lazy(() => import("./pages/CrmIntegrations"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const VerifyChain = lazy(() => import("./pages/VerifyChain"));
+const AiCaseEvaluator = lazy(() => import("./pages/AiCaseEvaluator"));
 const queryClient = new QueryClient();
 
 function PageLoader() {
@@ -155,6 +156,7 @@ const App = () => (
                 <Route path="/cross-platform-autopilot" element={<ProtectedRoute><LazyRoute><CrossPlatformAutopilot /></LazyRoute></ProtectedRoute>} />
                 <Route path="/fraud-detection" element={<ProtectedRoute><LazyRoute><FraudDetection /></LazyRoute></ProtectedRoute>} />
                 <Route path="/crm-integrations" element={<ProtectedRoute><LazyRoute><CrmIntegrations /></LazyRoute></ProtectedRoute>} />
+                <Route path="/ai-case-evaluator" element={<ProtectedRoute><LazyRoute><AiCaseEvaluator /></LazyRoute></ProtectedRoute>} />
 
                 {/* Admin routes */}
                 <Route path="/admin" element={<ProtectedRoute requireAdmin><LazyRoute><AdminDashboard /></LazyRoute></ProtectedRoute>} />
