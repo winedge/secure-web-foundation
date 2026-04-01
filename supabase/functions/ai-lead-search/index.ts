@@ -215,7 +215,7 @@ ${truncatedSummaries.join("\n")}`,
       confidence_score: topResults[0]?.relevance_score || 0,
       decision_factors: { query, total_leads: leads.length, results_returned: results.length, tags: interpretation.tags },
       compliant_frameworks: ["ABA-512", "GDPR", "EU-AI-Act"],
-    }).catch(() => {}); // Non-blocking
+    }).then(() => {}).catch(() => {}); // Non-blocking
 
     return new Response(JSON.stringify({ results, interpretation }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
