@@ -1,4 +1,5 @@
 import {
+  Scale,
   LayoutDashboard,
   ShoppingCart,
   Briefcase,
