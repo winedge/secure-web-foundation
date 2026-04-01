@@ -69,6 +69,7 @@ const FraudDetection = lazy(() => import("./pages/FraudDetection"));
 const CrmIntegrations = lazy(() => import("./pages/CrmIntegrations"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const VerifyChain = lazy(() => import("./pages/VerifyChain"));
+const AiCaseEvaluator = lazy(() => import("./pages/AiCaseEvaluator"));
 const queryClient = new QueryClient();
 
 function PageLoader() {
