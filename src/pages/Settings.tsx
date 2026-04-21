@@ -23,6 +23,8 @@ import { useFirmBranding, useUpsertBranding } from '@/hooks/use-firm-branding';
 import { usePlatformConnections, useConnectMetaPlatform, useExchangeMetaToken, useVerifyMetaConnection, useDisconnectPlatform } from '@/hooks/use-platform-connections';
 import { useSearchParams } from 'react-router-dom';
 import { TortTypeManager as TortTypeManagerComponent } from '@/components/admin/TortTypeManager';
+import { VerticalSettingsTab } from '@/components/settings/VerticalSettingsTab';
+import { Layers } from 'lucide-react';
 
 const profileSchema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters'),
@@ -198,9 +200,13 @@ export default function Settings() {
               <MessageCircle className="h-4 w-4" />
               <span>Chatbot</span>
             </TabsTrigger>
+            <TabsTrigger value="industry" className="gap-1 sm:gap-2">
+              <Layers className="h-4 w-4" />
+              <span>Industry</span>
+            </TabsTrigger>
             <TabsTrigger value="tort-types" className="gap-1 sm:gap-2">
               <Scale className="h-4 w-4" />
-              <span>Torts</span>
+              <span>Categories</span>
             </TabsTrigger>
             <TabsTrigger value="connections" className="gap-1 sm:gap-2">
               <Link2 className="h-4 w-4" />
