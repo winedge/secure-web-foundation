@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders, handleCors, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { createSupabaseClient, getAuthenticatedUser } from "../_shared/auth.ts";
+import { getVerticalContext, getFirmIdForUser } from "../_shared/vertical.ts";
 
 serve(async (req) => {
   const cors = handleCors(req);
@@ -11,37 +12,36 @@ serve(async (req) => {
     const user = await getAuthenticatedUser(req, supabase);
 
     const { tort_type, target_states, firm_name } = await req.json();
-
-    if (!tort_type) return errorResponse("tort_type is required");
+    if (!tort_type) return errorResponse("category is required");
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const prompt = `You are a legal marketing intelligence analyst. Analyze the competitive landscape for a law firm specializing in "${tort_type}" tort cases${target_states?.length ? ` in these states: ${target_states.join(", ")}` : ""}.
+    const firmId = await getFirmIdForUser(user.id);
+    const { config: vCfg, verticalSlug } = await getVerticalContext(firmId, "competitor");
+    const verticalName = vCfg?.vertical?.name ?? "Mass Tort Legal";
 
-Provide a comprehensive competitive intelligence report with the following sections. Use realistic, data-driven estimates based on your knowledge of the legal advertising market:
+    const subjectLabel =
+      verticalSlug === "real_estate" ? "real estate brokerage"
+      : verticalSlug === "skin_clinic" ? "aesthetics clinic"
+      : verticalSlug === "dental" ? "dental practice"
+      : verticalSlug === "solar" ? "solar provider"
+      : verticalSlug === "home_services" ? "home services company"
+      : "law firm";
 
-1. **Market Overview**: Current market size, growth trends, and key dynamics for this tort type.
+    const prompt = `You are a marketing intelligence analyst for the ${verticalName} vertical. Analyze the competitive landscape for a ${subjectLabel} specializing in "${tort_type}"${target_states?.length ? ` in these regions: ${target_states.join(", ")}` : ""}.
 
-2. **Top Competitors** (provide 4-6): For each competitor include:
-   - Firm name (use realistic but fictional firm names)
-   - Estimated monthly ad spend range
-   - Primary advertising channels (Meta, Google, TV, etc.)
-   - Key messaging themes
-   - Geographic focus
-   - Competitive strength (1-10 scale)
+Provide a comprehensive competitive intelligence report. Use realistic, data-driven estimates appropriate to ${verticalSlug.replace("_", " ")}:
 
-3. **Ad Spend Patterns**: Monthly/seasonal trends in ad spending for this tort type. When spend peaks and dips.
+1. Market Overview: market size, growth, dynamics for this category in ${verticalName}.
+2. Top Competitors (4-6): name (realistic but fictional), monthly ad spend range, primary channels, messaging themes, geographic focus, strength (1-10).
+3. Ad Spend Patterns: monthly/seasonal trends.
+4. Messaging Analysis: common strategies, emotional appeals, CTAs, differentiators used by competitors in ${verticalSlug.replace("_", " ")}.
+5. Market Positioning Map: Price vs Quality, Volume vs Specialization.
+6. Opportunities & Gaps${firm_name ? ` for ${firm_name}` : ""}.
+7. Recommended Strategy: budget split, messaging, targeting, differentiation tailored to ${verticalSlug.replace("_", " ")}.
 
-4. **Messaging Analysis**: Common messaging strategies, emotional appeals, CTAs, and differentiators used by competitors.
-
-5. **Market Positioning Map**: Where competitors sit on axes of Price vs. Quality and Volume vs. Specialization.
-
-6. **Opportunities & Gaps**: Underserved markets, messaging gaps, and strategic opportunities${firm_name ? ` specifically for ${firm_name}` : ""}.
-
-7. **Recommended Strategy**: Specific, actionable recommendations for budget allocation, messaging, targeting, and differentiation.
-
-Return the response as valid JSON with this structure:
+Return JSON:
 {
   "market_overview": { "size_estimate": string, "growth_rate": string, "key_trends": string[] },
   "competitors": [{ "name": string, "monthly_spend": string, "channels": string[], "messaging_themes": string[], "geographic_focus": string[], "strength_score": number }],
@@ -53,14 +53,11 @@ Return the response as valid JSON with this structure:
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "You are a competitive intelligence analyst for legal marketing. Always respond with valid JSON only, no markdown." },
+          { role: "system", content: `You are a competitive intelligence analyst for the ${verticalName} vertical. Always respond with valid JSON only, no markdown.` },
           { role: "user", content: prompt },
         ],
         temperature: 0.7,
@@ -78,7 +75,6 @@ Return the response as valid JSON with this structure:
     const aiData = await response.json();
     const content = aiData.choices?.[0]?.message?.content || "";
 
-    // Parse JSON from response
     let parsed;
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -87,7 +83,7 @@ Return the response as valid JSON with this structure:
       parsed = { raw_analysis: content };
     }
 
-    return jsonResponse({ analysis: parsed, tort_type, target_states, analyzed_at: new Date().toISOString() });
+    return jsonResponse({ analysis: parsed, tort_type, target_states, vertical: verticalSlug, analyzed_at: new Date().toISOString() });
   } catch (e) {
     console.error("competitor-intelligence error:", e);
     return errorResponse(e instanceof Error ? e.message : "Unknown error", 500);
