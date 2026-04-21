@@ -7,6 +7,8 @@ import { AuthProvider } from "@/lib/auth-context";
 import { PostHogProvider, PostHogPageView } from "@/lib/posthog";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { SubscriptionProvider } from "@/components/subscription/SubscriptionProvider";
+import { VerticalProvider } from "@/lib/verticals/vertical-context";
+import { ModuleGate } from "@/components/verticals/ModuleGate";
 import { RouteErrorBoundary } from "@/components/error/RouteErrorBoundary";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { ZKUnlockDialog } from "@/components/auth/ZKUnlockDialog";
@@ -104,6 +106,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <SubscriptionProvider>
+        <VerticalProvider>
         <PostHogProvider>
           <TooltipProvider>
             <Toaster />
@@ -135,28 +138,28 @@ const App = () => (
                 <Route path="/social-calendar" element={<ProtectedRoute><LazyRoute><SocialMediaCalendar /></LazyRoute></ProtectedRoute>} />
                 <Route path="/intake-builder" element={<ProtectedRoute><LazyRoute><IntakeFormBuilder /></LazyRoute></ProtectedRoute>} />
                 <Route path="/teams" element={<ProtectedRoute><LazyRoute><Teams /></LazyRoute></ProtectedRoute>} />
-                <Route path="/competitor-intelligence" element={<ProtectedRoute><LazyRoute><CompetitorIntelligence /></LazyRoute></ProtectedRoute>} />
+                <Route path="/competitor-intelligence" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="competitor_intel" label="Competitor Intelligence"><CompetitorIntelligence /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/pricing" element={<ProtectedRoute><LazyRoute><Pricing /></LazyRoute></ProtectedRoute>} />
                 <Route path="/smart-alerts" element={<ProtectedRoute><LazyRoute><SmartAlerts /></LazyRoute></ProtectedRoute>} />
                 <Route path="/referral-network" element={<ProtectedRoute><LazyRoute><ReferralNetwork /></LazyRoute></ProtectedRoute>} />
-                <Route path="/market-pulse" element={<ProtectedRoute><LazyRoute><MarketPulseRadar /></LazyRoute></ProtectedRoute>} />
-                <Route path="/judge-intelligence" element={<ProtectedRoute><LazyRoute><JudgeIntelligence /></LazyRoute></ProtectedRoute>} />
-                <Route path="/evidence-vault" element={<ProtectedRoute><LazyRoute><EvidenceVault /></LazyRoute></ProtectedRoute>} />
-                <Route path="/predictive-leads" element={<ProtectedRoute><LazyRoute><PredictiveLeads /></LazyRoute></ProtectedRoute>} />
-                <Route path="/benchmarks" element={<ProtectedRoute><LazyRoute><CrossFirmBenchmarks /></LazyRoute></ProtectedRoute>} />
-                <Route path="/creative-studio" element={<ProtectedRoute><LazyRoute><CreativeStudio /></LazyRoute></ProtectedRoute>} />
-                <Route path="/viral-content" element={<ProtectedRoute><LazyRoute><ViralContentEngine /></LazyRoute></ProtectedRoute>} />
-                <Route path="/video-ads" element={<ProtectedRoute><LazyRoute><VideoAdGenerator /></LazyRoute></ProtectedRoute>} />
-                <Route path="/google-ads" element={<ProtectedRoute><LazyRoute><GoogleAds /></LazyRoute></ProtectedRoute>} />
-                
-                <Route path="/lookalike-audience" element={<ProtectedRoute><LazyRoute><LookalikeAudience /></LazyRoute></ProtectedRoute>} />
-                <Route path="/intent-signals" element={<ProtectedRoute><LazyRoute><IntentSignalTracker /></LazyRoute></ProtectedRoute>} />
-                <Route path="/geofence-campaigns" element={<ProtectedRoute><LazyRoute><GeofenceCampaigns /></LazyRoute></ProtectedRoute>} />
-                <Route path="/dark-funnel" element={<ProtectedRoute><LazyRoute><DarkFunnelIntelligence /></LazyRoute></ProtectedRoute>} />
-                <Route path="/cross-platform-autopilot" element={<ProtectedRoute><LazyRoute><CrossPlatformAutopilot /></LazyRoute></ProtectedRoute>} />
-                <Route path="/fraud-detection" element={<ProtectedRoute><LazyRoute><FraudDetection /></LazyRoute></ProtectedRoute>} />
+                <Route path="/market-pulse" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="market_pulse" label="Market Pulse"><MarketPulseRadar /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/judge-intelligence" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="judge_intelligence" label="Judge Intelligence"><JudgeIntelligence /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/evidence-vault" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="evidence_vault" label="Evidence Vault"><EvidenceVault /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/predictive-leads" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="predictive_leads" label="Predictive Leads"><PredictiveLeads /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/benchmarks" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="benchmarks" label="Cross-Firm Benchmarks"><CrossFirmBenchmarks /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/creative-studio" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="creative_studio" label="Creative Studio"><CreativeStudio /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/viral-content" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="viral_content" label="Viral Content Engine"><ViralContentEngine /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/video-ads" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="video_ads" label="Video Ad Generator"><VideoAdGenerator /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/google-ads" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="google_ads" label="Google Ads"><GoogleAds /></ModuleGate></LazyRoute></ProtectedRoute>} />
+
+                <Route path="/lookalike-audience" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="lookalike" label="Lookalike Audience"><LookalikeAudience /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/intent-signals" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="intent_signals" label="Intent Signals"><IntentSignalTracker /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/geofence-campaigns" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="geofence" label="Geofence Campaigns"><GeofenceCampaigns /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/dark-funnel" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="dark_funnel" label="Dark Funnel Intelligence"><DarkFunnelIntelligence /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/cross-platform-autopilot" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="cross_platform_autopilot" label="Cross-Platform Autopilot"><CrossPlatformAutopilot /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/fraud-detection" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="fraud_detection" label="Fraud Detection"><FraudDetection /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/crm-integrations" element={<ProtectedRoute><LazyRoute><CrmIntegrations /></LazyRoute></ProtectedRoute>} />
-                <Route path="/ai-case-evaluator" element={<ProtectedRoute><LazyRoute><AiCaseEvaluator /></LazyRoute></ProtectedRoute>} />
+                <Route path="/ai-case-evaluator" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="case_evaluator" label="AI Lead Evaluator"><AiCaseEvaluator /></ModuleGate></LazyRoute></ProtectedRoute>} />
 
                 {/* Admin routes */}
                 <Route path="/admin" element={<ProtectedRoute requireAdmin><LazyRoute><AdminDashboard /></LazyRoute></ProtectedRoute>} />
@@ -177,6 +180,7 @@ const App = () => (
             </BrowserRouter>
           </TooltipProvider>
         </PostHogProvider>
+        </VerticalProvider>
       </SubscriptionProvider>
     </AuthProvider>
   </QueryClientProvider>

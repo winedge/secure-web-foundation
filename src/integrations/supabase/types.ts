@@ -2079,6 +2079,8 @@ export type Database = {
             | null
           subscription_status: string | null
           updated_at: string
+          vertical_id: string | null
+          vertical_locked: boolean
           wallet_balance: number | null
           website: string | null
         }
@@ -2096,6 +2098,8 @@ export type Database = {
             | null
           subscription_status?: string | null
           updated_at?: string
+          vertical_id?: string | null
+          vertical_locked?: boolean
           wallet_balance?: number | null
           website?: string | null
         }
@@ -2113,10 +2117,20 @@ export type Database = {
             | null
           subscription_status?: string | null
           updated_at?: string
+          vertical_id?: string | null
+          vertical_locked?: boolean
           wallet_balance?: number | null
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "firms_vertical_id_fkey"
+            columns: ["vertical_id"]
+            isOneToOne: false
+            referencedRelation: "industry_verticals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fraud_checks: {
         Row: {
@@ -2227,6 +2241,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      industry_verticals: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          is_system: boolean
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       intent_signals: {
         Row: {
@@ -2699,11 +2749,13 @@ export type Database = {
           age_bucket: string | null
           ai_quality_score: number | null
           campaign_id: string | null
+          category: string | null
           city: string | null
           consent_hipaa: boolean | null
           consent_privacy: boolean | null
           consent_tcpa: boolean | null
           created_at: string
+          custom_fields: Json
           diagnosis_details: string | null
           documents_url: string[] | null
           duplicate_of: string | null
@@ -2729,6 +2781,7 @@ export type Database = {
           tier: Database["public"]["Enums"]["lead_tier"]
           tort_type: string
           updated_at: string
+          vertical_id: string | null
           zip_code: string | null
         }
         Insert: {
@@ -2736,11 +2789,13 @@ export type Database = {
           age_bucket?: string | null
           ai_quality_score?: number | null
           campaign_id?: string | null
+          category?: string | null
           city?: string | null
           consent_hipaa?: boolean | null
           consent_privacy?: boolean | null
           consent_tcpa?: boolean | null
           created_at?: string
+          custom_fields?: Json
           diagnosis_details?: string | null
           documents_url?: string[] | null
           duplicate_of?: string | null
@@ -2766,6 +2821,7 @@ export type Database = {
           tier?: Database["public"]["Enums"]["lead_tier"]
           tort_type: string
           updated_at?: string
+          vertical_id?: string | null
           zip_code?: string | null
         }
         Update: {
@@ -2773,11 +2829,13 @@ export type Database = {
           age_bucket?: string | null
           ai_quality_score?: number | null
           campaign_id?: string | null
+          category?: string | null
           city?: string | null
           consent_hipaa?: boolean | null
           consent_privacy?: boolean | null
           consent_tcpa?: boolean | null
           created_at?: string
+          custom_fields?: Json
           diagnosis_details?: string | null
           documents_url?: string[] | null
           duplicate_of?: string | null
@@ -2803,6 +2861,7 @@ export type Database = {
           tier?: Database["public"]["Enums"]["lead_tier"]
           tort_type?: string
           updated_at?: string
+          vertical_id?: string | null
           zip_code?: string | null
         }
         Relationships: [
@@ -2832,6 +2891,13 @@ export type Database = {
             columns: ["source_id"]
             isOneToOne: false
             referencedRelation: "lead_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_vertical_id_fkey"
+            columns: ["vertical_id"]
+            isOneToOne: false
+            referencedRelation: "industry_verticals"
             referencedColumns: ["id"]
           },
         ]
@@ -4041,6 +4107,330 @@ export type Database = {
         }
         Relationships: []
       }
+      vertical_ai_prompts: {
+        Row: {
+          created_at: string
+          firm_id: string | null
+          id: string
+          is_active: boolean
+          model: string | null
+          output_schema: Json | null
+          prompt_type: string
+          system_prompt: string
+          updated_at: string
+          version: number
+          vertical_id: string
+        }
+        Insert: {
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          is_active?: boolean
+          model?: string | null
+          output_schema?: Json | null
+          prompt_type: string
+          system_prompt: string
+          updated_at?: string
+          version?: number
+          vertical_id: string
+        }
+        Update: {
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          is_active?: boolean
+          model?: string | null
+          output_schema?: Json | null
+          prompt_type?: string
+          system_prompt?: string
+          updated_at?: string
+          version?: number
+          vertical_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vertical_ai_prompts_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vertical_ai_prompts_vertical_id_fkey"
+            columns: ["vertical_id"]
+            isOneToOne: false
+            referencedRelation: "industry_verticals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vertical_intake_fields: {
+        Row: {
+          created_at: string
+          field_key: string
+          field_order: number
+          field_type: string
+          firm_id: string | null
+          id: string
+          is_active: boolean
+          label: string
+          options: Json | null
+          placeholder: string | null
+          required: boolean
+          updated_at: string
+          validation_regex: string | null
+          vertical_id: string
+        }
+        Insert: {
+          created_at?: string
+          field_key: string
+          field_order?: number
+          field_type?: string
+          firm_id?: string | null
+          id?: string
+          is_active?: boolean
+          label: string
+          options?: Json | null
+          placeholder?: string | null
+          required?: boolean
+          updated_at?: string
+          validation_regex?: string | null
+          vertical_id: string
+        }
+        Update: {
+          created_at?: string
+          field_key?: string
+          field_order?: number
+          field_type?: string
+          firm_id?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          options?: Json | null
+          placeholder?: string | null
+          required?: boolean
+          updated_at?: string
+          validation_regex?: string | null
+          vertical_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vertical_intake_fields_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vertical_intake_fields_vertical_id_fkey"
+            columns: ["vertical_id"]
+            isOneToOne: false
+            referencedRelation: "industry_verticals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vertical_lead_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          firm_id: string | null
+          id: string
+          is_active: boolean
+          key: string
+          label: string
+          updated_at: string
+          vertical_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          firm_id?: string | null
+          id?: string
+          is_active?: boolean
+          key: string
+          label: string
+          updated_at?: string
+          vertical_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          firm_id?: string | null
+          id?: string
+          is_active?: boolean
+          key?: string
+          label?: string
+          updated_at?: string
+          vertical_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vertical_lead_categories_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vertical_lead_categories_vertical_id_fkey"
+            columns: ["vertical_id"]
+            isOneToOne: false
+            referencedRelation: "industry_verticals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vertical_module_access: {
+        Row: {
+          created_at: string
+          firm_id: string | null
+          id: string
+          is_enabled: boolean
+          module_key: string
+          updated_at: string
+          vertical_id: string
+        }
+        Insert: {
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          is_enabled?: boolean
+          module_key: string
+          updated_at?: string
+          vertical_id: string
+        }
+        Update: {
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          is_enabled?: boolean
+          module_key?: string
+          updated_at?: string
+          vertical_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vertical_module_access_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vertical_module_access_vertical_id_fkey"
+            columns: ["vertical_id"]
+            isOneToOne: false
+            referencedRelation: "industry_verticals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vertical_pipeline_stages: {
+        Row: {
+          color: string | null
+          created_at: string
+          default_fee: number
+          firm_id: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          label: string
+          requires_payment: boolean
+          stage_key: string
+          stage_order: number
+          updated_at: string
+          vertical_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          default_fee?: number
+          firm_id?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          label: string
+          requires_payment?: boolean
+          stage_key: string
+          stage_order?: number
+          updated_at?: string
+          vertical_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          default_fee?: number
+          firm_id?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          requires_payment?: boolean
+          stage_key?: string
+          stage_order?: number
+          updated_at?: string
+          vertical_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vertical_pipeline_stages_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vertical_pipeline_stages_vertical_id_fkey"
+            columns: ["vertical_id"]
+            isOneToOne: false
+            referencedRelation: "industry_verticals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vertical_terminology: {
+        Row: {
+          created_at: string
+          firm_id: string | null
+          id: string
+          terminology: Json
+          updated_at: string
+          vertical_id: string
+        }
+        Insert: {
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          terminology?: Json
+          updated_at?: string
+          vertical_id: string
+        }
+        Update: {
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          terminology?: Json
+          updated_at?: string
+          vertical_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vertical_terminology_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vertical_terminology_vertical_id_fkey"
+            columns: ["vertical_id"]
+            isOneToOne: false
+            referencedRelation: "industry_verticals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       video_ad_projects: {
         Row: {
           ai_metadata: Json | null
@@ -4433,7 +4823,9 @@ export type Database = {
           tort_type: string
         }[]
       }
+      get_pipeline_stage_counts: { Args: { _firm_id: string }; Returns: Json }
       get_user_firm_id: { Args: { _user_id: string }; Returns: string }
+      get_vertical_config: { Args: { _firm_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
