@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getVerticalContext, buildSystemPrompt, getFirmIdForUser } from "../_shared/vertical.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,13 +31,8 @@ serve(async (req) => {
       });
     }
 
-    const { data: firmMember } = await supabase
-      .from("firm_members")
-      .select("firm_id")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!firmMember) {
+    const firmId = await getFirmIdForUser(user.id);
+    if (!firmId) {
       return new Response(JSON.stringify({ error: "No firm found" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -49,7 +45,6 @@ serve(async (req) => {
       });
     }
 
-    // Truncate to ~15000 chars to stay within AI context limits
     const truncatedText = document_text.substring(0, 15000);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -59,33 +54,36 @@ serve(async (req) => {
       });
     }
 
-    const prompt = `You are an expert legal case evaluator specializing in mass tort litigation and personal injury law. 
+    // Vertical context
+    const { config: vCfg, prompt: vPrompt, verticalSlug } = await getVerticalContext(firmId, "document");
+    const evaluatorTitle = vCfg?.terminology?.evaluator_title ?? "Case Evaluator";
+    const subject = vCfg?.terminology?.evaluator_subject ?? "case";
+    const verticalName = vCfg?.vertical?.name ?? "Mass Tort Legal";
+    const systemPrompt = buildSystemPrompt("document", verticalSlug, vPrompt);
 
-Evaluate the following document and provide a thorough case evaluation. Extract all relevant details about the case including:
-- The type of tort/injury/claim
-- Jurisdiction/state information
-- Patient/plaintiff details (age, medical conditions, exposure)
-- Evidence quality and documentation
-- Potential defendants
-- Relevant timelines
+    const prompt = `You are evaluating a document for the ${verticalName} vertical (${evaluatorTitle}).
+
+Extract all relevant details from the document and produce a structured ${subject} evaluation tailored to ${verticalSlug.replace("_", " ")}. Adapt fields and reasoning appropriately:
+- For mass_tort: tort/injury type, jurisdiction, plaintiff details, evidence, defendants, statute of limitations.
+- For real_estate: property type, location, buyer/seller intent, price range, financing readiness, market timing.
+- For solar: site suitability, energy usage, financing fit, incentives, install timeline.
+- For dental / skin_clinic: treatment fit, medical history relevance, insurance signals, urgency.
+- For home_services: scope of work, urgency, location, budget signals, scheduling.
 
 Document (file: ${file_name || "uploaded document"}):
 ---
 ${truncatedText}
 ---
 
-Based on this document, provide a comprehensive case evaluation using the evaluate_case tool. If information is missing, note it in your analysis and adjust scores accordingly.`;
+Use the evaluate_case tool. If information is missing, list it in missing_information and adjust scores accordingly.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "You are a legal case evaluation AI. Always use the provided tool to return structured analysis. Be thorough and realistic in your assessments." },
+          { role: "system", content: systemPrompt },
           { role: "user", content: prompt },
         ],
         tools: [
@@ -93,24 +91,24 @@ Based on this document, provide a comprehensive case evaluation using the evalua
             type: "function",
             function: {
               name: "evaluate_case",
-              description: "Return comprehensive case viability evaluation based on the uploaded document",
+              description: `Return comprehensive ${subject} evaluation for ${verticalSlug}`,
               parameters: {
                 type: "object",
                 properties: {
-                  case_summary: { type: "string", description: "Brief 2-3 sentence summary of the case from the document" },
-                  tort_type: { type: "string", description: "Identified tort type (e.g. medical malpractice, personal injury, product liability)" },
-                  jurisdiction: { type: "string", description: "Identified jurisdiction/state" },
-                  viability_score: { type: "number", description: "0-100 case viability score" },
-                  settlement_estimate_low: { type: "number", description: "Low end settlement estimate in USD" },
-                  settlement_estimate_high: { type: "number", description: "High end settlement estimate in USD" },
-                  strengths: { type: "array", items: { type: "string" }, description: "Case strengths (3-5 items)" },
-                  weaknesses: { type: "array", items: { type: "string" }, description: "Case weaknesses (2-4 items)" },
-                  recommendations: { type: "array", items: { type: "string" }, description: "Actionable recommendations (3-5 items)" },
-                  jurisdiction_notes: { type: "string", description: "Notes about the jurisdiction's stance on this type of case" },
-                  statute_of_limitations: { type: "string", description: "Relevant statute of limitations info" },
-                  similar_cases_summary: { type: "string", description: "Brief summary of similar precedent cases" },
-                  key_evidence: { type: "array", items: { type: "string" }, description: "Key pieces of evidence identified in the document" },
-                  missing_information: { type: "array", items: { type: "string" }, description: "Important information that is missing from the document" },
+                  case_summary: { type: "string", description: "2-3 sentence summary" },
+                  tort_type: { type: "string", description: `Identified category (tort type for legal, treatment type for clinic, property type for real estate, etc.)` },
+                  jurisdiction: { type: "string", description: "Identified jurisdiction / region / market" },
+                  viability_score: { type: "number", description: "0-100 viability / fit score" },
+                  settlement_estimate_low: { type: "number", description: "Low end value estimate in USD" },
+                  settlement_estimate_high: { type: "number", description: "High end value estimate in USD" },
+                  strengths: { type: "array", items: { type: "string" } },
+                  weaknesses: { type: "array", items: { type: "string" } },
+                  recommendations: { type: "array", items: { type: "string" } },
+                  jurisdiction_notes: { type: "string" },
+                  statute_of_limitations: { type: "string", description: "Time-window notes appropriate to vertical" },
+                  similar_cases_summary: { type: "string" },
+                  key_evidence: { type: "array", items: { type: "string" } },
+                  missing_information: { type: "array", items: { type: "string" } },
                 },
                 required: ["case_summary", "tort_type", "jurisdiction", "viability_score", "settlement_estimate_low", "settlement_estimate_high", "strengths", "weaknesses", "recommendations", "jurisdiction_notes", "statute_of_limitations", "similar_cases_summary", "key_evidence", "missing_information"],
               },
@@ -149,20 +147,19 @@ Based on this document, provide a comprehensive case evaluation using the evalua
 
     const evaluation = JSON.parse(toolCall.function.arguments);
 
-    // AI Transparency logging
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
     await serviceClient.from("ai_transparency_logs").insert({
-      firm_id: firmMember.firm_id,
+      firm_id: firmId,
       action_type: "document_case_evaluation",
       model_name: "google/gemini-2.5-flash",
       model_version: "latest",
-      input_summary: `Document case evaluation: ${file_name || "uploaded document"} (${truncatedText.length} chars)`,
-      output_summary: `Viability: ${evaluation.viability_score}%, Tort: ${evaluation.tort_type}, Settlement: $${evaluation.settlement_estimate_low}-$${evaluation.settlement_estimate_high}`,
+      input_summary: `${verticalSlug} document ${subject} evaluation: ${file_name || "uploaded"} (${truncatedText.length} chars)`,
+      output_summary: `Viability: ${evaluation.viability_score}%, Category: ${evaluation.tort_type}, Value: $${evaluation.settlement_estimate_low}-$${evaluation.settlement_estimate_high}`,
       confidence_score: evaluation.viability_score,
-      decision_factors: { file_name, tort_type: evaluation.tort_type, jurisdiction: evaluation.jurisdiction },
+      decision_factors: { vertical: verticalSlug, file_name, category: evaluation.tort_type, jurisdiction: evaluation.jurisdiction },
       compliant_frameworks: ["ABA-512", "GDPR", "EU-AI-Act"],
     }).then(() => {}).catch(() => {});
 

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getVerticalContext, buildSystemPrompt, getFirmIdForUser } from "../_shared/vertical.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,6 +26,10 @@ serve(async (req) => {
     const { lead_id, firm_id } = await req.json();
     if (!lead_id || !firm_id) throw new Error("Missing lead_id or firm_id");
 
+    // Vertical context
+    const { config: vCfg, prompt: vPrompt, verticalSlug } = await getVerticalContext(firm_id, "scoring");
+    const subject = vCfg?.terminology?.lead_singular ?? "Lead";
+
     // Fetch lead data
     const { data: lead, error: leadError } = await supabase
       .from("leads")
@@ -33,7 +38,6 @@ serve(async (req) => {
       .single();
     if (leadError) throw leadError;
 
-    // Fetch purchase info
     const { data: purchase } = await supabase
       .from("lead_purchases")
       .select("*")
@@ -44,11 +48,14 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const prompt = `You are an expert legal lead scoring AI for mass tort litigation. Analyze this lead and provide a conversion probability score and actionable insights.
+    const systemPrompt = buildSystemPrompt("scoring", verticalSlug, vPrompt);
+    const category = (lead as any).category || lead.tort_type;
 
-Lead Data:
+    const prompt = `Score this ${subject.toLowerCase()} for the ${vCfg?.vertical?.name ?? "Mass Tort Legal"} vertical.
+
+${subject} Data:
 - Name: ${lead.first_name} ${lead.last_name}
-- Tort Type: ${lead.tort_type}
+- Category: ${category}
 - State: ${lead.state}
 - Age Bucket: ${lead.age_bucket || "Unknown"}
 - Current AI Quality Score: ${lead.ai_quality_score || "N/A"}
@@ -56,24 +63,21 @@ Lead Data:
 - Tier: ${lead.tier}
 - Is Verified: ${lead.is_verified}
 - Is Exclusive: ${lead.is_exclusive}
-- Diagnosis Details: ${lead.diagnosis_details || "None provided"}
-- Exposure Details: ${lead.exposure_details || "None provided"}
+- Diagnosis / Details: ${lead.diagnosis_details || "None provided"}
+- Exposure / Context: ${lead.exposure_details || "None provided"}
+- Custom fields: ${JSON.stringify((lead as any).custom_fields || {})}
 - Source: ${lead.source || "Unknown"}
 - Pipeline Stage: ${purchase?.pipeline_stage || "new_lead"}
-- Days Since Purchase: ${purchase ? Math.floor((Date.now() - new Date(purchase.purchased_at).getTime()) / 86400000) : "N/A"}
 
-Provide your analysis using the suggest_scoring tool.`;
+Tailor your scoring rubric, factors, and recommended action to the ${verticalSlug.replace("_", " ")} business. Use the suggest_scoring tool.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "You are a legal lead conversion scoring AI. Always use the provided tool to return structured data." },
+          { role: "system", content: systemPrompt },
           { role: "user", content: prompt },
         ],
         tools: [
@@ -81,23 +85,23 @@ Provide your analysis using the suggest_scoring tool.`;
             type: "function",
             function: {
               name: "suggest_scoring",
-              description: "Return lead scoring analysis",
+              description: `Return ${subject.toLowerCase()} scoring analysis tailored to the ${verticalSlug} vertical`,
               parameters: {
                 type: "object",
                 properties: {
-                  conversion_probability: { type: "number", description: "0-100 probability of conversion to signed retainer" },
+                  conversion_probability: { type: "number", description: "0-100 probability of conversion" },
                   recommended_action: { type: "string", description: "One clear next-step recommendation" },
-                  optimal_contact_time: { type: "string", description: "Best time/day to contact this lead" },
-                  predicted_value: { type: "number", description: "Estimated case value in USD" },
+                  optimal_contact_time: { type: "string", description: "Best time/day to contact" },
+                  predicted_value: { type: "number", description: "Estimated value in USD" },
                   scoring_factors: {
                     type: "object",
                     properties: {
-                      tort_strength: { type: "number", description: "1-10 strength of tort claim" },
+                      tort_strength: { type: "number", description: "1-10 strength of opportunity" },
                       urgency: { type: "number", description: "1-10 urgency to act" },
                       documentation_quality: { type: "number", description: "1-10 quality of provided info" },
-                      jurisdiction_favorability: { type: "number", description: "1-10 how favorable the state is" },
+                      jurisdiction_favorability: { type: "number", description: "1-10 favorability of state/region" },
                       risk_level: { type: "string", enum: ["low", "medium", "high"] },
-                      key_insight: { type: "string", description: "Most important insight about this lead" },
+                      key_insight: { type: "string", description: "Most important insight, vertical-specific" },
                     },
                     required: ["tort_strength", "urgency", "documentation_quality", "jurisdiction_favorability", "risk_level", "key_insight"],
                   },
@@ -134,7 +138,6 @@ Provide your analysis using the suggest_scoring tool.`;
     const scoring = JSON.parse(toolCall.function.arguments);
     const startTime = Date.now();
 
-    // Upsert the score
     const { data: scoreData, error: scoreError } = await supabase
       .from("ai_lead_scores")
       .upsert({
@@ -152,7 +155,7 @@ Provide your analysis using the suggest_scoring tool.`;
 
     if (scoreError) throw scoreError;
 
-    // Log for AI transparency / EU AI Act compliance
+    // AI transparency log
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -163,10 +166,10 @@ Provide your analysis using the suggest_scoring tool.`;
       action_type: "lead_scoring",
       model_name: "google/gemini-3-flash-preview",
       model_version: aiData.model || "unknown",
-      input_summary: `Lead scoring for ${lead.tort_type} lead in ${lead.state}`,
+      input_summary: `${verticalSlug} scoring for ${category} ${subject.toLowerCase()} in ${lead.state}`,
       output_summary: `Conversion: ${scoring.conversion_probability}%, Value: $${scoring.predicted_value}, Action: ${scoring.recommended_action}`,
       confidence_score: scoring.conversion_probability,
-      decision_factors: scoring.scoring_factors,
+      decision_factors: { ...scoring.scoring_factors, vertical: verticalSlug },
       processing_time_ms: Date.now() - startTime,
       compliant_frameworks: ["ABA-512", "GDPR", "EU-AI-Act"],
     });
@@ -176,7 +179,7 @@ Provide your analysis using the suggest_scoring tool.`;
     });
   } catch (e) {
     console.error("ai-lead-scoring error:", e);
-    return new Response(JSON.stringify({ error: e.message }), {
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
