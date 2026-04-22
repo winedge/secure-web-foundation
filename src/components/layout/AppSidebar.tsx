@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { SidebarNavSection } from './SidebarNavSection';
 import { SidebarNavGroup } from './SidebarNavGroup';
 import { SidebarUserFooter } from './SidebarUserFooter';
-import { standaloneItems, navGroups, bottomItems, adminOverview, adminData, adminLogs, applyVerticalToNav } from './sidebar-nav-data';
+import { standaloneItems, navGroups, bottomItems, adminOverview, adminData, adminLogs, applyVerticalToNav, buildAiToolGroups } from './sidebar-nav-data';
 import { useVertical } from '@/hooks/use-vertical';
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
@@ -18,6 +18,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { tier } = useSubscriptionContext();
   const { enabledModules, terminology } = useVertical();
   const groups = applyVerticalToNav(navGroups, enabledModules, terminology);
+  const aiToolGroups = applyVerticalToNav(buildAiToolGroups(), enabledModules, terminology);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
@@ -41,6 +42,19 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         {groups.map((group) => (
           <SidebarNavGroup key={group.label} group={group} tier={tier} onNavigate={onNavigate} />
         ))}
+
+        {/* AI Toolbox — vertical-specific tools, gated by module access */}
+        {aiToolGroups.length > 0 && (
+          <>
+            <div className="my-3 border-t border-sidebar-border/50" />
+            <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+              AI Tools
+            </p>
+            {aiToolGroups.map((group) => (
+              <SidebarNavGroup key={`ai-${group.label}`} group={group} tier={tier} onNavigate={onNavigate} />
+            ))}
+          </>
+        )}
 
         {/* Bottom standalone items */}
         <SidebarNavSection items={bottomItems} tier={tier} onNavigate={onNavigate} />
