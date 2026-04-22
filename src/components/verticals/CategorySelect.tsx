@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Info, Settings2, AlertCircle } from 'lucide-react';
+import { Info, Settings2, AlertCircle, Loader2, CheckCircle2, CircleSlash } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useVertical } from '@/hooks/use-vertical';
 import { VERTICAL_PRESETS } from '@/lib/verticals/presets';
