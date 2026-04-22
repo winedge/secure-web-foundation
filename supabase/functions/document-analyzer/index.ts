@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getVerticalContext, buildSystemPrompt } from "../_shared/vertical.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,7 +26,6 @@ serve(async (req) => {
     const { document_id } = await req.json();
     if (!document_id) throw new Error("Missing document_id");
 
-    // Get the document record
     const { data: doc, error: docError } = await supabase
       .from("document_analyses")
       .select("*")
@@ -33,25 +33,30 @@ serve(async (req) => {
       .single();
     if (docError) throw docError;
 
-    // Get the lead data if linked
     let leadContext = "";
+    let firmId: string | null = doc.firm_id ?? null;
     if (doc.lead_id) {
       const { data: lead } = await supabase
         .from("leads")
-        .select("tort_type, state, first_name, last_name, diagnosis_details, exposure_details")
+        .select("tort_type, category, state, first_name, last_name, diagnosis_details, exposure_details, custom_fields")
         .eq("id", doc.lead_id)
         .single();
       if (lead) {
-        leadContext = `\nLinked Lead: ${lead.first_name} ${lead.last_name}, Tort: ${lead.tort_type}, State: ${lead.state}, Diagnosis: ${lead.diagnosis_details || "N/A"}, Exposure: ${lead.exposure_details || "N/A"}`;
+        leadContext = `\nLinked Record: ${lead.first_name} ${lead.last_name}, Category: ${lead.category || lead.tort_type}, State: ${lead.state}, Notes: ${lead.diagnosis_details || lead.exposure_details || JSON.stringify(lead.custom_fields || {})}`;
       }
     }
+
+    // Vertical-aware prompt
+    const { prompt: customPrompt, verticalSlug } = await getVerticalContext(firmId, "document");
+    const systemPrompt = buildSystemPrompt("document", verticalSlug, customPrompt);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const prompt = `Analyze this legal document and extract structured information.
+    const userPrompt = `Analyze this document and extract structured information.
 
 Document: "${doc.file_name}" (Type: ${doc.document_type})
+Vertical: ${verticalSlug}
 ${leadContext}
 
 Use the analyze_document tool to return your analysis.`;
@@ -65,14 +70,14 @@ Use the analyze_document tool to return your analysis.`;
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "You are a legal document analyzer specializing in mass tort cases. Extract key facts, flag statute of limitations risks, and identify fields that can auto-populate case records." },
-          { role: "user", content: prompt },
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
         ],
         tools: [{
           type: "function",
           function: {
             name: "analyze_document",
-            description: "Return structured document analysis",
+            description: "Return structured document analysis tailored to the vertical",
             parameters: {
               type: "object",
               properties: {
@@ -82,7 +87,7 @@ Use the analyze_document tool to return your analysis.`;
                   items: {
                     type: "object",
                     properties: {
-                      category: { type: "string", description: "e.g. Diagnosis, Treatment, Exposure, Timeline, Damages" },
+                      category: { type: "string", description: "Vertical-specific category, e.g. Diagnosis/Treatment for legal/clinic, Property Details for real estate, Site Specs for solar" },
                       fact: { type: "string" },
                       confidence: { type: "string", enum: ["high", "medium", "low"] },
                       page_reference: { type: "string" }
@@ -107,15 +112,10 @@ Use the analyze_document tool to return your analysis.`;
                 },
                 auto_populated_fields: {
                   type: "object",
-                  properties: {
-                    diagnosis_details: { type: "string" },
-                    exposure_details: { type: "string" },
-                    age_bucket: { type: "string" },
-                    state: { type: "string" }
-                  },
-                  additionalProperties: false
+                  description: "Fields that can be auto-populated on the linked record",
+                  additionalProperties: true
                 },
-                document_type_detected: { type: "string", description: "medical_record, police_report, intake_form, legal_filing, other" }
+                document_type_detected: { type: "string", description: "Vertical-appropriate type, e.g. medical_record/police_report/intake_form for legal; consultation_form/treatment_plan for clinic; property_deed/inspection_report for real estate; site_survey/utility_bill for solar; estimate/work_order for home services" }
               },
               required: ["summary", "extracted_facts", "statute_risks", "auto_populated_fields", "document_type_detected"],
               additionalProperties: false
@@ -139,7 +139,6 @@ Use the analyze_document tool to return your analysis.`;
 
     const analysis = JSON.parse(toolCall.function.arguments);
 
-    // Update the document record
     const { data: updated, error: updateError } = await supabase
       .from("document_analyses")
       .update({
@@ -162,7 +161,7 @@ Use the analyze_document tool to return your analysis.`;
     });
   } catch (e) {
     console.error("document-analyzer error:", e);
-    return new Response(JSON.stringify({ error: e.message }), {
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
