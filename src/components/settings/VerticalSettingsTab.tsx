@@ -167,7 +167,10 @@ export function VerticalSettingsTab() {
     onError: (err: any) => toast.error('Failed: ' + err.message),
   });
 
-  const moduleSet = useMemo(() => new Set(enabledModules), [enabledModules]);
+  const moduleSet = useMemo(
+    () => (adminMode && isAdmin ? (systemModules ?? new Set<string>()) : new Set<string>(enabledModules)),
+    [adminMode, isAdmin, systemModules, enabledModules]
+  );
 
   if (isLoading || !vertical) {
     return (
