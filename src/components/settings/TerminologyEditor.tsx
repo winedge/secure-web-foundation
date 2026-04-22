@@ -35,19 +35,37 @@ const FIELDS: { key: TerminologyKey; label: string; hint?: string; placeholder?:
   { key: 'evaluator_subject', label: 'Evaluator subject', placeholder: 'lead', hint: 'Used in sentences like "Evaluate this {subject}".' },
 ];
 
-export function TerminologyEditor() {
+export function TerminologyEditor({ adminMode = false }: { adminMode?: boolean } = {}) {
   const { data: firm } = useFirm();
   const { vertical, terminology, refetch } = useVertical();
   const qc = useQueryClient();
 
-  // Local draft seeded from current effective terminology (firm override OR system).
+  // In admin mode, fetch the system terminology row directly so we edit the preset
+  // rather than the firm override.
+  const { data: systemTerminology, refetch: refetchSystem } = useQuery({
+    queryKey: ['system-terminology', vertical?.id],
+    enabled: !!vertical?.id && adminMode,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vertical_terminology' as any)
+        .select('terminology')
+        .eq('vertical_id', vertical!.id)
+        .is('firm_id', null)
+        .maybeSingle();
+      if (error) throw error;
+      return ((data as any)?.terminology ?? {}) as Record<string, string>;
+    },
+  });
+
+  const sourceTerminology = adminMode ? (systemTerminology ?? {}) : (terminology as Record<string, string>);
+
   const initialDraft = useMemo(() => {
     const draft: Record<string, string> = {};
     for (const f of FIELDS) {
-      draft[f.key] = (terminology as any)?.[f.key] ?? '';
+      draft[f.key] = (sourceTerminology as any)?.[f.key] ?? '';
     }
     return draft;
-  }, [terminology]);
+  }, [sourceTerminology]);
 
   const [draft, setDraft] = useState<Record<string, string>>(initialDraft);
   const [dirty, setDirty] = useState(false);
@@ -64,29 +82,52 @@ export function TerminologyEditor() {
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['vertical-config'] });
+    qc.invalidateQueries({ queryKey: ['system-terminology', vertical?.id] });
     refetch();
+    if (adminMode) refetchSystem();
   };
 
   const save = useMutation({
     mutationFn: async () => {
-      if (!firm?.id || !vertical?.id) throw new Error('Missing firm/vertical');
-      // Strip empties so we don't override defaults with blank strings.
+      if (!vertical?.id) throw new Error('Missing vertical');
+      if (!adminMode && !firm?.id) throw new Error('Missing firm');
       const cleaned: Record<string, string> = {};
       for (const f of FIELDS) {
         const v = (draft[f.key] ?? '').trim();
         if (v) cleaned[f.key] = v;
       }
-      const { error } = await supabase
-        .from('vertical_terminology' as any)
-        .upsert(
-          {
-            vertical_id: vertical.id,
-            firm_id: firm.id,
-            terminology: cleaned,
-          } as any,
-          { onConflict: 'vertical_id,firm_id' }
-        );
-      if (error) throw error;
+      const targetFirmId: string | null = adminMode ? null : firm!.id;
+
+      if (adminMode) {
+        // Manual upsert: find existing system row, update, else insert.
+        const { data: existing, error: fetchErr } = await supabase
+          .from('vertical_terminology' as any)
+          .select('id')
+          .eq('vertical_id', vertical.id)
+          .is('firm_id', null)
+          .maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (existing) {
+          const { error } = await supabase
+            .from('vertical_terminology' as any)
+            .update({ terminology: cleaned } as any)
+            .eq('id', (existing as any).id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('vertical_terminology' as any)
+            .insert({ vertical_id: vertical.id, firm_id: null, terminology: cleaned } as any);
+          if (error) throw error;
+        }
+      } else {
+        const { error } = await supabase
+          .from('vertical_terminology' as any)
+          .upsert(
+            { vertical_id: vertical.id, firm_id: targetFirmId, terminology: cleaned } as any,
+            { onConflict: 'vertical_id,firm_id' }
+          );
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       toast.success('Terminology saved');
