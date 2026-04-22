@@ -17,6 +17,7 @@ export default function IntentSignalTracker() {
   const [isScanning, setIsScanning] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [categoryError, setCategoryError] = useState<string | undefined>();
+  const [categoryValid, setCategoryValid] = useState(true);
 
   const scan = async () => {
     const categoryValidation = validateCategoryValue(tortType);
@@ -47,8 +48,8 @@ export default function IntentSignalTracker() {
             <p className="text-muted-foreground mt-1">Detect people actively searching right now. Trigger instant campaigns.</p>
           </div>
           <div className="flex gap-2">
-            <CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} />
-            <Button onClick={scan} disabled={isScanning} className="gap-2">
+            <CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} required onValidityChange={setCategoryValid} />
+            <Button onClick={scan} disabled={isScanning || !categoryValid} className="gap-2">
               {isScanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Radio className="h-4 w-4" />}
               {isScanning ? 'Scanning...' : 'Detect Signals'}
             </Button>

@@ -40,6 +40,7 @@ export default function MarketPulseRadar() {
   const [filterTort, setFilterTort] = useState('');
   const [filterState, setFilterState] = useState('');
   const [categoryError, setCategoryError] = useState<string | undefined>();
+  const [categoryValid, setCategoryValid] = useState(true);
 
   const runScan = async () => {
     const categoryValidation = validateCategoryValue(filterTort, categoryLabel);
@@ -101,7 +102,7 @@ export default function MarketPulseRadar() {
             </h1>
             <p className="text-muted-foreground mt-1">Detect emerging {categoryLabel.toLowerCase()} opportunities for {vertical?.name || 'your business'} before competitors.</p>
           </div>
-          <Button onClick={runScan} disabled={isScanning} size="lg" className="gap-2">
+          <Button onClick={runScan} disabled={isScanning || !categoryValid} size="lg" className="gap-2">
             {isScanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Radar className="h-4 w-4" />}
             {isScanning ? 'Scanning Markets...' : 'Run Deep Scan'}
           </Button>
@@ -111,7 +112,7 @@ export default function MarketPulseRadar() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex flex-wrap gap-4">
-              <CategorySelect value={filterTort} onChange={(v) => { setFilterTort(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} />
+              <CategorySelect value={filterTort} onChange={(v) => { setFilterTort(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} required onValidityChange={setCategoryValid} />
               <Select value={filterState} onValueChange={setFilterState}>
                 <SelectTrigger className="w-40"><SelectValue placeholder="All States" /></SelectTrigger>
                 <SelectContent>

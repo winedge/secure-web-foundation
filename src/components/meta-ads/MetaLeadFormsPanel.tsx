@@ -41,6 +41,7 @@ export function MetaLeadFormsPanel() {
   const [hasLoaded, setHasLoaded] = useState(false);
   const [fetchResults, setFetchResults] = useState<Record<string, { total: number; ingested: number }>>({});
   const [categoryError, setCategoryError] = useState<string | undefined>();
+  const [categoryValid, setCategoryValid] = useState(true);
 
   const loadForms = async () => {
     if (!user) return;
@@ -150,6 +151,8 @@ export function MetaLeadFormsPanel() {
               onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }}
               placeholder={`Select ${categoryLabel.toLowerCase()}`}
               error={categoryError}
+              required
+              onValidityChange={setCategoryValid}
             />
           </div>
           <p className="text-xs text-muted-foreground pb-2">

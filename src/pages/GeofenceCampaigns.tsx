@@ -21,6 +21,7 @@ export default function GeofenceCampaigns() {
   const [metaWizardOpen, setMetaWizardOpen] = useState(false);
   const [selectedFence, setSelectedFence] = useState<any>(null);
   const [categoryError, setCategoryError] = useState<string | undefined>();
+  const [categoryValid, setCategoryValid] = useState(true);
   const pixel = useMetaPixel();
 
   const generate = async () => {
@@ -60,9 +61,9 @@ export default function GeofenceCampaigns() {
             <p className="text-muted-foreground mt-1">Location-based ad targeting around courthouses, hospitals, and competitor offices.</p>
           </div>
           <div className="flex gap-2">
-            <CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} />
+            <CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} required onValidityChange={setCategoryValid} />
             <Input placeholder="Radius (m)" value={radius} onChange={(e) => setRadius(e.target.value)} className="w-24" type="number" />
-            <Button onClick={generate} disabled={isGenerating} className="gap-2">
+            <Button onClick={generate} disabled={isGenerating || !categoryValid} className="gap-2">
               {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
               {isGenerating ? 'Designing...' : 'Design Geofences'}
             </Button>

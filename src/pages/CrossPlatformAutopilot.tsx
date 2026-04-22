@@ -27,6 +27,7 @@ export default function CrossPlatformAutopilot() {
   const [result, setResult] = useState<any>(null);
   const [metaWizardOpen, setMetaWizardOpen] = useState(false);
   const [categoryError, setCategoryError] = useState<string | undefined>();
+  const [categoryValid, setCategoryValid] = useState(true);
   const pixel = useMetaPixel();
 
   const optimize = async () => {
@@ -65,8 +66,8 @@ export default function CrossPlatformAutopilot() {
               <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Monthly budget" value={budget} onChange={(e) => setBudget(e.target.value)} className="pl-8 w-40" type="number" />
             </div>
-            <CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} />
-            <Button onClick={optimize} disabled={isOptimizing} className="gap-2">
+            <CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} required onValidityChange={setCategoryValid} />
+            <Button onClick={optimize} disabled={isOptimizing || !categoryValid} className="gap-2">
               {isOptimizing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Cpu className="h-4 w-4" />}
               {isOptimizing ? 'Optimizing...' : 'Optimize Allocation'}
             </Button>

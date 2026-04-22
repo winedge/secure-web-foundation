@@ -21,6 +21,7 @@ export default function LookalikeAudience() {
   const [metaWizardOpen, setMetaWizardOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<any>(null);
   const [categoryError, setCategoryError] = useState<string | undefined>();
+  const [categoryValid, setCategoryValid] = useState(true);
   const pixel = useMetaPixel();
 
   const build = async () => {
@@ -61,8 +62,8 @@ export default function LookalikeAudience() {
             <p className="text-muted-foreground mt-1">Build hyper-targeted audiences from your best-converting leads. Auto-sync to ad platforms.</p>
           </div>
           <div className="flex gap-2">
-            <CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} />
-            <Button onClick={build} disabled={isBuilding} className="gap-2">
+            <CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} required onValidityChange={setCategoryValid} />
+            <Button onClick={build} disabled={isBuilding || !categoryValid} className="gap-2">
               {isBuilding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Target className="h-4 w-4" />}
               {isBuilding ? 'Building...' : 'Build Audiences'}
             </Button>

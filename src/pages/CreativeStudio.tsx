@@ -26,6 +26,7 @@ export default function CreativeStudio() {
   const [metaWizardOpen, setMetaWizardOpen] = useState(false);
   const [metaWizardPrefill, setMetaWizardPrefill] = useState<any>({});
   const [categoryError, setCategoryError] = useState<string | undefined>();
+  const [categoryValid, setCategoryValid] = useState(true);
   const createCampaign = useCreateCampaign();
   const navigate = useNavigate();
   const pixel = useMetaPixel();
@@ -108,9 +109,11 @@ export default function CreativeStudio() {
                 placeholder={`Select ${categoryLabel.toLowerCase()}`}
                 className="max-w-xs"
                 error={categoryError}
+                required
+                onValidityChange={setCategoryValid}
               />
               <Input placeholder="Brand tone (e.g. empathetic, urgent)" value={brandTone} onChange={(e) => setBrandTone(e.target.value)} className="max-w-xs" />
-              <Button onClick={generate} disabled={isGenerating} className="gap-2">
+              <Button onClick={generate} disabled={isGenerating || !categoryValid} className="gap-2">
                 {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                 {isGenerating ? 'Generating...' : 'Generate Campaign'}
               </Button>
