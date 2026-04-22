@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Building2, ArrowRight, ArrowLeft, Globe, Mail, Phone, Briefcase,
-  CreditCard, Facebook, Megaphone, Check, Crown, Loader2,
+  CreditCard, Facebook, Megaphone, Check, Crown, Loader2, Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,8 +18,11 @@ import { useSubscription, SUBSCRIPTION_TIERS } from '@/hooks/use-subscription';
 import { useConnectMetaPlatform, usePlatformConnections } from '@/hooks/use-platform-connections';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { VerticalSelector } from '@/components/onboarding/VerticalSelector';
+import type { VerticalPreset } from '@/lib/verticals/presets';
 
 const STEPS = [
+  { label: 'Choose Industry', icon: Layers },
   { label: 'Set Up Firm', icon: Building2 },
   { label: 'Choose Plan', icon: CreditCard },
   { label: 'Connect Facebook', icon: Facebook },
@@ -46,6 +49,8 @@ export default function Onboarding() {
   const { data: connections } = usePlatformConnections();
   const [step, setStep] = useState(0);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [selectedVertical, setSelectedVertical] = useState<VerticalPreset | null>(null);
+  const [assigningVertical, setAssigningVertical] = useState(false);
 
   const metaConnected = connections?.some(
     (c) => c.platform === 'facebook' && c.is_active
@@ -53,9 +58,9 @@ export default function Onboarding() {
 
   // Resume from last saved step
   useEffect(() => {
-    if (firm && step === 0) setStep(1);
-    if (tier && step <= 1) setStep(2);
-    if (metaConnected && step <= 2) setStep(3);
+    if (firm && step === 0) setStep(2);
+    if (tier && step <= 2) setStep(3);
+    if (metaConnected && step <= 3) setStep(4);
   }, [firm, tier, metaConnected]);
 
   const progress = ((step + 1) / STEPS.length) * 100;
@@ -75,19 +80,50 @@ export default function Onboarding() {
     },
   });
 
+  const handleVerticalContinue = async (preset: VerticalPreset) => {
+    setSelectedVertical(preset);
+    if (user) {
+      try {
+        await supabase.from('profiles').update({ onboarding_step: 1 } as any).eq('id', user.id);
+      } catch (e) {
+        // non-blocking
+      }
+    }
+    setStep(1);
+  };
+
   const onFirmSubmit = async (data: FirmFormData) => {
-    await createFirm.mutateAsync({
+    const created = await createFirm.mutateAsync({
       name: data.name,
       website: data.website || undefined,
-      practice_type: data.practice_type || undefined,
+      practice_type: data.practice_type || selectedVertical?.name || undefined,
       contact_email: data.contact_email || undefined,
       contact_phone: data.contact_phone || undefined,
     });
-    // Save step progress
-    if (user) {
-      await supabase.from('profiles').update({ onboarding_step: 1 } as any).eq('id', user.id);
+
+    // Assign vertical_id to the newly created firm
+    if (selectedVertical && created?.id) {
+      setAssigningVertical(true);
+      try {
+        const { data: vRow } = await supabase
+          .from('industry_verticals')
+          .select('id')
+          .eq('slug', selectedVertical.slug)
+          .maybeSingle();
+        if (vRow?.id) {
+          await supabase.from('firms').update({ vertical_id: vRow.id } as any).eq('id', created.id);
+        }
+      } catch (e) {
+        // non-blocking — firm still works without vertical assignment
+      } finally {
+        setAssigningVertical(false);
+      }
     }
-    setStep(1);
+
+    if (user) {
+      await supabase.from('profiles').update({ onboarding_step: 2 } as any).eq('id', user.id);
+    }
+    setStep(2);
   };
 
   const handleSubscribe = async (priceId: string, tierKey: string) => {
@@ -109,7 +145,7 @@ export default function Onboarding() {
   };
 
   const handleSkipPlan = () => {
-    setStep(2);
+    setStep(3);
   };
 
   const handleConnectFacebook = () => {
@@ -118,7 +154,7 @@ export default function Onboarding() {
 
   const handleFinish = async () => {
     if (user) {
-      await supabase.from('profiles').update({ onboarding_completed: true, onboarding_step: 4 } as any).eq('id', user.id);
+      await supabase.from('profiles').update({ onboarding_completed: true, onboarding_step: 5 } as any).eq('id', user.id);
     }
     toast.success('Onboarding complete! Welcome to LeadsThru.');
     navigate('/dashboard');
@@ -173,15 +209,29 @@ export default function Onboarding() {
       {/* Main Content */}
       <div className="flex-1 flex items-start justify-center px-4 sm:px-6 pb-12">
         <div className="w-full max-w-lg">
-          {/* Step 0: Firm Setup */}
+          {/* Step 0: Choose Industry Vertical */}
           {step === 0 && (
+            <VerticalSelector
+              selectedSlug={selectedVertical?.slug ?? null}
+              onSelect={setSelectedVertical}
+              onContinue={handleVerticalContinue}
+              isPending={false}
+            />
+          )}
+
+          {/* Step 1: Firm Setup */}
+          {step === 1 && (
             <Card className="border-0 shadow-2xl animate-fade-in">
               <CardHeader className="text-center pb-4">
                 <div className="mx-auto w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <Building2 className="h-7 w-7 text-primary" />
                 </div>
-                <CardTitle className="text-2xl">Set Up Your Firm</CardTitle>
-                <CardDescription>Tell us about your law firm to get started</CardDescription>
+                <CardTitle className="text-2xl">Set Up Your {selectedVertical ? selectedVertical.name.split(' ')[0] : ''} Business</CardTitle>
+                <CardDescription>
+                  {selectedVertical
+                    ? `Tell us about your ${selectedVertical.name.toLowerCase()} business`
+                    : 'Tell us about your business to get started'}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit(onFirmSubmit)} className="space-y-4">
@@ -220,17 +270,22 @@ export default function Onboarding() {
                       <Input id="contact_phone" placeholder="(555) 123-4567" className="h-11" {...register('contact_phone')} />
                     </div>
                   </div>
-                  <Button type="submit" className="w-full h-12 text-base mt-4" disabled={createFirm.isPending}>
-                    {createFirm.isPending ? 'Creating...' : 'Continue'}
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button type="button" variant="ghost" className="flex-1" onClick={() => setStep(0)} disabled={createFirm.isPending}>
+                      <ArrowLeft className="mr-2 h-4 w-4" /> Back
+                    </Button>
+                    <Button type="submit" className="flex-1 h-12 text-base" disabled={createFirm.isPending || assigningVertical}>
+                      {createFirm.isPending || assigningVertical ? 'Creating...' : 'Continue'}
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </div>
                 </form>
               </CardContent>
             </Card>
           )}
 
-          {/* Step 1: Choose Plan */}
-          {step === 1 && (
+          {/* Step 2: Choose Plan */}
+          {step === 2 && (
             <div className="space-y-4 animate-fade-in">
               <Card className="border-0 shadow-2xl">
                 <CardHeader className="text-center pb-2">
@@ -299,14 +354,14 @@ export default function Onboarding() {
               </Card>
 
               <div className="flex gap-3">
-                <Button variant="ghost" className="text-white/70 hover:text-white" onClick={() => setStep(0)}>
+                <Button variant="ghost" className="text-white/70 hover:text-white" onClick={() => setStep(1)}>
                   <ArrowLeft className="h-4 w-4 mr-2" /> Back
                 </Button>
                 <Button variant="ghost" className="text-white/70 hover:text-white ml-auto" onClick={handleSkipPlan}>
                   Skip for now <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
                 {tier && (
-                  <Button className="bg-accent hover:bg-accent/90 text-accent-foreground" onClick={() => setStep(2)}>
+                  <Button className="bg-accent hover:bg-accent/90 text-accent-foreground" onClick={() => setStep(3)}>
                     Continue <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 )}
@@ -314,8 +369,8 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 2: Connect Facebook */}
-          {step === 2 && (
+          {/* Step 3: Connect Facebook */}
+          {step === 3 && (
             <div className="space-y-4 animate-fade-in">
               <Card className="border-0 shadow-2xl">
                 <CardHeader className="text-center">
@@ -354,13 +409,13 @@ export default function Onboarding() {
               </Card>
 
               <div className="flex gap-3">
-                <Button variant="ghost" className="text-white/70 hover:text-white" onClick={() => setStep(1)}>
+                <Button variant="ghost" className="text-white/70 hover:text-white" onClick={() => setStep(2)}>
                   <ArrowLeft className="h-4 w-4 mr-2" /> Back
                 </Button>
                 <Button
                   variant="ghost"
                   className="text-white/70 hover:text-white ml-auto"
-                  onClick={() => setStep(3)}
+                  onClick={() => setStep(4)}
                 >
                   {metaConnected ? 'Continue' : 'Skip for now'} <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
@@ -368,8 +423,8 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 3: First Campaign */}
-          {step === 3 && (
+          {/* Step 4: First Campaign */}
+          {step === 4 && (
             <div className="space-y-4 animate-fade-in">
               <Card className="border-0 shadow-2xl">
                 <CardHeader className="text-center">
@@ -395,7 +450,7 @@ export default function Onboarding() {
                 </CardContent>
               </Card>
 
-              <Button variant="ghost" className="text-white/70 hover:text-white" onClick={() => setStep(2)}>
+              <Button variant="ghost" className="text-white/70 hover:text-white" onClick={() => setStep(3)}>
                 <ArrowLeft className="h-4 w-4 mr-2" /> Back
               </Button>
             </div>

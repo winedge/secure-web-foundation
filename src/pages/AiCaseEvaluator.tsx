@@ -10,6 +10,7 @@ import { Scale, Upload, FileText, CheckCircle, XCircle, Lightbulb, MapPin, Clock
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import mammoth from 'mammoth';
+import { useVertical } from '@/hooks/use-vertical';
 
 interface DocumentEvaluation {
   case_summary: string;
@@ -29,6 +30,9 @@ interface DocumentEvaluation {
 }
 
 export default function AiCaseEvaluatorPage() {
+  const { term } = useVertical();
+  const evaluatorTitle = term('evaluator_title', 'AI Case Evaluator');
+  const evaluatorSubject = term('evaluator_subject', 'case');
   const [file, setFile] = useState<File | null>(null);
   const [textContent, setTextContent] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
@@ -144,10 +148,10 @@ export default function AiCaseEvaluatorPage() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Scale className="h-6 w-6 text-primary" />
-              AI Case Evaluator
+              {evaluatorTitle}
             </h1>
             <p className="text-muted-foreground mt-1">
-              Upload a case document to get AI-powered viability analysis, settlement estimates, and legal insights
+              Upload a {evaluatorSubject} document to get AI-powered viability analysis, value estimates, and expert insights
             </p>
           </div>
           <Badge variant="outline" className="gap-1 text-xs border-accent text-accent">

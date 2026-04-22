@@ -10,11 +10,14 @@ import { useState } from 'react';
 import { SidebarNavSection } from './SidebarNavSection';
 import { SidebarNavGroup } from './SidebarNavGroup';
 import { SidebarUserFooter } from './SidebarUserFooter';
-import { standaloneItems, navGroups, bottomItems, adminOverview, adminData, adminLogs } from './sidebar-nav-data';
+import { standaloneItems, navGroups, bottomItems, adminOverview, adminData, adminLogs, applyVerticalToNav } from './sidebar-nav-data';
+import { useVertical } from '@/hooks/use-vertical';
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { isAdmin } = useIsAdmin();
   const { tier } = useSubscriptionContext();
+  const { enabledModules, terminology } = useVertical();
+  const groups = applyVerticalToNav(navGroups, enabledModules, terminology);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
@@ -34,8 +37,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         {/* Standalone: Dashboard */}
         <SidebarNavSection items={standaloneItems} tier={tier} onNavigate={onNavigate} />
 
-        {/* Grouped sections */}
-        {navGroups.map((group) => (
+        {/* Grouped sections (vertical-aware) */}
+        {groups.map((group) => (
           <SidebarNavGroup key={group.label} group={group} tier={tier} onNavigate={onNavigate} />
         ))}
 

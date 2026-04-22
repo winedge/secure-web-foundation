@@ -40,12 +40,19 @@ import {
   ShieldAlert,
   Plug,
 } from 'lucide-react';
+import type { ModuleKey } from '@/lib/verticals/types';
 
 export interface NavItem {
   name: string;
   href: string;
   icon: typeof LayoutDashboard;
   premium?: boolean;
+  /** Module gate. If set, item only renders when the active vertical has this module enabled. */
+  module?: ModuleKey;
+  /** Terminology key — when set, label is replaced with the vertical-specific term at render time. */
+  termKey?: string;
+  /** Optional fallback label suffix; e.g. "My {lead_plural}" */
+  termTemplate?: string;
 }
 
 export interface NavGroup {
@@ -54,6 +61,8 @@ export interface NavGroup {
   items: NavItem[];
   /** If set, clicking the group header navigates here */
   href?: string;
+  /** Terminology key for the group label */
+  termKey?: string;
 }
 
 // Standalone top-level items (no grouping needed)
@@ -65,10 +74,11 @@ export const standaloneItems: NavItem[] = [
 export const navGroups: NavGroup[] = [
   {
     label: 'Leads',
+    termKey: 'lead_plural',
     icon: Briefcase,
     items: [
-      { name: 'Marketplace', href: '/marketplace', icon: ShoppingCart },
-      { name: 'My Leads', href: '/my-leads', icon: Briefcase },
+      { name: 'Marketplace', href: '/marketplace', icon: ShoppingCart, termKey: 'marketplace_title' },
+      { name: 'My Leads', href: '/my-leads', icon: Briefcase, termTemplate: 'My {lead_plural}' },
       { name: 'Intake Submissions', href: '/intake-submissions', icon: ClipboardList },
     ],
   },
@@ -77,36 +87,36 @@ export const navGroups: NavGroup[] = [
     icon: Megaphone,
     items: [
       { name: 'Campaigns', href: '/campaigns', icon: TrendingUp },
-      { name: 'Meta Ads', href: '/meta-ads', icon: Megaphone, premium: true },
-      { name: 'Google Ads', href: '/google-ads', icon: Globe, premium: true },
-      { name: 'Social Calendar', href: '/social-calendar', icon: CalendarDays, premium: true },
-      { name: 'Competitor Intel', href: '/competitor-intelligence', icon: Radar, premium: true },
-      { name: 'Market Pulse', href: '/market-pulse', icon: Target, premium: true },
-      { name: 'Predictive Leads', href: '/predictive-leads', icon: Brain, premium: true },
-      { name: 'Intent Signals', href: '/intent-signals', icon: Zap, premium: true },
-      { name: 'Lookalike Audience', href: '/lookalike-audience', icon: UserSearch, premium: true },
-      { name: 'Geofence Campaigns', href: '/geofence-campaigns', icon: MapPin, premium: true },
-      { name: 'Dark Funnel', href: '/dark-funnel', icon: Eye, premium: true },
+      { name: 'Meta Ads', href: '/meta-ads', icon: Megaphone, premium: true, module: 'meta_ads' },
+      { name: 'Google Ads', href: '/google-ads', icon: Globe, premium: true, module: 'google_ads' },
+      { name: 'Social Calendar', href: '/social-calendar', icon: CalendarDays, premium: true, module: 'social_calendar' },
+      { name: 'Competitor Intel', href: '/competitor-intelligence', icon: Radar, premium: true, module: 'competitor_intel' },
+      { name: 'Market Pulse', href: '/market-pulse', icon: Target, premium: true, module: 'market_pulse' },
+      { name: 'Predictive Leads', href: '/predictive-leads', icon: Brain, premium: true, module: 'predictive_leads' },
+      { name: 'Intent Signals', href: '/intent-signals', icon: Zap, premium: true, module: 'intent_signals' },
+      { name: 'Lookalike Audience', href: '/lookalike-audience', icon: UserSearch, premium: true, module: 'lookalike' },
+      { name: 'Geofence Campaigns', href: '/geofence-campaigns', icon: MapPin, premium: true, module: 'geofence' },
+      { name: 'Dark Funnel', href: '/dark-funnel', icon: Eye, premium: true, module: 'dark_funnel' },
     ],
   },
   {
     label: 'Creative',
     icon: Sparkles,
     items: [
-      { name: 'Creative Studio', href: '/creative-studio', icon: Sparkles, premium: true },
-      { name: 'Viral Content', href: '/viral-content', icon: Flame, premium: true },
-      { name: 'Video Ad Generator', href: '/video-ads', icon: Video, premium: true },
+      { name: 'Creative Studio', href: '/creative-studio', icon: Sparkles, premium: true, module: 'creative_studio' },
+      { name: 'Viral Content', href: '/viral-content', icon: Flame, premium: true, module: 'viral_content' },
+      { name: 'Video Ad Generator', href: '/video-ads', icon: Video, premium: true, module: 'video_ads' },
     ],
   },
   {
     label: 'Intelligence',
     icon: Gavel,
     items: [
-      { name: 'AI Case Evaluator', href: '/ai-case-evaluator', icon: Scale },
-      { name: 'Judge Intel', href: '/judge-intelligence', icon: Gavel, premium: true },
-      { name: 'Evidence Vault', href: '/evidence-vault', icon: VaultIcon, premium: true },
-      { name: 'Benchmarks', href: '/benchmarks', icon: BarChart3, premium: true },
-      { name: 'Cross-Platform AI', href: '/cross-platform-autopilot', icon: Layers, premium: true },
+      { name: 'AI Case Evaluator', href: '/ai-case-evaluator', icon: Scale, module: 'case_evaluator', termKey: 'evaluator_title' },
+      { name: 'Judge Intel', href: '/judge-intelligence', icon: Gavel, premium: true, module: 'judge_intelligence' },
+      { name: 'Evidence Vault', href: '/evidence-vault', icon: VaultIcon, premium: true, module: 'evidence_vault' },
+      { name: 'Benchmarks', href: '/benchmarks', icon: BarChart3, premium: true, module: 'benchmarks' },
+      { name: 'Cross-Platform AI', href: '/cross-platform-autopilot', icon: Layers, premium: true, module: 'cross_platform_autopilot' },
     ],
   },
   {
@@ -125,7 +135,7 @@ export const navGroups: NavGroup[] = [
       { name: 'Teams', href: '/teams', icon: Users },
       { name: 'Smart Alerts', href: '/smart-alerts', icon: Bell },
       { name: 'Referral Network', href: '/referral-network', icon: Handshake },
-      { name: 'Fraud Detection', href: '/fraud-detection', icon: ShieldAlert },
+      { name: 'Fraud Detection', href: '/fraud-detection', icon: ShieldAlert, module: 'fraud_detection' },
       { name: 'CRM Integrations', href: '/crm-integrations', icon: Plug },
     ],
   },
@@ -155,3 +165,31 @@ export const adminLogs: Omit<NavItem, 'premium'>[] = [
   { name: 'Audit Logs', href: '/admin/audit-logs', icon: History },
   { name: 'Intake Submissions', href: '/admin/leads', icon: ClipboardList },
 ];
+
+/**
+ * Apply vertical terminology and module gating to nav groups.
+ * Returns filtered/relabeled groups for the active vertical.
+ */
+export function applyVerticalToNav(
+  groups: NavGroup[],
+  enabledModules: string[],
+  terminology: Record<string, string | undefined>
+): NavGroup[] {
+  const interpolate = (template: string): string =>
+    template.replace(/\{(\w+)\}/g, (_, k) => terminology[k] ?? k);
+
+  return groups
+    .map((group) => {
+      const items = group.items
+        .filter((item) => !item.module || enabledModules.includes(item.module))
+        .map((item) => {
+          let name = item.name;
+          if (item.termTemplate) name = interpolate(item.termTemplate);
+          else if (item.termKey && terminology[item.termKey]) name = terminology[item.termKey]!;
+          return { ...item, name };
+        });
+      const label = group.termKey && terminology[group.termKey] ? terminology[group.termKey]! : group.label;
+      return { ...group, label, items };
+    })
+    .filter((group) => group.items.length > 0);
+}
