@@ -195,7 +195,7 @@ export function CategorySelect({
           maxLength={100}
           {...ariaProps}
         />
-        {examples.length > 0 && (
+        {showExampleChips && examples.length > 0 && (
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-xs text-muted-foreground">{t('categorySelect.tryLabel')}</span>
             {examples.map((ex, idx) => (
