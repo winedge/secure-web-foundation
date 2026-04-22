@@ -962,6 +962,53 @@ export type Database = {
           },
         ]
       }
+      category_select_events: {
+        Row: {
+          allow_free_text_fallback: boolean
+          category_count: number
+          created_at: string
+          firm_id: string | null
+          id: string
+          is_missing: boolean
+          state: string
+          user_id: string | null
+          vertical_name: string | null
+          vertical_slug: string
+        }
+        Insert: {
+          allow_free_text_fallback?: boolean
+          category_count?: number
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          is_missing?: boolean
+          state: string
+          user_id?: string | null
+          vertical_name?: string | null
+          vertical_slug: string
+        }
+        Update: {
+          allow_free_text_fallback?: boolean
+          category_count?: number
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          is_missing?: boolean
+          state?: string
+          user_id?: string | null
+          vertical_name?: string | null
+          vertical_slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_select_events_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_conversations: {
         Row: {
           created_at: string
