@@ -247,32 +247,38 @@ export function PipelineStagesEditor({ adminMode = false }: { adminMode?: boolea
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-4">
         <div>
-          <CardTitle className="text-base">Pipeline Stages</CardTitle>
+          <CardTitle className="text-base">
+            Pipeline Stages {adminMode && <Badge variant="destructive" className="ml-2">System defaults</Badge>}
+          </CardTitle>
           <CardDescription>
-            Stages your team moves leads through, in order. Customize labels, fees, and payment gates.
+            {adminMode
+              ? `Editing the system preset for ${vertical?.name}. Changes apply to every firm on this industry that hasn't customized their pipeline.`
+              : 'Stages your team moves leads through, in order. Customize labels, fees, and payment gates.'}
           </CardDescription>
         </div>
         <div className="flex gap-2">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm" disabled={resetDefaults.isPending}>
-                <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Reset
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Reset pipeline to industry defaults?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This removes all of your firm's custom pipeline stages and restores the {vertical?.name} system preset.
-                  Existing leads keep their data but may be remapped to the default stage labels.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => resetDefaults.mutate()}>Reset to defaults</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {!adminMode && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" disabled={resetDefaults.isPending}>
+                  <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Reset
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Reset pipeline to industry defaults?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This removes all of your firm's custom pipeline stages and restores the {vertical?.name} system preset.
+                    Existing leads keep their data but may be remapped to the default stage labels.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => resetDefaults.mutate()}>Reset to defaults</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
           <Dialog
             open={open}
             onOpenChange={(o) => {
