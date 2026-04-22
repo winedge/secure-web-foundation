@@ -67,10 +67,11 @@ export function CategorySelect({
   showError = false,
   requiredMessage,
 }: CategorySelectProps) {
+  const { t } = useTranslation();
   const { categories, term, isLoading, vertical } = useVertical();
   const label = term('category_label', 'Category');
   const labelLower = label.toLowerCase();
-  const ph = placeholder ?? `Select ${labelLower}`;
+  const ph = placeholder ?? t('categorySelect.selectPlaceholder', { label: labelLower });
   const verticalName = vertical?.name ?? 'this vertical';
 
   const [touched, setTouched] = useState(false);
