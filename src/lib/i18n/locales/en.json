@@ -1,0 +1,13 @@
+{
+  "categorySelect": {
+    "tryLabel": "Try:",
+    "examplePlaceholder": "e.g. {{example}}",
+    "enterPlaceholder": "Enter {{label}}",
+    "selectPlaceholder": "Select {{label}}",
+    "manageLink": "Manage {{label}}s",
+    "emptyDescription": "No {{label}} options configured for {{vertical}}. Type a value or add categories.",
+    "emptyDescriptionBlocked": "No {{label}} options configured for {{vertical}}.",
+    "requiredError": "{{label}} is required",
+    "maxLengthError": "{{label}} must be 100 characters or less"
+  }
+}

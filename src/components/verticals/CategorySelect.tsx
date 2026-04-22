@@ -9,6 +9,7 @@
  *   - Use the exported `validateCategoryValue` helper for submit-time checks.
  */
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -66,10 +67,11 @@ export function CategorySelect({
   showError = false,
   requiredMessage,
 }: CategorySelectProps) {
+  const { t } = useTranslation();
   const { categories, term, isLoading, vertical } = useVertical();
   const label = term('category_label', 'Category');
   const labelLower = label.toLowerCase();
-  const ph = placeholder ?? `Select ${labelLower}`;
+  const ph = placeholder ?? t('categorySelect.selectPlaceholder', { label: labelLower });
   const verticalName = vertical?.name ?? 'this vertical';
 
   const [touched, setTouched] = useState(false);
@@ -122,7 +124,9 @@ export function CategorySelect({
   // Compute inline error: external > internal required check
   const trimmed = (value ?? '').trim();
   const internalError =
-    required && !trimmed ? requiredMessage ?? `${label} is required` : null;
+    required && !trimmed
+      ? requiredMessage ?? t('categorySelect.requiredError', { label })
+      : null;
   const displayError = error ?? ((touched || showError) ? internalError : null);
   const hasError = !!displayError;
 
@@ -164,14 +168,18 @@ export function CategorySelect({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onBlur={() => setTouched(true)}
-          placeholder={examples.length > 0 ? `e.g. ${examples[0]}` : `Enter ${labelLower}`}
+          placeholder={
+            examples.length > 0
+              ? t('categorySelect.examplePlaceholder', { example: examples[0] })
+              : t('categorySelect.enterPlaceholder', { label: labelLower })
+          }
           className={cn(className, errorClass)}
           maxLength={100}
           {...ariaProps}
         />
         {examples.length > 0 && (
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs text-muted-foreground">Try:</span>
+            <span className="text-xs text-muted-foreground">{t('categorySelect.tryLabel')}</span>
             {examples.map((ex) => (
               <button
                 key={ex}
@@ -193,7 +201,7 @@ export function CategorySelect({
           <p className="text-xs text-muted-foreground flex items-start gap-1.5">
             <Info className="h-3 w-3 mt-0.5 shrink-0" />
             <span>
-              No {labelLower} options configured for {verticalName}. Type a value or add categories.
+              {t('categorySelect.emptyDescription', { label: labelLower, vertical: verticalName })}
             </span>
           </p>
           <Link
@@ -201,7 +209,7 @@ export function CategorySelect({
             className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1 shrink-0"
           >
             <Settings2 className="h-3 w-3" />
-            Manage {labelLower}s
+            {t('categorySelect.manageLink', { label: labelLower })}
           </Link>
         </div>
       </div>
@@ -223,7 +231,7 @@ export function CategorySelect({
           <span className="flex items-start gap-2">
             <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
             <span>
-              No {labelLower} options configured for {verticalName}.
+              {t('categorySelect.emptyDescriptionBlocked', { label: labelLower, vertical: verticalName })}
             </span>
           </span>
           <Link
@@ -231,7 +239,7 @@ export function CategorySelect({
             className="font-medium text-primary hover:underline inline-flex items-center gap-1 shrink-0"
           >
             <Settings2 className="h-3 w-3" />
-            Manage {labelLower}s
+            {t('categorySelect.manageLink', { label: labelLower })}
           </Link>
         </div>
       </div>
