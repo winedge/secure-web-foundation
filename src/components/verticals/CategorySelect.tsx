@@ -20,7 +20,7 @@ import { useVertical } from '@/hooks/use-vertical';
 import { VERTICAL_PRESETS } from '@/lib/verticals/presets';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { trackEvent } from '@/lib/posthog';
+import { supabase } from '@/integrations/supabase/client';
 
 const MANAGE_CATEGORIES_HREF = '/settings?tab=tort-types';
 
@@ -163,7 +163,9 @@ export function CategorySelect({
     const key = `${verticalSlug}:${state}`;
     if (trackedStateRef.current === key) return;
     trackedStateRef.current = key;
-    trackEvent('category_select_state', {
+    // Skip the transient loading state — only record meaningful render outcomes.
+    if (state === 'loading') return;
+    void supabase.from('category_select_events').insert({
       state,
       vertical_slug: verticalSlug,
       vertical_name: vertical?.name ?? null,
@@ -257,13 +259,6 @@ export function CategorySelect({
                 key={ex}
                 type="button"
                 onClick={() => {
-                  trackEvent('category_select_example_chip_click', {
-                    value: ex,
-                    vertical_slug: vertical?.slug ?? 'unknown',
-                    vertical_name: vertical?.name ?? null,
-                    chip_index: idx,
-                    chip_count: examples.length,
-                  });
                   onChange(ex);
                 }}
                 className="inline-flex"

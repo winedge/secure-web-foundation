@@ -151,6 +151,7 @@ export const adminOverview: Omit<NavItem, 'premium'>[] = [
   { name: 'Admin Panel', href: '/admin', icon: Shield },
   { name: 'User Roles (UAC)', href: '/admin/user-roles', icon: ShieldCheck },
   { name: 'Reporting', href: '/admin/reporting', icon: BarChart3 },
+  { name: 'Vertical Health', href: '/admin/vertical-health', icon: Layers },
   { name: 'Platform Settings', href: '/admin/settings', icon: Cog },
 ];
 
