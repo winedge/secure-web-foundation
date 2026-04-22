@@ -1,8 +1,19 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createSupabaseClient, createLogger } from "../_shared/auth.ts";
 import { handleCors, jsonResponse, errorResponse } from "../_shared/cors.ts";
+import { getVerticalContext } from "../_shared/vertical.ts";
 
 const log = createLogger("fraud-detection");
+
+// Vertical-specific bot/fraud heuristics
+const VERTICAL_FRAUD_HINTS: Record<string, { critical_fields: string[]; common_scams: string[] }> = {
+  mass_tort: { critical_fields: ["diagnosis_details", "exposure_details"], common_scams: ["lead_recycling", "fake_diagnosis"] },
+  skin_clinic: { critical_fields: ["category", "phone"], common_scams: ["bot_booking", "no_show_farming"] },
+  real_estate: { critical_fields: ["state", "phone", "email"], common_scams: ["wire_fraud_indicator", "fake_buyer"] },
+  solar: { critical_fields: ["address", "state", "zip_code"], common_scams: ["door_to_door_resell", "renter_misrepresentation"] },
+  dental: { critical_fields: ["category", "phone"], common_scams: ["insurance_farming", "bot_booking"] },
+  home_services: { critical_fields: ["address", "phone"], common_scams: ["price_shopping_bot", "competitor_probe"] },
+};
 
 interface FraudSignal {
   check_type: string;
@@ -30,6 +41,9 @@ serve(async (req) => {
       .single();
 
     if (leadErr || !lead) return errorResponse("Lead not found", 404);
+
+    const { verticalSlug } = await getVerticalContext(lead.firm_id ?? null, "fraud");
+    const verticalHints = VERTICAL_FRAUD_HINTS[verticalSlug] ?? VERTICAL_FRAUD_HINTS.mass_tort;
 
     const signals: FraudSignal[] = [];
 
@@ -70,7 +84,15 @@ serve(async (req) => {
     const botIndicators: string[] = [];
     if (!lead.first_name && !lead.last_name) botIndicators.push("missing_name");
     if (!lead.email && !lead.phone) botIndicators.push("missing_contact");
-    if (!lead.diagnosis_details && !lead.exposure_details) botIndicators.push("missing_case_details");
+
+    // Vertical-specific critical-field check
+    const missingCritical = verticalHints.critical_fields.filter((f) => {
+      const v = (lead as Record<string, unknown>)[f] ?? (lead.custom_fields as Record<string, unknown> | null)?.[f];
+      return v === null || v === undefined || v === "";
+    });
+    if (missingCritical.length > 0) {
+      botIndicators.push(`missing_${verticalSlug}_critical:${missingCritical.join(",")}`);
+    }
 
     const metadata = lead.metadata || {};
     if (metadata.submission_time_ms && metadata.submission_time_ms < 3000) {
@@ -155,6 +177,8 @@ serve(async (req) => {
 
     return jsonResponse({
       lead_id,
+      vertical: verticalSlug,
+      vertical_scams_watched: verticalHints.common_scams,
       signals_found: signals.length,
       signals,
       action: signals.some((s) => s.severity === "critical" || s.severity === "high")
