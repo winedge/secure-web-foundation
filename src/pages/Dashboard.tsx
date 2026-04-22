@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useVertical } from '@/hooks/use-vertical';
 
 export default function Dashboard() {
   const { user, loading } = useAuth();
@@ -25,6 +26,7 @@ export default function Dashboard() {
   const { data: firm, isLoading: firmLoading } = useFirm();
   const { data: purchasedLeads } = usePurchasedLeads();
   const { tier, subscribed } = useSubscription();
+  const { term } = useVertical();
   const [timedOut, setTimedOut] = useState(false);
 
   // Available leads count
@@ -323,8 +325,8 @@ export default function Dashboard() {
               />
               <QuickAction
                 icon={<ShoppingCart className="h-4 w-4" />}
-                label="Browse Marketplace"
-                description="Find new leads to purchase"
+                label={`Browse ${term('marketplace_title', 'Marketplace')}`}
+                description={`Find new ${term('lead_plural', 'leads').toLowerCase()} to purchase`}
                 onClick={() => navigate('/marketplace')}
               />
               <QuickAction
