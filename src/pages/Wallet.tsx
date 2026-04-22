@@ -7,7 +7,6 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { formatCurrency } from '@/lib/utils';
 import { useCurrency } from '@/hooks/use-currency';
 import { toast } from 'sonner';
 import { useSubscription, openCustomerPortal } from '@/hooks/use-subscription';
@@ -27,7 +26,7 @@ import { format } from 'date-fns';
 export default function Wallet() {
   const { data: firm } = useFirm();
   const { tier, subscribed, subscriptionEnd } = useSubscription();
-  const { currency, formatFromUsd, format: formatLocal } = useCurrency();
+  const { formatFromUsd, format: formatLocal } = useCurrency();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [loadingAmount, setLoadingAmount] = useState<number | null>(null);
