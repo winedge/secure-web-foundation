@@ -100,7 +100,7 @@ export default function PredictiveLeads() {
 
         <Card>
           <CardContent className="pt-6">
-            <CategorySelect value={filterTort} onChange={(v) => { setFilterTort(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} />
+            <CategorySelect value={filterTort} onChange={(v) => { setFilterTort(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} required onValidityChange={setCategoryValid} />
           </CardContent>
         </Card>
 
