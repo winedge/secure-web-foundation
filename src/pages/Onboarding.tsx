@@ -78,6 +78,7 @@ export default function Onboarding() {
       practice_type: '',
       contact_email: '',
       contact_phone: '',
+      country: 'US',
     },
   });
 
@@ -101,6 +102,15 @@ export default function Onboarding() {
       contact_email: data.contact_email || undefined,
       contact_phone: data.contact_phone || undefined,
     });
+
+    // Persist country on the firm so currency/billing reflects it.
+    if (created?.id && data.country) {
+      try {
+        await supabase.from('firms').update({ country: data.country } as any).eq('id', created.id);
+      } catch {
+        // non-blocking
+      }
+    }
 
     // Assign vertical_id to the newly created firm
     if (selectedVertical && created?.id) {
@@ -270,6 +280,23 @@ export default function Onboarding() {
                       </label>
                       <Input id="contact_phone" placeholder="(555) 123-4567" className="h-11" {...register('contact_phone')} />
                     </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="country" className="text-sm font-medium flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-muted-foreground" /> Country
+                    </label>
+                    <select
+                      id="country"
+                      className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
+                      {...register('country')}
+                    >
+                      <option value="US">United States (USD)</option>
+                      <option value="IN">India (INR)</option>
+                      <option value="GB">United Kingdom</option>
+                      <option value="CA">Canada</option>
+                      <option value="AU">Australia</option>
+                    </select>
+                    {errors.country && <p className="text-sm text-destructive">{errors.country.message}</p>}
                   </div>
                   <div className="flex gap-2">
                     <Button type="button" variant="ghost" className="flex-1" onClick={() => setStep(0)} disabled={createFirm.isPending}>
