@@ -329,6 +329,7 @@ export function VerticalSettingsTab() {
                   );
                 })}
               </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
