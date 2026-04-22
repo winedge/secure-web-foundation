@@ -99,16 +99,58 @@ export function VerticalSettingsTab() {
     },
   });
 
+  // System-level enabled modules (firm_id IS NULL) for admin mode display.
+  const { data: systemModules, refetch: refetchSystemModules } = useQuery({
+    queryKey: ['system-vertical-modules', vertical?.id],
+    enabled: !!vertical?.id && adminMode && isAdmin,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vertical_module_access' as any)
+        .select('module_key, is_enabled')
+        .eq('vertical_id', vertical!.id)
+        .is('firm_id', null);
+      if (error) throw error;
+      return new Set(((data ?? []) as any[]).filter((r) => r.is_enabled).map((r) => r.module_key as string));
+    },
+  });
+
   const toggleModule = useMutation({
     mutationFn: async ({ moduleKey, enable }: { moduleKey: ModuleKey; enable: boolean }) => {
-      if (!firm?.id || !vertical?.id) throw new Error('Missing firm/vertical');
-      // Upsert a firm-scoped override row
+      if (!vertical?.id) throw new Error('Missing vertical');
+      const useAdmin = adminMode && isAdmin;
+      if (!useAdmin && !firm?.id) throw new Error('Missing firm');
+
+      if (useAdmin) {
+        // System row: firm_id IS NULL — manual upsert because partial-unique can't be referenced.
+        const { data: existing, error: fetchErr } = await supabase
+          .from('vertical_module_access' as any)
+          .select('id')
+          .eq('vertical_id', vertical.id)
+          .eq('module_key', moduleKey)
+          .is('firm_id', null)
+          .maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (existing) {
+          const { error } = await supabase
+            .from('vertical_module_access' as any)
+            .update({ is_enabled: enable } as any)
+            .eq('id', (existing as any).id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('vertical_module_access' as any)
+            .insert({ vertical_id: vertical.id, firm_id: null, module_key: moduleKey, is_enabled: enable } as any);
+          if (error) throw error;
+        }
+        return;
+      }
+
       const { error } = await supabase
         .from('vertical_module_access' as any)
         .upsert(
           {
             vertical_id: vertical.id,
-            firm_id: firm.id,
+            firm_id: firm!.id,
             module_key: moduleKey,
             is_enabled: enable,
           } as any,
@@ -119,6 +161,8 @@ export function VerticalSettingsTab() {
     onSuccess: (_, vars) => {
       toast.success(`${vars.enable ? 'Enabled' : 'Disabled'} module`);
       refetch();
+      if (adminMode && isAdmin) refetchSystemModules();
+      queryClient.invalidateQueries({ queryKey: ['system-vertical-modules', vertical?.id] });
     },
     onError: (err: any) => toast.error('Failed: ' + err.message),
   });
