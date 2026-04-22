@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
+import { useCurrency } from '@/hooks/use-currency';
 import { toast } from 'sonner';
 import { useSubscription, openCustomerPortal } from '@/hooks/use-subscription';
 import { 
