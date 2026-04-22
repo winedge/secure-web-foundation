@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { createSupabaseClient } from "../_shared/auth.ts";
-import { getVerticalContext, buildSystemPrompt } from "../_shared/vertical.ts";
+import { getVerticalContext, buildSystemPrompt, resolveCategory } from "../_shared/vertical.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
@@ -10,12 +10,14 @@ serve(async (req) => {
   const supabase = createSupabaseClient(true);
 
   try {
-    const { tort_type, states, action, firm_id } = await req.json();
+    const { tort_type, category, states, action, firm_id } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const { prompt: customPrompt, verticalSlug } = await getVerticalContext(firm_id, "market");
+    const { config, prompt: customPrompt, verticalSlug } = await getVerticalContext(firm_id, "market");
+    const resolved = resolveCategory(config, category ?? tort_type);
+    const subjectCategory = resolved.category;
 
     if (action === "scan") {
       const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -67,7 +69,7 @@ Return JSON array:
             },
             {
               role: "user",
-              content: `Scan for emerging ${verticalSlug.replace(/_/g, " ")} opportunities${tort_type ? ` related to ${tort_type}` : ''}${states?.length ? ` in states: ${states.join(', ')}` : ''}. Focus on developments from the last 30 days and predict what will trend in the next 60 days. Provide at least 5-8 emerging opportunities.`
+              content: `Scan for emerging ${verticalSlug.replace(/_/g, " ")} opportunities${subjectCategory ? ` related to ${subjectCategory}` : ''}${resolved.allCategories.length ? ` (vertical categories: ${resolved.allCategories.join(', ')})` : ''}${states?.length ? ` in states: ${states.join(', ')}` : ''}. Focus on developments from the last 30 days and predict what will trend in the next 60 days. Provide at least 5-8 emerging opportunities.`
             }
           ],
           temperature: 0.4,

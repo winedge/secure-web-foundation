@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
-import { getVerticalContext, buildSystemPrompt } from "../_shared/vertical.ts";
+import { getVerticalContext, buildSystemPrompt, resolveCategory } from "../_shared/vertical.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
@@ -8,13 +8,14 @@ serve(async (req) => {
 
   try {
     const { tort_type, category, platform, style, firm_id } = await req.json();
-    const subject = category || tort_type;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const { config, prompt: customPrompt, verticalSlug } = await getVerticalContext(firm_id, "viral");
     const verticalName = config?.vertical?.name ?? "Mass Tort";
+    const resolved = resolveCategory(config, category ?? tort_type);
+    const subject = resolved.category;
 
     const systemPrompt = `${buildSystemPrompt("viral", verticalSlug, customPrompt)}
 
@@ -79,7 +80,7 @@ Return JSON:
       parsed = jsonMatch ? JSON.parse(jsonMatch[1]) : JSON.parse(content);
     } catch { parsed = { top_performers: [], inspired_variants: [], trending_formats: [], trend_jacking_opportunities: [] }; }
 
-    return jsonResponse({ ...parsed, vertical: verticalSlug });
+    return jsonResponse({ ...parsed, vertical: verticalSlug, category: resolved.category, available_categories: resolved.allCategories });
   } catch (e) {
     console.error("viral-content error:", e);
     return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);

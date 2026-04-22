@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders, handleCors, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { createSupabaseClient, getAuthenticatedUser } from "../_shared/auth.ts";
-import { getVerticalContext, getFirmIdForUser } from "../_shared/vertical.ts";
+import { getVerticalContext, getFirmIdForUser, resolveCategory } from "../_shared/vertical.ts";
 
 serve(async (req) => {
   const cors = handleCors(req);
@@ -11,8 +11,9 @@ serve(async (req) => {
     const supabase = createSupabaseClient();
     const user = await getAuthenticatedUser(req, supabase);
 
-    const { tort_type, target_states, firm_name } = await req.json();
-    if (!tort_type) return errorResponse("category is required");
+    const { tort_type, category, target_states, firm_name } = await req.json();
+    const requestedCategory = category ?? tort_type;
+    if (!requestedCategory) return errorResponse("category is required");
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -20,6 +21,8 @@ serve(async (req) => {
     const firmId = await getFirmIdForUser(user.id);
     const { config: vCfg, verticalSlug } = await getVerticalContext(firmId, "competitor");
     const verticalName = vCfg?.vertical?.name ?? "Mass Tort Legal";
+    const resolved = resolveCategory(vCfg, requestedCategory);
+    const resolvedCategory = resolved.category;
 
     const subjectLabel =
       verticalSlug === "real_estate" ? "real estate brokerage"
@@ -29,7 +32,7 @@ serve(async (req) => {
       : verticalSlug === "home_services" ? "home services company"
       : "law firm";
 
-    const prompt = `You are a marketing intelligence analyst for the ${verticalName} vertical. Analyze the competitive landscape for a ${subjectLabel} specializing in "${tort_type}"${target_states?.length ? ` in these regions: ${target_states.join(", ")}` : ""}.
+    const prompt = `You are a marketing intelligence analyst for the ${verticalName} vertical. Analyze the competitive landscape for a ${subjectLabel} specializing in "${resolvedCategory}"${resolved.allCategories.length ? ` (one of the configured categories for this vertical: ${resolved.allCategories.join(", ")})` : ""}${target_states?.length ? ` in these regions: ${target_states.join(", ")}` : ""}.
 
 Provide a comprehensive competitive intelligence report. Use realistic, data-driven estimates appropriate to ${verticalSlug.replace("_", " ")}:
 
@@ -83,7 +86,7 @@ Return JSON:
       parsed = { raw_analysis: content };
     }
 
-    return jsonResponse({ analysis: parsed, tort_type, target_states, vertical: verticalSlug, analyzed_at: new Date().toISOString() });
+    return jsonResponse({ analysis: parsed, category: resolvedCategory, available_categories: resolved.allCategories, target_states, vertical: verticalSlug, analyzed_at: new Date().toISOString() });
   } catch (e) {
     console.error("competitor-intelligence error:", e);
     return errorResponse(e instanceof Error ? e.message : "Unknown error", 500);
