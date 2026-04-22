@@ -158,31 +158,37 @@ export function TerminologyEditor({ adminMode = false }: { adminMode?: boolean }
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-4">
         <div>
-          <CardTitle className="text-base">Terminology Overrides</CardTitle>
+          <CardTitle className="text-base">
+            {adminMode ? 'System Terminology' : 'Terminology Overrides'}
+            {adminMode && <Badge variant="destructive" className="ml-2">System defaults</Badge>}
+          </CardTitle>
           <CardDescription>
-            Customize how leads, categories, and key sections are labeled across the app for the {vertical?.name} vertical.
-            Leave a field blank to use the industry default.
+            {adminMode
+              ? `Editing the system terminology for ${vertical?.name}. Changes apply to every firm on this industry that hasn't customized labels.`
+              : `Customize how leads, categories, and key sections are labeled across the app for the ${vertical?.name} vertical. Leave a field blank to use the industry default.`}
           </CardDescription>
         </div>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="outline" size="sm" disabled={reset.isPending}>
-              <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Reset
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Reset terminology to defaults?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Your firm's custom terminology will be cleared and the {vertical?.name} industry defaults will be used.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => reset.mutate()}>Reset</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {!adminMode && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" disabled={reset.isPending}>
+                <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Reset
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Reset terminology to defaults?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Your firm's custom terminology will be cleared and the {vertical?.name} industry defaults will be used.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => reset.mutate()}>Reset</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
