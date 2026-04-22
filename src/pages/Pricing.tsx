@@ -154,7 +154,7 @@ export default function Pricing() {
                   Included in Premium
                 </Button>
               ) : (
-                renderSubscribeButtons('basic', SUBSCRIPTION_TIERS.basic.price_id, SUBSCRIPTION_TIERS.basic.price)
+                renderSubscribeButtons('basic', tierPricing('basic').priceId, tierPricing('basic').price)
               )}
             </CardContent>
           </Card>
@@ -174,7 +174,7 @@ export default function Pricing() {
               </CardTitle>
               <CardDescription>For firms ready to scale</CardDescription>
               <div className="mt-4">
-                <span className="text-4xl font-bold">${SUBSCRIPTION_TIERS.premium.price}</span>
+                <span className="text-4xl font-bold">{formatMoney(tierPricing('premium').price, currency)}</span>
                 <span className="text-muted-foreground">/month</span>
               </div>
             </CardHeader>
@@ -192,7 +192,7 @@ export default function Pricing() {
                   Manage Subscription
                 </Button>
               ) : (
-                renderSubscribeButtons('premium', SUBSCRIPTION_TIERS.premium.price_id, SUBSCRIPTION_TIERS.premium.price)
+                renderSubscribeButtons('premium', tierPricing('premium').priceId, tierPricing('premium').price)
               )}
             </CardContent>
           </Card>
