@@ -60,6 +60,7 @@ export default function JudgeIntelligence() {
   const [simulation, setSimulation] = useState<Simulation | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
   const [categoryError, setCategoryError] = useState<string | undefined>();
+  const [categoryValid, setCategoryValid] = useState(true);
 
   if (!isVertical('mass_tort')) {
     return (
@@ -141,9 +142,9 @@ export default function JudgeIntelligence() {
               <Input placeholder="Judge name..." value={judgeName} onChange={(e) => setJudgeName(e.target.value)} />
               <Input placeholder="Jurisdiction (e.g. Southern District of NY)..." value={jurisdiction} onChange={(e) => setJurisdiction(e.target.value)} />
               <Input placeholder="State (optional)..." value={state} onChange={(e) => setState(e.target.value)} />
-              <CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} placeholder="Category (optional)" error={categoryError} />
+              <CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} placeholder="Category (optional)" error={categoryError} required onValidityChange={setCategoryValid} />
             </div>
-            <Button onClick={analyzeJudge} disabled={isLoading} className="mt-4 gap-2">
+            <Button onClick={analyzeJudge} disabled={isLoading || !categoryValid} className="mt-4 gap-2">
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
               {isLoading ? 'Analyzing...' : 'Profile Judge'}
             </Button>
