@@ -8,6 +8,13 @@
     "emptyDescription": "No hay opciones de {{label}} configuradas para {{vertical}}. Escribe un valor o agrega categorías.",
     "emptyDescriptionBlocked": "No hay opciones de {{label}} configuradas para {{vertical}}.",
     "requiredError": "{{label}} es obligatorio",
-    "maxLengthError": "{{label}} debe tener 100 caracteres o menos"
+    "maxLengthError": "{{label}} debe tener 100 caracteres o menos",
+    "status": {
+      "loading": "Cargando…",
+      "hasCategories": "{{count}} opción disponible",
+      "hasCategories_other": "{{count}} opciones disponibles",
+      "empty": "Sin opciones | texto libre",
+      "blocked": "Sin opciones disponibles"
+    }
   }
 }

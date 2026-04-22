@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Info, Settings2, AlertCircle } from 'lucide-react';
+import { Info, Settings2, AlertCircle, Loader2, CheckCircle2, CircleSlash } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useVertical } from '@/hooks/use-vertical';
 import { VERTICAL_PRESETS } from '@/lib/verticals/presets';
@@ -196,6 +196,43 @@ export function CategorySelect({
     ? { 'aria-invalid': true as const, 'aria-describedby': 'category-select-error' }
     : {};
 
+  // Small status summary chip shown above the input so users (and admins QA-ing
+  // verticals) can see at a glance whether categories loaded, are missing, or
+  // are blocked. Uses semantic tokens only.
+  const statusSummary = (() => {
+    if (isLoading) {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
+          {t('categorySelect.status.loading')}
+        </span>
+      );
+    }
+    if (categories.length > 0) {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+          <CheckCircle2 className="h-3 w-3 text-primary" aria-hidden />
+          {t('categorySelect.status.hasCategories', { count: categories.length })}
+        </span>
+      );
+    }
+    if (allowFreeTextFallback) {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Info className="h-3 w-3" aria-hidden />
+          {t('categorySelect.status.empty')}
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs text-destructive">
+        <CircleSlash className="h-3 w-3" aria-hidden />
+        {t('categorySelect.status.blocked')}
+      </span>
+    );
+  })();
+
+
   let content: React.ReactNode;
 
   if (isLoading) {
@@ -336,6 +373,7 @@ export function CategorySelect({
   if (!showLabel) {
     return (
       <div className="space-y-1">
+        <div className="flex items-center justify-end">{statusSummary}</div>
         {content}
         {errorNode}
       </div>
@@ -343,10 +381,13 @@ export function CategorySelect({
   }
   return (
     <div className="space-y-1">
-      <Label className={cn(labelClassName, hasError && 'text-destructive')}>
-        {label}
-        {required && <span className="text-destructive ml-0.5">*</span>}
-      </Label>
+      <div className="flex items-center justify-between gap-2">
+        <Label className={cn(labelClassName, hasError && 'text-destructive')}>
+          {label}
+          {required && <span className="text-destructive ml-0.5">*</span>}
+        </Label>
+        {statusSummary}
+      </div>
       {content}
       {errorNode}
     </div>
