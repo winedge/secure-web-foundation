@@ -2,13 +2,18 @@
  * CategorySelect - vertical-aware dropdown for lead categories.
  * Shows loading skeleton while config loads, and a helpful empty state
  * (with free-text fallback) when the active vertical has no categories.
+ *
+ * Validation:
+ *   - Pass `required` to enable inline error messaging.
+ *   - Pass external `error` text to display a server-side / form-level error.
+ *   - Use the exported `validateCategoryValue` helper for submit-time checks.
  */
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Info, Settings2 } from 'lucide-react';
+import { Info, Settings2, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useVertical } from '@/hooks/use-vertical';
 import { VERTICAL_PRESETS } from '@/lib/verticals/presets';
@@ -26,6 +31,25 @@ interface CategorySelectProps {
   labelClassName?: string;
   /** When true, show a free-text input as fallback if no categories exist. Default: true */
   allowFreeTextFallback?: boolean;
+  /** Mark field as required - shows inline error when left empty after blur. */
+  required?: boolean;
+  /** External error message (e.g. from form submission). Overrides internal validation. */
+  error?: string;
+  /** Auto-show error immediately (e.g. after a submit attempt). */
+  showError?: boolean;
+  /** Custom required-error text. */
+  requiredMessage?: string;
+}
+
+/**
+ * Submit-time validation helper. Returns an error string or null.
+ * Use in form onSubmit before calling APIs.
+ */
+export function validateCategoryValue(value: string, label = 'Category'): string | null {
+  const trimmed = (value ?? '').trim();
+  if (!trimmed) return `${label} is required`;
+  if (trimmed.length > 100) return `${label} must be 100 characters or less`;
+  return null;
 }
 
 export function CategorySelect({
@@ -36,12 +60,18 @@ export function CategorySelect({
   showLabel,
   labelClassName,
   allowFreeTextFallback = true,
+  required = false,
+  error,
+  showError = false,
+  requiredMessage,
 }: CategorySelectProps) {
   const { categories, term, isLoading, vertical } = useVertical();
   const label = term('category_label', 'Category');
   const labelLower = label.toLowerCase();
   const ph = placeholder ?? `Select ${labelLower}`;
   const verticalName = vertical?.name ?? 'this vertical';
+
+  const [touched, setTouched] = useState(false);
 
   // Auto-clear value only if categories have loaded and the current value
   // is no longer one of the available options. Preserves value across reloads
@@ -62,6 +92,19 @@ export function CategorySelect({
     }
   }, [isLoading, categories, value]);
 
+  // Compute inline error: external > internal required check
+  const trimmed = (value ?? '').trim();
+  const internalError =
+    required && !trimmed ? requiredMessage ?? `${label} is required` : null;
+  const displayError = error ?? ((touched || showError) ? internalError : null);
+  const hasError = !!displayError;
+
+  // Aria + visual error styling shared across variants
+  const errorClass = hasError ? 'border-destructive focus-visible:ring-destructive' : '';
+  const ariaProps = hasError
+    ? { 'aria-invalid': true as const, 'aria-describedby': 'category-select-error' }
+    : {};
+
   let content: React.ReactNode;
 
   if (isLoading) {
@@ -69,7 +112,11 @@ export function CategorySelect({
   } else if (categories.length > 0) {
     content = (
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className={className}>
+        <SelectTrigger
+          className={cn(className, errorClass)}
+          onBlur={() => setTouched(true)}
+          {...ariaProps}
+        >
           <SelectValue placeholder={ph} />
         </SelectTrigger>
         <SelectContent>
@@ -89,8 +136,11 @@ export function CategorySelect({
         <Input
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onBlur={() => setTouched(true)}
           placeholder={examples.length > 0 ? `e.g. ${examples[0]}` : `Enter ${labelLower}`}
-          className={className}
+          className={cn(className, errorClass)}
+          maxLength={100}
+          {...ariaProps}
         />
         {examples.length > 0 && (
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -130,35 +180,64 @@ export function CategorySelect({
       </div>
     );
   } else {
+    // Free-text fallback disabled and no categories: cannot satisfy `required`.
+    // Surface a blocking error so the form cannot be submitted with this field.
     content = (
-      <div
-        className={cn(
-          'flex items-start justify-between gap-3 rounded-md border border-dashed border-border bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground',
-          className,
-        )}
-      >
-        <span className="flex items-start gap-2">
-          <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-          <span>
-            No {labelLower} options configured for {verticalName}.
-          </span>
-        </span>
-        <Link
-          to={MANAGE_CATEGORIES_HREF}
-          className="font-medium text-primary hover:underline inline-flex items-center gap-1 shrink-0"
+      <div className="space-y-1.5">
+        <div
+          className={cn(
+            'flex items-start justify-between gap-3 rounded-md border border-dashed px-3 py-2.5 text-xs',
+            hasError
+              ? 'border-destructive bg-destructive/5 text-destructive'
+              : 'border-border bg-muted/30 text-muted-foreground',
+            className,
+          )}
         >
-          <Settings2 className="h-3 w-3" />
-          Manage {labelLower}s
-        </Link>
+          <span className="flex items-start gap-2">
+            <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+            <span>
+              No {labelLower} options configured for {verticalName}.
+            </span>
+          </span>
+          <Link
+            to={MANAGE_CATEGORIES_HREF}
+            className="font-medium text-primary hover:underline inline-flex items-center gap-1 shrink-0"
+          >
+            <Settings2 className="h-3 w-3" />
+            Manage {labelLower}s
+          </Link>
+        </div>
       </div>
     );
   }
 
-  if (!showLabel) return content;
+  const errorNode = hasError ? (
+    <p
+      id="category-select-error"
+      role="alert"
+      className="text-xs text-destructive flex items-center gap-1.5 mt-1"
+    >
+      <AlertCircle className="h-3 w-3 shrink-0" />
+      <span>{displayError}</span>
+    </p>
+  ) : null;
+
+  if (!showLabel) {
+    return (
+      <div className="space-y-1">
+        {content}
+        {errorNode}
+      </div>
+    );
+  }
   return (
     <div className="space-y-1">
-      <Label className={labelClassName}>{label}</Label>
+      <Label className={cn(labelClassName, hasError && 'text-destructive')}>
+        {label}
+        {required && <span className="text-destructive ml-0.5">*</span>}
+      </Label>
       {content}
+      {errorNode}
     </div>
   );
 }
