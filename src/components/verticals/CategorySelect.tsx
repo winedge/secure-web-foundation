@@ -8,9 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Info } from 'lucide-react';
+import { Info, Settings2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useVertical } from '@/hooks/use-vertical';
 import { cn } from '@/lib/utils';
+
+const MANAGE_CATEGORIES_HREF = '/settings?tab=tort-types';
 
 interface CategorySelectProps {
   value: string;
