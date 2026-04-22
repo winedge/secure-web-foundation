@@ -8,6 +8,13 @@
     "emptyDescription": "No {{label}} options configured for {{vertical}}. Type a value or add categories.",
     "emptyDescriptionBlocked": "No {{label}} options configured for {{vertical}}.",
     "requiredError": "{{label}} is required",
-    "maxLengthError": "{{label}} must be 100 characters or less"
+    "maxLengthError": "{{label}} must be 100 characters or less",
+    "status": {
+      "loading": "Loading…",
+      "hasCategories": "{{count}} option available",
+      "hasCategories_other": "{{count}} options available",
+      "empty": "No options | free text",
+      "blocked": "No options available"
+    }
   }
 }
