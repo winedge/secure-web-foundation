@@ -1,24 +1,24 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
+import { getVerticalContext, buildSystemPrompt } from "../_shared/vertical.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
   if (corsResp) return corsResp;
 
   try {
-    const { tort_type, platform, style } = await req.json();
+    const { tort_type, category, platform, style, firm_id } = await req.json();
+    const subject = category || tort_type;
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: `You are a viral content analyst for legal advertising. Analyze top-performing legal ads and generate inspired variants.
+    const { config, prompt: customPrompt, verticalSlug } = await getVerticalContext(firm_id, "viral");
+    const verticalName = config?.vertical?.name ?? "Mass Tort";
+
+    const systemPrompt = `${buildSystemPrompt("viral", verticalSlug, customPrompt)}
+
+Analyze top-performing ads in the ${verticalName} industry and generate inspired variants tailored to its audience, tone, and compliance constraints.
 
 Return JSON:
 {
@@ -47,12 +47,19 @@ Return JSON:
     "urgency": "string",
     "content_idea": "string"
   }]
-}`
-          },
+}`;
+
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: `Analyze top-performing ${tort_type || 'legal'} ads on ${platform || 'all platforms'}. Generate inspired variants in ${style || 'professional'} style. Include trend-jacking opportunities.`
-          }
+            content: `Analyze top-performing ${subject || verticalName} ads on ${platform || 'all platforms'}. Generate inspired variants in ${style || 'professional'} style. Include trend-jacking opportunities relevant to ${verticalName}.`,
+          },
         ],
         temperature: 0.6,
       }),
@@ -72,7 +79,7 @@ Return JSON:
       parsed = jsonMatch ? JSON.parse(jsonMatch[1]) : JSON.parse(content);
     } catch { parsed = { top_performers: [], inspired_variants: [], trending_formats: [], trend_jacking_opportunities: [] }; }
 
-    return jsonResponse(parsed);
+    return jsonResponse({ ...parsed, vertical: verticalSlug });
   } catch (e) {
     console.error("viral-content error:", e);
     return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
