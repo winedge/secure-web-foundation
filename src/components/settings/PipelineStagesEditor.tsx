@@ -42,16 +42,34 @@ const slugify = (s: string) =>
     .replace(/^_+|_+$/g, '')
     .slice(0, 60);
 
-export function PipelineStagesEditor() {
+export function PipelineStagesEditor({ adminMode = false }: { adminMode?: boolean } = {}) {
   const { data: firm } = useFirm();
   const { vertical, stages, refetch } = useVertical();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Partial<StageRow> | null>(null);
   const [open, setOpen] = useState(false);
 
+  // In admin mode, fetch system rows (firm_id IS NULL) directly so edits target the preset.
+  const { data: systemStages, refetch: refetchSystem } = useQuery({
+    queryKey: ['system-pipeline-stages', vertical?.id],
+    enabled: !!vertical?.id && adminMode,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vertical_pipeline_stages' as any)
+        .select('*')
+        .eq('vertical_id', vertical!.id)
+        .is('firm_id', null)
+        .order('stage_order');
+      if (error) throw error;
+      return (data ?? []) as unknown as StageRow[];
+    },
+  });
+
+  const sourceStages = adminMode ? (systemStages ?? []) : (stages as StageRow[]);
+
   const sorted = useMemo(
-    () => [...(stages as StageRow[])].sort((a, b) => a.stage_order - b.stage_order),
-    [stages]
+    () => [...sourceStages].sort((a, b) => a.stage_order - b.stage_order),
+    [sourceStages]
   );
 
   const ensureFirmStages = async (): Promise<StageRow[]> => {
