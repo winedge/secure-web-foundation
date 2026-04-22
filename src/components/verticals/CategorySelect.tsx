@@ -155,9 +155,14 @@ export function CategorySelect({
   }, [value, required, isLoading, categories.length, allowFreeTextFallback, onValidityChange]);
 
   // Analytics: track which state CategorySelect renders in per vertical.
-  // Dedupe per (verticalSlug, state) within this component instance so we
-  // don't spam events on every re-render.
+  // Dedupe per (verticalSlug, state) within this component instance, AND
+  // debounce the DB insert by ~400ms so a quick loading→has_categories /
+  // loading→empty flip for the same vertical only emits one event.
   const trackedStateRef = useRef<string | null>(null);
+  const pendingInsertRef = useRef<{
+    timer: ReturnType<typeof setTimeout>;
+    verticalSlug: string;
+  } | null>(null);
   useEffect(() => {
     const verticalSlug = vertical?.slug ?? 'unknown';
     const state: 'loading' | 'has_categories' | 'empty_freetext' | 'empty_blocked' = isLoading
@@ -201,8 +206,33 @@ export function CategorySelect({
 
     // Skip the transient loading state — only record meaningful render outcomes.
     if (state === 'loading') return;
-    void supabase.from('category_select_events').insert(payload);
+
+    // Debounce: if a previous insert for the SAME vertical is still pending
+    // (e.g. a brief loading flash), cancel it and schedule this newer state
+    // instead. Different verticals are flushed immediately so we don't drop
+    // events when the user switches verticals quickly.
+    if (pendingInsertRef.current) {
+      if (pendingInsertRef.current.verticalSlug === verticalSlug) {
+        clearTimeout(pendingInsertRef.current.timer);
+      }
+      // Different vertical: let the prior timer fire on its own schedule.
+    }
+    const timer = setTimeout(() => {
+      pendingInsertRef.current = null;
+      void supabase.from('category_select_events').insert(payload);
+    }, 400);
+    pendingInsertRef.current = { timer, verticalSlug };
   }, [isLoading, categories.length, vertical?.slug, vertical?.name, allowFreeTextFallback, debug]);
+
+  // Flush any pending debounced insert on unmount so we don't lose events.
+  useEffect(() => {
+    return () => {
+      if (pendingInsertRef.current) {
+        clearTimeout(pendingInsertRef.current.timer);
+        pendingInsertRef.current = null;
+      }
+    };
+  }, []);
 
   // Track clicks on the "Manage categories" link from empty states.
   // Captures vertical and current empty state so admins can see whether
