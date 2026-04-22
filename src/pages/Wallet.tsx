@@ -7,7 +7,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { formatCurrency } from '@/lib/utils';
+import { useCurrency } from '@/hooks/use-currency';
 import { toast } from 'sonner';
 import { useSubscription, openCustomerPortal } from '@/hooks/use-subscription';
 import { 
@@ -26,6 +26,7 @@ import { format } from 'date-fns';
 export default function Wallet() {
   const { data: firm } = useFirm();
   const { tier, subscribed, subscriptionEnd } = useSubscription();
+  const { formatFromUsd, format: formatLocal } = useCurrency();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [loadingAmount, setLoadingAmount] = useState<number | null>(null);
@@ -34,7 +35,7 @@ export default function Wallet() {
   useEffect(() => {
     if (searchParams.get('success') === 'true') {
       const amount = searchParams.get('amount');
-      toast.success(`Payment successful! $${amount} will be added to your wallet shortly.`);
+      toast.success(`Payment successful! ${amount ? formatFromUsd(Number(amount)) : ''} will be added to your wallet shortly.`);
       setSearchParams({});
     } else if (searchParams.get('canceled') === 'true') {
       toast.info('Payment was canceled.');
@@ -103,7 +104,7 @@ export default function Wallet() {
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-bold text-primary mb-6">
-                {formatCurrency(Number(firm?.wallet_balance || 0))}
+                {formatLocal(Number(firm?.wallet_balance || 0))}
               </div>
               
               <div className="space-y-4">
@@ -121,7 +122,7 @@ export default function Wallet() {
                         <Loader2 className="h-5 w-5 animate-spin" />
                       ) : (
                         <>
-                          <span className="text-lg font-bold">{formatCurrency(amount)}</span>
+                          <span className="text-lg font-bold">{formatFromUsd(amount)}</span>
                           <span className="text-xs text-muted-foreground">Add funds</span>
                         </>
                       )}
@@ -227,7 +228,7 @@ export default function Wallet() {
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-destructive">
-                        -{formatCurrency(Number(purchase.amount))}
+                        -{formatLocal(Number(purchase.amount))}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {format(new Date(purchase.purchased_at), 'MMM d, yyyy')}

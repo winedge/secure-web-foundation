@@ -5,21 +5,30 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Crown, Loader2, Sparkles, Wallet } from 'lucide-react';
-import { useSubscription, SUBSCRIPTION_TIERS } from '@/hooks/use-subscription';
+import { useSubscription, SUBSCRIPTION_TIERS, priceIdForTier } from '@/hooks/use-subscription';
 import { openCustomerPortal } from '@/hooks/use-subscription';
 import { supabase } from '@/integrations/supabase/client';
 import { useFirm } from '@/hooks/use-firm';
-import { formatCurrency } from '@/lib/utils';
+import { useCurrency } from '@/hooks/use-currency';
+import { formatMoney } from '@/lib/currency';
 import { toast } from 'sonner';
 
 export default function Pricing() {
-  const { tier: currentTier, subscribed, subscriptionEnd, loading } = useSubscription();
+  const { tier: currentTier, subscribed, subscriptionEnd } = useSubscription();
   const { data: firm } = useFirm();
+  const { currency } = useCurrency();
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [walletLoading, setWalletLoading] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const walletBalance = Number(firm?.wallet_balance || 0);
+
+  // Map a tier to its localized price + Stripe price ID for the user's currency.
+  const tierPricing = (key: 'basic' | 'premium') => {
+    const t = SUBSCRIPTION_TIERS[key];
+    const price = currency === 'INR' ? t.price_inr : t.price;
+    return { price, priceId: priceIdForTier(key, currency) };
+  };
 
   const handleSubscribe = async (priceId: string, tierKey: string) => {
     setCheckoutLoading(tierKey);
@@ -92,7 +101,7 @@ export default function Pricing() {
           ) : (
             <Wallet className="h-4 w-4" />
           )}
-          Pay with Wallet ({formatCurrency(walletBalance)})
+          Pay with Wallet ({formatMoney(walletBalance, currency)})
         </Button>
         {!canAfford && (
           <p className="text-xs text-muted-foreground text-center">
@@ -123,7 +132,7 @@ export default function Pricing() {
               <CardTitle className="text-2xl">Basic</CardTitle>
               <CardDescription>For firms getting started</CardDescription>
               <div className="mt-4">
-                <span className="text-4xl font-bold">${SUBSCRIPTION_TIERS.basic.price}</span>
+                <span className="text-4xl font-bold">{formatMoney(tierPricing('basic').price, currency)}</span>
                 <span className="text-muted-foreground">/month</span>
               </div>
             </CardHeader>
@@ -145,7 +154,7 @@ export default function Pricing() {
                   Included in Premium
                 </Button>
               ) : (
-                renderSubscribeButtons('basic', SUBSCRIPTION_TIERS.basic.price_id, SUBSCRIPTION_TIERS.basic.price)
+                renderSubscribeButtons('basic', tierPricing('basic').priceId, tierPricing('basic').price)
               )}
             </CardContent>
           </Card>
@@ -165,7 +174,7 @@ export default function Pricing() {
               </CardTitle>
               <CardDescription>For firms ready to scale</CardDescription>
               <div className="mt-4">
-                <span className="text-4xl font-bold">${SUBSCRIPTION_TIERS.premium.price}</span>
+                <span className="text-4xl font-bold">{formatMoney(tierPricing('premium').price, currency)}</span>
                 <span className="text-muted-foreground">/month</span>
               </div>
             </CardHeader>
@@ -183,7 +192,7 @@ export default function Pricing() {
                   Manage Subscription
                 </Button>
               ) : (
-                renderSubscribeButtons('premium', SUBSCRIPTION_TIERS.premium.price_id, SUBSCRIPTION_TIERS.premium.price)
+                renderSubscribeButtons('premium', tierPricing('premium').priceId, tierPricing('premium').price)
               )}
             </CardContent>
           </Card>

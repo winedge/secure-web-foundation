@@ -5,9 +5,15 @@ import { getStripe } from "../_shared/stripe.ts";
 
 const log = createLogger("WALLET-SUBSCRIBE");
 
-const PLAN_PRICES: Record<string, { price: number; product_id: string }> = {
-  price_1SzxaCKzSXP4o2z9sZU0jFy8: { price: 99, product_id: "prod_TxtMCJzuiHKivL" },
-  price_1SzxaQKzSXP4o2z9zjRZWUNJ: { price: 249, product_id: "prod_TxtNjgqRTXPV67" },
+// Each subscription plan can be purchased via the wallet using either its USD or INR price ID.
+// `price` is in the firm's wallet currency (USD = dollars, INR = rupees).
+const PLAN_PRICES: Record<string, { price: number; product_id: string; plan: 'basic' | 'premium'; currency: 'usd' | 'inr' }> = {
+  // USD
+  price_1SzxaCKzSXP4o2z9sZU0jFy8: { price: 99, product_id: "prod_TxtMCJzuiHKivL", plan: 'basic', currency: 'usd' },
+  price_1SzxaQKzSXP4o2z9zjRZWUNJ: { price: 249, product_id: "prod_TxtNjgqRTXPV67", plan: 'premium', currency: 'usd' },
+  // INR
+  price_1TP34mKzSXP4o2z9bdRacNk2: { price: 8500, product_id: "prod_UNoiAW62kBoQ4z", plan: 'basic', currency: 'inr' },
+  price_1TP35MKzSXP4o2z9ojHvzRjQ: { price: 22000, product_id: "prod_UNoiKrGGJKHnOV", plan: 'premium', currency: 'inr' },
 };
 
 serve(async (req) => {
@@ -46,8 +52,9 @@ serve(async (req) => {
     if (firmErr) throw firmErr;
 
     const walletBalance = Number(firm.wallet_balance || 0);
+    const symbol = planInfo.currency === 'inr' ? '₹' : '$';
     if (walletBalance < planInfo.price) {
-      throw new Error(`Insufficient wallet balance. You need $${planInfo.price} but have $${walletBalance.toFixed(2)}`);
+      throw new Error(`Insufficient wallet balance. You need ${symbol}${planInfo.price} but have ${symbol}${walletBalance.toFixed(2)}`);
     }
 
     // Deduct from wallet
@@ -55,7 +62,7 @@ serve(async (req) => {
       .from("firms")
       .update({
         wallet_balance: walletBalance - planInfo.price,
-        subscription_plan: priceId === "price_1SzxaCKzSXP4o2z9sZU0jFy8" ? "basic" : "premium",
+        subscription_plan: planInfo.plan,
         subscription_status: "active",
       })
       .eq("id", firmMember.firm_id);
@@ -70,6 +77,7 @@ serve(async (req) => {
       details: {
         price_id: priceId,
         amount: planInfo.price,
+        currency: planInfo.currency,
         product_id: planInfo.product_id,
         previous_balance: walletBalance,
         new_balance: walletBalance - planInfo.price,
@@ -79,12 +87,13 @@ serve(async (req) => {
     log("Subscription purchased via wallet", {
       firmId: firmMember.firm_id,
       amount: planInfo.price,
+      currency: planInfo.currency,
       newBalance: walletBalance - planInfo.price,
     });
 
     return jsonResponse({
       success: true,
-      message: `Successfully subscribed! $${planInfo.price} deducted from wallet.`,
+      message: `Successfully subscribed! ${symbol}${planInfo.price} deducted from wallet.`,
       new_balance: walletBalance - planInfo.price,
     });
   } catch (error) {
