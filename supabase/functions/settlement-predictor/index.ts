@@ -1,10 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getVerticalContext } from "../_shared/vertical.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const LEGAL_VERTICALS = new Set(["mass_tort"]);
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -22,8 +25,17 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) throw new Error("Unauthorized");
 
-    const { lead_id } = await req.json();
+    const { lead_id, firm_id } = await req.json();
     if (!lead_id) throw new Error("Missing lead_id");
+
+    const { verticalSlug } = await getVerticalContext(firm_id, "settlement");
+    if (!LEGAL_VERTICALS.has(verticalSlug)) {
+      return new Response(JSON.stringify({
+        error: "Settlement Predictor is only available for legal verticals.",
+        vertical: verticalSlug,
+        gated: true,
+      }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const { data: lead, error: leadError } = await supabase
       .from("leads")
@@ -32,7 +44,6 @@ serve(async (req) => {
       .single();
     if (leadError) throw leadError;
 
-    // Get existing case evaluation if any
     const { data: evaluation } = await supabase
       .from("ai_case_evaluations")
       .select("*")
@@ -67,10 +78,7 @@ Use the predict_settlement tool to return your analysis.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
@@ -90,10 +98,10 @@ Use the predict_settlement tool to return your analysis.`;
                   items: {
                     type: "object",
                     properties: {
-                      name: { type: "string", description: "e.g. Best Case, Likely Case, Worst Case, Trial Verdict" },
-                      probability: { type: "number", description: "0-100 probability percentage" },
-                      settlement_amount: { type: "number", description: "Estimated amount in USD" },
-                      timeline_months: { type: "number", description: "Estimated months to resolution" },
+                      name: { type: "string" },
+                      probability: { type: "number" },
+                      settlement_amount: { type: "number" },
+                      timeline_months: { type: "number" },
                       description: { type: "string" }
                     },
                     required: ["name", "probability", "settlement_amount", "timeline_months", "description"],
@@ -103,10 +111,10 @@ Use the predict_settlement tool to return your analysis.`;
                 jurisdiction_analysis: {
                   type: "object",
                   properties: {
-                    favorability_score: { type: "number", description: "0-100 jurisdiction favorability" },
-                    judge_tendency: { type: "string", description: "plaintiff-friendly, neutral, defense-friendly" },
-                    historical_verdicts: { type: "string", description: "Summary of relevant verdicts in this jurisdiction" },
-                    mdl_status: { type: "string", description: "Current MDL status if applicable" }
+                    favorability_score: { type: "number" },
+                    judge_tendency: { type: "string" },
+                    historical_verdicts: { type: "string" },
+                    mdl_status: { type: "string" }
                   },
                   required: ["favorability_score", "judge_tendency", "historical_verdicts", "mdl_status"],
                   additionalProperties: false
@@ -124,8 +132,8 @@ Use the predict_settlement tool to return your analysis.`;
                     additionalProperties: false
                   }
                 },
-                recommendation: { type: "string", description: "Overall strategic recommendation" },
-                confidence_level: { type: "number", description: "0-100 overall prediction confidence" }
+                recommendation: { type: "string" },
+                confidence_level: { type: "number" }
               },
               required: ["scenarios", "jurisdiction_analysis", "risk_factors", "recommendation", "confidence_level"],
               additionalProperties: false
@@ -149,12 +157,12 @@ Use the predict_settlement tool to return your analysis.`;
 
     const prediction = JSON.parse(toolCall.function.arguments);
 
-    return new Response(JSON.stringify(prediction), {
+    return new Response(JSON.stringify({ ...prediction, vertical: verticalSlug }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("settlement-predictor error:", e);
-    return new Response(JSON.stringify({ error: e.message }), {
+    return new Response(JSON.stringify({ error: (e as Error).message }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

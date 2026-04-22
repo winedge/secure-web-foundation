@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { createSupabaseClient } from "../_shared/auth.ts";
+import { getVerticalContext } from "../_shared/vertical.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
@@ -9,13 +10,15 @@ serve(async (req) => {
   const supabase = createSupabaseClient(true);
 
   try {
-    const { firm_id, period, tort_type } = await req.json();
-
+    const { firm_id, period, tort_type, category } = await req.json();
     if (!firm_id) throw new Error("firm_id required");
+    const subject = category || tort_type;
 
     const currentPeriod = period || new Date().toISOString().slice(0, 7);
 
-    // Get firm's own metrics
+    const { config, verticalSlug } = await getVerticalContext(firm_id, "autopilot");
+    const verticalName = config?.vertical?.name ?? "Mass Tort";
+
     const { data: firmBenchmark } = await supabase
       .from("firm_benchmarks")
       .select("*")
@@ -23,7 +26,6 @@ serve(async (req) => {
       .eq("period", currentPeriod)
       .maybeSingle();
 
-    // Get firm's lead purchases for this period
     const periodStart = `${currentPeriod}-01`;
     const { data: purchases } = await supabase
       .from("lead_purchases")
@@ -32,52 +34,46 @@ serve(async (req) => {
       .gte("purchased_at", periodStart)
       .order("purchased_at", { ascending: false });
 
-    // Calculate current metrics if no benchmark exists
-    const totalSpend = (purchases || []).reduce((s, p) => s + (p.amount || 0), 0);
+    const totalSpend = (purchases || []).reduce((s: number, p: any) => s + (p.amount || 0), 0);
     const totalLeads = (purchases || []).length;
     const avgCpl = totalLeads > 0 ? totalSpend / totalLeads : 0;
 
-    // Auto-generate benchmark if missing
     if (!firmBenchmark && totalLeads > 0) {
       await supabase.from("firm_benchmarks").insert({
         firm_id,
         period: currentPeriod,
-        tort_type: tort_type || null,
+        tort_type: subject || null,
         avg_cpl: avgCpl,
         total_leads_purchased: totalLeads,
         total_spend: totalSpend,
-        avg_conversion_rate: 0.15, // placeholder
+        avg_conversion_rate: 0.15,
         avg_case_value: 0,
         avg_response_time_minutes: 0,
         pipeline_velocity_days: 0,
       });
     }
 
-    // Use AI to generate industry comparison
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
           {
             role: "system",
-            content: `You are a legal industry benchmarking AI. Compare a firm's performance metrics against industry averages and provide actionable insights.
+            content: `You are an industry benchmarking AI for the ${verticalName} sector. Compare a firm's performance metrics against ${verticalName}-specific industry averages and provide actionable insights. Use realistic benchmarks for ${verticalName}, not legal industry numbers (unless this IS the legal vertical).
 
 Firm metrics:
 - CPL: $${avgCpl.toFixed(2)}
 - Total leads: ${totalLeads}
 - Total spend: $${totalSpend.toFixed(2)}
 - Period: ${currentPeriod}
-${tort_type ? `- Tort type: ${tort_type}` : ''}
+${subject ? `- Category/focus: ${subject}` : ''}
 
-Provide realistic industry benchmarks and comparisons. Return JSON:
+Return JSON:
 {
   "firm_metrics": { "cpl": number, "leads": number, "spend": number, "conversion_rate": number },
   "industry_benchmarks": {
@@ -90,21 +86,21 @@ Provide realistic industry benchmarks and comparisons. Return JSON:
     "avg_pipeline_velocity_days": number
   },
   "percentile_rank": {
-    "cpl": number (1-100, lower is better),
-    "conversion": number (1-100, higher is better),
-    "response_time": number (1-100, lower is better)
+    "cpl": number,
+    "conversion": number,
+    "response_time": number
   },
   "performance_grade": "A+|A|B|C|D|F",
   "strengths": ["strength1", "strength2"],
   "improvement_areas": [{"area": "string", "current": "string", "target": "string", "action": "string"}],
   "competitive_position": "string",
   "monthly_trend": "improving|stable|declining"
-}`
+}`,
           },
           {
             role: "user",
-            content: `Generate comprehensive benchmark comparison for this firm's performance in ${currentPeriod}.`
-          }
+            content: `Generate comprehensive benchmark comparison for this ${verticalName} firm's performance in ${currentPeriod}.`,
+          },
         ],
         temperature: 0.3,
       }),
@@ -127,7 +123,7 @@ Provide realistic industry benchmarks and comparisons. Return JSON:
       parsed = { error: "Could not parse benchmarks" };
     }
 
-    return jsonResponse(parsed);
+    return jsonResponse({ ...parsed, vertical: verticalSlug });
   } catch (e) {
     console.error("cross-firm-benchmarks error:", e);
     return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
