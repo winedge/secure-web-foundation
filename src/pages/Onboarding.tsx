@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Building2, ArrowRight, ArrowLeft, Globe, Mail, Phone, Briefcase,
-  CreditCard, Facebook, Megaphone, Check, Crown, Loader2,
+  CreditCard, Facebook, Megaphone, Check, Crown, Loader2, Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,8 +18,11 @@ import { useSubscription, SUBSCRIPTION_TIERS } from '@/hooks/use-subscription';
 import { useConnectMetaPlatform, usePlatformConnections } from '@/hooks/use-platform-connections';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { VerticalSelector } from '@/components/onboarding/VerticalSelector';
+import type { VerticalPreset } from '@/lib/verticals/presets';
 
 const STEPS = [
+  { label: 'Choose Industry', icon: Layers },
   { label: 'Set Up Firm', icon: Building2 },
   { label: 'Choose Plan', icon: CreditCard },
   { label: 'Connect Facebook', icon: Facebook },
@@ -46,6 +49,8 @@ export default function Onboarding() {
   const { data: connections } = usePlatformConnections();
   const [step, setStep] = useState(0);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [selectedVertical, setSelectedVertical] = useState<VerticalPreset | null>(null);
+  const [assigningVertical, setAssigningVertical] = useState(false);
 
   const metaConnected = connections?.some(
     (c) => c.platform === 'facebook' && c.is_active
@@ -53,9 +58,9 @@ export default function Onboarding() {
 
   // Resume from last saved step
   useEffect(() => {
-    if (firm && step === 0) setStep(1);
-    if (tier && step <= 1) setStep(2);
-    if (metaConnected && step <= 2) setStep(3);
+    if (firm && step === 0) setStep(2);
+    if (tier && step <= 2) setStep(3);
+    if (metaConnected && step <= 3) setStep(4);
   }, [firm, tier, metaConnected]);
 
   const progress = ((step + 1) / STEPS.length) * 100;
