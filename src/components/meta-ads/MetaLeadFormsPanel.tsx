@@ -46,7 +46,7 @@ export function MetaLeadFormsPanel() {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
-        body: { action: 'get_lead_forms', user_id: user.id },
+        body: { action: 'get_lead_forms', user_id: user.id, firm_id: firm?.id },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
