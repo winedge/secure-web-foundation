@@ -88,6 +88,7 @@ export function CategorySelect({
   showError = false,
   requiredMessage,
   showExampleChips = true,
+  onValidityChange,
 }: CategorySelectProps) {
   const { t } = useTranslation();
   const { categories, term, isLoading, vertical } = useVertical();
