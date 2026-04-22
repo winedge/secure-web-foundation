@@ -27,7 +27,7 @@ export default function LookalikeAudience() {
     setIsBuilding(true);
     try {
       const { data, error } = await supabase.functions.invoke('lookalike-audience', {
-        body: { firm_id: firm.id, tort_type: tortType, category: tortType },
+        body: { firm_id: firm.id, category: tortType },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

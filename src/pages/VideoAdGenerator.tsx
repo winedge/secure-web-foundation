@@ -36,7 +36,7 @@ export default function VideoAdGenerator() {
     setFrames([]);
     try {
       const { data, error } = await supabase.functions.invoke('ai-video-ads', {
-        body: { firm_id: firm?.id, brief, tort_type: tortType, category: tortType, duration: parseInt(duration), format },
+        body: { firm_id: firm?.id, brief, category: tortType, duration: parseInt(duration), format },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

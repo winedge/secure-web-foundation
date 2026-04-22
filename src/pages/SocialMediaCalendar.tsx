@@ -429,7 +429,7 @@ function CreatePostForm({ initialDate, editPost, onCreated }: { initialDate?: Da
       const defaultCategory = categories[0]?.label || vertical?.name || 'general';
       const result = await contentAI.mutateAsync({
         action: 'generate_post',
-        context: { prompt: aiPrompt, platforms, firm_id: firm?.id, tort_type: defaultCategory, category: defaultCategory },
+        context: { prompt: aiPrompt, platforms, firm_id: firm?.id, category: defaultCategory },
       });
       if (result.content) setContent(result.content);
       toast({ title: 'Content generated!' });

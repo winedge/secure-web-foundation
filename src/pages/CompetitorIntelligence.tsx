@@ -69,7 +69,6 @@ export default function CompetitorIntelligence() {
     if (!tortType) return;
     runAnalysis.mutate({
       firm_id: firm?.id,
-      tort_type: tortType,
       category: tortType,
       target_states: selectedStates.length > 0 ? selectedStates : undefined,
       firm_name: firm?.name,

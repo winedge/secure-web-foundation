@@ -43,7 +43,7 @@ export default function PredictiveLeads() {
     setIsAnalyzing(true);
     try {
       const { data, error } = await supabase.functions.invoke('predictive-leads', {
-        body: { firm_id: firm?.id, tort_type: filterTort || undefined, category: filterTort || undefined },
+        body: { firm_id: firm?.id, category: filterTort || undefined },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
