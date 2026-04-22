@@ -132,7 +132,7 @@ export default function Pricing() {
               <CardTitle className="text-2xl">Basic</CardTitle>
               <CardDescription>For firms getting started</CardDescription>
               <div className="mt-4">
-                <span className="text-4xl font-bold">${SUBSCRIPTION_TIERS.basic.price}</span>
+                <span className="text-4xl font-bold">{formatMoney(tierPricing('basic').price, currency)}</span>
                 <span className="text-muted-foreground">/month</span>
               </div>
             </CardHeader>
