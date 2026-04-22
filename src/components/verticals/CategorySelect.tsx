@@ -43,6 +43,25 @@ interface CategorySelectProps {
   requiredMessage?: string;
   /** When true, show clickable example chips in the free-text empty state. Default: true */
   showExampleChips?: boolean;
+  /** Notifies parent of validity changes so submit buttons can be disabled. */
+  onValidityChange?: (isValid: boolean) => void;
+}
+
+/**
+ * Pure validity check matching CategorySelect's internal rules.
+ * Use to disable submit buttons without subscribing to onValidityChange.
+ */
+export function isCategoryFieldValid(opts: {
+  value: string;
+  required?: boolean;
+  hasCategories: boolean;
+  allowFreeTextFallback?: boolean;
+}): boolean {
+  const { value, required = false, hasCategories, allowFreeTextFallback = true } = opts;
+  // Blocked state: no categories and no free-text fallback -> always invalid when required.
+  if (!hasCategories && !allowFreeTextFallback) return !required;
+  if (!required) return true;
+  return (value ?? '').trim().length > 0;
 }
 
 /**
