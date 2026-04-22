@@ -45,6 +45,12 @@ interface CategorySelectProps {
   showExampleChips?: boolean;
   /** Notifies parent of validity changes so submit buttons can be disabled. */
   onValidityChange?: (isValid: boolean) => void;
+  /**
+   * When true, log the emitted `category_select_state` payload to the console
+   * (also includes the transient `loading` state). Can also be enabled globally
+   * via `?debugCategorySelect=1` in the URL or `localStorage.debugCategorySelect=1`.
+   */
+  debug?: boolean;
 }
 
 /**
@@ -92,6 +98,7 @@ export function CategorySelect({
   requiredMessage,
   showExampleChips = true,
   onValidityChange,
+  debug = false,
 }: CategorySelectProps) {
   const { t } = useTranslation();
   const { categories, term, isLoading, vertical } = useVertical();
