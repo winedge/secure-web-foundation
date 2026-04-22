@@ -10,6 +10,7 @@ import { Loader2, Scale, Search, Shield, TrendingUp, AlertTriangle, Gavel, User,
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useVertical } from '@/hooks/use-vertical';
+import { CategorySelect } from '@/components/verticals/CategorySelect';
 
 interface JudgeProfile {
   judge_name: string;
