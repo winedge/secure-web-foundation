@@ -9,6 +9,7 @@ import { Loader2, Eye, EyeOff, TrendingUp, AlertTriangle, Zap } from 'lucide-rea
 import { supabase } from '@/integrations/supabase/client';
 import { useFirm } from '@/hooks/use-firm';
 import { toast } from 'sonner';
+import { CategorySelect } from '@/components/verticals/CategorySelect';
 
 export default function DarkFunnelIntelligence() {
   const { data: firm } = useFirm();
@@ -20,7 +21,7 @@ export default function DarkFunnelIntelligence() {
     setIsAnalyzing(true);
     try {
       const { data, error } = await supabase.functions.invoke('dark-funnel', {
-        body: { firm_id: firm?.id, tort_type: tortType },
+        body: { firm_id: firm?.id, tort_type: tortType, category: tortType },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -44,7 +45,7 @@ export default function DarkFunnelIntelligence() {
             <p className="text-muted-foreground mt-1">Reveal the hidden buyer journey. Track anonymous visitors before they ever submit a form.</p>
           </div>
           <div className="flex gap-2">
-            <Input placeholder="Tort type..." value={tortType} onChange={(e) => setTortType(e.target.value)} className="max-w-xs" />
+            <CategorySelect value={tortType} onChange={setTortType} className="max-w-xs" />
             <Button onClick={analyze} disabled={isAnalyzing} className="gap-2">
               {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
               {isAnalyzing ? 'Analyzing...' : 'Reveal Dark Funnel'}

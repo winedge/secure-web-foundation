@@ -10,6 +10,8 @@ import { Loader2, Video, Film, Clock, Download, Sparkles, ImageIcon } from 'luci
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { VideoPlayer } from '@/components/video/VideoPlayer';
+import { useFirm } from '@/hooks/use-firm';
+import { CategorySelect } from '@/components/verticals/CategorySelect';
 
 interface SceneFrame {
   scene_number: number;
@@ -18,6 +20,7 @@ interface SceneFrame {
 }
 
 export default function VideoAdGenerator() {
+  const { data: firm } = useFirm();
   const [brief, setBrief] = useState('');
   const [tortType, setTortType] = useState('');
   const [duration, setDuration] = useState('30');
@@ -33,7 +36,7 @@ export default function VideoAdGenerator() {
     setFrames([]);
     try {
       const { data, error } = await supabase.functions.invoke('ai-video-ads', {
-        body: { brief, tort_type: tortType, duration: parseInt(duration), format },
+        body: { firm_id: firm?.id, brief, tort_type: tortType, category: tortType, duration: parseInt(duration), format },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -78,8 +81,8 @@ export default function VideoAdGenerator() {
         <Card>
           <CardContent className="pt-6 space-y-4">
             <Textarea placeholder="Describe your video ad... (e.g. 'Emotional testimonial-style ad for mesothelioma victims')" value={brief} onChange={(e) => setBrief(e.target.value)} rows={3} />
-            <div className="flex flex-wrap gap-4">
-              <Input placeholder="Tort type" value={tortType} onChange={(e) => setTortType(e.target.value)} className="max-w-xs" />
+            <div className="flex flex-wrap gap-4 items-end">
+              <div className="max-w-xs flex-1"><CategorySelect value={tortType} onChange={setTortType} /></div>
               <Select value={duration} onValueChange={setDuration}>
                 <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
                 <SelectContent>

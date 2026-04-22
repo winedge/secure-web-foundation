@@ -11,6 +11,7 @@ import { useFirm } from '@/hooks/use-firm';
 import { toast } from 'sonner';
 import { MetaCampaignWizard } from '@/components/meta-ads/MetaCampaignWizard';
 import { useMetaPixel } from '@/hooks/use-meta-pixel';
+import { CategorySelect } from '@/components/verticals/CategorySelect';
 
 export default function LookalikeAudience() {
   const { data: firm } = useFirm();
@@ -26,7 +27,7 @@ export default function LookalikeAudience() {
     setIsBuilding(true);
     try {
       const { data, error } = await supabase.functions.invoke('lookalike-audience', {
-        body: { firm_id: firm.id, tort_type: tortType },
+        body: { firm_id: firm.id, tort_type: tortType, category: tortType },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -56,7 +57,7 @@ export default function LookalikeAudience() {
             <p className="text-muted-foreground mt-1">Build hyper-targeted audiences from your best-converting leads. Auto-sync to ad platforms.</p>
           </div>
           <div className="flex gap-2">
-            <Input placeholder="Tort type filter..." value={tortType} onChange={(e) => setTortType(e.target.value)} className="max-w-xs" />
+            <CategorySelect value={tortType} onChange={setTortType} className="max-w-xs" />
             <Button onClick={build} disabled={isBuilding} className="gap-2">
               {isBuilding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Target className="h-4 w-4" />}
               {isBuilding ? 'Building...' : 'Build Audiences'}

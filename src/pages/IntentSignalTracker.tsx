@@ -8,8 +8,11 @@ import { Progress } from '@/components/ui/progress';
 import { Loader2, Radio, TrendingUp, Zap, Clock, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useFirm } from '@/hooks/use-firm';
+import { CategorySelect } from '@/components/verticals/CategorySelect';
 
 export default function IntentSignalTracker() {
+  const { data: firm } = useFirm();
   const [tortType, setTortType] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [result, setResult] = useState<any>(null);
@@ -17,7 +20,7 @@ export default function IntentSignalTracker() {
   const scan = async () => {
     setIsScanning(true);
     try {
-      const { data, error } = await supabase.functions.invoke('intent-signals', { body: { tort_type: tortType } });
+      const { data, error } = await supabase.functions.invoke('intent-signals', { body: { firm_id: firm?.id, tort_type: tortType, category: tortType } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data);
@@ -37,10 +40,10 @@ export default function IntentSignalTracker() {
               </div>
               Intent Signal Tracker
             </h1>
-            <p className="text-muted-foreground mt-1">Detect people actively searching for legal help RIGHT NOW. Trigger instant campaigns.</p>
+            <p className="text-muted-foreground mt-1">Detect people actively searching right now. Trigger instant campaigns.</p>
           </div>
           <div className="flex gap-2">
-            <Input placeholder="Tort type..." value={tortType} onChange={(e) => setTortType(e.target.value)} className="max-w-xs" />
+            <CategorySelect value={tortType} onChange={setTortType} className="max-w-xs" />
             <Button onClick={scan} disabled={isScanning} className="gap-2">
               {isScanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Radio className="h-4 w-4" />}
               {isScanning ? 'Scanning...' : 'Detect Signals'}

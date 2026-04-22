@@ -9,8 +9,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { MetaCampaignWizard } from '@/components/meta-ads/MetaCampaignWizard';
 import { useMetaPixel } from '@/hooks/use-meta-pixel';
+import { useFirm } from '@/hooks/use-firm';
+import { CategorySelect } from '@/components/verticals/CategorySelect';
 
 export default function GeofenceCampaigns() {
+  const { data: firm } = useFirm();
   const [tortType, setTortType] = useState('');
   const [radius, setRadius] = useState('500');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -23,7 +26,7 @@ export default function GeofenceCampaigns() {
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('geofence-engine', {
-        body: { tort_type: tortType, radius_meters: parseInt(radius), locations: ['courthouses', 'hospitals', 'chiropractors', 'competitor offices'] },
+        body: { firm_id: firm?.id, tort_type: tortType, category: tortType, radius_meters: parseInt(radius), locations: ['courthouses', 'hospitals', 'chiropractors', 'competitor offices'] },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -53,7 +56,7 @@ export default function GeofenceCampaigns() {
             <p className="text-muted-foreground mt-1">Location-based ad targeting around courthouses, hospitals, and competitor offices.</p>
           </div>
           <div className="flex gap-2">
-            <Input placeholder="Tort type" value={tortType} onChange={(e) => setTortType(e.target.value)} className="max-w-xs" />
+            <CategorySelect value={tortType} onChange={setTortType} className="max-w-xs" />
             <Input placeholder="Radius (m)" value={radius} onChange={(e) => setRadius(e.target.value)} className="w-24" type="number" />
             <Button onClick={generate} disabled={isGenerating} className="gap-2">
               {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
