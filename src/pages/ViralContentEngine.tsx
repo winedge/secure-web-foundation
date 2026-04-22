@@ -8,8 +8,11 @@ import { Progress } from '@/components/ui/progress';
 import { Loader2, Flame, TrendingUp, Zap, Eye, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useFirm } from '@/hooks/use-firm';
+import { CategorySelect } from '@/components/verticals/CategorySelect';
 
 export default function ViralContentEngine() {
+  const { data: firm } = useFirm();
   const [tortType, setTortType] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<any>(null);
@@ -17,7 +20,7 @@ export default function ViralContentEngine() {
   const analyze = async () => {
     setIsAnalyzing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('viral-content', { body: { tort_type: tortType } });
+      const { data, error } = await supabase.functions.invoke('viral-content', { body: { firm_id: firm?.id, tort_type: tortType, category: tortType } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data);
@@ -37,10 +40,10 @@ export default function ViralContentEngine() {
               </div>
               Viral Content Engine
             </h1>
-            <p className="text-muted-foreground mt-1">Reverse-engineer top-performing legal ads. Generate inspired variants with trend-jacking.</p>
+            <p className="text-muted-foreground mt-1">Reverse-engineer top-performing ads. Generate inspired variants with trend-jacking.</p>
           </div>
           <div className="flex gap-2">
-            <Input placeholder="Tort type..." value={tortType} onChange={(e) => setTortType(e.target.value)} className="max-w-xs" />
+            <CategorySelect value={tortType} onChange={setTortType} className="max-w-xs" />
             <Button onClick={analyze} disabled={isAnalyzing} className="gap-2">
               {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
               {isAnalyzing ? 'Analyzing...' : 'Analyze Top Ads'}

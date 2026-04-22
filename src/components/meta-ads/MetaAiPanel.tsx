@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMetaAiAssistant, useCreateMetaCampaign, useCreateMetaAdSet, useCreateMetaAd, useMetaCampaigns, useMetaAiLogs } from '@/hooks/use-meta-campaigns';
 import { useFirm } from '@/hooks/use-firm';
-import { useTortTypes } from '@/hooks/use-tort-types';
+import { useVertical } from '@/hooks/use-vertical';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +29,8 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
   const { data: firm } = useFirm();
   const { data: campaigns } = useMetaCampaigns();
   const { data: aiLogs } = useMetaAiLogs(campaignId || undefined);
-  const { data: tortTypes } = useTortTypes();
+  const { categories, term, vertical } = useVertical();
+  const categoryLabel = term('category_label', 'Category');
   const aiAssistant = useMetaAiAssistant();
   const createCampaign = useCreateMetaCampaign();
   const createAdSet = useCreateMetaAdSet();
@@ -52,10 +53,12 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
     const result = await aiAssistant.mutateAsync({
       action: 'generate_campaign',
       context: {
+        firm_id: firm?.id,
         tort_type: tortType,
+        category: tortType,
         target_states: targetStates.split(',').map(s => s.trim()).filter(Boolean),
         daily_budget: Number(budget),
-        firm_name: firm?.name || 'Law Firm',
+        firm_name: firm?.name || vertical?.name || 'Business',
         additional_context: additionalContext,
       },
     });
@@ -121,6 +124,7 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
     const result = await aiAssistant.mutateAsync({
       action: 'optimize_campaign',
       context: {
+        firm_id: firm?.id,
         campaign_id: selectedCampaignForOptimize,
         metrics: { impressions: 45000, clicks: 1200, leads: 45, spend: 890, ctr: 2.67, cpl: 19.78, days_running: 7 },
       },
@@ -132,7 +136,9 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
     const result = await aiAssistant.mutateAsync({
       action: 'suggest_audience',
       context: {
-        tort_type: tortType || 'Camp Lejeune',
+        firm_id: firm?.id,
+        tort_type: tortType || categories[0]?.label || vertical?.name || 'general',
+        category: tortType || categories[0]?.label,
         target_states: targetStates.split(',').map(s => s.trim()).filter(Boolean),
       },
     });
@@ -143,11 +149,13 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
     const result = await aiAssistant.mutateAsync({
       action: 'competitor_analysis',
       context: {
-        tort_type: tortType || 'Camp Lejeune',
+        firm_id: firm?.id,
+        tort_type: tortType || categories[0]?.label || vertical?.name || 'general',
+        category: tortType || categories[0]?.label,
         target_states: targetStates.split(',').map(s => s.trim()).filter(Boolean),
-        firm_name: firm?.name || 'Law Firm',
+        firm_name: firm?.name || vertical?.name || 'Business',
         firm_website: firm?.website || '',
-        practice_type: firm?.practice_type || '',
+        practice_type: firm?.practice_type || vertical?.name || '',
       },
     });
     setCompetitorResult(result);
@@ -157,11 +165,13 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
     const result = await aiAssistant.mutateAsync({
       action: 'brand_study',
       context: {
-        firm_name: firm?.name || 'Law Firm',
+        firm_id: firm?.id,
+        firm_name: firm?.name || vertical?.name || 'Business',
         firm_website: firm?.website || '',
-        practice_type: firm?.practice_type || '',
+        practice_type: firm?.practice_type || vertical?.name || '',
         states: firm?.states || [],
-        tort_type: tortType || 'Mass Tort',
+        tort_type: tortType || categories[0]?.label || vertical?.name || 'general',
+        category: tortType || categories[0]?.label,
         additional_context: additionalContext,
       },
     });
@@ -172,12 +182,14 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
     const result = await aiAssistant.mutateAsync({
       action: 'full_strategy',
       context: {
-        tort_type: tortType || 'Camp Lejeune',
+        firm_id: firm?.id,
+        tort_type: tortType || categories[0]?.label || vertical?.name || 'general',
+        category: tortType || categories[0]?.label,
         target_states: targetStates.split(',').map(s => s.trim()).filter(Boolean),
         daily_budget: Number(budget),
-        firm_name: firm?.name || 'Law Firm',
+        firm_name: firm?.name || vertical?.name || 'Business',
         firm_website: firm?.website || '',
-        practice_type: firm?.practice_type || '',
+        practice_type: firm?.practice_type || vertical?.name || '',
         additional_context: additionalContext,
       },
     });
@@ -202,13 +214,17 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div><Label>Tort Type</Label>
-              <Select value={tortType} onValueChange={setTortType}>
-                <SelectTrigger><SelectValue placeholder="Select tort type" /></SelectTrigger>
-                <SelectContent>
-                  {(tortTypes || []).map(t => <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+            <div><Label>{categoryLabel}</Label>
+              {categories.length > 0 ? (
+                <Select value={tortType} onValueChange={setTortType}>
+                  <SelectTrigger><SelectValue placeholder={`Select ${categoryLabel.toLowerCase()}`} /></SelectTrigger>
+                  <SelectContent>
+                    {categories.map(c => <SelectItem key={c.id} value={c.label}>{c.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input value={tortType} onChange={e => setTortType(e.target.value)} placeholder={`Enter ${categoryLabel.toLowerCase()}`} />
+              )}
             </div>
             <div><Label>Target States</Label><Input value={targetStates} onChange={e => setTargetStates(e.target.value)} placeholder="FL, TX, CA" /></div>
             <div><Label>Daily Budget ($)</Label><Input type="number" value={budget} onChange={e => setBudget(e.target.value)} /></div>

@@ -12,6 +12,7 @@ import { Slider } from '@/components/ui/slider';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCreateMetaCampaign, useCreateMetaAdSet, useCreateMetaAd } from '@/hooks/use-meta-campaigns';
 import { useFirm } from '@/hooks/use-firm';
+import { useVertical } from '@/hooks/use-vertical';
 import { useToast } from '@/hooks/use-toast';
 import { useMetaPixel } from '@/hooks/use-meta-pixel';
 import {
@@ -42,12 +43,10 @@ const PLACEMENTS = [
   { id: 'audience_network_native', label: 'Audience Network', platform: 'Audience Network' },
 ];
 
-const LEGAL_INTERESTS = [
-  'Personal Injury', 'Mass Tort Litigation', 'Medical Malpractice', 'Drug Side Effects',
-  'Mesothelioma', 'Asbestos', 'Roundup Herbicide', 'Camp Lejeune', 'AFFF Firefighting Foam',
-  'Paraquat', 'NEC Baby Formula', 'Hip Replacement Recall', 'Car Accidents', 'Truck Accidents',
-  'Workers Compensation', 'Social Security Disability', 'Veterans Benefits', 'Bankruptcy',
-  'DUI Defense', 'Criminal Defense', 'Healthcare', 'Health Insurance', 'Disability Insurance',
+const FALLBACK_INTERESTS = [
+  'Health & Wellness', 'Local Services', 'Home Improvement', 'Real Estate', 'Solar Energy',
+  'Dental Care', 'Skincare', 'Legal Services', 'Insurance', 'Personal Finance',
+  'Family Health', 'Senior Living', 'Veterans', 'Small Business', 'Lifestyle',
 ];
 
 const LANGUAGES = [
@@ -180,6 +179,11 @@ export function MetaCampaignWizard({ open, onOpenChange, onCreated, prefillData 
   const [data, setData] = useState<WizardData>({ ...defaultData, ...prefillData });
   const [isCreating, setIsCreating] = useState(false);
   const { data: firm } = useFirm();
+  const { categories, term, vertical } = useVertical();
+  const categoryLabel = term('category_label', 'Category');
+  const interestSuggestions = categories.length > 0
+    ? Array.from(new Set([...categories.map(c => c.label), ...FALLBACK_INTERESTS]))
+    : FALLBACK_INTERESTS;
   const { toast } = useToast();
   const createCampaign = useCreateMetaCampaign();
   const createAdSet = useCreateMetaAdSet();
@@ -330,11 +334,20 @@ export function MetaCampaignWizard({ open, onOpenChange, onCreated, prefillData 
               <div className="grid grid-cols-2 gap-3 mt-4">
                 <div>
                   <Label>Campaign Name *</Label>
-                  <Input value={data.campaignName} onChange={e => update({ campaignName: e.target.value })} placeholder="e.g., Camp Lejeune - Florida Q1" className="mt-1" />
+                  <Input value={data.campaignName} onChange={e => update({ campaignName: e.target.value })} placeholder={vertical?.slug === 'mass_tort' ? 'e.g., Camp Lejeune - Florida Q1' : `e.g., ${categories[0]?.label || 'Q1'} - Florida`} className="mt-1" />
                 </div>
                 <div>
-                  <Label>Tort / Case Type</Label>
-                  <Input value={data.tortType} onChange={e => update({ tortType: e.target.value })} placeholder="e.g., Camp Lejeune, Roundup" className="mt-1" />
+                  <Label>{categoryLabel}</Label>
+                  {categories.length > 0 ? (
+                    <Select value={data.tortType} onValueChange={v => update({ tortType: v })}>
+                      <SelectTrigger className="mt-1"><SelectValue placeholder={`Select ${categoryLabel.toLowerCase()}`} /></SelectTrigger>
+                      <SelectContent>
+                        {categories.map(c => <SelectItem key={c.id} value={c.label}>{c.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input value={data.tortType} onChange={e => update({ tortType: e.target.value })} placeholder={`e.g., ${categoryLabel}`} className="mt-1" />
+                  )}
                 </div>
               </div>
             </div>
@@ -452,10 +465,10 @@ export function MetaCampaignWizard({ open, onOpenChange, onCreated, prefillData 
 
               {/* Interests */}
               <div>
-                <Label>Interests & Behaviors</Label>
+                <Label>Audience Interests & Behaviors</Label>
                 <p className="text-xs text-muted-foreground mt-0.5">Target people who have shown interest in related topics</p>
                 <div className="flex flex-wrap gap-1.5 mt-2">
-                  {LEGAL_INTERESTS.map(i => (
+                  {interestSuggestions.map(i => (
                     <button
                       key={i}
                       onClick={() => update({ interests: toggleArray(data.interests, i) })}
@@ -694,7 +707,7 @@ export function MetaCampaignWizard({ open, onOpenChange, onCreated, prefillData 
                   <div className="grid grid-cols-2 gap-1 text-sm">
                     <span className="text-muted-foreground">Name</span><span className="font-medium">{data.campaignName}</span>
                     <span className="text-muted-foreground">Goal</span><span><Badge variant="outline">{CAMPAIGN_GOALS.find(g => g.id === data.goal)?.label}</Badge></span>
-                    <span className="text-muted-foreground">Tort Type</span><span>{data.tortType || '-'}</span>
+                    <span className="text-muted-foreground">{categoryLabel}</span><span>{data.tortType || '-'}</span>
                   </div>
                 </CardContent></Card>
 

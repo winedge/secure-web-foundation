@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCompetitorIntelligence, type CompetitorData } from '@/hooks/use-competitor-intelligence';
 import { useFirm } from '@/hooks/use-firm';
-import { useTortTypes } from '@/hooks/use-tort-types';
+import { useVertical } from '@/hooks/use-vertical';
 import { Loader2, Search, TrendingUp, Target, MessageSquare, Lightbulb, BarChart3, Users, Zap, Shield } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
@@ -59,7 +59,8 @@ function CompetitorCard({ competitor, index }: { competitor: CompetitorData; ind
 
 export default function CompetitorIntelligence() {
   const { data: firm } = useFirm();
-  const { data: tortTypes } = useTortTypes();
+  const { categories, term } = useVertical();
+  const categoryLabel = term('category_label', 'Category');
   const { analysis, runAnalysis, isAnalyzing } = useCompetitorIntelligence();
   const [tortType, setTortType] = useState('');
   const [selectedStates, setSelectedStates] = useState<string[]>([]);
@@ -67,10 +68,12 @@ export default function CompetitorIntelligence() {
   const handleAnalyze = () => {
     if (!tortType) return;
     runAnalysis.mutate({
+      firm_id: firm?.id,
       tort_type: tortType,
+      category: tortType,
       target_states: selectedStates.length > 0 ? selectedStates : undefined,
       firm_name: firm?.name,
-    });
+    } as any);
   };
 
   const budgetData = analysis?.recommended_strategy?.budget_split
@@ -109,29 +112,23 @@ export default function CompetitorIntelligence() {
                 Run Competitive Analysis
               </CardTitle>
               <CardDescription>
-                Select a tort type and target states to analyze your competitive landscape
+                Select a {categoryLabel.toLowerCase()} and target states to analyze your competitive landscape
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col sm:flex-row gap-3">
-                <Select value={tortType} onValueChange={setTortType}>
-                  <SelectTrigger className="sm:w-[250px]">
-                    <SelectValue placeholder="Select tort type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(tortTypes || [
-                      { id: '1', name: 'Camp Lejeune' },
-                      { id: '2', name: 'Talcum Powder' },
-                      { id: '3', name: 'Roundup' },
-                      { id: '4', name: 'AFFF Firefighting Foam' },
-                      { id: '5', name: 'NEC Baby Formula' },
-                      { id: '6', name: 'Paraquat' },
-                      { id: '7', name: 'Hair Relaxer' },
-                    ]).map((t: any) => (
-                      <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {categories.length > 0 ? (
+                  <Select value={tortType} onValueChange={setTortType}>
+                    <SelectTrigger className="sm:w-[250px]">
+                      <SelectValue placeholder={`Select ${categoryLabel.toLowerCase()}`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(c => <SelectItem key={c.id} value={c.label}>{c.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input value={tortType} onChange={(e) => setTortType(e.target.value)} placeholder={`Enter ${categoryLabel.toLowerCase()}`} className="sm:w-[250px]" />
+                )}
                 <Select onValueChange={(v) => setSelectedStates(prev => prev.includes(v) ? prev : [...prev, v])}>
                   <SelectTrigger className="sm:w-[180px]">
                     <SelectValue placeholder="Add states" />

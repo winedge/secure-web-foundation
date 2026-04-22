@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMetaCampaigns, useUpdateMetaCampaign, useDeleteMetaCampaign, useSyncFromMeta, useCreateMetaCampaign, MetaCampaign } from '@/hooks/use-meta-campaigns';
+import { useVertical } from '@/hooks/use-vertical';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +31,8 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
   const updateCampaign = useUpdateMetaCampaign();
   const deleteCampaign = useDeleteMetaCampaign();
   const syncFromMeta = useSyncFromMeta();
+  const { categories, term } = useVertical();
+  const categoryLabel = term('category_label', 'Category');
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -180,7 +183,16 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
           <DialogHeader><DialogTitle>{editCampaign ? 'Edit Campaign' : 'New Meta Campaign'}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div><Label>Campaign Name</Label><Input value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} /></div>
-            <div><Label>Tort Type</Label><Input value={formData.tort_type} onChange={e => setFormData(p => ({ ...p, tort_type: e.target.value }))} placeholder="e.g. Camp Lejeune, Roundup" /></div>
+            <div><Label>{categoryLabel}</Label>
+              {categories.length > 0 ? (
+                <Select value={formData.tort_type} onValueChange={v => setFormData(p => ({ ...p, tort_type: v }))}>
+                  <SelectTrigger><SelectValue placeholder={`Select ${categoryLabel.toLowerCase()}`} /></SelectTrigger>
+                  <SelectContent>{categories.map(c => <SelectItem key={c.id} value={c.label}>{c.label}</SelectItem>)}</SelectContent>
+                </Select>
+              ) : (
+                <Input value={formData.tort_type} onChange={e => setFormData(p => ({ ...p, tort_type: e.target.value }))} placeholder={`e.g., ${categoryLabel}`} />
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Objective</Label>
                 <Select value={formData.objective} onValueChange={v => setFormData(p => ({ ...p, objective: v }))}>

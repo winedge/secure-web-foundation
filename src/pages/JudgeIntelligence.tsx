@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Scale, Search, Shield, TrendingUp, AlertTriangle, Gavel, User, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useVertical } from '@/hooks/use-vertical';
 
 interface JudgeProfile {
   judge_name: string;
@@ -48,6 +49,7 @@ interface Simulation {
 }
 
 export default function JudgeIntelligence() {
+  const { isVertical, vertical } = useVertical();
   const [judgeName, setJudgeName] = useState('');
   const [jurisdiction, setJurisdiction] = useState('');
   const [state, setState] = useState('');
@@ -56,6 +58,22 @@ export default function JudgeIntelligence() {
   const [profile, setProfile] = useState<JudgeProfile | null>(null);
   const [simulation, setSimulation] = useState<Simulation | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
+
+  if (!isVertical('mass_tort')) {
+    return (
+      <DashboardLayout>
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-20 text-center">
+            <Gavel className="h-12 w-12 text-muted-foreground/30 mb-4" />
+            <h2 className="text-xl font-semibold text-foreground">Available for Mass Tort firms only</h2>
+            <p className="text-muted-foreground text-sm mt-2 max-w-md">
+              Judge & Jury Intelligence is a legal-specific tool. Your current vertical ({vertical?.name}) doesn't use this feature.
+            </p>
+          </CardContent>
+        </Card>
+      </DashboardLayout>
+    );
+  }
 
   const analyzeJudge = async () => {
     if (!judgeName || !jurisdiction) {

@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Brain, TrendingUp, Flame, MapPin, Zap, Clock, Target, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useFirm } from '@/hooks/use-firm';
+import { CategorySelect } from '@/components/verticals/CategorySelect';
 
 interface PredictiveSignal {
   tort_type: string;
@@ -30,6 +32,7 @@ interface HotZone {
 }
 
 export default function PredictiveLeads() {
+  const { data: firm } = useFirm();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [predictions, setPredictions] = useState<PredictiveSignal[]>([]);
   const [hotZones, setHotZones] = useState<HotZone[]>([]);
@@ -40,7 +43,7 @@ export default function PredictiveLeads() {
     setIsAnalyzing(true);
     try {
       const { data, error } = await supabase.functions.invoke('predictive-leads', {
-        body: { tort_type: filterTort || undefined },
+        body: { firm_id: firm?.id, tort_type: filterTort || undefined, category: filterTort || undefined },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useGoogleAiAssistant, useGoogleCampaigns } from '@/hooks/use-google-campaigns';
 import { useFirm } from '@/hooks/use-firm';
-import { useTortTypes } from '@/hooks/use-tort-types';
+import { useVertical } from '@/hooks/use-vertical';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +26,8 @@ interface Props {
 export function GoogleAiPanel({ campaignId, onCampaignCreated }: Props) {
   const { data: firm } = useFirm();
   const { data: campaigns } = useGoogleCampaigns();
-  const { data: tortTypes } = useTortTypes();
+  const { categories, term, vertical } = useVertical();
+  const categoryLabel = term('category_label', 'Category');
   const aiAssistant = useGoogleAiAssistant();
   const { toast } = useToast();
 
@@ -40,15 +41,19 @@ export function GoogleAiPanel({ campaignId, onCampaignCreated }: Props) {
   const [optimizeResult, setOptimizeResult] = useState<any>(null);
   const [learningResult, setLearningResult] = useState<any>(null);
 
+  const fallbackCategory = () => tortType || categories[0]?.label || vertical?.name || 'general';
+
   const handleGenerate = async () => {
     const result = await aiAssistant.mutateAsync({
       action: 'generate_google_campaign',
       context: {
+        firm_id: firm?.id,
         tort_type: tortType,
+        category: tortType,
         target_states: targetStates.split(',').map(s => s.trim()).filter(Boolean),
         daily_budget: Number(budget),
         campaign_type: campaignType,
-        firm_name: firm?.name || 'Law Firm',
+        firm_name: firm?.name || vertical?.name || 'Business',
         additional_context: context,
       },
     });
@@ -58,7 +63,12 @@ export function GoogleAiPanel({ campaignId, onCampaignCreated }: Props) {
   const handleKeywordResearch = async () => {
     const result = await aiAssistant.mutateAsync({
       action: 'keyword_research',
-      context: { tort_type: tortType || 'Camp Lejeune', target_states: targetStates.split(',').map(s => s.trim()).filter(Boolean) },
+      context: {
+        firm_id: firm?.id,
+        tort_type: fallbackCategory(),
+        category: fallbackCategory(),
+        target_states: targetStates.split(',').map(s => s.trim()).filter(Boolean),
+      },
     });
     setKeywordResult(result);
   };
@@ -67,6 +77,7 @@ export function GoogleAiPanel({ campaignId, onCampaignCreated }: Props) {
     const result = await aiAssistant.mutateAsync({
       action: 'optimize_google_campaign',
       context: {
+        firm_id: firm?.id,
         campaign_id: campaignId,
         metrics: { impressions: 89000, clicks: 3200, conversions: 128, spend: 4200, ctr: 3.6, cpc: 1.31, cpa: 32.81, roas: 4.2, quality_score: 8 },
       },
@@ -78,8 +89,9 @@ export function GoogleAiPanel({ campaignId, onCampaignCreated }: Props) {
     const result = await aiAssistant.mutateAsync({
       action: 'self_learning_report',
       context: {
+        firm_id: firm?.id,
         platform: 'google',
-        firm_name: firm?.name,
+        firm_name: firm?.name || vertical?.name,
         campaigns: campaigns?.map(c => ({ name: c.name, type: c.type, cpa: c.cpa, roas: c.roas, conversions: c.conversions, quality_score: c.quality_score })),
       },
     });
@@ -97,11 +109,15 @@ export function GoogleAiPanel({ campaignId, onCampaignCreated }: Props) {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-            <div><Label>Tort Type</Label>
-              <Select value={tortType} onValueChange={setTortType}>
-                <SelectTrigger><SelectValue placeholder="Select tort" /></SelectTrigger>
-                <SelectContent>{(tortTypes || []).map(t => <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>)}</SelectContent>
-              </Select>
+            <div><Label>{categoryLabel}</Label>
+              {categories.length > 0 ? (
+                <Select value={tortType} onValueChange={setTortType}>
+                  <SelectTrigger><SelectValue placeholder={`Select ${categoryLabel.toLowerCase()}`} /></SelectTrigger>
+                  <SelectContent>{categories.map(c => <SelectItem key={c.id} value={c.label}>{c.label}</SelectItem>)}</SelectContent>
+                </Select>
+              ) : (
+                <Input value={tortType} onChange={e => setTortType(e.target.value)} placeholder={`Enter ${categoryLabel.toLowerCase()}`} />
+              )}
             </div>
             <div><Label>Target States</Label><Input value={targetStates} onChange={e => setTargetStates(e.target.value)} placeholder="FL, TX, CA" /></div>
             <div><Label>Daily Budget ($)</Label><Input type="number" value={budget} onChange={e => setBudget(e.target.value)} /></div>

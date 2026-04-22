@@ -12,6 +12,9 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { MetaCampaignWizard } from '@/components/meta-ads/MetaCampaignWizard';
 import { useMetaPixel } from '@/hooks/use-meta-pixel';
+import { useFirm } from '@/hooks/use-firm';
+import { useVertical } from '@/hooks/use-vertical';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function CreativeStudio() {
   const [brief, setBrief] = useState('');
@@ -25,13 +28,16 @@ export default function CreativeStudio() {
   const createCampaign = useCreateCampaign();
   const navigate = useNavigate();
   const pixel = useMetaPixel();
+  const { data: firm } = useFirm();
+  const { categories, term, vertical } = useVertical();
+  const categoryLabel = term('category_label', 'Category');
 
   const generate = async () => {
     if (!brief) { toast.error('Enter a creative brief'); return; }
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('ai-creative-studio', {
-        body: { brief, tort_type: tortType, brand_tone: brandTone, num_variants: 6 },
+        body: { firm_id: firm?.id, brief, tort_type: tortType, category: tortType, brand_tone: brandTone, num_variants: 6 },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -85,14 +91,21 @@ export default function CreativeStudio() {
             </div>
             AI Creative Studio
           </h1>
-          <p className="text-muted-foreground mt-1">Generate full ad campaigns from a single brief. AI creates, tests, and optimizes.</p>
+          <p className="text-muted-foreground mt-1">Generate full ad campaigns from a single brief. Tailored for {vertical?.name || 'your business'}.</p>
         </div>
 
         <Card>
           <CardContent className="pt-6 space-y-4">
-            <Textarea placeholder="Describe your campaign brief... (e.g. 'We need ads for Camp Lejeune water contamination targeting veterans in NC, VA, and SC')" value={brief} onChange={(e) => setBrief(e.target.value)} rows={3} />
+            <Textarea placeholder={`Describe your campaign brief... (e.g. 'Ads for ${categories[0]?.label || 'our top service'} targeting customers in FL, TX, and CA')`} value={brief} onChange={(e) => setBrief(e.target.value)} rows={3} />
             <div className="flex flex-wrap gap-4">
-              <Input placeholder="Tort type" value={tortType} onChange={(e) => setTortType(e.target.value)} className="max-w-xs" />
+              {categories.length > 0 ? (
+                <Select value={tortType} onValueChange={setTortType}>
+                  <SelectTrigger className="max-w-xs"><SelectValue placeholder={`Select ${categoryLabel.toLowerCase()}`} /></SelectTrigger>
+                  <SelectContent>{categories.map(c => <SelectItem key={c.id} value={c.label}>{c.label}</SelectItem>)}</SelectContent>
+                </Select>
+              ) : (
+                <Input placeholder={categoryLabel} value={tortType} onChange={(e) => setTortType(e.target.value)} className="max-w-xs" />
+              )}
               <Input placeholder="Brand tone (e.g. empathetic, urgent)" value={brandTone} onChange={(e) => setBrandTone(e.target.value)} className="max-w-xs" />
               <Button onClick={generate} disabled={isGenerating} className="gap-2">
                 {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}

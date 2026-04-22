@@ -10,6 +10,9 @@ import { Progress } from '@/components/ui/progress';
 import { Loader2, Radar, TrendingUp, AlertTriangle, Zap, Globe, Eye, Flame, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useFirm } from '@/hooks/use-firm';
+import { useVertical } from '@/hooks/use-vertical';
+import { CategorySelect } from '@/components/verticals/CategorySelect';
 
 interface PulseAlert {
   title: string;
@@ -27,6 +30,9 @@ interface PulseAlert {
 }
 
 export default function MarketPulseRadar() {
+  const { data: firm } = useFirm();
+  const { vertical, term } = useVertical();
+  const categoryLabel = term('category_label', 'Category');
   const [isScanning, setIsScanning] = useState(false);
   const [alerts, setAlerts] = useState<PulseAlert[]>([]);
   const [marketSummary, setMarketSummary] = useState('');
@@ -39,9 +45,11 @@ export default function MarketPulseRadar() {
     try {
       const { data, error } = await supabase.functions.invoke('market-pulse', {
         body: {
+          firm_id: firm?.id,
           action: 'scan',
           tort_type: filterTort || undefined,
-          states: filterState ? [filterState] : undefined,
+          category: filterTort || undefined,
+          states: filterState && filterState !== 'all' ? [filterState] : undefined,
         },
       });
       if (error) throw error;
@@ -87,7 +95,7 @@ export default function MarketPulseRadar() {
               </div>
               Market Pulse Radar
             </h1>
-            <p className="text-muted-foreground mt-1">Detect emerging mass torts before your competitors. AI-powered market intelligence.</p>
+            <p className="text-muted-foreground mt-1">Detect emerging {categoryLabel.toLowerCase()} opportunities for {vertical?.name || 'your business'} before competitors.</p>
           </div>
           <Button onClick={runScan} disabled={isScanning} size="lg" className="gap-2">
             {isScanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Radar className="h-4 w-4" />}
@@ -99,12 +107,7 @@ export default function MarketPulseRadar() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex flex-wrap gap-4">
-              <Input
-                placeholder="Filter by tort type..."
-                value={filterTort}
-                onChange={(e) => setFilterTort(e.target.value)}
-                className="max-w-xs"
-              />
+              <CategorySelect value={filterTort} onChange={setFilterTort} className="max-w-xs" />
               <Select value={filterState} onValueChange={setFilterState}>
                 <SelectTrigger className="w-40"><SelectValue placeholder="All States" /></SelectTrigger>
                 <SelectContent>
