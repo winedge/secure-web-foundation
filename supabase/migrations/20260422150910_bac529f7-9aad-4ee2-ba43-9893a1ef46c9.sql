@@ -1,0 +1,2 @@
+ALTER TABLE public.firms ADD COLUMN IF NOT EXISTS country TEXT NOT NULL DEFAULT 'US';
+COMMENT ON COLUMN public.firms.country IS 'ISO-3166 alpha-2 country code (e.g. US, IN). Used to derive billing currency.';
