@@ -373,6 +373,7 @@ export function CategorySelect({
   if (!showLabel) {
     return (
       <div className="space-y-1">
+        <div className="flex items-center justify-end">{statusSummary}</div>
         {content}
         {errorNode}
       </div>
@@ -380,10 +381,13 @@ export function CategorySelect({
   }
   return (
     <div className="space-y-1">
-      <Label className={cn(labelClassName, hasError && 'text-destructive')}>
-        {label}
-        {required && <span className="text-destructive ml-0.5">*</span>}
-      </Label>
+      <div className="flex items-center justify-between gap-2">
+        <Label className={cn(labelClassName, hasError && 'text-destructive')}>
+          {label}
+          {required && <span className="text-destructive ml-0.5">*</span>}
+        </Label>
+        {statusSummary}
+      </div>
       {content}
       {errorNode}
     </div>
