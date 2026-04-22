@@ -270,10 +270,15 @@ export default function Onboarding() {
                       <Input id="contact_phone" placeholder="(555) 123-4567" className="h-11" {...register('contact_phone')} />
                     </div>
                   </div>
-                  <Button type="submit" className="w-full h-12 text-base mt-4" disabled={createFirm.isPending}>
-                    {createFirm.isPending ? 'Creating...' : 'Continue'}
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button type="button" variant="ghost" className="flex-1" onClick={() => setStep(0)} disabled={createFirm.isPending}>
+                      <ArrowLeft className="mr-2 h-4 w-4" /> Back
+                    </Button>
+                    <Button type="submit" className="flex-1 h-12 text-base" disabled={createFirm.isPending || assigningVertical}>
+                      {createFirm.isPending || assigningVertical ? 'Creating...' : 'Continue'}
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </div>
                 </form>
               </CardContent>
             </Card>
