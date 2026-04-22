@@ -22,6 +22,7 @@ import { ComplianceBadge } from './ComplianceBadge';
 import { ScoreIndicator } from './ScoreIndicator';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Lead, usePurchaseLead } from '@/hooks/use-leads';
+import { useVertical } from '@/hooks/use-vertical';
 import {
   Dialog,
   DialogContent,
@@ -46,6 +47,7 @@ export function LeadDetailModal({ lead, open, onOpenChange, isPurchased: isPurch
   const [justPurchased, setJustPurchased] = useState(false);
   const isPurchased = isPurchasedProp || justPurchased;
   const { mutate: purchaseLead, isPending } = usePurchaseLead();
+  const { term } = useVertical();
 
   const handlePurchase = () => {
     purchaseLead(lead.id, {
