@@ -196,6 +196,43 @@ export function CategorySelect({
     ? { 'aria-invalid': true as const, 'aria-describedby': 'category-select-error' }
     : {};
 
+  // Small status summary chip shown above the input so users (and admins QA-ing
+  // verticals) can see at a glance whether categories loaded, are missing, or
+  // are blocked. Uses semantic tokens only.
+  const statusSummary = (() => {
+    if (isLoading) {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
+          {t('categorySelect.status.loading')}
+        </span>
+      );
+    }
+    if (categories.length > 0) {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+          <CheckCircle2 className="h-3 w-3 text-primary" aria-hidden />
+          {t('categorySelect.status.hasCategories', { count: categories.length })}
+        </span>
+      );
+    }
+    if (allowFreeTextFallback) {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Info className="h-3 w-3" aria-hidden />
+          {t('categorySelect.status.empty')}
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs text-destructive">
+        <CircleSlash className="h-3 w-3" aria-hidden />
+        {t('categorySelect.status.blocked')}
+      </span>
+    );
+  })();
+
+
   let content: React.ReactNode;
 
   if (isLoading) {
