@@ -360,6 +360,74 @@ export type Database = {
           },
         ]
       }
+      ai_tool_results: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          firm_id: string
+          id: string
+          input_file_name: string | null
+          input_file_url: string | null
+          input_text: string | null
+          model_used: string | null
+          output_data: Json | null
+          output_text: string | null
+          status: string
+          tokens_used: number | null
+          tool_key: string
+          updated_at: string
+          user_id: string
+          vertical_slug: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          firm_id: string
+          id?: string
+          input_file_name?: string | null
+          input_file_url?: string | null
+          input_text?: string | null
+          model_used?: string | null
+          output_data?: Json | null
+          output_text?: string | null
+          status?: string
+          tokens_used?: number | null
+          tool_key: string
+          updated_at?: string
+          user_id: string
+          vertical_slug?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          firm_id?: string
+          id?: string
+          input_file_name?: string | null
+          input_file_url?: string | null
+          input_text?: string | null
+          model_used?: string | null
+          output_data?: Json | null
+          output_text?: string | null
+          status?: string
+          tokens_used?: number | null
+          tool_key?: string
+          updated_at?: string
+          user_id?: string
+          vertical_slug?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_tool_results_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_transparency_logs: {
         Row: {
           action_type: string
