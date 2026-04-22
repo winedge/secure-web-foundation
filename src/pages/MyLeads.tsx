@@ -53,6 +53,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { usePiiMasking } from '@/hooks/use-pii-masking';
+import { useVertical } from '@/hooks/use-vertical';
 
 function LeadNotesPanel({ leadId }: { leadId: string }) {
   const { data: notes, isLoading } = useLeadNotes(leadId);

@@ -100,9 +100,9 @@ export default function Marketplace() {
     <DashboardLayout>
       <div>
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold">Lead Marketplace</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">{term('marketplace_title', 'Lead Marketplace')}</h1>
           <p className="text-muted-foreground mt-1">
-            Browse and purchase AI-verified mass tort leads
+            Browse and purchase AI-verified {vertical?.name || 'industry'} {term('lead_plural', 'leads').toLowerCase()}
           </p>
         </div>
 
