@@ -99,10 +99,11 @@ export function VerticalSettingsTab() {
     },
   });
 
-  // System-level enabled modules (firm_id IS NULL) for admin mode display.
+  // System-level enabled modules (firm_id IS NULL) — used for admin mode display
+  // AND to filter the firm-mode toggle list to vertical-eligible modules only.
   const { data: systemModules, refetch: refetchSystemModules } = useQuery({
     queryKey: ['system-vertical-modules', vertical?.id],
-    enabled: !!vertical?.id && adminMode && isAdmin,
+    enabled: !!vertical?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('vertical_module_access' as any)
@@ -171,6 +172,14 @@ export function VerticalSettingsTab() {
     () => (adminMode && isAdmin ? (systemModules ?? new Set<string>()) : new Set<string>(enabledModules)),
     [adminMode, isAdmin, systemModules, enabledModules]
   );
+
+  // In firm mode, only show modules that are eligible (system-enabled) for this vertical.
+  // In admin mode, show every module so the admin can enable/disable any of them platform-wide.
+  const visibleModules = useMemo(() => {
+    if (adminMode && isAdmin) return ALL_MODULES;
+    if (!systemModules) return ALL_MODULES; // fallback while loading
+    return ALL_MODULES.filter((m) => systemModules.has(m.key));
+  }, [adminMode, isAdmin, systemModules]);
 
   if (isLoading || !vertical) {
     return (
@@ -293,12 +302,17 @@ export function VerticalSettingsTab() {
               <CardDescription>
                 {adminMode && isAdmin
                   ? `Toggle which AI modules are AVAILABLE on the ${vertical?.name} vertical platform-wide. Firms can still hide individual modules in their own settings.`
-                  : 'Toggle which AI modules appear in the sidebar and are usable by your team.'}
+                  : `Showing only the AI modules designed for ${vertical?.name}. Toggle which ones appear in the sidebar and are usable by your team.`}
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {visibleModules.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4">
+                  No AI modules are enabled for this vertical yet. Contact support to request additional tools.
+                </p>
+              ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {ALL_MODULES.map((m) => {
+                {visibleModules.map((m) => {
                   const enabled = moduleSet.has(m.key);
                   return (
                     <div
