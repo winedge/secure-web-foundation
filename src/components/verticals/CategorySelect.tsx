@@ -3,6 +3,7 @@
  * Shows loading skeleton while config loads, and a helpful empty state
  * (with free-text fallback) when the active vertical has no categories.
  */
+import { useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -36,6 +37,25 @@ export function CategorySelect({
   const labelLower = label.toLowerCase();
   const ph = placeholder ?? `Select ${labelLower}`;
   const verticalName = vertical?.name ?? 'this vertical';
+
+  // Auto-clear value only if categories have loaded and the current value
+  // is no longer one of the available options. Preserves value across reloads
+  // and while loading. Skips clearing when free-text fallback is active
+  // (no categories at all) so the user's typed value isn't wiped.
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!value) return;
+    if (categories.length === 0) return;
+    const stillValid = categories.some((c) => c.label === value || c.key === value);
+    if (!stillValid) {
+      onChangeRef.current('');
+    }
+  }, [isLoading, categories, value]);
 
   let content: React.ReactNode;
 
