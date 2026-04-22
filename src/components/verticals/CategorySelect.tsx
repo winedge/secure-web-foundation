@@ -170,13 +170,19 @@ export function CategorySelect({
     });
   }, [isLoading, categories.length, vertical?.slug, vertical?.name, allowFreeTextFallback]);
 
-  // Compute inline error: external > internal required check
+  // Compute inline error: external > over-length (always) > required (after touch/submit).
+  // Over-length is shown immediately because the input is `maxLength=100` capped, so
+  // exceeding it implies a programmatic / paste-truncation edge — surface it always.
   const trimmed = (value ?? '').trim();
-  const internalError =
+  const overLengthError =
+    trimmed.length > 100 ? t('categorySelect.maxLengthError', { label }) : null;
+  const internalRequiredError =
     required && !trimmed
       ? requiredMessage ?? t('categorySelect.requiredError', { label })
       : null;
-  const displayError = error ?? ((touched || showError) ? internalError : null);
+  const internalError =
+    overLengthError ?? ((touched || showError) ? internalRequiredError : null);
+  const displayError = error ?? internalError;
   const hasError = !!displayError;
 
   // Aria + visual error styling shared across variants
