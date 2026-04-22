@@ -104,6 +104,35 @@ describe('CategorySelect - inline error visibility', () => {
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent('Server says no');
   });
+
+  it('shows over-length error immediately when value exceeds 100 characters', () => {
+    const tooLong = 'a'.repeat(101);
+    renderWithRouter(
+      <CategorySelect value={tooLong} onChange={() => {}} />,
+    );
+    const alert = screen.getByRole('alert');
+    expect(alert).toBeInTheDocument();
+    expect(alert).toHaveTextContent(/100 characters or less/i);
+  });
+
+  it('over-length error appears without blur/submit and overrides required-empty', () => {
+    const tooLong = 'b'.repeat(150);
+    renderWithRouter(
+      <CategorySelect value={tooLong} onChange={() => {}} required />,
+    );
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent(/100 characters or less/i);
+    expect(alert).not.toHaveTextContent(/required/i);
+  });
+
+  it('reports invalid via onValidityChange when value exceeds 100 characters', () => {
+    const onValidityChange = vi.fn();
+    const tooLong = 'c'.repeat(101);
+    renderWithRouter(
+      <CategorySelect value={tooLong} onChange={() => {}} onValidityChange={onValidityChange} />,
+    );
+    expect(onValidityChange).toHaveBeenCalledWith(false);
+  });
 });
 
 describe('CategorySelect - free-text fallback disabled (blocked state)', () => {

@@ -60,8 +60,11 @@ export function isCategoryFieldValid(opts: {
   const { value, required = false, hasCategories, allowFreeTextFallback = true } = opts;
   // Blocked state: no categories and no free-text fallback -> always invalid when required.
   if (!hasCategories && !allowFreeTextFallback) return !required;
+  const trimmed = (value ?? '').trim();
+  // Over-length is always invalid, regardless of `required`.
+  if (trimmed.length > 100) return false;
   if (!required) return true;
-  return (value ?? '').trim().length > 0;
+  return trimmed.length > 0;
 }
 
 /**
@@ -170,13 +173,19 @@ export function CategorySelect({
     });
   }, [isLoading, categories.length, vertical?.slug, vertical?.name, allowFreeTextFallback]);
 
-  // Compute inline error: external > internal required check
+  // Compute inline error: external > over-length (always) > required (after touch/submit).
+  // Over-length is shown immediately because the input is `maxLength=100` capped, so
+  // exceeding it implies a programmatic / paste-truncation edge — surface it always.
   const trimmed = (value ?? '').trim();
-  const internalError =
+  const overLengthError =
+    trimmed.length > 100 ? t('categorySelect.maxLengthError', { label }) : null;
+  const internalRequiredError =
     required && !trimmed
       ? requiredMessage ?? t('categorySelect.requiredError', { label })
       : null;
-  const displayError = error ?? ((touched || showError) ? internalError : null);
+  const internalError =
+    overLengthError ?? ((touched || showError) ? internalRequiredError : null);
+  const displayError = error ?? internalError;
   const hasError = !!displayError;
 
   // Aria + visual error styling shared across variants
@@ -238,7 +247,6 @@ export function CategorySelect({
               : t('categorySelect.enterPlaceholder', { label: labelLower })
           }
           className={cn(className, errorClass)}
-          maxLength={100}
           {...ariaProps}
         />
         {showExampleChips && examples.length > 0 && (
