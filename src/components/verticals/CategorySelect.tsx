@@ -195,11 +195,20 @@ export function CategorySelect({
         {examples.length > 0 && (
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-xs text-muted-foreground">{t('categorySelect.tryLabel')}</span>
-            {examples.map((ex) => (
+            {examples.map((ex, idx) => (
               <button
                 key={ex}
                 type="button"
-                onClick={() => onChange(ex)}
+                onClick={() => {
+                  trackEvent('category_select_example_chip_click', {
+                    value: ex,
+                    vertical_slug: vertical?.slug ?? 'unknown',
+                    vertical_name: vertical?.name ?? null,
+                    chip_index: idx,
+                    chip_count: examples.length,
+                  });
+                  onChange(ex);
+                }}
                 className="inline-flex"
               >
                 <Badge
