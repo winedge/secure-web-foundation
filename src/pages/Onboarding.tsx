@@ -80,19 +80,50 @@ export default function Onboarding() {
     },
   });
 
+  const handleVerticalContinue = async (preset: VerticalPreset) => {
+    setSelectedVertical(preset);
+    if (user) {
+      try {
+        await supabase.from('profiles').update({ onboarding_step: 1 } as any).eq('id', user.id);
+      } catch (e) {
+        // non-blocking
+      }
+    }
+    setStep(1);
+  };
+
   const onFirmSubmit = async (data: FirmFormData) => {
-    await createFirm.mutateAsync({
+    const created = await createFirm.mutateAsync({
       name: data.name,
       website: data.website || undefined,
-      practice_type: data.practice_type || undefined,
+      practice_type: data.practice_type || selectedVertical?.name || undefined,
       contact_email: data.contact_email || undefined,
       contact_phone: data.contact_phone || undefined,
     });
-    // Save step progress
-    if (user) {
-      await supabase.from('profiles').update({ onboarding_step: 1 } as any).eq('id', user.id);
+
+    // Assign vertical_id to the newly created firm
+    if (selectedVertical && created?.id) {
+      setAssigningVertical(true);
+      try {
+        const { data: vRow } = await supabase
+          .from('industry_verticals')
+          .select('id')
+          .eq('slug', selectedVertical.slug)
+          .maybeSingle();
+        if (vRow?.id) {
+          await supabase.from('firms').update({ vertical_id: vRow.id } as any).eq('id', created.id);
+        }
+      } catch (e) {
+        // non-blocking — firm still works without vertical assignment
+      } finally {
+        setAssigningVertical(false);
+      }
     }
-    setStep(1);
+
+    if (user) {
+      await supabase.from('profiles').update({ onboarding_step: 2 } as any).eq('id', user.id);
+    }
+    setStep(2);
   };
 
   const handleSubscribe = async (priceId: string, tierKey: string) => {
@@ -114,7 +145,7 @@ export default function Onboarding() {
   };
 
   const handleSkipPlan = () => {
-    setStep(2);
+    setStep(3);
   };
 
   const handleConnectFacebook = () => {
@@ -123,7 +154,7 @@ export default function Onboarding() {
 
   const handleFinish = async () => {
     if (user) {
-      await supabase.from('profiles').update({ onboarding_completed: true, onboarding_step: 4 } as any).eq('id', user.id);
+      await supabase.from('profiles').update({ onboarding_completed: true, onboarding_step: 5 } as any).eq('id', user.id);
     }
     toast.success('Onboarding complete! Welcome to LeadsThru.');
     navigate('/dashboard');
