@@ -5,9 +5,15 @@ import { getStripe } from "../_shared/stripe.ts";
 
 const log = createLogger("WALLET-SUBSCRIBE");
 
-const PLAN_PRICES: Record<string, { price: number; product_id: string }> = {
-  price_1SzxaCKzSXP4o2z9sZU0jFy8: { price: 99, product_id: "prod_TxtMCJzuiHKivL" },
-  price_1SzxaQKzSXP4o2z9zjRZWUNJ: { price: 249, product_id: "prod_TxtNjgqRTXPV67" },
+// Each subscription plan can be purchased via the wallet using either its USD or INR price ID.
+// `price` is in the firm's wallet currency (USD = dollars, INR = rupees).
+const PLAN_PRICES: Record<string, { price: number; product_id: string; plan: 'basic' | 'premium'; currency: 'usd' | 'inr' }> = {
+  // USD
+  price_1SzxaCKzSXP4o2z9sZU0jFy8: { price: 99, product_id: "prod_TxtMCJzuiHKivL", plan: 'basic', currency: 'usd' },
+  price_1SzxaQKzSXP4o2z9zjRZWUNJ: { price: 249, product_id: "prod_TxtNjgqRTXPV67", plan: 'premium', currency: 'usd' },
+  // INR
+  price_1TP34mKzSXP4o2z9bdRacNk2: { price: 8500, product_id: "prod_UNoiAW62kBoQ4z", plan: 'basic', currency: 'inr' },
+  price_1TP35MKzSXP4o2z9ojHvzRjQ: { price: 22000, product_id: "prod_UNoiKrGGJKHnOV", plan: 'premium', currency: 'inr' },
 };
 
 serve(async (req) => {
