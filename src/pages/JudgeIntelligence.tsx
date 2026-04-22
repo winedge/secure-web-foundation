@@ -10,7 +10,7 @@ import { Loader2, Scale, Search, Shield, TrendingUp, AlertTriangle, Gavel, User,
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useVertical } from '@/hooks/use-vertical';
-import { CategorySelect } from '@/components/verticals/CategorySelect';
+import { CategorySelect, validateCategoryValue } from '@/components/verticals/CategorySelect';
 
 interface JudgeProfile {
   judge_name: string;
@@ -59,6 +59,7 @@ export default function JudgeIntelligence() {
   const [profile, setProfile] = useState<JudgeProfile | null>(null);
   const [simulation, setSimulation] = useState<Simulation | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [categoryError, setCategoryError] = useState<string | undefined>();
 
   if (!isVertical('mass_tort')) {
     return (
@@ -81,6 +82,9 @@ export default function JudgeIntelligence() {
       toast.error('Please enter judge name and jurisdiction');
       return;
     }
+    const categoryValidation = validateCategoryValue(tortType);
+    setCategoryError(categoryValidation ?? undefined);
+    if (categoryValidation) { toast.error(categoryValidation); return; }
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('judge-intelligence', {
@@ -137,7 +141,7 @@ export default function JudgeIntelligence() {
               <Input placeholder="Judge name..." value={judgeName} onChange={(e) => setJudgeName(e.target.value)} />
               <Input placeholder="Jurisdiction (e.g. Southern District of NY)..." value={jurisdiction} onChange={(e) => setJurisdiction(e.target.value)} />
               <Input placeholder="State (optional)..." value={state} onChange={(e) => setState(e.target.value)} />
-              <CategorySelect value={tortType} onChange={setTortType} placeholder="Category (optional)" />
+              <CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} placeholder="Category (optional)" error={categoryError} />
             </div>
             <Button onClick={analyzeJudge} disabled={isLoading} className="mt-4 gap-2">
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}

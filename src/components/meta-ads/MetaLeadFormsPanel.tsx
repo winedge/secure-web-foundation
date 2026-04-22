@@ -14,7 +14,7 @@ import {
 import { toast } from 'sonner';
 import { useVertical } from '@/hooks/use-vertical';
 import { useFirm } from '@/hooks/use-firm';
-import { CategorySelect } from '@/components/verticals/CategorySelect';
+import { CategorySelect, validateCategoryValue } from '@/components/verticals/CategorySelect';
 
 interface LeadForm {
   id: string;
@@ -40,6 +40,7 @@ export function MetaLeadFormsPanel() {
   const [tortType, setTortType] = useState('General');
   const [hasLoaded, setHasLoaded] = useState(false);
   const [fetchResults, setFetchResults] = useState<Record<string, { total: number; ingested: number }>>({});
+  const [categoryError, setCategoryError] = useState<string | undefined>();
 
   const loadForms = async () => {
     if (!user) return;
@@ -62,6 +63,9 @@ export function MetaLeadFormsPanel() {
 
   const fetchFormLeads = async (form: LeadForm) => {
     if (!user) return;
+    const categoryValidation = validateCategoryValue(tortType, categoryLabel);
+    setCategoryError(categoryValidation ?? undefined);
+    if (categoryValidation) { toast.error(categoryValidation); return; }
     setFetchingFormId(form.id);
     try {
       const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
@@ -143,8 +147,9 @@ export function MetaLeadFormsPanel() {
             <Label className="text-xs">Default {categoryLabel} for Imported Leads</Label>
             <CategorySelect
               value={tortType}
-              onChange={setTortType}
+              onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }}
               placeholder={`Select ${categoryLabel.toLowerCase()}`}
+              error={categoryError}
             />
           </div>
           <p className="text-xs text-muted-foreground pb-2">

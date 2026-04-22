@@ -9,15 +9,19 @@ import { Loader2, Eye, EyeOff, TrendingUp, AlertTriangle, Zap } from 'lucide-rea
 import { supabase } from '@/integrations/supabase/client';
 import { useFirm } from '@/hooks/use-firm';
 import { toast } from 'sonner';
-import { CategorySelect } from '@/components/verticals/CategorySelect';
+import { CategorySelect, validateCategoryValue } from '@/components/verticals/CategorySelect';
 
 export default function DarkFunnelIntelligence() {
   const { data: firm } = useFirm();
   const [tortType, setTortType] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [categoryError, setCategoryError] = useState<string | undefined>();
 
   const analyze = async () => {
+    const categoryValidation = validateCategoryValue(tortType);
+    setCategoryError(categoryValidation ?? undefined);
+    if (categoryValidation) { toast.error(categoryValidation); return; }
     setIsAnalyzing(true);
     try {
       const { data, error } = await supabase.functions.invoke('dark-funnel', {
@@ -45,7 +49,7 @@ export default function DarkFunnelIntelligence() {
             <p className="text-muted-foreground mt-1">Reveal the hidden buyer journey. Track anonymous visitors before they ever submit a form.</p>
           </div>
           <div className="flex gap-2">
-            <CategorySelect value={tortType} onChange={setTortType} className="max-w-xs" />
+            <CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} />
             <Button onClick={analyze} disabled={isAnalyzing} className="gap-2">
               {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
               {isAnalyzing ? 'Analyzing...' : 'Reveal Dark Funnel'}

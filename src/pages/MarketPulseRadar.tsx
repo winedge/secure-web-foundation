@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useFirm } from '@/hooks/use-firm';
 import { useVertical } from '@/hooks/use-vertical';
-import { CategorySelect } from '@/components/verticals/CategorySelect';
+import { CategorySelect, validateCategoryValue } from '@/components/verticals/CategorySelect';
 
 interface PulseAlert {
   title: string;
@@ -39,8 +39,12 @@ export default function MarketPulseRadar() {
   const [trendingTorts, setTrendingTorts] = useState<string[]>([]);
   const [filterTort, setFilterTort] = useState('');
   const [filterState, setFilterState] = useState('');
+  const [categoryError, setCategoryError] = useState<string | undefined>();
 
   const runScan = async () => {
+    const categoryValidation = validateCategoryValue(filterTort, categoryLabel);
+    setCategoryError(categoryValidation ?? undefined);
+    if (categoryValidation) { toast.error(categoryValidation); return; }
     setIsScanning(true);
     try {
       const { data, error } = await supabase.functions.invoke('market-pulse', {
@@ -107,7 +111,7 @@ export default function MarketPulseRadar() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex flex-wrap gap-4">
-              <CategorySelect value={filterTort} onChange={setFilterTort} className="max-w-xs" />
+              <CategorySelect value={filterTort} onChange={(v) => { setFilterTort(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} />
               <Select value={filterState} onValueChange={setFilterState}>
                 <SelectTrigger className="w-40"><SelectValue placeholder="All States" /></SelectTrigger>
                 <SelectContent>

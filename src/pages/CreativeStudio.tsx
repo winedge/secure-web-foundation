@@ -14,7 +14,7 @@ import { MetaCampaignWizard } from '@/components/meta-ads/MetaCampaignWizard';
 import { useMetaPixel } from '@/hooks/use-meta-pixel';
 import { useFirm } from '@/hooks/use-firm';
 import { useVertical } from '@/hooks/use-vertical';
-import { CategorySelect } from '@/components/verticals/CategorySelect';
+import { CategorySelect, validateCategoryValue } from '@/components/verticals/CategorySelect';
 
 export default function CreativeStudio() {
   const [brief, setBrief] = useState('');
@@ -25,6 +25,7 @@ export default function CreativeStudio() {
   const [creatingId, setCreatingId] = useState<string | null>(null);
   const [metaWizardOpen, setMetaWizardOpen] = useState(false);
   const [metaWizardPrefill, setMetaWizardPrefill] = useState<any>({});
+  const [categoryError, setCategoryError] = useState<string | undefined>();
   const createCampaign = useCreateCampaign();
   const navigate = useNavigate();
   const pixel = useMetaPixel();
@@ -34,6 +35,9 @@ export default function CreativeStudio() {
 
   const generate = async () => {
     if (!brief) { toast.error('Enter a creative brief'); return; }
+    const categoryValidation = validateCategoryValue(tortType, categoryLabel);
+    setCategoryError(categoryValidation ?? undefined);
+    if (categoryValidation) { toast.error(categoryValidation); return; }
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('ai-creative-studio', {
@@ -100,9 +104,10 @@ export default function CreativeStudio() {
             <div className="flex flex-wrap gap-4">
               <CategorySelect
                 value={tortType}
-                onChange={setTortType}
+                onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }}
                 placeholder={`Select ${categoryLabel.toLowerCase()}`}
                 className="max-w-xs"
+                error={categoryError}
               />
               <Input placeholder="Brand tone (e.g. empathetic, urgent)" value={brandTone} onChange={(e) => setBrandTone(e.target.value)} className="max-w-xs" />
               <Button onClick={generate} disabled={isGenerating} className="gap-2">

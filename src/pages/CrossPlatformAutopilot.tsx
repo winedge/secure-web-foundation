@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { MetaCampaignWizard } from '@/components/meta-ads/MetaCampaignWizard';
 import { useMetaPixel } from '@/hooks/use-meta-pixel';
 import { useFirm } from '@/hooks/use-firm';
-import { CategorySelect } from '@/components/verticals/CategorySelect';
+import { CategorySelect, validateCategoryValue } from '@/components/verticals/CategorySelect';
 
 const PLATFORMS = ['meta', 'google', 'tiktok', 'linkedin', 'youtube'] as const;
 const PLATFORM_COLORS: Record<string, string> = {
@@ -26,9 +26,13 @@ export default function CrossPlatformAutopilot() {
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [metaWizardOpen, setMetaWizardOpen] = useState(false);
+  const [categoryError, setCategoryError] = useState<string | undefined>();
   const pixel = useMetaPixel();
 
   const optimize = async () => {
+    const categoryValidation = validateCategoryValue(tortType);
+    setCategoryError(categoryValidation ?? undefined);
+    if (categoryValidation) { toast.error(categoryValidation); return; }
     setIsOptimizing(true);
     try {
       const { data, error } = await supabase.functions.invoke('cross-platform-autopilot', {
@@ -61,7 +65,7 @@ export default function CrossPlatformAutopilot() {
               <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Monthly budget" value={budget} onChange={(e) => setBudget(e.target.value)} className="pl-8 w-40" type="number" />
             </div>
-            <CategorySelect value={tortType} onChange={setTortType} className="max-w-xs" />
+            <CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} />
             <Button onClick={optimize} disabled={isOptimizing} className="gap-2">
               {isOptimizing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Cpu className="h-4 w-4" />}
               {isOptimizing ? 'Optimizing...' : 'Optimize Allocation'}
