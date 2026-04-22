@@ -231,7 +231,7 @@ export function CategorySelect({
           <span className="flex items-start gap-2">
             <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
             <span>
-              No {labelLower} options configured for {verticalName}.
+              {t('categorySelect.emptyDescriptionBlocked', { label: labelLower, vertical: verticalName })}
             </span>
           </span>
           <Link
@@ -239,7 +239,7 @@ export function CategorySelect({
             className="font-medium text-primary hover:underline inline-flex items-center gap-1 shrink-0"
           >
             <Settings2 className="h-3 w-3" />
-            Manage {labelLower}s
+            {t('categorySelect.manageLink', { label: labelLower })}
           </Link>
         </div>
       </div>
