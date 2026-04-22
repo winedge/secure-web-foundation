@@ -168,14 +168,18 @@ export function CategorySelect({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onBlur={() => setTouched(true)}
-          placeholder={examples.length > 0 ? `e.g. ${examples[0]}` : `Enter ${labelLower}`}
+          placeholder={
+            examples.length > 0
+              ? t('categorySelect.examplePlaceholder', { example: examples[0] })
+              : t('categorySelect.enterPlaceholder', { label: labelLower })
+          }
           className={cn(className, errorClass)}
           maxLength={100}
           {...ariaProps}
         />
         {examples.length > 0 && (
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs text-muted-foreground">Try:</span>
+            <span className="text-xs text-muted-foreground">{t('categorySelect.tryLabel')}</span>
             {examples.map((ex) => (
               <button
                 key={ex}
@@ -197,7 +201,7 @@ export function CategorySelect({
           <p className="text-xs text-muted-foreground flex items-start gap-1.5">
             <Info className="h-3 w-3 mt-0.5 shrink-0" />
             <span>
-              No {labelLower} options configured for {verticalName}. Type a value or add categories.
+              {t('categorySelect.emptyDescription', { label: labelLower, vertical: verticalName })}
             </span>
           </p>
           <Link
@@ -205,7 +209,7 @@ export function CategorySelect({
             className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1 shrink-0"
           >
             <Settings2 className="h-3 w-3" />
-            Manage {labelLower}s
+            {t('categorySelect.manageLink', { label: labelLower })}
           </Link>
         </div>
       </div>
