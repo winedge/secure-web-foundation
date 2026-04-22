@@ -209,15 +209,29 @@ export default function Onboarding() {
       {/* Main Content */}
       <div className="flex-1 flex items-start justify-center px-4 sm:px-6 pb-12">
         <div className="w-full max-w-lg">
-          {/* Step 0: Firm Setup */}
+          {/* Step 0: Choose Industry Vertical */}
           {step === 0 && (
+            <VerticalSelector
+              selectedSlug={selectedVertical?.slug ?? null}
+              onSelect={setSelectedVertical}
+              onContinue={handleVerticalContinue}
+              isPending={false}
+            />
+          )}
+
+          {/* Step 1: Firm Setup */}
+          {step === 1 && (
             <Card className="border-0 shadow-2xl animate-fade-in">
               <CardHeader className="text-center pb-4">
                 <div className="mx-auto w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <Building2 className="h-7 w-7 text-primary" />
                 </div>
-                <CardTitle className="text-2xl">Set Up Your Firm</CardTitle>
-                <CardDescription>Tell us about your law firm to get started</CardDescription>
+                <CardTitle className="text-2xl">Set Up Your {selectedVertical ? selectedVertical.name.split(' ')[0] : ''} Business</CardTitle>
+                <CardDescription>
+                  {selectedVertical
+                    ? `Tell us about your ${selectedVertical.name.toLowerCase()} business`
+                    : 'Tell us about your business to get started'}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit(onFirmSubmit)} className="space-y-4">
