@@ -1,0 +1,13 @@
+{
+  "categorySelect": {
+    "tryLabel": "Prueba:",
+    "examplePlaceholder": "p. ej. {{example}}",
+    "enterPlaceholder": "Ingresa {{label}}",
+    "selectPlaceholder": "Selecciona {{label}}",
+    "manageLink": "Administrar {{label}}s",
+    "emptyDescription": "No hay opciones de {{label}} configuradas para {{vertical}}. Escribe un valor o agrega categorías.",
+    "emptyDescriptionBlocked": "No hay opciones de {{label}} configuradas para {{vertical}}.",
+    "requiredError": "{{label}} es obligatorio",
+    "maxLengthError": "{{label}} debe tener 100 caracteres o menos"
+  }
+}
