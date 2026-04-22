@@ -2,13 +2,15 @@ import { useSubscriptionContext } from '@/components/subscription/SubscriptionPr
 import { supabase } from '@/integrations/supabase/client';
 import { useIsAdmin } from '@/hooks/use-user-role';
 
-// Stripe product/price mapping
+// Stripe product/price mapping. Each tier has a default USD price and an optional INR price for India-based firms.
 export const SUBSCRIPTION_TIERS = {
   basic: {
     product_id: 'prod_TxtMCJzuiHKivL',
     price_id: 'price_1SzxaCKzSXP4o2z9sZU0jFy8',
+    price_id_inr: 'price_1TP34mKzSXP4o2z9bdRacNk2',
     name: 'Basic',
     price: 99,
+    price_inr: 8500,
     features: [
       'Lead Marketplace Access',
       'Campaign Management',
@@ -20,8 +22,10 @@ export const SUBSCRIPTION_TIERS = {
   premium: {
     product_id: 'prod_TxtNjgqRTXPV67',
     price_id: 'price_1SzxaQKzSXP4o2z9zjRZWUNJ',
+    price_id_inr: 'price_1TP35MKzSXP4o2z9ojHvzRjQ',
     name: 'Premium',
     price: 249,
+    price_inr: 22000,
     features: [
       'Everything in Basic',
       'Meta Ads Manager + AI Autopilot',
@@ -32,6 +36,15 @@ export const SUBSCRIPTION_TIERS = {
     ],
   },
 } as const;
+
+/** Resolve the Stripe price ID for a tier given the user's currency. */
+export function priceIdForTier(
+  tierKey: 'basic' | 'premium',
+  currency: 'USD' | 'INR',
+): string {
+  const t = SUBSCRIPTION_TIERS[tierKey];
+  return currency === 'INR' ? t.price_id_inr : t.price_id;
+}
 
 export type SubscriptionTier = keyof typeof SUBSCRIPTION_TIERS | null;
 
