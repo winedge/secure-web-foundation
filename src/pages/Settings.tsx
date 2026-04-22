@@ -391,6 +391,10 @@ export default function Settings() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="industry">
+            <VerticalSettingsTab />
+          </TabsContent>
+
           <TabsContent value="profile">
             <Card>
               <CardHeader>
