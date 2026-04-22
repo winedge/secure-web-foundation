@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders, handleCors, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { createSupabaseClient, getAuthenticatedUser } from "../_shared/auth.ts";
-import { getVerticalContext, getFirmIdForUser } from "../_shared/vertical.ts";
+import { getVerticalContext, getFirmIdForUser, resolveCategory } from "../_shared/vertical.ts";
 
 serve(async (req) => {
   const cors = handleCors(req);

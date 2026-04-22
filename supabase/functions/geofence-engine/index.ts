@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
-import { getVerticalContext, buildSystemPrompt } from "../_shared/vertical.ts";
+import { getVerticalContext, buildSystemPrompt, resolveCategory } from "../_shared/vertical.ts";
 
 const DEFAULT_LOCATIONS: Record<string, string[]> = {
   mass_tort: ["courthouses", "hospitals", "chiropractors"],
