@@ -35,6 +35,7 @@ const firmSchema = z.object({
   practice_type: z.string().optional(),
   contact_email: z.string().email().optional().or(z.literal('')),
   contact_phone: z.string().optional(),
+  country: z.string().length(2, 'Select a country').default('US'),
 });
 
 type FirmFormData = z.infer<typeof firmSchema>;
