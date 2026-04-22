@@ -41,6 +41,7 @@ import {
   Plug,
 } from 'lucide-react';
 import type { ModuleKey } from '@/lib/verticals/types';
+import { AI_TOOLS } from '@/lib/ai-tools/registry';
 
 export interface NavItem {
   name: string;
