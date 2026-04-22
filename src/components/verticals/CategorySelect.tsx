@@ -3,6 +3,7 @@
  * Shows loading skeleton while config loads, and a helpful empty state
  * (with free-text fallback) when the active vertical has no categories.
  */
+import { useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
