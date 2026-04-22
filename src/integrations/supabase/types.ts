@@ -4857,6 +4857,30 @@ export type Database = {
         }
         Returns: Json
       }
+      clone_vertical_stages_for_firm: {
+        Args: { _firm_id: string; _vertical_id: string }
+        Returns: {
+          color: string | null
+          created_at: string
+          default_fee: number
+          firm_id: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          label: string
+          requires_payment: boolean
+          stage_key: string
+          stage_order: number
+          updated_at: string
+          vertical_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "vertical_pipeline_stages"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_marketplace_leads: {
         Args: never
         Returns: {
