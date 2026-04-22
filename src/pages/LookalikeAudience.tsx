@@ -11,7 +11,7 @@ import { useFirm } from '@/hooks/use-firm';
 import { toast } from 'sonner';
 import { MetaCampaignWizard } from '@/components/meta-ads/MetaCampaignWizard';
 import { useMetaPixel } from '@/hooks/use-meta-pixel';
-import { CategorySelect } from '@/components/verticals/CategorySelect';
+import { CategorySelect, validateCategoryValue } from '@/components/verticals/CategorySelect';
 
 export default function LookalikeAudience() {
   const { data: firm } = useFirm();
@@ -20,10 +20,14 @@ export default function LookalikeAudience() {
   const [result, setResult] = useState<any>(null);
   const [metaWizardOpen, setMetaWizardOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<any>(null);
+  const [categoryError, setCategoryError] = useState<string | undefined>();
   const pixel = useMetaPixel();
 
   const build = async () => {
     if (!firm?.id) return;
+    const categoryValidation = validateCategoryValue(tortType);
+    setCategoryError(categoryValidation ?? undefined);
+    if (categoryValidation) { toast.error(categoryValidation); return; }
     setIsBuilding(true);
     try {
       const { data, error } = await supabase.functions.invoke('lookalike-audience', {
@@ -57,7 +61,7 @@ export default function LookalikeAudience() {
             <p className="text-muted-foreground mt-1">Build hyper-targeted audiences from your best-converting leads. Auto-sync to ad platforms.</p>
           </div>
           <div className="flex gap-2">
-            <CategorySelect value={tortType} onChange={setTortType} className="max-w-xs" />
+            <CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} />
             <Button onClick={build} disabled={isBuilding} className="gap-2">
               {isBuilding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Target className="h-4 w-4" />}
               {isBuilding ? 'Building...' : 'Build Audiences'}

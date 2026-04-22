@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { VideoPlayer } from '@/components/video/VideoPlayer';
 import { useFirm } from '@/hooks/use-firm';
-import { CategorySelect } from '@/components/verticals/CategorySelect';
+import { CategorySelect, validateCategoryValue } from '@/components/verticals/CategorySelect';
 
 interface SceneFrame {
   scene_number: number;
@@ -29,9 +29,13 @@ export default function VideoAdGenerator() {
   const [script, setScript] = useState<any>(null);
   const [isGeneratingFrames, setIsGeneratingFrames] = useState(false);
   const [frames, setFrames] = useState<SceneFrame[]>([]);
+  const [categoryError, setCategoryError] = useState<string | undefined>();
 
   const generate = async () => {
     if (!brief) { toast.error('Enter a brief'); return; }
+    const categoryValidation = validateCategoryValue(tortType);
+    setCategoryError(categoryValidation ?? undefined);
+    if (categoryValidation) { toast.error(categoryValidation); return; }
     setIsGenerating(true);
     setFrames([]);
     try {
@@ -82,7 +86,7 @@ export default function VideoAdGenerator() {
           <CardContent className="pt-6 space-y-4">
             <Textarea placeholder="Describe your video ad... (e.g. 'Emotional testimonial-style ad for mesothelioma victims')" value={brief} onChange={(e) => setBrief(e.target.value)} rows={3} />
             <div className="flex flex-wrap gap-4 items-end">
-              <div className="max-w-xs flex-1"><CategorySelect value={tortType} onChange={setTortType} /></div>
+              <div className="max-w-xs flex-1"><CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} error={categoryError} /></div>
               <Select value={duration} onValueChange={setDuration}>
                 <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
                 <SelectContent>

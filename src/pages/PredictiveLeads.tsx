@@ -10,7 +10,7 @@ import { Loader2, Brain, TrendingUp, Flame, MapPin, Zap, Clock, Target, BarChart
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useFirm } from '@/hooks/use-firm';
-import { CategorySelect } from '@/components/verticals/CategorySelect';
+import { CategorySelect, validateCategoryValue } from '@/components/verticals/CategorySelect';
 
 interface PredictiveSignal {
   tort_type: string;
@@ -38,8 +38,12 @@ export default function PredictiveLeads() {
   const [hotZones, setHotZones] = useState<HotZone[]>([]);
   const [forecast, setForecast] = useState('');
   const [filterTort, setFilterTort] = useState('');
+  const [categoryError, setCategoryError] = useState<string | undefined>();
 
   const runPrediction = async () => {
+    const categoryValidation = validateCategoryValue(filterTort);
+    setCategoryError(categoryValidation ?? undefined);
+    if (categoryValidation) { toast.error(categoryValidation); return; }
     setIsAnalyzing(true);
     try {
       const { data, error } = await supabase.functions.invoke('predictive-leads', {
@@ -95,7 +99,7 @@ export default function PredictiveLeads() {
 
         <Card>
           <CardContent className="pt-6">
-            <CategorySelect value={filterTort} onChange={setFilterTort} className="max-w-xs" />
+            <CategorySelect value={filterTort} onChange={(v) => { setFilterTort(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} />
           </CardContent>
         </Card>
 
