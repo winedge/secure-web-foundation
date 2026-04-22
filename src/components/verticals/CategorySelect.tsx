@@ -41,6 +41,8 @@ interface CategorySelectProps {
   showError?: boolean;
   /** Custom required-error text. */
   requiredMessage?: string;
+  /** When true, show clickable example chips in the free-text empty state. Default: true */
+  showExampleChips?: boolean;
 }
 
 /**
@@ -66,6 +68,7 @@ export function CategorySelect({
   error,
   showError = false,
   requiredMessage,
+  showExampleChips = true,
 }: CategorySelectProps) {
   const { t } = useTranslation();
   const { categories, term, isLoading, vertical } = useVertical();
@@ -184,7 +187,7 @@ export function CategorySelect({
           onChange={(e) => onChange(e.target.value)}
           onBlur={() => setTouched(true)}
           placeholder={
-            examples.length > 0
+            showExampleChips && examples.length > 0
               ? t('categorySelect.examplePlaceholder', { example: examples[0] })
               : t('categorySelect.enterPlaceholder', { label: labelLower })
           }
@@ -192,7 +195,7 @@ export function CategorySelect({
           maxLength={100}
           {...ariaProps}
         />
-        {examples.length > 0 && (
+        {showExampleChips && examples.length > 0 && (
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-xs text-muted-foreground">{t('categorySelect.tryLabel')}</span>
             {examples.map((ex, idx) => (
