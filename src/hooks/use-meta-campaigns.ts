@@ -139,12 +139,15 @@ export function useCreateMetaCampaign() {
           body: {
             action: 'create_campaign',
             user_id: user?.id,
+            firm_id: firm.id,
             campaign_id: data.id,
             name: data.name,
             objective: data.objective,
             daily_budget: data.daily_budget,
             bid_strategy: data.bid_strategy,
             status: data.status,
+            tort_type: data.tort_type,
+            category: data.tort_type,
           },
         });
       } catch (syncErr) {
@@ -165,6 +168,7 @@ export function useUpdateMetaCampaign() {
   const qc = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { data: firm } = useFirm();
 
   return useMutation({
     mutationFn: async ({ id, ...input }: Partial<MetaCampaign> & { id: string }) => {
@@ -183,6 +187,7 @@ export function useUpdateMetaCampaign() {
             body: {
               action: 'update_campaign',
               user_id: user?.id,
+              firm_id: firm?.id,
               meta_campaign_id: data.meta_campaign_id,
               ...input,
             },
@@ -206,6 +211,7 @@ export function useDeleteMetaCampaign() {
   const qc = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { data: firm } = useFirm();
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -223,7 +229,7 @@ export function useDeleteMetaCampaign() {
       if (campaign?.meta_campaign_id) {
         try {
           await supabase.functions.invoke('meta-ads-sync', {
-            body: { action: 'delete_campaign', user_id: user?.id, meta_campaign_id: campaign.meta_campaign_id },
+            body: { action: 'delete_campaign', user_id: user?.id, firm_id: firm?.id, meta_campaign_id: campaign.meta_campaign_id },
           });
         } catch (syncErr) {
           console.warn('Meta delete sync failed:', syncErr);

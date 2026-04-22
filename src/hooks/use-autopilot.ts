@@ -138,11 +138,12 @@ export function useDeleteAutopilotRule() {
 export function useRunAutopilot() {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { data: firm } = useFirm();
 
   return useMutation({
     mutationFn: async (campaignId: string) => {
       const { data, error } = await supabase.functions.invoke('campaign-autopilot', {
-        body: { campaign_id: campaignId },
+        body: { campaign_id: campaignId, firm_id: firm?.id },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

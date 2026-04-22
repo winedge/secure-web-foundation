@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useVertical } from '@/hooks/use-vertical';
+import { useFirm } from '@/hooks/use-firm';
 import { CategorySelect } from '@/components/verticals/CategorySelect';
 
 interface LeadForm {
@@ -30,6 +31,7 @@ interface LeadForm {
 export function MetaLeadFormsPanel() {
   const { user } = useAuth();
   const { term } = useVertical();
+  const { data: firm } = useFirm();
   const categoryLabel = term('category_label', 'Category');
   const [forms, setForms] = useState<LeadForm[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,7 +46,7 @@ export function MetaLeadFormsPanel() {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
-        body: { action: 'get_lead_forms', user_id: user.id },
+        body: { action: 'get_lead_forms', user_id: user.id, firm_id: firm?.id },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -66,9 +68,11 @@ export function MetaLeadFormsPanel() {
         body: {
           action: 'fetch_form_leads',
           user_id: user.id,
+          firm_id: firm?.id,
           form_id: form.id,
           page_access_token: form.page_access_token,
           tort_type: tortType,
+          category: tortType,
         },
       });
       if (error) throw error;
@@ -93,6 +97,7 @@ export function MetaLeadFormsPanel() {
         body: {
           action: 'subscribe_lead_updates',
           user_id: user.id,
+          firm_id: firm?.id,
           page_id: form.page_id,
           page_access_token: form.page_access_token,
         },
