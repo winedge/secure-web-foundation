@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useVertical } from '@/hooks/use-vertical';
+import { useFirm } from '@/hooks/use-firm';
 import { CategorySelect } from '@/components/verticals/CategorySelect';
 
 interface LeadForm {
