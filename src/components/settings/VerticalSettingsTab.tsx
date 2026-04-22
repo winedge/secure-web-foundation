@@ -24,6 +24,7 @@ import { Loader2, Layers, Tag, MessageSquare, Sparkles, Lock, RefreshCw } from '
 import { toast } from 'sonner';
 import { VERTICAL_PRESETS } from '@/lib/verticals/presets';
 import type { ModuleKey } from '@/lib/verticals/types';
+import { PipelineStagesEditor } from './PipelineStagesEditor';
 
 const ALL_MODULES: { key: ModuleKey; label: string }[] = [
   { key: 'lead_scoring', label: 'AI Lead Scoring' },
@@ -254,7 +255,7 @@ export function VerticalSettingsTab() {
 
         {/* Pipeline Stages */}
         <TabsContent value="stages">
-          <PipelineStagesPanel />
+          <PipelineStagesEditor />
         </TabsContent>
 
         {/* Categories */}
@@ -274,49 +275,6 @@ function ReadonlyRow({ label, value }: { label: string; value: string | undefine
     </div>
   );
 }
-
-function PipelineStagesPanel() {
-  const { stages } = useVertical();
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Pipeline Stages</CardTitle>
-        <CardDescription>Stages your team moves leads through, in order.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          {stages.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No stages configured.</p>
-          ) : (
-            stages.map((s, i) => (
-              <div key={s.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
-                <div className="flex items-center gap-3">
-                  <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
-                    {i + 1}
-                  </div>
-                  <div>
-                    <div className="font-medium text-sm">{s.label}</div>
-                    <div className="text-xs text-muted-foreground">{s.stage_key}</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {s.requires_payment && s.default_fee > 0 && (
-                    <Badge variant="secondary">${s.default_fee} fee</Badge>
-                  )}
-                  {s.requires_payment ? <Badge>paid</Badge> : <Badge variant="outline">free</Badge>}
-                </div>
-              </div>
-            ))
-          )}
-          <p className="text-xs text-muted-foreground pt-2 flex items-center gap-1.5">
-            <Lock className="h-3 w-3" /> Custom stage editing is coming soon. System presets are read-only.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 function CategoriesPanel() {
   const { categories } = useVertical();
   return (
