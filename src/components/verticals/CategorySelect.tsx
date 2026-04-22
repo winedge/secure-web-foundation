@@ -43,6 +43,25 @@ interface CategorySelectProps {
   requiredMessage?: string;
   /** When true, show clickable example chips in the free-text empty state. Default: true */
   showExampleChips?: boolean;
+  /** Notifies parent of validity changes so submit buttons can be disabled. */
+  onValidityChange?: (isValid: boolean) => void;
+}
+
+/**
+ * Pure validity check matching CategorySelect's internal rules.
+ * Use to disable submit buttons without subscribing to onValidityChange.
+ */
+export function isCategoryFieldValid(opts: {
+  value: string;
+  required?: boolean;
+  hasCategories: boolean;
+  allowFreeTextFallback?: boolean;
+}): boolean {
+  const { value, required = false, hasCategories, allowFreeTextFallback = true } = opts;
+  // Blocked state: no categories and no free-text fallback -> always invalid when required.
+  if (!hasCategories && !allowFreeTextFallback) return !required;
+  if (!required) return true;
+  return (value ?? '').trim().length > 0;
 }
 
 /**
@@ -69,6 +88,7 @@ export function CategorySelect({
   showError = false,
   requiredMessage,
   showExampleChips = true,
+  onValidityChange,
 }: CategorySelectProps) {
   const { t } = useTranslation();
   const { categories, term, isLoading, vertical } = useVertical();
@@ -104,6 +124,25 @@ export function CategorySelect({
       onChangeRef.current('');
     }
   }, [isLoading, categories, value]);
+
+  // Notify parent of validity so it can disable submit buttons.
+  // Treat loading as valid (don't disable while categories are still resolving).
+  const lastValidityRef = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (!onValidityChange) return;
+    const valid = isLoading
+      ? true
+      : isCategoryFieldValid({
+          value,
+          required,
+          hasCategories: categories.length > 0,
+          allowFreeTextFallback,
+        });
+    if (lastValidityRef.current !== valid) {
+      lastValidityRef.current = valid;
+      onValidityChange(valid);
+    }
+  }, [value, required, isLoading, categories.length, allowFreeTextFallback, onValidityChange]);
 
   // Analytics: track which state CategorySelect renders in per vertical.
   // Dedupe per (verticalSlug, state) within this component instance so we

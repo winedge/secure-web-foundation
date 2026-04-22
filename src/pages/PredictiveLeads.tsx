@@ -39,6 +39,7 @@ export default function PredictiveLeads() {
   const [forecast, setForecast] = useState('');
   const [filterTort, setFilterTort] = useState('');
   const [categoryError, setCategoryError] = useState<string | undefined>();
+  const [categoryValid, setCategoryValid] = useState(true);
 
   const runPrediction = async () => {
     const categoryValidation = validateCategoryValue(filterTort);
@@ -91,7 +92,7 @@ export default function PredictiveLeads() {
             </h1>
             <p className="text-muted-foreground mt-1">AI predicts lead surges before they happen. Be first to market.</p>
           </div>
-          <Button onClick={runPrediction} disabled={isAnalyzing} size="lg" className="gap-2">
+          <Button onClick={runPrediction} disabled={isAnalyzing || !categoryValid} size="lg" className="gap-2">
             {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Brain className="h-4 w-4" />}
             {isAnalyzing ? 'Analyzing Signals...' : 'Generate Predictions'}
           </Button>
@@ -99,7 +100,7 @@ export default function PredictiveLeads() {
 
         <Card>
           <CardContent className="pt-6">
-            <CategorySelect value={filterTort} onChange={(v) => { setFilterTort(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} />
+            <CategorySelect value={filterTort} onChange={(v) => { setFilterTort(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} required onValidityChange={setCategoryValid} />
           </CardContent>
         </Card>
 

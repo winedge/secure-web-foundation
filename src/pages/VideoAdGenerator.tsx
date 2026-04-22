@@ -30,6 +30,7 @@ export default function VideoAdGenerator() {
   const [isGeneratingFrames, setIsGeneratingFrames] = useState(false);
   const [frames, setFrames] = useState<SceneFrame[]>([]);
   const [categoryError, setCategoryError] = useState<string | undefined>();
+  const [categoryValid, setCategoryValid] = useState(true);
 
   const generate = async () => {
     if (!brief) { toast.error('Enter a brief'); return; }
@@ -86,7 +87,7 @@ export default function VideoAdGenerator() {
           <CardContent className="pt-6 space-y-4">
             <Textarea placeholder="Describe your video ad... (e.g. 'Emotional testimonial-style ad for mesothelioma victims')" value={brief} onChange={(e) => setBrief(e.target.value)} rows={3} />
             <div className="flex flex-wrap gap-4 items-end">
-              <div className="max-w-xs flex-1"><CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} error={categoryError} /></div>
+              <div className="max-w-xs flex-1"><CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} error={categoryError} required onValidityChange={setCategoryValid} /></div>
               <Select value={duration} onValueChange={setDuration}>
                 <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -103,7 +104,7 @@ export default function VideoAdGenerator() {
                   <SelectItem value="1:1">1:1 (Feed)</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={generate} disabled={isGenerating} className="gap-2">
+              <Button onClick={generate} disabled={isGenerating || !categoryValid} className="gap-2">
                 {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Film className="h-4 w-4" />}
                 {isGenerating ? 'Writing Script...' : 'Generate Script'}
               </Button>

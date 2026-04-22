@@ -17,6 +17,7 @@ export default function ViralContentEngine() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [categoryError, setCategoryError] = useState<string | undefined>();
+  const [categoryValid, setCategoryValid] = useState(true);
 
   const analyze = async () => {
     const categoryValidation = validateCategoryValue(tortType);
@@ -47,8 +48,8 @@ export default function ViralContentEngine() {
             <p className="text-muted-foreground mt-1">Reverse-engineer top-performing ads. Generate inspired variants with trend-jacking.</p>
           </div>
           <div className="flex gap-2">
-            <CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} />
-            <Button onClick={analyze} disabled={isAnalyzing} className="gap-2">
+            <CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} className="max-w-xs" error={categoryError} required onValidityChange={setCategoryValid} />
+            <Button onClick={analyze} disabled={isAnalyzing || !categoryValid} className="gap-2">
               {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
               {isAnalyzing ? 'Analyzing...' : 'Analyze Top Ads'}
             </Button>
