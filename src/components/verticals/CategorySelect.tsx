@@ -170,17 +170,40 @@ export function CategorySelect({
     const key = `${verticalSlug}:${state}`;
     if (trackedStateRef.current === key) return;
     trackedStateRef.current = key;
-    // Skip the transient loading state — only record meaningful render outcomes.
-    if (state === 'loading') return;
-    void supabase.from('category_select_events').insert({
+
+    const payload = {
       state,
       vertical_slug: verticalSlug,
       vertical_name: vertical?.name ?? null,
       category_count: categories.length,
       allow_free_text_fallback: allowFreeTextFallback,
       is_missing: state === 'empty_freetext' || state === 'empty_blocked',
-    });
-  }, [isLoading, categories.length, vertical?.slug, vertical?.name, allowFreeTextFallback]);
+    };
+
+    // Debug logging: prop OR `?debugCategorySelect=1` URL flag OR
+    // `localStorage.debugCategorySelect=1`. Logs every transition (including
+    // `loading`) so devs can verify the full lifecycle.
+    let debugEnabled = debug;
+    if (!debugEnabled && typeof window !== 'undefined') {
+      try {
+        const url = new URL(window.location.href);
+        debugEnabled =
+          url.searchParams.get('debugCategorySelect') === '1' ||
+          window.localStorage?.getItem('debugCategorySelect') === '1';
+      } catch {
+        // Ignore URL/storage access errors (e.g. sandboxed iframes).
+      }
+    }
+    if (debugEnabled) {
+      // eslint-disable-next-line no-console
+      console.log('[CategorySelect] category_select_state', payload);
+    }
+
+    // Skip the transient loading state — only record meaningful render outcomes.
+    if (state === 'loading') return;
+    void supabase.from('category_select_events').insert(payload);
+  }, [isLoading, categories.length, vertical?.slug, vertical?.name, allowFreeTextFallback, debug]);
+
 
   // Compute inline error: external > over-length (always) > required (after touch/submit).
   // Over-length is shown immediately because the input is `maxLength=100` capped, so
