@@ -252,14 +252,6 @@ export function VerticalSettingsTab() {
   );
 }
 
-function ReadonlyRow({ label, value }: { label: string; value: string | undefined }) {
-  return (
-    <div className="grid grid-cols-3 gap-2 items-center">
-      <Label className="col-span-1 text-sm">{label}</Label>
-      <Input value={value ?? ''} readOnly className="col-span-2 bg-muted/50" />
-    </div>
-  );
-}
 function CategoriesPanel() {
   const { categories } = useVertical();
   return (
