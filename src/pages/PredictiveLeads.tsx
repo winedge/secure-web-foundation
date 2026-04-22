@@ -95,7 +95,7 @@ export default function PredictiveLeads() {
 
         <Card>
           <CardContent className="pt-6">
-            <Input placeholder="Filter by tort type..." value={filterTort} onChange={(e) => setFilterTort(e.target.value)} className="max-w-xs" />
+            <CategorySelect value={filterTort} onChange={setFilterTort} className="max-w-xs" />
           </CardContent>
         </Card>
 
