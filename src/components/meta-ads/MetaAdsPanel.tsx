@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useMetaAds, useCreateMetaAd, useUpdateMetaAd, MetaAd, useMetaAiAssistant } from '@/hooks/use-meta-campaigns';
+import { useVertical } from '@/hooks/use-vertical';
+import { useFirm } from '@/hooks/use-firm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +24,8 @@ export function MetaAdsPanel({ adSetId, onBack }: Props) {
   const createAd = useCreateMetaAd();
   const updateAd = useUpdateMetaAd();
   const aiAssistant = useMetaAiAssistant();
+  const { vertical, categories } = useVertical();
+  const { data: firm } = useFirm();
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<MetaAd | null>(null);
 
@@ -64,9 +68,10 @@ export function MetaAdsPanel({ adSetId, onBack }: Props) {
   };
 
   const generateWithAi = async () => {
+    const defaultCategory = categories[0]?.label || vertical?.name || 'General';
     const result = await aiAssistant.mutateAsync({
       action: 'generate_ad_copy',
-      context: { tort_type: 'Mass Tort', ad_set_id: adSetId },
+      context: { firm_id: firm?.id, tort_type: defaultCategory, category: defaultCategory, ad_set_id: adSetId },
     });
     if (result?.variations?.length > 0) {
       const v = result.variations[0];
