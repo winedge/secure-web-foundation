@@ -286,8 +286,15 @@ export function VerticalSettingsTab() {
         <TabsContent value="modules">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Enabled AI Tools</CardTitle>
-              <CardDescription>Toggle which AI modules appear in the sidebar and are usable by your team.</CardDescription>
+              <CardTitle className="text-base flex items-center gap-2">
+                Enabled AI Tools
+                {adminMode && isAdmin && <Badge variant="destructive">System defaults</Badge>}
+              </CardTitle>
+              <CardDescription>
+                {adminMode && isAdmin
+                  ? `Toggle which AI modules are AVAILABLE on the ${vertical?.name} vertical platform-wide. Firms can still hide individual modules in their own settings.`
+                  : 'Toggle which AI modules appear in the sidebar and are usable by your team.'}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -314,12 +321,12 @@ export function VerticalSettingsTab() {
 
         {/* Terminology */}
         <TabsContent value="terminology">
-          <TerminologyEditor />
+          <TerminologyEditor adminMode={adminMode && isAdmin} />
         </TabsContent>
 
         {/* Pipeline Stages */}
         <TabsContent value="stages">
-          <PipelineStagesEditor />
+          <PipelineStagesEditor adminMode={adminMode && isAdmin} />
         </TabsContent>
 
         {/* Categories */}
