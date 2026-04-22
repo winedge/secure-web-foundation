@@ -384,6 +384,7 @@ export function CategorySelect({
           </p>
           <Link
             to={MANAGE_CATEGORIES_HREF}
+            onClick={handleManageCategoriesClick}
             className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1 shrink-0"
           >
             <Settings2 className="h-3 w-3" />
@@ -414,6 +415,7 @@ export function CategorySelect({
           </span>
           <Link
             to={MANAGE_CATEGORIES_HREF}
+            onClick={handleManageCategoriesClick}
             className="font-medium text-primary hover:underline inline-flex items-center gap-1 shrink-0"
           >
             <Settings2 className="h-3 w-3" />
