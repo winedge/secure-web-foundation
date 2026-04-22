@@ -187,7 +187,7 @@ export function CategorySelect({
           onChange={(e) => onChange(e.target.value)}
           onBlur={() => setTouched(true)}
           placeholder={
-            examples.length > 0
+            showExampleChips && examples.length > 0
               ? t('categorySelect.examplePlaceholder', { example: examples[0] })
               : t('categorySelect.enterPlaceholder', { label: labelLower })
           }
