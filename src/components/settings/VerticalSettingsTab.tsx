@@ -24,6 +24,7 @@ import { Loader2, Layers, Tag, MessageSquare, Sparkles, Lock, RefreshCw } from '
 import { toast } from 'sonner';
 import { VERTICAL_PRESETS } from '@/lib/verticals/presets';
 import type { ModuleKey } from '@/lib/verticals/types';
+import { PipelineStagesEditor } from './PipelineStagesEditor';
 
 const ALL_MODULES: { key: ModuleKey; label: string }[] = [
   { key: 'lead_scoring', label: 'AI Lead Scoring' },
@@ -254,7 +255,7 @@ export function VerticalSettingsTab() {
 
         {/* Pipeline Stages */}
         <TabsContent value="stages">
-          <PipelineStagesPanel />
+          <PipelineStagesEditor />
         </TabsContent>
 
         {/* Categories */}
