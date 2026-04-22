@@ -284,8 +284,8 @@ export default function Onboarding() {
             </Card>
           )}
 
-          {/* Step 1: Choose Plan */}
-          {step === 1 && (
+          {/* Step 2: Choose Plan */}
+          {step === 2 && (
             <div className="space-y-4 animate-fade-in">
               <Card className="border-0 shadow-2xl">
                 <CardHeader className="text-center pb-2">
@@ -354,14 +354,14 @@ export default function Onboarding() {
               </Card>
 
               <div className="flex gap-3">
-                <Button variant="ghost" className="text-white/70 hover:text-white" onClick={() => setStep(0)}>
+                <Button variant="ghost" className="text-white/70 hover:text-white" onClick={() => setStep(1)}>
                   <ArrowLeft className="h-4 w-4 mr-2" /> Back
                 </Button>
                 <Button variant="ghost" className="text-white/70 hover:text-white ml-auto" onClick={handleSkipPlan}>
                   Skip for now <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
                 {tier && (
-                  <Button className="bg-accent hover:bg-accent/90 text-accent-foreground" onClick={() => setStep(2)}>
+                  <Button className="bg-accent hover:bg-accent/90 text-accent-foreground" onClick={() => setStep(3)}>
                     Continue <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 )}
@@ -369,8 +369,8 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 2: Connect Facebook */}
-          {step === 2 && (
+          {/* Step 3: Connect Facebook */}
+          {step === 3 && (
             <div className="space-y-4 animate-fade-in">
               <Card className="border-0 shadow-2xl">
                 <CardHeader className="text-center">
@@ -409,13 +409,13 @@ export default function Onboarding() {
               </Card>
 
               <div className="flex gap-3">
-                <Button variant="ghost" className="text-white/70 hover:text-white" onClick={() => setStep(1)}>
+                <Button variant="ghost" className="text-white/70 hover:text-white" onClick={() => setStep(2)}>
                   <ArrowLeft className="h-4 w-4 mr-2" /> Back
                 </Button>
                 <Button
                   variant="ghost"
                   className="text-white/70 hover:text-white ml-auto"
-                  onClick={() => setStep(3)}
+                  onClick={() => setStep(4)}
                 >
                   {metaConnected ? 'Continue' : 'Skip for now'} <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
@@ -423,8 +423,8 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 3: First Campaign */}
-          {step === 3 && (
+          {/* Step 4: First Campaign */}
+          {step === 4 && (
             <div className="space-y-4 animate-fade-in">
               <Card className="border-0 shadow-2xl">
                 <CardHeader className="text-center">
@@ -450,7 +450,7 @@ export default function Onboarding() {
                 </CardContent>
               </Card>
 
-              <Button variant="ghost" className="text-white/70 hover:text-white" onClick={() => setStep(2)}>
+              <Button variant="ghost" className="text-white/70 hover:text-white" onClick={() => setStep(3)}>
                 <ArrowLeft className="h-4 w-4 mr-2" /> Back
               </Button>
             </div>
