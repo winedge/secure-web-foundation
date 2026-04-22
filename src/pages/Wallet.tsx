@@ -27,6 +27,7 @@ import { format } from 'date-fns';
 export default function Wallet() {
   const { data: firm } = useFirm();
   const { tier, subscribed, subscriptionEnd } = useSubscription();
+  const { currency, formatFromUsd, format } = useCurrency();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [loadingAmount, setLoadingAmount] = useState<number | null>(null);
