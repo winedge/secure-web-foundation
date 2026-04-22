@@ -73,6 +73,7 @@ const CrmIntegrations = lazy(() => import("./pages/CrmIntegrations"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const VerifyChain = lazy(() => import("./pages/VerifyChain"));
 const AiCaseEvaluator = lazy(() => import("./pages/AiCaseEvaluator"));
+const AiToolPage = lazy(() => import("./pages/AiToolPage"));
 const queryClient = new QueryClient();
 
 function PageLoader() {
@@ -162,6 +163,9 @@ const App = () => (
                 <Route path="/fraud-detection" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="fraud_detection" label="Fraud Detection"><FraudDetection /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/crm-integrations" element={<ProtectedRoute><LazyRoute><CrmIntegrations /></LazyRoute></ProtectedRoute>} />
                 <Route path="/ai-case-evaluator" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="case_evaluator" label="AI Lead Evaluator"><AiCaseEvaluator /></ModuleGate></LazyRoute></ProtectedRoute>} />
+
+                {/* Dynamic AI tool route - all 40 vertical-specific tools */}
+                <Route path="/tools/:toolKey" element={<ProtectedRoute><LazyRoute><AiToolPage /></LazyRoute></ProtectedRoute>} />
 
                 {/* Admin routes */}
                 <Route path="/admin" element={<ProtectedRoute requireAdmin><LazyRoute><AdminDashboard /></LazyRoute></ProtectedRoute>} />

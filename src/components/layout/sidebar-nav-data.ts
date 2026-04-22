@@ -41,6 +41,7 @@ import {
   Plug,
 } from 'lucide-react';
 import type { ModuleKey } from '@/lib/verticals/types';
+import { AI_TOOLS } from '@/lib/ai-tools/registry';
 
 export interface NavItem {
   name: string;
@@ -166,6 +167,53 @@ export const adminLogs: Omit<NavItem, 'premium'>[] = [
   { name: 'Audit Logs', href: '/admin/audit-logs', icon: History },
   { name: 'Intake Submissions', href: '/admin/leads', icon: ClipboardList },
 ];
+
+/**
+ * Build AI Toolbox nav groups from the central registry.
+ * Each tool is gated by its `moduleKey`, so vertical-aware filtering
+ * happens automatically via `applyVerticalToNav`.
+ */
+export function buildAiToolGroups(): NavGroup[] {
+  const groupOrder: NavGroup['label'][] = [
+    'Dental',
+    'Aesthetics',
+    'Real Estate',
+    'Solar',
+    'Legal',
+    'Home Services',
+    'AI Toolbox',
+  ] as unknown as NavGroup['label'][];
+
+  const groupIcons: Record<string, NavItem['icon']> = {
+    'Dental': Sparkles,
+    'Aesthetics': Sparkles,
+    'Real Estate': Sparkles,
+    'Solar': Sparkles,
+    'Legal': Gavel,
+    'Home Services': Wrench,
+    'AI Toolbox': Brain,
+  };
+
+  const byGroup = new Map<string, NavItem[]>();
+  for (const tool of AI_TOOLS) {
+    const items = byGroup.get(tool.group) ?? [];
+    items.push({
+      name: tool.label,
+      href: `/tools/${tool.key}`,
+      icon: tool.icon,
+      module: tool.moduleKey as ModuleKey,
+    });
+    byGroup.set(tool.group, items);
+  }
+
+  return groupOrder
+    .filter((label) => byGroup.has(label as string))
+    .map((label) => ({
+      label: label as string,
+      icon: groupIcons[label as string] ?? Sparkles,
+      items: byGroup.get(label as string)!,
+    }));
+}
 
 /**
  * Apply vertical terminology and module gating to nav groups.
