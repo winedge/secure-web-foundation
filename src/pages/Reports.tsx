@@ -84,8 +84,6 @@ export default function Reports() {
             Track your {term('lead_singular', 'lead').toLowerCase()} acquisition performance and spending trends
           </p>
         </div>
-          </p>
-        </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 h-auto">
