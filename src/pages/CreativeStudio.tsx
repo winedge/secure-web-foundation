@@ -14,7 +14,7 @@ import { MetaCampaignWizard } from '@/components/meta-ads/MetaCampaignWizard';
 import { useMetaPixel } from '@/hooks/use-meta-pixel';
 import { useFirm } from '@/hooks/use-firm';
 import { useVertical } from '@/hooks/use-vertical';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CategorySelect } from '@/components/verticals/CategorySelect';
 
 export default function CreativeStudio() {
   const [brief, setBrief] = useState('');
@@ -98,14 +98,12 @@ export default function CreativeStudio() {
           <CardContent className="pt-6 space-y-4">
             <Textarea placeholder={`Describe your campaign brief... (e.g. 'Ads for ${categories[0]?.label || 'our top service'} targeting customers in FL, TX, and CA')`} value={brief} onChange={(e) => setBrief(e.target.value)} rows={3} />
             <div className="flex flex-wrap gap-4">
-              {categories.length > 0 ? (
-                <Select value={tortType} onValueChange={setTortType}>
-                  <SelectTrigger className="max-w-xs"><SelectValue placeholder={`Select ${categoryLabel.toLowerCase()}`} /></SelectTrigger>
-                  <SelectContent>{categories.map(c => <SelectItem key={c.id} value={c.label}>{c.label}</SelectItem>)}</SelectContent>
-                </Select>
-              ) : (
-                <Input placeholder={categoryLabel} value={tortType} onChange={(e) => setTortType(e.target.value)} className="max-w-xs" />
-              )}
+              <CategorySelect
+                value={tortType}
+                onChange={setTortType}
+                placeholder={`Select ${categoryLabel.toLowerCase()}`}
+                className="max-w-xs"
+              />
               <Input placeholder="Brand tone (e.g. empathetic, urgent)" value={brandTone} onChange={(e) => setBrandTone(e.target.value)} className="max-w-xs" />
               <Button onClick={generate} disabled={isGenerating} className="gap-2">
                 {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}

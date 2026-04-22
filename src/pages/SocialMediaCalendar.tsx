@@ -14,6 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useSocialPosts, useCreateSocialPost, useUpdateSocialPost, useDeleteSocialPost, useSocialContentAI, SocialPost } from '@/hooks/use-social-posts';
 import { usePlatformConnections, useConnectMetaPlatform } from '@/hooks/use-platform-connections';
+import { useVertical } from '@/hooks/use-vertical';
+import { useFirm } from '@/hooks/use-firm';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Calendar, Plus, Bot, Image, Video, Upload, Clock, CheckCircle, XCircle,
@@ -388,6 +390,8 @@ function CreatePostForm({ initialDate, editPost, onCreated }: { initialDate?: Da
   const updatePost = useUpdateSocialPost();
   const contentAI = useSocialContentAI();
   const { toast } = useToast();
+  const { vertical, categories } = useVertical();
+  const { data: firm } = useFirm();
 
   const [content, setContent] = useState(editPost?.content || '');
   const [platforms, setPlatforms] = useState<string[]>(editPost?.platforms || ['facebook']);
@@ -422,9 +426,10 @@ function CreatePostForm({ initialDate, editPost, onCreated }: { initialDate?: Da
     if (!aiPrompt.trim()) return;
     setGenerating(true);
     try {
+      const defaultCategory = categories[0]?.label || vertical?.name || 'general';
       const result = await contentAI.mutateAsync({
         action: 'generate_post',
-        context: { prompt: aiPrompt, platforms, tort_type: 'general mass tort' },
+        context: { prompt: aiPrompt, platforms, firm_id: firm?.id, tort_type: defaultCategory, category: defaultCategory },
       });
       if (result.content) setContent(result.content);
       toast({ title: 'Content generated!' });

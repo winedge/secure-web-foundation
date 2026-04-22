@@ -226,7 +226,7 @@ export default function MarketPulseRadar() {
             <CardContent className="flex flex-col items-center justify-center py-16">
               <Radar className="h-12 w-12 text-muted-foreground/30 mb-4" />
               <h3 className="text-lg font-semibold text-foreground">No Scans Yet</h3>
-              <p className="text-muted-foreground text-sm mt-1">Click "Run Deep Scan" to detect emerging mass tort opportunities</p>
+              <p className="text-muted-foreground text-sm mt-1">Click "Run Deep Scan" to detect emerging market opportunities</p>
             </CardContent>
           </Card>
         ) : null}
