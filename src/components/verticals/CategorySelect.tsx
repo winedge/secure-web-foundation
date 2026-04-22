@@ -60,8 +60,11 @@ export function isCategoryFieldValid(opts: {
   const { value, required = false, hasCategories, allowFreeTextFallback = true } = opts;
   // Blocked state: no categories and no free-text fallback -> always invalid when required.
   if (!hasCategories && !allowFreeTextFallback) return !required;
+  const trimmed = (value ?? '').trim();
+  // Over-length is always invalid, regardless of `required`.
+  if (trimmed.length > 100) return false;
   if (!required) return true;
-  return (value ?? '').trim().length > 0;
+  return trimmed.length > 0;
 }
 
 /**
