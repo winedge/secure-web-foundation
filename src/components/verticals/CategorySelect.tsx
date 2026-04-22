@@ -204,6 +204,41 @@ export function CategorySelect({
     void supabase.from('category_select_events').insert(payload);
   }, [isLoading, categories.length, vertical?.slug, vertical?.name, allowFreeTextFallback, debug]);
 
+  // Track clicks on the "Manage categories" link from empty states.
+  // Captures vertical and current empty state so admins can see whether
+  // users react more to soft empties (free-text) or blocked empties.
+  const handleManageCategoriesClick = () => {
+    const verticalSlug = vertical?.slug ?? 'unknown';
+    const emptyState: 'empty_freetext' | 'empty_blocked' = allowFreeTextFallback
+      ? 'empty_freetext'
+      : 'empty_blocked';
+    const payload = {
+      state: `manage_click:${emptyState}`,
+      vertical_slug: verticalSlug,
+      vertical_name: vertical?.name ?? null,
+      category_count: categories.length,
+      allow_free_text_fallback: allowFreeTextFallback,
+      is_missing: true,
+    };
+
+    let debugEnabled = debug;
+    if (!debugEnabled && typeof window !== 'undefined') {
+      try {
+        const url = new URL(window.location.href);
+        debugEnabled =
+          url.searchParams.get('debugCategorySelect') === '1' ||
+          window.localStorage?.getItem('debugCategorySelect') === '1';
+      } catch {
+        // Ignore URL/storage access errors.
+      }
+    }
+    if (debugEnabled) {
+      // eslint-disable-next-line no-console
+      console.log('[CategorySelect] manage_categories_click', { ...payload, source_state: emptyState });
+    }
+
+    void supabase.from('category_select_events').insert(payload);
+  };
 
   // Compute inline error: external > over-length (always) > required (after touch/submit).
   // Over-length is shown immediately because the input is `maxLength=100` capped, so
@@ -349,6 +384,7 @@ export function CategorySelect({
           </p>
           <Link
             to={MANAGE_CATEGORIES_HREF}
+            onClick={handleManageCategoriesClick}
             className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1 shrink-0"
           >
             <Settings2 className="h-3 w-3" />
@@ -379,6 +415,7 @@ export function CategorySelect({
           </span>
           <Link
             to={MANAGE_CATEGORIES_HREF}
+            onClick={handleManageCategoriesClick}
             className="font-medium text-primary hover:underline inline-flex items-center gap-1 shrink-0"
           >
             <Settings2 className="h-3 w-3" />
