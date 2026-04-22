@@ -5,11 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Crown, Loader2, Sparkles, Wallet } from 'lucide-react';
-import { useSubscription, SUBSCRIPTION_TIERS } from '@/hooks/use-subscription';
+import { useSubscription, SUBSCRIPTION_TIERS, priceIdForTier } from '@/hooks/use-subscription';
 import { openCustomerPortal } from '@/hooks/use-subscription';
 import { supabase } from '@/integrations/supabase/client';
 import { useFirm } from '@/hooks/use-firm';
-import { formatCurrency } from '@/lib/utils';
+import { useCurrency } from '@/hooks/use-currency';
+import { formatMoney } from '@/lib/currency';
 import { toast } from 'sonner';
 
 export default function Pricing() {
