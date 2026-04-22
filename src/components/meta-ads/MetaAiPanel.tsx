@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMetaAiAssistant, useCreateMetaCampaign, useCreateMetaAdSet, useCreateMetaAd, useMetaCampaigns, useMetaAiLogs } from '@/hooks/use-meta-campaigns';
 import { useFirm } from '@/hooks/use-firm';
-import { useTortTypes } from '@/hooks/use-tort-types';
+import { useVertical } from '@/hooks/use-vertical';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +29,8 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
   const { data: firm } = useFirm();
   const { data: campaigns } = useMetaCampaigns();
   const { data: aiLogs } = useMetaAiLogs(campaignId || undefined);
-  const { data: tortTypes } = useTortTypes();
+  const { categories, term, vertical } = useVertical();
+  const categoryLabel = term('category_label', 'Category');
   const aiAssistant = useMetaAiAssistant();
   const createCampaign = useCreateMetaCampaign();
   const createAdSet = useCreateMetaAdSet();

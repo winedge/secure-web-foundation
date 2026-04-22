@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useVertical } from '@/hooks/use-vertical';
 
 const US_STATES = [
   'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
@@ -31,22 +32,9 @@ const US_STATES = [
   'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
 ];
 
-const TORT_TYPES = [
-  'Personal Injury',
-  'Medical Malpractice',
-  'Product Liability',
-  'Workers Compensation',
-  'Auto Accident',
-  'Slip and Fall',
-  'Wrongful Death',
-  'Mass Tort',
-  'Pharmaceutical',
-  'Environmental',
-];
-
 const campaignSchema = z.object({
   name: z.string().min(1, 'Campaign name is required'),
-  tort_type: z.string().min(1, 'Tort type is required'),
+  tort_type: z.string().min(1, 'Category is required'),
   target_states: z.array(z.string()).optional(),
   target_age_min: z.number().min(18).max(100).optional().nullable(),
   target_age_max: z.number().min(18).max(100).optional().nullable(),
@@ -67,6 +55,8 @@ interface CampaignFormProps {
 
 export function CampaignForm({ open, onOpenChange, campaign, onSubmit, isLoading }: CampaignFormProps) {
   const isEditing = !!campaign;
+  const { categories, term, vertical } = useVertical();
+  const categoryLabel = term('category_label', 'Category');
 
   const form = useForm<CampaignFormValues>({
     resolver: zodResolver(campaignSchema),
@@ -105,6 +95,10 @@ export function CampaignForm({ open, onOpenChange, campaign, onSubmit, isLoading
     });
   };
 
+  const namePlaceholder = vertical?.slug === 'mass_tort'
+    ? 'e.g., Q1 Auto Accident Campaign'
+    : `e.g., Q1 ${categories[0]?.label || 'Lead Acquisition'} Campaign`;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -130,7 +124,7 @@ export function CampaignForm({ open, onOpenChange, campaign, onSubmit, isLoading
                     <Label htmlFor="name">Campaign Name</Label>
                     <Input
                       id="name"
-                      placeholder="e.g., Q1 Auto Accident Campaign"
+                      placeholder={namePlaceholder}
                       {...form.register('name')}
                     />
                     {form.formState.errors.name && (
@@ -139,22 +133,30 @@ export function CampaignForm({ open, onOpenChange, campaign, onSubmit, isLoading
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="tort_type">Tort Type</Label>
-                    <Select
-                      value={form.watch('tort_type')}
-                      onValueChange={(value) => form.setValue('tort_type', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select tort type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TORT_TYPES.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="tort_type">{categoryLabel}</Label>
+                    {categories.length > 0 ? (
+                      <Select
+                        value={form.watch('tort_type')}
+                        onValueChange={(value) => form.setValue('tort_type', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={`Select ${categoryLabel.toLowerCase()}`} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((c) => (
+                            <SelectItem key={c.id} value={c.label}>
+                              {c.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        id="tort_type"
+                        placeholder={`Enter ${categoryLabel.toLowerCase()}`}
+                        {...form.register('tort_type')}
+                      />
+                    )}
                     {form.formState.errors.tort_type && (
                       <p className="text-sm text-destructive">{form.formState.errors.tort_type.message}</p>
                     )}
