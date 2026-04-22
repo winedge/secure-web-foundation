@@ -93,6 +93,32 @@ export function CategorySelect({
     }
   }, [isLoading, categories, value]);
 
+  // Analytics: track which state CategorySelect renders in per vertical.
+  // Dedupe per (verticalSlug, state) within this component instance so we
+  // don't spam events on every re-render.
+  const trackedStateRef = useRef<string | null>(null);
+  useEffect(() => {
+    const verticalSlug = vertical?.slug ?? 'unknown';
+    const state: 'loading' | 'has_categories' | 'empty_freetext' | 'empty_blocked' = isLoading
+      ? 'loading'
+      : categories.length > 0
+        ? 'has_categories'
+        : allowFreeTextFallback
+          ? 'empty_freetext'
+          : 'empty_blocked';
+    const key = `${verticalSlug}:${state}`;
+    if (trackedStateRef.current === key) return;
+    trackedStateRef.current = key;
+    trackEvent('category_select_state', {
+      state,
+      vertical_slug: verticalSlug,
+      vertical_name: vertical?.name ?? null,
+      category_count: categories.length,
+      allow_free_text_fallback: allowFreeTextFallback,
+      is_missing: state === 'empty_freetext' || state === 'empty_blocked',
+    });
+  }, [isLoading, categories.length, vertical?.slug, vertical?.name, allowFreeTextFallback]);
+
   // Compute inline error: external > internal required check
   const trimmed = (value ?? '').trim();
   const internalError =
