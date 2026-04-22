@@ -37,7 +37,7 @@ export default function CreativeStudio() {
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('ai-creative-studio', {
-        body: { firm_id: firm?.id, brief, tort_type: tortType, category: tortType, brand_tone: brandTone, num_variants: 6 },
+        body: { firm_id: firm?.id, brief, category: tortType, brand_tone: brandTone, num_variants: 6 },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

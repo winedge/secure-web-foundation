@@ -20,7 +20,7 @@ export default function IntentSignalTracker() {
   const scan = async () => {
     setIsScanning(true);
     try {
-      const { data, error } = await supabase.functions.invoke('intent-signals', { body: { firm_id: firm?.id, tort_type: tortType, category: tortType } });
+      const { data, error } = await supabase.functions.invoke('intent-signals', { body: { firm_id: firm?.id, category: tortType } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data);

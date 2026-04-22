@@ -20,7 +20,7 @@ export default function ViralContentEngine() {
   const analyze = async () => {
     setIsAnalyzing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('viral-content', { body: { firm_id: firm?.id, tort_type: tortType, category: tortType } });
+      const { data, error } = await supabase.functions.invoke('viral-content', { body: { firm_id: firm?.id, category: tortType } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data);

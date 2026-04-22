@@ -32,7 +32,7 @@ export default function CrossPlatformAutopilot() {
     setIsOptimizing(true);
     try {
       const { data, error } = await supabase.functions.invoke('cross-platform-autopilot', {
-        body: { firm_id: firm?.id, total_budget: parseFloat(budget), tort_type: tortType, category: tortType },
+        body: { firm_id: firm?.id, total_budget: parseFloat(budget), category: tortType },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

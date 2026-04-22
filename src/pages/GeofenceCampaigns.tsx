@@ -26,7 +26,7 @@ export default function GeofenceCampaigns() {
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('geofence-engine', {
-        body: { firm_id: firm?.id, tort_type: tortType, category: tortType, radius_meters: parseInt(radius), locations: ['courthouses', 'hospitals', 'chiropractors', 'competitor offices'] },
+        body: { firm_id: firm?.id, category: tortType, radius_meters: parseInt(radius), locations: ['courthouses', 'hospitals', 'chiropractors', 'competitor offices'] },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
