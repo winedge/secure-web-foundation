@@ -41,6 +41,8 @@ interface CategorySelectProps {
   showError?: boolean;
   /** Custom required-error text. */
   requiredMessage?: string;
+  /** When true, show clickable example chips in the free-text empty state. Default: true */
+  showExampleChips?: boolean;
 }
 
 /**
@@ -66,6 +68,7 @@ export function CategorySelect({
   error,
   showError = false,
   requiredMessage,
+  showExampleChips = true,
 }: CategorySelectProps) {
   const { t } = useTranslation();
   const { categories, term, isLoading, vertical } = useVertical();
