@@ -247,7 +247,6 @@ export function CategorySelect({
               : t('categorySelect.enterPlaceholder', { label: labelLower })
           }
           className={cn(className, errorClass)}
-          maxLength={100}
           {...ariaProps}
         />
         {showExampleChips && examples.length > 0 && (
