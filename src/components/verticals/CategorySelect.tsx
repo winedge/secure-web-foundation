@@ -79,6 +79,13 @@ export function CategorySelect({
 
   const [touched, setTouched] = useState(false);
 
+  // Persist touched once a submit attempt (showError) has occurred, so the
+  // inline error keeps showing across re-renders even if the parent later
+  // toggles showError off or categories reload and swap the inner variant.
+  useEffect(() => {
+    if (showError && !touched) setTouched(true);
+  }, [showError, touched]);
+
   // Auto-clear value only if categories have loaded and the current value
   // is no longer one of the available options. Preserves value across reloads
   // and while loading. Skips clearing when free-text fallback is active
