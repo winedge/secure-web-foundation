@@ -19,6 +19,7 @@ import { useVertical } from '@/hooks/use-vertical';
 import { VERTICAL_PRESETS } from '@/lib/verticals/presets';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { trackEvent } from '@/lib/posthog';
 
 const MANAGE_CATEGORIES_HREF = '/settings?tab=tort-types';
 
