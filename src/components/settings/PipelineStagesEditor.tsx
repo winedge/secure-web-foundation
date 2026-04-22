@@ -6,8 +6,8 @@
  * RPC) so the firm can edit/delete/reorder freely without touching the system preset.
  * Reset-to-defaults deletes all firm rows for the vertical, falling back to system stages.
  */
-import { useMemo, useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useFirm } from '@/hooks/use-firm';
 import { useVertical } from '@/hooks/use-vertical';
