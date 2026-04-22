@@ -58,8 +58,10 @@ const ALL_MODULES: { key: ModuleKey; label: string }[] = [
 export function VerticalSettingsTab() {
   const { data: firm } = useFirm();
   const { vertical, terminology, enabledModules, refetch, isLoading } = useVertical();
+  const { isAdmin } = useIsAdmin();
   const queryClient = useQueryClient();
   const [pendingSwitch, setPendingSwitch] = useState<string | null>(null);
+  const [adminMode, setAdminMode] = useState(false);
 
   // Load list of all available verticals
   const { data: allVerticals } = useQuery({
