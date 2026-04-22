@@ -53,6 +53,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { usePiiMasking } from '@/hooks/use-pii-masking';
+import { useVertical } from '@/hooks/use-vertical';
 
 function LeadNotesPanel({ leadId }: { leadId: string }) {
   const { data: notes, isLoading } = useLeadNotes(leadId);
@@ -402,6 +403,7 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
 export default function MyLeads() {
   const isMobile = useIsMobile();
   const { isPiiMaskingEnabled } = usePiiMasking();
+  const { term } = useVertical();
   const { data: leads, isLoading } = usePurchasedLeads();
   const { data: sourcesMap } = useLeadSources();
   const updateStage = useUpdatePipelineStage();
@@ -524,8 +526,8 @@ export default function MyLeads() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">My Leads</h1>
-            <p className="text-muted-foreground mt-1">Manage your leads through the pipeline</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">My {term('lead_plural', 'Leads')}</h1>
+            <p className="text-muted-foreground mt-1">Manage your {term('lead_plural', 'leads').toLowerCase()} through the {term('pipeline_title', 'pipeline').toLowerCase()}</p>
           </div>
           <Button
             variant="outline"

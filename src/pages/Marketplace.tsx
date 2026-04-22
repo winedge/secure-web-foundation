@@ -11,6 +11,7 @@ import { useLeads, useLeadSources, LeadFilters } from '@/hooks/use-leads';
 import { useRealtimeLeads } from '@/hooks/use-realtime-leads';
 import { useAuth } from '@/lib/auth-context';
 import { useFirm } from '@/hooks/use-firm';
+import { useVertical } from '@/hooks/use-vertical';
 
 const tortTypes = ['Camp Lejeune', 'Roundup', 'Talcum Powder', 'AFFF', 'Paraquat', '3M Earplugs'];
 const states = ['CA', 'TX', 'FL', 'NY', 'PA', 'IL', 'OH', 'GA', 'NC', 'MI'];
@@ -20,6 +21,7 @@ type SortOption = 'newest' | 'oldest' | 'price-low' | 'price-high' | 'score-high
 export default function Marketplace() {
   const { user, loading } = useAuth();
   const { data: firm, isLoading: firmLoading } = useFirm();
+  const { term, vertical } = useVertical();
   const navigate = useNavigate();
   const [filters, setFilters] = useState<LeadFilters>({});
   const [sortBy, setSortBy] = useState<SortOption>('newest');
@@ -98,9 +100,9 @@ export default function Marketplace() {
     <DashboardLayout>
       <div>
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold">Lead Marketplace</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">{term('marketplace_title', 'Lead Marketplace')}</h1>
           <p className="text-muted-foreground mt-1">
-            Browse and purchase AI-verified mass tort leads
+            Browse and purchase AI-verified {vertical?.name || 'industry'} {term('lead_plural', 'leads').toLowerCase()}
           </p>
         </div>
 

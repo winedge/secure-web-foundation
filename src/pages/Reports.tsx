@@ -23,6 +23,7 @@ import { TrendingUp, DollarSign, ShoppingCart, Target, Calendar, MapPin, BarChar
 import { MetaDemographicReporting } from '@/components/reports/MetaDemographicReporting';
 import { ReportScheduleManager } from '@/components/reports/ReportScheduleManager';
 import { ROIPerformanceReport } from '@/components/reports/ROIPerformanceReport';
+import { useVertical } from '@/hooks/use-vertical';
 
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 const TIER_COLORS = {
@@ -34,6 +35,7 @@ const TIER_COLORS = {
 
 export default function Reports() {
   const { data: reports, isLoading } = useReportsData();
+  const { term } = useVertical();
 
   if (isLoading) {
     return (
@@ -79,7 +81,7 @@ export default function Reports() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Reports & Analytics</h1>
           <p className="text-muted-foreground">
-            Track your lead acquisition performance and spending trends
+            Track your {term('lead_singular', 'lead').toLowerCase()} acquisition performance and spending trends
           </p>
         </div>
 
