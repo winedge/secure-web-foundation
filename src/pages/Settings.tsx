@@ -62,7 +62,8 @@ export default function Settings() {
 
   // Determine default tab from URL
   const tabParam = searchParams.get('tab');
-  const defaultTab = tabParam === 'connections' ? 'connections' : tabParam === 'chatbot' ? 'chatbot' : 'profile';
+  const ALLOWED_TABS = ['profile', 'firm', 'chatbot', 'industry', 'tort-types', 'connections', 'notifications', 'security'];
+  const defaultTab = tabParam && ALLOWED_TABS.includes(tabParam) ? tabParam : 'profile';
 
   // Load chatbot settings from branding
   useEffect(() => {

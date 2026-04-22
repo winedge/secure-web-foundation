@@ -8,9 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Info } from 'lucide-react';
+import { Info, Settings2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useVertical } from '@/hooks/use-vertical';
 import { cn } from '@/lib/utils';
+
+const MANAGE_CATEGORIES_HREF = '/settings?tab=tort-types';
 
 interface CategorySelectProps {
   value: string;
@@ -85,26 +88,44 @@ export function CategorySelect({
           placeholder={`Enter ${labelLower}`}
           className={className}
         />
-        <p className="text-xs text-muted-foreground flex items-start gap-1.5">
-          <Info className="h-3 w-3 mt-0.5 shrink-0" />
-          <span>
-            No {labelLower} options configured for {verticalName}. Type a value or add categories in Settings.
-          </span>
-        </p>
+        <div className="flex items-start justify-between gap-2 flex-wrap">
+          <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+            <Info className="h-3 w-3 mt-0.5 shrink-0" />
+            <span>
+              No {labelLower} options configured for {verticalName}. Type a value or add categories.
+            </span>
+          </p>
+          <Link
+            to={MANAGE_CATEGORIES_HREF}
+            className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1 shrink-0"
+          >
+            <Settings2 className="h-3 w-3" />
+            Manage {labelLower}s
+          </Link>
+        </div>
       </div>
     );
   } else {
     content = (
       <div
         className={cn(
-          'flex items-start gap-2 rounded-md border border-dashed border-border bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground',
+          'flex items-start justify-between gap-3 rounded-md border border-dashed border-border bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground',
           className,
         )}
       >
-        <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-        <span>
-          No {labelLower} options configured for {verticalName}. Add categories in Settings to enable this filter.
+        <span className="flex items-start gap-2">
+          <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+          <span>
+            No {labelLower} options configured for {verticalName}.
+          </span>
         </span>
+        <Link
+          to={MANAGE_CATEGORIES_HREF}
+          className="font-medium text-primary hover:underline inline-flex items-center gap-1 shrink-0"
+        >
+          <Settings2 className="h-3 w-3" />
+          Manage {labelLower}s
+        </Link>
       </div>
     );
   }
