@@ -182,6 +182,35 @@ export function VerticalSettingsTab() {
 
   return (
     <div className="space-y-6">
+      {/* Super-admin platform-mode banner */}
+      {isAdmin && (
+        <Card className="border-destructive/40 bg-destructive/5">
+          <CardContent className="flex items-center justify-between gap-4 py-4">
+            <div className="flex items-start gap-3">
+              <Shield className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+              <div>
+                <div className="text-sm font-semibold">Super admin: Platform settings mode</div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {adminMode
+                    ? `You are editing the SYSTEM defaults for ${vertical?.name}. Changes apply to every firm on this industry that hasn't customized their own settings.`
+                    : 'Toggle this to edit the system-wide defaults for this industry vertical instead of your firm overrides.'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Label htmlFor="admin-mode-toggle" className="text-xs text-muted-foreground">
+                {adminMode ? 'System' : 'Firm'}
+              </Label>
+              <Switch
+                id="admin-mode-toggle"
+                checked={adminMode}
+                onCheckedChange={setAdminMode}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Current Vertical */}
       <Card>
         <CardHeader>
