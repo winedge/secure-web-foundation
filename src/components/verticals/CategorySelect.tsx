@@ -160,8 +160,23 @@ export function CategorySelect({
       </Select>
     );
   } else if (allowFreeTextFallback) {
-    const examples =
-      VERTICAL_PRESETS.find((p) => p.slug === vertical?.slug)?.exampleCategories?.slice(0, 3) ?? [];
+    // Sanitize preset examples: trim whitespace, drop empties, dedupe (case-insensitive),
+    // then cap at 3. Falls back to an empty list when the vertical preset is missing
+    // or has no `exampleCategories`, so the placeholder/chips never render bad values.
+    const rawExamples =
+      VERTICAL_PRESETS.find((p) => p.slug === vertical?.slug)?.exampleCategories ?? [];
+    const seen = new Set<string>();
+    const examples: string[] = [];
+    for (const raw of rawExamples) {
+      if (typeof raw !== 'string') continue;
+      const trimmed = raw.trim();
+      if (!trimmed) continue;
+      const key = trimmed.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      examples.push(trimmed);
+      if (examples.length === 3) break;
+    }
     content = (
       <div className="space-y-1.5">
         <Input
