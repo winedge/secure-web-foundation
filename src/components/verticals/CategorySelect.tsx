@@ -11,6 +11,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Info, Settings2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useVertical } from '@/hooks/use-vertical';
+import { VERTICAL_PRESETS } from '@/lib/verticals/presets';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 const MANAGE_CATEGORIES_HREF = '/settings?tab=tort-types';
