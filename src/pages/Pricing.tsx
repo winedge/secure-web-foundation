@@ -14,13 +14,21 @@ import { formatMoney } from '@/lib/currency';
 import { toast } from 'sonner';
 
 export default function Pricing() {
-  const { tier: currentTier, subscribed, subscriptionEnd, loading } = useSubscription();
+  const { tier: currentTier, subscribed, subscriptionEnd } = useSubscription();
   const { data: firm } = useFirm();
+  const { currency } = useCurrency();
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [walletLoading, setWalletLoading] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const walletBalance = Number(firm?.wallet_balance || 0);
+
+  // Map a tier to its localized price + Stripe price ID for the user's currency.
+  const tierPricing = (key: 'basic' | 'premium') => {
+    const t = SUBSCRIPTION_TIERS[key];
+    const price = currency === 'INR' ? t.price_inr : t.price;
+    return { price, priceId: priceIdForTier(key, currency) };
+  };
 
   const handleSubscribe = async (priceId: string, tierKey: string) => {
     setCheckoutLoading(tierKey);
