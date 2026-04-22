@@ -1,32 +1,70 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, Zap, BarChart3, Menu, X } from 'lucide-react';
+import { ArrowRight, Shield, Zap, BarChart3, Menu, X, Scale, Sparkles, Home, Sun, Smile, Wrench, Layers, Settings2, Workflow } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import logoImg from '@/assets/leadthru-logo.png';
 import logoDark from '@/assets/leadthru-logo-dark.png';
+import { VERTICAL_PRESETS } from '@/lib/verticals/presets';
+
+const ICON_MAP: Record<string, typeof Scale> = {
+  Scale,
+  Sparkles,
+  Home,
+  Sun,
+  Smile,
+  Wrench,
+};
 
 const features = [
   {
     icon: Shield,
     title: 'AI-Verified Leads',
-    description: 'Every lead is scored and verified using advanced AI to ensure quality and reduce fraud.',
+    description: 'Every lead is scored, deduplicated, and verified by AI to ensure quality and reduce fraud across any industry.',
   },
   {
     icon: Zap,
     title: 'Instant Access',
-    description: 'Purchase leads instantly and unlock full contact details with one-click.',
+    description: 'Purchase leads instantly and unlock full contact details with one click | no waiting, no friction.',
   },
   {
     icon: BarChart3,
     title: 'Transparent Pricing',
-    description: 'See lead quality scores and pricing upfront. No hidden fees or surprises.',
+    description: 'See lead quality scores and pricing upfront. No hidden fees, no surprises, no minimum contracts.',
+  },
+];
+
+const adaptivePillars = [
+  {
+    icon: Workflow,
+    title: 'Pipeline Stages Adapt',
+    description: 'Stages, fees, and statuses match your industry | from "Retainer Signed" to "Site Survey" to "Booked".',
+  },
+  {
+    icon: Settings2,
+    title: 'Intake Fields Adapt',
+    description: 'Forms, fields, and chatbots auto-configure to capture exactly what your vertical needs.',
+  },
+  {
+    icon: Layers,
+    title: 'AI Prompts Adapt',
+    description: 'Scoring, evaluation, and creative generation all use industry-tuned prompts | not a generic one-size-fits-all.',
   },
 ];
 
 export default function Index() {
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [verticalIndex, setVerticalIndex] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setVerticalIndex((i) => (i + 1) % VERTICAL_PRESETS.length);
+    }, 3000);
+    return () => clearInterval(id);
+  }, []);
+
+  const currentVertical = VERTICAL_PRESETS[verticalIndex];
 
   return (
     <div className="min-h-screen">
@@ -87,14 +125,26 @@ export default function Index() {
 
           {/* Hero Content */}
           <div className="flex-1 flex items-center py-12 sm:py-20">
-            <div className="max-w-2xl">
+            <div className="max-w-3xl">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight">
-                Mass Tort Leads,{' '}
-                <span className="text-accent">AI-Verified</span>
+                AI-Verified Leads{' '}
+                <span className="text-accent">For Every Industry</span>
               </h1>
-              <p className="text-base sm:text-lg md:text-xl text-white/80 mb-6 sm:mb-8 max-w-xl">
-                Access the most transparent marketplace for verified mass tort leads. 
-                AI-scored, compliance-ready, and available for instant purchase.
+
+              {/* Rotating vertical name */}
+              <div className="mb-5 sm:mb-7 h-8 sm:h-10 flex items-center">
+                <span className="text-white/60 text-sm sm:text-base mr-2">Built for</span>
+                <span
+                  key={currentVertical.slug}
+                  className="text-accent text-lg sm:text-2xl font-semibold animate-fade-in"
+                >
+                  {currentVertical.name}
+                </span>
+              </div>
+
+              <p className="text-base sm:text-lg md:text-xl text-white/80 mb-6 sm:mb-8 max-w-2xl">
+                The most transparent marketplace for verified, high-intent leads | scored, compliance-ready,
+                and instantly accessible across legal, medical, real estate, solar, dental, and home-service verticals.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground text-base sm:text-lg px-6 sm:px-8">
@@ -112,13 +162,41 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Industries Strip */}
+      <section className="py-12 sm:py-16 bg-card border-b border-border">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="text-center mb-8 sm:mb-10">
+            <p className="text-xs sm:text-sm font-semibold tracking-wider uppercase text-muted-foreground mb-2">
+              Industries We Power
+            </p>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">One platform | every vertical</h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            {VERTICAL_PRESETS.map((v) => {
+              const Icon = ICON_MAP[v.icon] ?? Layers;
+              return (
+                <div
+                  key={v.slug}
+                  className="flex flex-col items-center text-center p-4 rounded-xl bg-background border border-border hover:border-accent/50 hover:shadow-md transition-all duration-300"
+                >
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-accent/10 flex items-center justify-center mb-2 sm:mb-3">
+                    <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-accent" />
+                  </div>
+                  <span className="text-xs sm:text-sm font-medium leading-tight">{v.name}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="py-16 sm:py-24 bg-background">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center mb-10 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Why Law Firms Choose LeadsThru</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Why Teams Choose LeadsThru</h2>
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              The smarter way to acquire high-quality mass tort leads
+              The smarter way to acquire high-quality leads | no matter what you sell
             </p>
           </div>
 
@@ -139,12 +217,40 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Built for your workflow */}
+      <section className="py-16 sm:py-24 bg-card border-y border-border">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Built For Your Workflow</h2>
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+              Choose your industry once | the entire platform reshapes around it
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {adaptivePillars.map((pillar) => (
+              <div
+                key={pillar.title}
+                className="p-6 sm:p-8 rounded-2xl bg-background border border-border hover:border-accent/40 transition-all duration-300"
+              >
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-accent/10 flex items-center justify-center mb-4 sm:mb-6">
+                  <pillar.icon className="h-6 w-6 sm:h-7 sm:w-7 text-accent" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">{pillar.title}</h3>
+                <p className="text-sm sm:text-base text-muted-foreground">{pillar.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-16 sm:py-24 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">Ready to Get Started?</h2>
-          <p className="text-base sm:text-lg md:text-xl opacity-80 mb-6 sm:mb-8 max-w-xl mx-auto">
-            Join hundreds of law firms already using LeadsThru to grow their practice.
+          <p className="text-base sm:text-lg md:text-xl opacity-80 mb-6 sm:mb-8 max-w-2xl mx-auto">
+            Join firms and businesses across legal, medical, real estate, solar, dental, and home-service industries
+            already using LeadsThru to grow.
           </p>
           <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground text-base sm:text-lg px-6 sm:px-8">
             <Link to="/auth?mode=signup">
@@ -161,7 +267,7 @@ export default function Index() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <img src={logoDark} alt="LeadThru" className="h-7" />
             <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-right">
-              © 2024 LeadsThru. All rights reserved. Not a law firm. Not legal advice.
+              © 2026 LeadsThru. All rights reserved.
             </p>
           </div>
         </div>
