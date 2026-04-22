@@ -31,6 +31,7 @@ interface LeadForm {
 export function MetaLeadFormsPanel() {
   const { user } = useAuth();
   const { term } = useVertical();
+  const { data: firm } = useFirm();
   const categoryLabel = term('category_label', 'Category');
   const [forms, setForms] = useState<LeadForm[]>([]);
   const [isLoading, setIsLoading] = useState(false);
