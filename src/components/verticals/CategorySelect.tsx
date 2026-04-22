@@ -11,6 +11,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Info, Settings2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useVertical } from '@/hooks/use-vertical';
+import { VERTICAL_PRESETS } from '@/lib/verticals/presets';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 const MANAGE_CATEGORIES_HREF = '/settings?tab=tort-types';
@@ -80,14 +82,36 @@ export function CategorySelect({
       </Select>
     );
   } else if (allowFreeTextFallback) {
+    const examples =
+      VERTICAL_PRESETS.find((p) => p.slug === vertical?.slug)?.exampleCategories?.slice(0, 3) ?? [];
     content = (
       <div className="space-y-1.5">
         <Input
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={`Enter ${labelLower}`}
+          placeholder={examples.length > 0 ? `e.g. ${examples[0]}` : `Enter ${labelLower}`}
           className={className}
         />
+        {examples.length > 0 && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-xs text-muted-foreground">Try:</span>
+            {examples.map((ex) => (
+              <button
+                key={ex}
+                type="button"
+                onClick={() => onChange(ex)}
+                className="inline-flex"
+              >
+                <Badge
+                  variant="secondary"
+                  className="text-xs font-normal cursor-pointer hover:bg-secondary/80 transition-colors"
+                >
+                  {ex}
+                </Badge>
+              </button>
+            ))}
+          </div>
+        )}
         <div className="flex items-start justify-between gap-2 flex-wrap">
           <p className="text-xs text-muted-foreground flex items-start gap-1.5">
             <Info className="h-3 w-3 mt-0.5 shrink-0" />
