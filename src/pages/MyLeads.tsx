@@ -20,6 +20,7 @@ import { SettlementPredictorPanel } from '@/components/leads/SettlementPredictor
 import { BackgroundCheckerPanel } from '@/components/leads/BackgroundCheckerPanel';
 import { AiTransparencyPanel } from '@/components/leads/AiTransparencyPanel';
 import { BlockchainAuditTrail } from '@/components/leads/BlockchainAuditTrail';
+import { ModuleGateInline } from '@/components/verticals/ModuleGate';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -350,7 +351,9 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
       </TabsContent>
 
       <TabsContent value="settlement" className="mt-4">
-        {canViewFinancials ? <SettlementPredictorPanel leadId={detailLead.id} /> : <PermissionRestricted fallbackMessage="Settlement Data Restricted" />}
+        <ModuleGateInline moduleKey="settlement_predictor">
+          {canViewFinancials ? <SettlementPredictorPanel leadId={detailLead.id} /> : <PermissionRestricted fallbackMessage="Settlement Data Restricted" />}
+        </ModuleGateInline>
       </TabsContent>
 
       <TabsContent value="documents" className="mt-4">
