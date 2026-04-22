@@ -68,9 +68,11 @@ export function MetaLeadFormsPanel() {
         body: {
           action: 'fetch_form_leads',
           user_id: user.id,
+          firm_id: firm?.id,
           form_id: form.id,
           page_access_token: form.page_access_token,
           tort_type: tortType,
+          category: tortType,
         },
       });
       if (error) throw error;
@@ -95,6 +97,7 @@ export function MetaLeadFormsPanel() {
         body: {
           action: 'subscribe_lead_updates',
           user_id: user.id,
+          firm_id: firm?.id,
           page_id: form.page_id,
           page_access_token: form.page_access_token,
         },

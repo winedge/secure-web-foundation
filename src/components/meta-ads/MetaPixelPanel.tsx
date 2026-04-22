@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
+import { useFirm } from '@/hooks/use-firm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +32,7 @@ interface PixelEvent {
 
 export function MetaPixelPanel() {
   const { user } = useAuth();
+  const { data: firm } = useFirm();
   const [pixels, setPixels] = useState<PixelInfo[]>([]);
   const [selectedPixel, setSelectedPixel] = useState<PixelInfo | null>(null);
   const [events, setEvents] = useState<PixelEvent[]>([]);
@@ -44,7 +46,7 @@ export function MetaPixelPanel() {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
-        body: { action: 'verify_pixel', user_id: user.id },
+        body: { action: 'verify_pixel', user_id: user.id, firm_id: firm?.id },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -63,7 +65,7 @@ export function MetaPixelPanel() {
     setIsVerifying(true);
     try {
       const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
-        body: { action: 'verify_pixel', user_id: user.id, pixel_id: pixelId },
+        body: { action: 'verify_pixel', user_id: user.id, firm_id: firm?.id, pixel_id: pixelId },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

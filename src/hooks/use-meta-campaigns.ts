@@ -139,12 +139,15 @@ export function useCreateMetaCampaign() {
           body: {
             action: 'create_campaign',
             user_id: user?.id,
+            firm_id: firm.id,
             campaign_id: data.id,
             name: data.name,
             objective: data.objective,
             daily_budget: data.daily_budget,
             bid_strategy: data.bid_strategy,
             status: data.status,
+            tort_type: data.tort_type,
+            category: data.tort_type,
           },
         });
       } catch (syncErr) {
