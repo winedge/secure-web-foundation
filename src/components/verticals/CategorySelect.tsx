@@ -259,13 +259,6 @@ export function CategorySelect({
                 key={ex}
                 type="button"
                 onClick={() => {
-                  trackEvent('category_select_example_chip_click', {
-                    value: ex,
-                    vertical_slug: vertical?.slug ?? 'unknown',
-                    vertical_name: vertical?.name ?? null,
-                    chip_index: idx,
-                    chip_count: examples.length,
-                  });
                   onChange(ex);
                 }}
                 className="inline-flex"
