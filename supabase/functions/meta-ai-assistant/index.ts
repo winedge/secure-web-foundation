@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { createSupabaseClient } from "../_shared/auth.ts";
+import { getVerticalContext } from "../_shared/vertical.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
@@ -13,7 +14,10 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // === AI LEARNING LOOP: Fetch historical feedback for this firm ===
+    const { config: vCfg, verticalSlug } = await getVerticalContext(firm_id, "creative");
+    const verticalName = vCfg?.vertical?.name ?? "Mass Tort";
+    const subjectLower = verticalName.toLowerCase();
+
     let learningContext = "";
     if (firm_id) {
       const { data: feedback } = await supabase
@@ -26,14 +30,12 @@ serve(async (req) => {
       if (feedback?.length) {
         const positives = feedback.filter((f: any) => f.rating === "positive" && f.was_applied);
         const negatives = feedback.filter((f: any) => f.rating === "negative");
-        
         learningContext = `\n\nLEARNING FROM THIS FIRM'S HISTORY:
 - ${positives.length} positive outcomes recorded. ${positives.slice(0, 3).map((f: any) => `[${f.action_type}: ${f.feedback_text || "liked"}${f.outcome_metrics ? `, results: ${JSON.stringify(f.outcome_metrics)}` : ""}]`).join(" ")}
 - ${negatives.length} negative feedback items. ${negatives.slice(0, 3).map((f: any) => `[${f.action_type}: ${f.feedback_text || "disliked"}]`).join(" ")}
-- Adapt your recommendations based on this feedback. Repeat patterns that worked, avoid patterns they disliked.`;
+- Adapt your recommendations based on this feedback.`;
       }
 
-      // Also fetch performance snapshots for data-driven recommendations
       const { data: snapshots } = await supabase
         .from("ai_performance_snapshots")
         .select("tort_type, metrics, ai_action_applied, snapshot_type")
@@ -42,39 +44,38 @@ serve(async (req) => {
         .limit(10);
 
       if (snapshots?.length) {
-        learningContext += `\n\nHISTORICAL PERFORMANCE DATA:
-${snapshots.map((s: any) => `[${s.snapshot_type}${s.tort_type ? ` / ${s.tort_type}` : ""}${s.ai_action_applied ? ` after ${s.ai_action_applied}` : ""}: ${JSON.stringify(s.metrics)}]`).join("\n")}`;
+        learningContext += `\n\nHISTORICAL PERFORMANCE DATA:\n${snapshots.map((s: any) => `[${s.snapshot_type}${s.tort_type ? ` / ${s.tort_type}` : ""}${s.ai_action_applied ? ` after ${s.ai_action_applied}` : ""}: ${JSON.stringify(s.metrics)}]`).join("\n")}`;
       }
     }
 
+    const verticalBanner = `INDUSTRY VERTICAL: ${verticalName}. Adapt all targeting, copy, compliance language, audience signals, and KPIs to the ${subjectLower} industry. Do NOT default to legal/mass-tort phrasing unless this IS the legal vertical.`;
+
     const systemPrompts: Record<string, string> = {
-      generate_campaign: `You are a Meta Ads campaign strategist specializing in mass tort lead generation for law firms. 
-Given the tort type, target states, and budget, generate a complete campaign strategy.
+      generate_campaign: `${verticalBanner}
+You are a Meta Ads campaign strategist for the ${verticalName} industry.
+Given the category, target locations, and budget, generate a complete campaign strategy.
 Return a JSON object with:
-- campaign_name: string
-- objective: string (LEAD_GENERATION, CONVERSIONS, or TRAFFIC)
-- bid_strategy: string (LOWEST_COST, COST_CAP, BID_CAP)
-- daily_budget: number
-- recommended_duration_days: number
+- campaign_name, objective (LEAD_GENERATION, CONVERSIONS, or TRAFFIC), bid_strategy, daily_budget, recommended_duration_days
 - ad_sets: array of objects with { name, age_min, age_max, interests: string[], locations: string[], placements: string[] }
 - ads: array of objects with { name, headline, body_text, description, call_to_action }
-- rationale: string explaining the strategy`,
+- rationale: string`,
 
-      generate_ad_copy: `You are an expert Meta Ads copywriter for mass tort legal advertising. 
-Generate compelling, compliant ad copy that drives lead generation while following legal advertising regulations.
+      generate_ad_copy: `${verticalBanner}
+You are an expert Meta Ads copywriter for the ${verticalName} industry.
+Generate compelling, compliant ad copy.
 Return a JSON object with:
 - variations: array of objects with { headline (max 40 chars), body_text (max 125 chars), description (max 30 chars), call_to_action: one of LEARN_MORE/SIGN_UP/CONTACT_US/GET_QUOTE/APPLY_NOW }
 - compliance_notes: string[]`,
 
-      optimize_campaign: `You are a Meta Ads optimization AI for mass tort campaigns. 
-Analyze the campaign performance data and provide actionable recommendations.
+      optimize_campaign: `${verticalBanner}
+You are a Meta Ads optimization AI for ${verticalName} campaigns.
 Return a JSON object with:
-- recommendations: array of objects with { type: budget|targeting|creative|bidding|scheduling, priority: high|medium|low, title: string, description: string, expected_impact: string }
-- overall_health: string (excellent|good|needs_attention|critical)
+- recommendations: array of objects with { type: budget|targeting|creative|bidding|scheduling, priority: high|medium|low, title, description, expected_impact }
+- overall_health: excellent|good|needs_attention|critical
 - summary: string`,
 
-      suggest_audience: `You are a Meta Ads audience targeting expert for mass tort legal campaigns.
-Given the tort type and target geography, suggest detailed audience targeting.
+      suggest_audience: `${verticalBanner}
+You are a Meta Ads audience targeting expert for ${verticalName}.
 Return a JSON object with:
 - primary_audience: { age_min, age_max, genders: string[], interests: string[], behaviors: string[], demographics: string[] }
 - lookalike_suggestions: string[]
@@ -82,84 +83,25 @@ Return a JSON object with:
 - estimated_reach: string
 - rationale: string`,
 
-      analyze_performance: `You are a Meta Ads analytics expert. Analyze the provided campaign metrics and provide insights.
+      analyze_performance: `${verticalBanner}
+You are a Meta Ads analytics expert for ${verticalName}.
 Return a JSON object with:
-- insights: array of { metric: string, trend: up|down|stable, analysis: string }
-- action_items: array of { priority: high|medium|low, action: string, expected_result: string }
-- budget_recommendation: { current_efficiency: string, suggested_change: string, reasoning: string }
+- insights: array of { metric, trend: up|down|stable, analysis }
+- action_items: array of { priority: high|medium|low, action, expected_result }
+- budget_recommendation: { current_efficiency, suggested_change, reasoning }
 - forecast: { next_7_days: { estimated_leads: number, estimated_cpl: number, estimated_spend: number } }`,
 
-      competitor_analysis: `You are a competitive intelligence expert for mass tort legal advertising on Meta/Facebook.
-Based on the provided tort type, target states, and firm information, conduct a thorough competitor analysis.
+      competitor_analysis: `${verticalBanner}
+You are a competitive intelligence expert for ${verticalName} advertising on Meta/Facebook.
+Return JSON with: competitor_landscape, competitor_strategies[], messaging_analysis, creative_trends, budget_intelligence, differentiation_opportunities[], seasonal_insights, actionable_recommendations[]`,
 
-Analyze:
-1. Common competitor strategies for this tort type on Meta
-2. Typical ad formats, messaging angles, and creative approaches used by competing firms
-3. Estimated budget ranges competitors spend on similar campaigns
-4. Common audience targeting strategies competitors use
-5. Landing page best practices in the mass tort space
-6. Seasonal trends and timing strategies
-7. Differentiation opportunities
+      brand_study: `${verticalBanner}
+You are a brand strategist for the ${verticalName} industry.
+Return JSON with: brand_assessment, audience_personas[], messaging_framework, visual_guidelines, content_pillars[], ad_creative_briefs[], brand_voice, competitive_positioning`,
 
-Return a JSON object with:
-- competitor_landscape: { market_saturation: "low"|"medium"|"high"|"very_high", avg_cpl_estimate: string, dominant_players_count: string }
-- competitor_strategies: array of { strategy: string, prevalence: "common"|"emerging"|"rare", effectiveness: "high"|"medium"|"low", description: string }
-- messaging_analysis: { common_angles: string[], overused_phrases: string[], untapped_angles: string[] }
-- creative_trends: { popular_formats: string[], emerging_formats: string[], recommended_formats: string[] }
-- budget_intelligence: { estimated_competitor_daily_budget: string, recommended_minimum: string, sweet_spot: string, reasoning: string }
-- differentiation_opportunities: array of { opportunity: string, difficulty: "easy"|"medium"|"hard", potential_impact: "high"|"medium"|"low", how_to_execute: string }
-- seasonal_insights: { best_months: string[], worst_months: string[], current_timing: string }
-- actionable_recommendations: array of { priority: "high"|"medium"|"low", title: string, description: string }`,
-
-      brand_study: `You are a brand strategist specializing in law firm positioning and Meta advertising for mass tort cases.
-Analyze the firm's brand positioning and create a comprehensive brand-aligned advertising strategy.
-
-Based on the firm information provided, analyze:
-1. Current brand positioning strengths and weaknesses
-2. Target audience personas for mass tort clients
-3. Brand voice and messaging framework for ads
-4. Visual identity recommendations for ad creatives
-5. Trust-building strategies specific to legal advertising
-6. Content pillar recommendations
-7. Brand differentiation in a crowded market
-
-Return a JSON object with:
-- brand_assessment: { strengths: string[], weaknesses: string[], opportunities: string[], threats: string[] }
-- audience_personas: array of { name: string, age_range: string, pain_points: string[], motivations: string[], preferred_platforms: string[], messaging_tone: string }
-- messaging_framework: { primary_value_proposition: string, supporting_messages: string[], emotional_triggers: string[], trust_signals: string[], disclaimer_template: string }
-- visual_guidelines: { recommended_colors: string[], image_styles: string[], video_concepts: string[], typography_notes: string }
-- content_pillars: array of { pillar: string, description: string, content_ideas: string[], frequency: string }
-- ad_creative_briefs: array of { format: string, headline: string, body: string, visual_direction: string, target_persona: string }
-- brand_voice: { tone: string, personality_traits: string[], do_list: string[], dont_list: string[] }
-- competitive_positioning: string`,
-
-      full_strategy: `You are a senior Meta Ads strategist creating a comprehensive, self-sufficient advertising plan for a law firm.
-This should be a complete, actionable strategy that the firm can execute entirely through this platform.
-
-Create an end-to-end strategy covering:
-1. Campaign architecture (campaign > ad set > ad structure)
-2. Budget allocation across campaigns
-3. Audience segmentation strategy
-4. Creative strategy with specific ad copy and visual directions
-5. Testing framework (A/B tests to run)
-6. Optimization rules and triggers
-7. Scaling plan based on performance thresholds
-8. Retargeting funnel setup
-9. Reporting KPIs and benchmarks
-
-Return a JSON object with:
-- strategy_name: string
-- executive_summary: string
-- campaign_architecture: array of { campaign_name: string, objective: string, budget_allocation_pct: number, ad_sets: array of { name: string, audience: string, budget_pct: number } }
-- budget_plan: { total_monthly_recommended: number, phase_1_daily: number, phase_2_daily: number, scale_trigger: string }
-- audience_segments: array of { segment_name: string, description: string, age_range: string, interests: string[], targeting_method: string, estimated_size: string }
-- creative_strategy: { themes: string[], ad_formats: string[], copy_variations: array of { headline: string, body: string, cta: string }, visual_directions: string[] }
-- testing_plan: array of { test_name: string, variable: string, variants: string[], success_metric: string, duration_days: number }
-- optimization_rules: array of { trigger: string, action: string, threshold: string }
-- scaling_plan: { phase_1: string, phase_2: string, phase_3: string, when_to_scale: string, when_to_pause: string }
-- retargeting_funnel: array of { stage: string, audience: string, message: string, budget_pct: number }
-- kpis: array of { metric: string, benchmark: string, target: string }
-- timeline: array of { week: string, actions: string[] }`,
+      full_strategy: `${verticalBanner}
+You are a senior Meta Ads strategist creating a comprehensive plan for a ${verticalName} business.
+Return JSON with: strategy_name, executive_summary, campaign_architecture[], budget_plan, audience_segments[], creative_strategy, testing_plan[], optimization_rules[], scaling_plan, retargeting_funnel[], kpis[], timeline[]`,
     };
 
     const systemPrompt = systemPrompts[action];
@@ -167,10 +109,7 @@ Return a JSON object with:
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
@@ -200,7 +139,7 @@ Return a JSON object with:
       parsed = { raw: content };
     }
 
-    return jsonResponse({ result: parsed });
+    return jsonResponse({ result: parsed, vertical: verticalSlug });
   } catch (e) {
     console.error("meta-ai-assistant error:", e);
     return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);

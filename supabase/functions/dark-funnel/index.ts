@@ -1,24 +1,24 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
+import { getVerticalContext, buildSystemPrompt } from "../_shared/vertical.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
   if (corsResp) return corsResp;
 
   try {
-    const { firm_id, tort_type } = await req.json();
+    const { firm_id, tort_type, category } = await req.json();
+    const subject = category || tort_type;
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: `You are a dark funnel intelligence AI. Analyze anonymous visitor journeys to reveal the hidden buyer journey before form submission.
+    const { config, prompt: customPrompt, verticalSlug } = await getVerticalContext(firm_id, "dark_funnel");
+    const verticalName = config?.vertical?.name ?? "Mass Tort";
+
+    const systemPrompt = `${buildSystemPrompt("dark_funnel", verticalSlug, customPrompt)}
+
+Analyze anonymous visitor journeys to reveal the hidden buyer journey before form submission for the ${verticalName} industry. Use vertical-specific channels, intent signals, and decision triggers.
 
 Return JSON:
 {
@@ -34,7 +34,7 @@ Return JSON:
     "estimated_size": number,
     "behavior_pattern": "string",
     "intent_level": "low|medium|high|very_high",
-    "likely_tort_interest": "string",
+    "likely_interest": "string (vertical-specific)",
     "predicted_timeline": "string",
     "engagement_strategy": "string",
     "content_recommendations": ["string"]
@@ -42,12 +42,19 @@ Return JSON:
   "hidden_channels": [{"channel": "string", "influence_score": number, "tracking_gap": "string", "solution": "string"}],
   "attribution_gaps": ["string"],
   "recommendations": ["string"]
-}`
-          },
+}`;
+
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: `Analyze the dark funnel for ${tort_type || 'legal services'}. Reveal hidden buyer journeys, shadow visitor profiles, and attribution gaps. Provide actionable intelligence.`
-          }
+            content: `Analyze the dark funnel for ${subject || verticalName} services. Reveal hidden buyer journeys, shadow visitor profiles, and attribution gaps. Provide actionable intelligence relevant to the ${verticalName} industry.`,
+          },
         ],
         temperature: 0.4,
       }),
@@ -67,7 +74,7 @@ Return JSON:
       parsed = jsonMatch ? JSON.parse(jsonMatch[1]) : JSON.parse(content);
     } catch { parsed = { funnel_insights: {}, shadow_profiles: [] }; }
 
-    return jsonResponse(parsed);
+    return jsonResponse({ ...parsed, vertical: verticalSlug });
   } catch (e) {
     console.error("dark-funnel error:", e);
     return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);

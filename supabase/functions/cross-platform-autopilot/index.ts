@@ -1,24 +1,24 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
+import { getVerticalContext, buildSystemPrompt } from "../_shared/vertical.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
   if (corsResp) return corsResp;
 
   try {
-    const { total_budget, tort_type, current_allocation, performance_data } = await req.json();
+    const { total_budget, tort_type, category, current_allocation, performance_data, firm_id } = await req.json();
+    const subject = category || tort_type;
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: `You are a cross-platform media buying AI. Optimize budget allocation across Meta, Google, TikTok, LinkedIn, and YouTube simultaneously.
+    const { config, prompt: customPrompt, verticalSlug } = await getVerticalContext(firm_id, "autopilot");
+    const verticalName = config?.vertical?.name ?? "Mass Tort";
+
+    const systemPrompt = `${buildSystemPrompt("autopilot", verticalSlug, customPrompt)}
+
+You are a cross-platform media buying AI for the ${verticalName} industry. Optimize budget allocation across Meta, Google, TikTok, LinkedIn, and YouTube simultaneously, using ${verticalName}-appropriate channel mix and KPIs.
 
 Current allocation: ${JSON.stringify(current_allocation || {})}
 Performance data: ${JSON.stringify(performance_data || {})}
@@ -38,12 +38,16 @@ Return JSON:
   "platform_synergies": ["string"],
   "risk_assessment": "string",
   "optimization_confidence": 0.0-1.0
-}`
-          },
-          {
-            role: "user",
-            content: `Optimize $${total_budget || 5000}/month across all platforms for ${tort_type || 'personal injury'} campaigns. Maximize lead volume while minimizing CPL.`
-          }
+}`;
+
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Optimize $${total_budget || 5000}/month across all platforms for ${subject || verticalName} campaigns in the ${verticalName} industry. Maximize lead volume while minimizing CPL.` },
         ],
         temperature: 0.3,
       }),
@@ -63,7 +67,7 @@ Return JSON:
       parsed = jsonMatch ? JSON.parse(jsonMatch[1]) : JSON.parse(content);
     } catch { parsed = { error: "Could not optimize" }; }
 
-    return jsonResponse(parsed);
+    return jsonResponse({ ...parsed, vertical: verticalSlug });
   } catch (e) {
     console.error("cross-platform-autopilot error:", e);
     return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);

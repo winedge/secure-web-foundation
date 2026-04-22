@@ -11,10 +11,13 @@ interface LeadData {
   city?: string;
   state: string;
   zip_code?: string;
-  tort_type: string;
+  tort_type?: string;
+  category?: string;
+  vertical_id?: string;
   age_bucket?: string;
   diagnosis_details?: string;
   exposure_details?: string;
+  custom_fields?: Record<string, unknown>;
   source_type: 'csv_upload' | 'google_ads' | 'meta_ads' | 'dialer' | 'crm' | 'intake_form' | 'referral' | 'other';
   external_id?: string;
   metadata?: Record<string, unknown>;
@@ -23,6 +26,7 @@ interface LeadData {
 interface IngestRequest {
   leads: LeadData[];
   deduplicate?: boolean;
+  vertical_id?: string;
 }
 
 async function checkDuplicate(supabase: any, email?: string, phone?: string): Promise<{ isDuplicate: boolean; duplicateOf?: string }> {
@@ -57,13 +61,25 @@ function calculateTier(score: number): 'A' | 'B' | 'C' | 'D' {
   return 'D';
 }
 
-function calculatePrice(tier: 'A' | 'B' | 'C' | 'D', tortType: string): number {
+function calculatePrice(tier: 'A' | 'B' | 'C' | 'D', category: string): number {
+  // Vertical-aware base prices (legacy mass-tort entries preserved for backward compatibility)
   const basePrices: Record<string, number> = {
+    // Mass Tort
     'Camp Lejeune': 500, 'Roundup': 400, 'Talcum Powder': 450,
     'AFFF': 550, 'Paraquat': 500, '3M Earplugs': 350,
+    // Skin Clinic
+    'Botox': 80, 'Laser': 120, 'Acne': 60,
+    // Real Estate
+    'Buy': 150, 'Sell': 200, 'Rent': 60,
+    // Solar
+    'Residential': 180, 'Commercial': 350, 'Battery': 120,
+    // Dental
+    'Implants': 200, 'Ortho': 150, 'Cosmetic': 100,
+    // Home Services
+    'HVAC': 90, 'Plumbing': 70, 'Roofing': 130,
   };
   const tierMultipliers: Record<string, number> = { 'A': 1.5, 'B': 1.0, 'C': 0.7, 'D': 0.4 };
-  return Math.round((basePrices[tortType] || 400) * tierMultipliers[tier]);
+  return Math.round((basePrices[category] || 100) * tierMultipliers[tier]);
 }
 
 serve(async (req) => {
@@ -120,7 +136,8 @@ serve(async (req) => {
 
         const qualityScore = calculateQualityScore(lead);
         const tier = calculateTier(qualityScore);
-        const price = calculatePrice(tier, lead.tort_type);
+        const category = lead.category || lead.tort_type || 'general';
+        const price = calculatePrice(tier, category);
 
         const { data: insertedLead, error: insertError } = await supabase
           .from('leads')
@@ -128,7 +145,11 @@ serve(async (req) => {
             first_name: lead.first_name, last_name: lead.last_name,
             email: lead.email, phone: lead.phone, address: lead.address,
             city: lead.city, state: lead.state, zip_code: lead.zip_code,
-            tort_type: lead.tort_type, age_bucket: lead.age_bucket,
+            tort_type: lead.tort_type || category,
+            category: category,
+            vertical_id: lead.vertical_id || body.vertical_id || null,
+            custom_fields: lead.custom_fields || {},
+            age_bucket: lead.age_bucket,
             diagnosis_details: lead.diagnosis_details, exposure_details: lead.exposure_details,
             ai_quality_score: qualityScore, tier, price, status: initialStatus,
             source_id: sourceMap.get(lead.source_type), external_id: lead.external_id,

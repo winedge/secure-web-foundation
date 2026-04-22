@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { createSupabaseClient } from "../_shared/auth.ts";
+import { getVerticalContext, buildSystemPrompt } from "../_shared/vertical.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
@@ -12,7 +13,9 @@ serve(async (req) => {
     const { firm_id, platform } = await req.json();
     if (!firm_id) throw new Error("firm_id required");
 
-    // Gather all historical data for learning
+    const { config, prompt: customPrompt, verticalSlug } = await getVerticalContext(firm_id, "autopilot");
+    const verticalName = config?.vertical?.name ?? "Mass Tort";
+
     const [feedbackRes, autopilotRes, analyticsRes, campaignsRes, snapshotsRes] = await Promise.all([
       supabase.from("ai_feedback").select("*").eq("firm_id", firm_id).order("created_at", { ascending: false }).limit(50),
       supabase.from("autopilot_logs").select("*").eq("firm_id", firm_id).order("created_at", { ascending: false }).limit(50),
@@ -22,53 +25,29 @@ serve(async (req) => {
     ]);
 
     const learningContext = {
-      feedback: (feedbackRes.data || []).map(f => ({
-        action: f.action_type,
-        rating: f.rating,
-        outcome: f.outcome_metrics,
-        applied: f.was_applied,
+      feedback: (feedbackRes.data || []).map((f: any) => ({
+        action: f.action_type, rating: f.rating, outcome: f.outcome_metrics, applied: f.was_applied,
       })),
-      autopilot_actions: (autopilotRes.data || []).map(a => ({
-        action: a.action_taken,
-        reasoning: a.ai_reasoning,
-        details: a.details,
+      autopilot_actions: (autopilotRes.data || []).map((a: any) => ({
+        action: a.action_taken, reasoning: a.ai_reasoning, details: a.details,
       })),
-      analytics_trends: (analyticsRes.data || []).slice(0, 30).map(a => ({
-        date: a.date,
-        spend: a.spend,
-        leads: a.leads,
-        cpl: a.cpl,
-        ctr: a.ctr,
+      analytics_trends: (analyticsRes.data || []).slice(0, 30).map((a: any) => ({
+        date: a.date, spend: a.spend, leads: a.leads, cpl: a.cpl, ctr: a.ctr,
       })),
-      campaigns: (campaignsRes.data || []).map(c => ({
-        name: c.name,
-        status: c.status,
-        objective: c.objective,
-        tort_type: c.tort_type,
-        daily_budget: c.daily_budget,
+      campaigns: (campaignsRes.data || []).map((c: any) => ({
+        name: c.name, status: c.status, objective: c.objective, tort_type: c.tort_type, daily_budget: c.daily_budget,
       })),
-      snapshots: (snapshotsRes.data || []).map(s => ({
-        type: s.snapshot_type,
-        metrics: s.metrics,
-        action: s.ai_action_applied,
+      snapshots: (snapshotsRes.data || []).map((s: any) => ({
+        type: s.snapshot_type, metrics: s.metrics, action: s.ai_action_applied,
       })),
     };
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: `You are an autonomous self-learning AI for legal marketing campaigns across Meta and Google Ads. Your job is to:
+    const systemPrompt = `${buildSystemPrompt("autopilot", verticalSlug, customPrompt)}
+
+You are an autonomous self-learning AI for ${verticalName} industry marketing campaigns across Meta and Google Ads. Your job is to:
 
 1. ANALYZE all historical campaign data, AI feedback, and autopilot actions
 2. IDENTIFY patterns: what worked, what failed, what can be improved
@@ -76,14 +55,14 @@ serve(async (req) => {
 4. PRESCRIBE improvements for the NEXT campaign based on accumulated knowledge
 5. SCORE your confidence in each recommendation based on data quality and quantity
 
-This is a CONTINUOUS LEARNING SYSTEM. Each call builds upon previous insights.
+This is a CONTINUOUS LEARNING SYSTEM. Each call builds upon previous insights. Tailor KPIs (CPA targets, conversion definitions) to ${verticalName}.
 
 Platform focus: ${platform || 'both'}
 
 Return JSON:
 {
   "learning_iteration": number,
-  "data_quality_score": number (0-100),
+  "data_quality_score": number,
   "performance_summary": "string",
   "winning_patterns": [{ "pattern": "string", "evidence": "string", "confidence": number, "times_validated": number }],
   "losing_patterns": [{ "pattern": "string", "evidence": "string", "confidence": number, "cost_impact": "string" }],
@@ -99,12 +78,16 @@ Return JSON:
     "confidence": number
   },
   "improvement_trajectory": "string"
-}`,
-          },
-          {
-            role: "user",
-            content: `Analyze this firm's complete campaign history and generate a self-learning report:\n${JSON.stringify(learningContext)}`,
-          },
+}`;
+
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Analyze this ${verticalName} firm's complete campaign history and generate a self-learning report:\n${JSON.stringify(learningContext)}` },
         ],
         temperature: 0.3,
       }),
@@ -127,7 +110,6 @@ Return JSON:
       parsed = { raw_response: content };
     }
 
-    // Store the learning snapshot
     await supabase.from("ai_performance_snapshots").insert({
       firm_id,
       snapshot_type: "self_learning_report",
@@ -135,7 +117,7 @@ Return JSON:
       ai_action_applied: "self_learning_analysis",
     });
 
-    return jsonResponse({ result: parsed });
+    return jsonResponse({ result: parsed, vertical: verticalSlug });
   } catch (e) {
     console.error("ai-self-learning error:", e);
     return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);

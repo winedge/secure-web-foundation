@@ -1,12 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
+import { getVerticalContext } from "../_shared/vertical.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
   if (corsResp) return corsResp;
 
   try {
-    const { scenes, title, format } = await req.json();
+    const { scenes, title, format, firm_id } = await req.json();
     if (!scenes || !Array.isArray(scenes) || scenes.length === 0) {
       throw new Error("scenes array required");
     }
@@ -14,26 +15,25 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    // Generate one cinematic frame per scene in parallel
-    const framePromises = scenes.map(async (scene: any, i: number) => {
-      const prompt = `Create a cinematic, photorealistic still frame for scene ${i + 1} of a professional legal advertisement video titled "${title || 'Legal Ad'}".
+    const { config, verticalSlug } = await getVerticalContext(firm_id, "video");
+    const verticalName = config?.vertical?.name ?? "Mass Tort";
 
-Scene description: ${scene.visual_description || scene.description || 'Professional legal scene'}
+    const framePromises = scenes.map(async (scene: any, i: number) => {
+      const prompt = `Create a cinematic, photorealistic still frame for scene ${i + 1} of a professional ${verticalName} industry advertisement video titled "${title || `${verticalName} Ad`}".
+
+Scene description: ${scene.visual_description || scene.description || `Professional ${verticalName} scene`}
 Text overlay to show on screen: "${scene.text_overlay || ''}"
 Mood: ${scene.music_mood || 'dramatic'}
 Voiceover context: ${scene.voiceover || ''}
 
-Style: Ultra high quality, dramatic cinematic lighting, shallow depth of field, professional broadcast TV commercial quality. 
+Style: Ultra high quality, dramatic cinematic lighting, shallow depth of field, professional broadcast TV commercial quality tailored to the ${verticalName} industry.
 Aspect ratio: ${format === '16:9' ? 'widescreen 16:9' : format === '1:1' ? 'square 1:1' : 'vertical 9:16 mobile'}.
 Do NOT include any watermarks.`;
 
       try {
         const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             model: "google/gemini-2.5-flash-image",
             messages: [{ role: "user", content: prompt }],
@@ -56,7 +56,7 @@ Do NOT include any watermarks.`;
     });
 
     const frames = await Promise.all(framePromises);
-    const successCount = frames.filter(f => f.image_url).length;
+    const successCount = frames.filter((f) => f.image_url).length;
 
     return jsonResponse({
       frames,
@@ -64,6 +64,7 @@ Do NOT include any watermarks.`;
       generated_count: successCount,
       format: format || '9:16',
       status: successCount > 0 ? 'completed' : 'failed',
+      vertical: verticalSlug,
     });
   } catch (e) {
     console.error("generate-video-ad error:", e);
