@@ -9,13 +9,14 @@ serve(async (req) => {
   try {
     const { brief, tort_type, category, duration, format, firm_id } = await req.json();
     if (!brief) throw new Error("brief required");
-    const subject = category || tort_type;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const { config, prompt: customPrompt, verticalSlug } = await getVerticalContext(firm_id, "video");
     const verticalName = config?.vertical?.name ?? "Mass Tort";
+    const resolved = resolveCategory(config, category ?? tort_type);
+    const subject = resolved.category;
 
     const systemPrompt = `${buildSystemPrompt("video", verticalSlug, customPrompt)}
 

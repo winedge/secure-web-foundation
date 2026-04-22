@@ -8,13 +8,14 @@ serve(async (req) => {
 
   try {
     const { tort_type, category, states, firm_id } = await req.json();
-    const subject = category || tort_type;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const { config, prompt: customPrompt, verticalSlug } = await getVerticalContext(firm_id, "intent");
     const verticalName = config?.vertical?.name ?? "Mass Tort";
+    const resolved = resolveCategory(config, category ?? tort_type);
+    const subject = resolved.category;
 
     const systemPrompt = `${buildSystemPrompt("intent", verticalSlug, customPrompt)}
 

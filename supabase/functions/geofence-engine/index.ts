@@ -17,13 +17,14 @@ serve(async (req) => {
 
   try {
     const { locations, tort_type, category, radius_meters, firm_id } = await req.json();
-    const subject = category || tort_type;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const { config, prompt: customPrompt, verticalSlug } = await getVerticalContext(firm_id, "geofence");
     const verticalName = config?.vertical?.name ?? "Mass Tort";
+    const resolved = resolveCategory(config, category ?? tort_type);
+    const subject = resolved.category;
     const defaults = DEFAULT_LOCATIONS[verticalSlug] ?? DEFAULT_LOCATIONS.mass_tort;
 
     const systemPrompt = `${buildSystemPrompt("geofence", verticalSlug, customPrompt)}

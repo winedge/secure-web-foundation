@@ -7,7 +7,7 @@ serve(async (req) => {
   if (corsResp) return corsResp;
 
   try {
-    const { brief, tort_type, target_audience, brand_tone, num_variants, firm_id } = await req.json();
+    const { brief, tort_type, category, target_audience, brand_tone, num_variants, firm_id } = await req.json();
     if (!brief) throw new Error("brief required");
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -15,6 +15,7 @@ serve(async (req) => {
 
     const { config: vCfg, prompt: vPrompt, verticalSlug } = await getVerticalContext(firm_id, "creative");
     const verticalName = vCfg?.vertical?.name ?? "Mass Tort Legal";
+    const resolved = resolveCategory(vCfg, category ?? tort_type);
     const overrideSystem = buildSystemPrompt("creative", verticalSlug, vPrompt);
 
     const complianceNote = verticalSlug === "mass_tort"
@@ -39,7 +40,7 @@ serve(async (req) => {
           },
           {
             role: "user",
-            content: `Brief: ${brief}\nVertical: ${verticalName}\nCategory: ${tort_type || 'general'}\nTarget audience: ${target_audience || 'adults 25-65'}\nBrand tone: ${brand_tone || 'professional, empathetic'}\nGenerate ${num_variants || 5} creative variants tailored to ${verticalSlug.replace('_', ' ')}.`,
+            content: `Brief: ${brief}\nVertical: ${verticalName}\nCategory: ${resolved.category}\nAvailable categories for this vertical: ${resolved.allCategories.join(', ') || 'n/a'}\nTarget audience: ${target_audience || 'adults 25-65'}\nBrand tone: ${brand_tone || 'professional, empathetic'}\nGenerate ${num_variants || 5} creative variants tailored to ${verticalSlug.replace('_', ' ')}.`,
           },
         ],
         temperature: 0.7,

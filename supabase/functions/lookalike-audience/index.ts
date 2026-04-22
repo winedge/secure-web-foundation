@@ -12,13 +12,14 @@ serve(async (req) => {
   try {
     const { firm_id, tort_type, category } = await req.json();
     if (!firm_id) throw new Error("firm_id required");
-    const subject = category || tort_type;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const { config, prompt: customPrompt, verticalSlug } = await getVerticalContext(firm_id, "lookalike");
     const verticalName = config?.vertical?.name ?? "Mass Tort";
+    const resolved = resolveCategory(config, category ?? tort_type);
+    const subject = resolved.category;
 
     const { data: purchases } = await supabase
       .from("lead_purchases")
