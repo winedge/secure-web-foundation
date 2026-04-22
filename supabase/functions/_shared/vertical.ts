@@ -98,6 +98,84 @@ export async function getVerticalContext(
   return { config, prompt, verticalSlug: config?.vertical?.slug ?? "mass_tort" };
 }
 
+/**
+ * Resolve and validate a category against the firm's vertical-configured
+ * `vertical_lead_categories`. Use this in every AI edge function so tools
+ * automatically use the correct categories for the selected vertical and
+ * never fall back to mass-tort terminology when another vertical is active.
+ *
+ * - If `requested` matches (case-insensitively) a configured category name or
+ *   slug, that canonical name is returned.
+ * - If `requested` is empty / invalid, the first configured category is used.
+ * - If the vertical has no configured categories, `requested` is returned
+ *   verbatim (or "general" if none was supplied).
+ */
+export interface ResolvedCategory {
+  /** Canonical category name to feed the AI prompt. */
+  category: string;
+  /** All category names available to the vertical (canonical order). */
+  allCategories: string[];
+  /** True when the requested value matched a configured category. */
+  matched: boolean;
+  /** True when no configured category was found and we fell back to a default. */
+  fallbackUsed: boolean;
+  /** Optional metadata for the resolved category (description, etc.). */
+  meta: Record<string, unknown> | null;
+}
+
+export function resolveCategory(
+  config: VerticalConfig | null,
+  requested: string | null | undefined
+): ResolvedCategory {
+  const categories = (config?.categories ?? []) as Array<Record<string, unknown>>;
+  const allCategories = categories
+    .map((c) => (c?.name as string | undefined) ?? (c?.slug as string | undefined) ?? "")
+    .filter(Boolean);
+
+  const trimmed = (requested ?? "").trim();
+
+  if (allCategories.length === 0) {
+    return {
+      category: trimmed || "general",
+      allCategories: [],
+      matched: false,
+      fallbackUsed: !trimmed,
+      meta: null,
+    };
+  }
+
+  const norm = (s: string) => s.toLowerCase().replace(/[\s_-]+/g, "");
+  const target = norm(trimmed);
+  const match = target
+    ? categories.find(
+        (c) =>
+          norm((c.name as string) ?? "") === target ||
+          norm((c.slug as string) ?? "") === target
+      )
+    : null;
+
+  if (match) {
+    return {
+      category: (match.name as string) ?? (match.slug as string) ?? trimmed,
+      allCategories,
+      matched: true,
+      fallbackUsed: false,
+      meta: match,
+    };
+  }
+
+  // Fallback to the first configured category for this vertical.
+  const first = categories[0];
+  return {
+    category: (first.name as string) ?? (first.slug as string) ?? allCategories[0],
+    allCategories,
+    matched: false,
+    fallbackUsed: true,
+    meta: first,
+  };
+}
+
+
 /** Build a vertical-aware system message with sensible defaults per prompt type. */
 export function buildSystemPrompt(
   promptType: PromptType,
