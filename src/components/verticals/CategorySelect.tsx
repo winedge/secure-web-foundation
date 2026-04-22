@@ -38,6 +38,25 @@ export function CategorySelect({
   const ph = placeholder ?? `Select ${labelLower}`;
   const verticalName = vertical?.name ?? 'this vertical';
 
+  // Auto-clear value only if categories have loaded and the current value
+  // is no longer one of the available options. Preserves value across reloads
+  // and while loading. Skips clearing when free-text fallback is active
+  // (no categories at all) so the user's typed value isn't wiped.
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!value) return;
+    if (categories.length === 0) return;
+    const stillValid = categories.some((c) => c.label === value || c.key === value);
+    if (!stillValid) {
+      onChangeRef.current('');
+    }
+  }, [isLoading, categories, value]);
+
   let content: React.ReactNode;
 
   if (isLoading) {
