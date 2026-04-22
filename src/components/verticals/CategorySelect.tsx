@@ -125,6 +125,25 @@ export function CategorySelect({
     }
   }, [isLoading, categories, value]);
 
+  // Notify parent of validity so it can disable submit buttons.
+  // Treat loading as valid (don't disable while categories are still resolving).
+  const lastValidityRef = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (!onValidityChange) return;
+    const valid = isLoading
+      ? true
+      : isCategoryFieldValid({
+          value,
+          required,
+          hasCategories: categories.length > 0,
+          allowFreeTextFallback,
+        });
+    if (lastValidityRef.current !== valid) {
+      lastValidityRef.current = valid;
+      onValidityChange(valid);
+    }
+  }, [value, required, isLoading, categories.length, allowFreeTextFallback, onValidityChange]);
+
   // Analytics: track which state CategorySelect renders in per vertical.
   // Dedupe per (verticalSlug, state) within this component instance so we
   // don't spam events on every re-render.
