@@ -136,7 +136,7 @@ export default function JudgeIntelligence() {
               <Input placeholder="Judge name..." value={judgeName} onChange={(e) => setJudgeName(e.target.value)} />
               <Input placeholder="Jurisdiction (e.g. Southern District of NY)..." value={jurisdiction} onChange={(e) => setJurisdiction(e.target.value)} />
               <Input placeholder="State (optional)..." value={state} onChange={(e) => setState(e.target.value)} />
-              <Input placeholder="Tort type (optional)..." value={tortType} onChange={(e) => setTortType(e.target.value)} />
+              <CategorySelect value={tortType} onChange={setTortType} placeholder="Category (optional)" />
             </div>
             <Button onClick={analyzeJudge} disabled={isLoading} className="mt-4 gap-2">
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
