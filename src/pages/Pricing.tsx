@@ -101,7 +101,7 @@ export default function Pricing() {
           ) : (
             <Wallet className="h-4 w-4" />
           )}
-          Pay with Wallet ({formatCurrency(walletBalance)})
+          Pay with Wallet ({formatMoney(walletBalance, currency)})
         </Button>
         {!canAfford && (
           <p className="text-xs text-muted-foreground text-center">
