@@ -124,7 +124,9 @@ export function CategorySelect({
   // Compute inline error: external > internal required check
   const trimmed = (value ?? '').trim();
   const internalError =
-    required && !trimmed ? requiredMessage ?? `${label} is required` : null;
+    required && !trimmed
+      ? requiredMessage ?? t('categorySelect.requiredError', { label })
+      : null;
   const displayError = error ?? ((touched || showError) ? internalError : null);
   const hasError = !!displayError;
 
