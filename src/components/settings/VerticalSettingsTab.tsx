@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 import { VERTICAL_PRESETS } from '@/lib/verticals/presets';
 import type { ModuleKey } from '@/lib/verticals/types';
 import { PipelineStagesEditor } from './PipelineStagesEditor';
+import { TerminologyEditor } from './TerminologyEditor';
 
 const ALL_MODULES: { key: ModuleKey; label: string }[] = [
   { key: 'lead_scoring', label: 'AI Lead Scoring' },
@@ -234,23 +235,7 @@ export function VerticalSettingsTab() {
 
         {/* Terminology */}
         <TabsContent value="terminology">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Terminology Overrides</CardTitle>
-              <CardDescription>How leads, categories, and the marketplace are labeled across the app.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <ReadonlyRow label="Lead (singular)" value={terminology.lead_singular} />
-              <ReadonlyRow label="Lead (plural)" value={terminology.lead_plural} />
-              <ReadonlyRow label="Category label" value={terminology.category_label} />
-              <ReadonlyRow label="Marketplace title" value={terminology.marketplace_title} />
-              <ReadonlyRow label="Pipeline title" value={terminology.pipeline_title} />
-              <ReadonlyRow label="Evaluator title" value={terminology.evaluator_title} />
-              <p className="text-xs text-muted-foreground pt-2 flex items-center gap-1.5">
-                <Lock className="h-3 w-3" /> Custom terminology editing is coming soon. System presets are read-only.
-              </p>
-            </CardContent>
-          </Card>
+          <TerminologyEditor />
         </TabsContent>
 
         {/* Pipeline Stages */}
@@ -267,14 +252,6 @@ export function VerticalSettingsTab() {
   );
 }
 
-function ReadonlyRow({ label, value }: { label: string; value: string | undefined }) {
-  return (
-    <div className="grid grid-cols-3 gap-2 items-center">
-      <Label className="col-span-1 text-sm">{label}</Label>
-      <Input value={value ?? ''} readOnly className="col-span-2 bg-muted/50" />
-    </div>
-  );
-}
 function CategoriesPanel() {
   const { categories } = useVertical();
   return (
