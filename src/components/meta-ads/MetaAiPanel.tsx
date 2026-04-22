@@ -310,7 +310,7 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
                 <div className="p-2 rounded-lg bg-orange-500/10"><Search className="h-5 w-5 text-orange-600" /></div>
                 <div>
                   <CardTitle className="text-lg">Competitor Analysis</CardTitle>
-                  <CardDescription>AI analyzes the competitive landscape for your tort type and geography</CardDescription>
+                  <CardDescription>AI analyzes the competitive landscape for your category and geography</CardDescription>
                 </div>
               </div>
             </CardHeader>
