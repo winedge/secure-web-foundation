@@ -76,7 +76,7 @@ export function GoogleCampaignsList({ onSelectCampaign }: Props) {
                   <CardTitle className="text-base truncate flex items-center gap-2">
                     <span>{typeIcons[c.type] || '📊'}</span>{c.name}
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-0.5">{c.tort_type} · {c.type.replace(/_/g, ' ')}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">{c.tort_type || 'General'} · {c.type.replace(/_/g, ' ')}</p>
                 </div>
                 <Badge className={statusColors[c.status] || ''}>{c.status}</Badge>
               </div>

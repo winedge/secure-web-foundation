@@ -5,13 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
+
 import { Label } from '@/components/ui/label';
 import {
   FileText, RefreshCw, Loader2, Download, CheckCircle, Users,
   Calendar, AlertTriangle, Bell, BellRing,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useVertical } from '@/hooks/use-vertical';
+import { CategorySelect } from '@/components/verticals/CategorySelect';
 
 interface LeadForm {
   id: string;
@@ -27,6 +29,8 @@ interface LeadForm {
 
 export function MetaLeadFormsPanel() {
   const { user } = useAuth();
+  const { term } = useVertical();
+  const categoryLabel = term('category_label', 'Category');
   const [forms, setForms] = useState<LeadForm[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [fetchingFormId, setFetchingFormId] = useState<string | null>(null);
@@ -127,19 +131,19 @@ export function MetaLeadFormsPanel() {
         </Button>
       </div>
 
-      {/* Tort Type Setting */}
+      {/* Default Category Setting */}
       <Card>
         <CardContent className="pt-4 pb-4 flex items-end gap-3">
           <div className="flex-1 max-w-xs">
-            <Label className="text-xs">Default Tort Type for Imported Leads</Label>
-            <Input
+            <Label className="text-xs">Default {categoryLabel} for Imported Leads</Label>
+            <CategorySelect
               value={tortType}
-              onChange={e => setTortType(e.target.value)}
-              placeholder="e.g. Camp Lejeune, Personal Injury"
+              onChange={setTortType}
+              placeholder={`Select ${categoryLabel.toLowerCase()}`}
             />
           </div>
           <p className="text-xs text-muted-foreground pb-2">
-            This tort type will be assigned to all leads imported from Meta lead forms.
+            This {categoryLabel.toLowerCase()} will be assigned to all leads imported from Meta lead forms.
           </p>
         </CardContent>
       </Card>
