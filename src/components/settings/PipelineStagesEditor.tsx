@@ -6,8 +6,8 @@
  * RPC) so the firm can edit/delete/reorder freely without touching the system preset.
  * Reset-to-defaults deletes all firm rows for the vertical, falling back to system stages.
  */
-import { useMemo, useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useFirm } from '@/hooks/use-firm';
 import { useVertical } from '@/hooks/use-vertical';
@@ -42,21 +42,38 @@ const slugify = (s: string) =>
     .replace(/^_+|_+$/g, '')
     .slice(0, 60);
 
-export function PipelineStagesEditor() {
+export function PipelineStagesEditor({ adminMode = false }: { adminMode?: boolean } = {}) {
   const { data: firm } = useFirm();
   const { vertical, stages, refetch } = useVertical();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Partial<StageRow> | null>(null);
   const [open, setOpen] = useState(false);
 
+  // In admin mode, fetch system rows (firm_id IS NULL) directly so edits target the preset.
+  const { data: systemStages, refetch: refetchSystem } = useQuery({
+    queryKey: ['system-pipeline-stages', vertical?.id],
+    enabled: !!vertical?.id && adminMode,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vertical_pipeline_stages' as any)
+        .select('*')
+        .eq('vertical_id', vertical!.id)
+        .is('firm_id', null)
+        .order('stage_order');
+      if (error) throw error;
+      return (data ?? []) as unknown as StageRow[];
+    },
+  });
+
+  const sourceStages = adminMode ? (systemStages ?? []) : (stages as StageRow[]);
+
   const sorted = useMemo(
-    () => [...(stages as StageRow[])].sort((a, b) => a.stage_order - b.stage_order),
-    [stages]
+    () => [...sourceStages].sort((a, b) => a.stage_order - b.stage_order),
+    [sourceStages]
   );
 
   const ensureFirmStages = async (): Promise<StageRow[]> => {
     if (!firm?.id || !vertical?.id) throw new Error('Missing firm/vertical');
-    // Clone system stages into firm-owned rows if not already done.
     await supabase.rpc('clone_vertical_stages_for_firm' as any, {
       _firm_id: firm.id,
       _vertical_id: vertical.id,
@@ -70,20 +87,35 @@ export function PipelineStagesEditor() {
     return (data ?? []) as unknown as StageRow[];
   };
 
+  const fetchSystemStages = async (): Promise<StageRow[]> => {
+    if (!vertical?.id) throw new Error('Missing vertical');
+    const { data, error } = await supabase
+      .from('vertical_pipeline_stages' as any)
+      .select('*')
+      .eq('vertical_id', vertical.id)
+      .is('firm_id', null);
+    if (error) throw error;
+    return (data ?? []) as unknown as StageRow[];
+  };
+
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['vertical-config'] });
+    qc.invalidateQueries({ queryKey: ['system-pipeline-stages', vertical?.id] });
     refetch();
+    if (adminMode) refetchSystem();
   };
 
   const saveStage = useMutation({
     mutationFn: async (input: Partial<StageRow>) => {
-      if (!firm?.id || !vertical?.id) throw new Error('Missing firm/vertical');
-      await ensureFirmStages();
+      if (!vertical?.id) throw new Error('Missing vertical');
+      const targetFirmId: string | null = adminMode ? null : firm?.id ?? null;
+      if (!adminMode && !firm?.id) throw new Error('Missing firm');
+      if (!adminMode) await ensureFirmStages();
 
       const stage_key = input.stage_key || slugify(input.label || 'stage');
-      const payload = {
+      const payload: any = {
         vertical_id: vertical.id,
-        firm_id: firm.id,
+        firm_id: targetFirmId,
         stage_key,
         label: input.label?.trim() || 'Untitled stage',
         stage_order: input.stage_order ?? sorted.length,
@@ -92,16 +124,30 @@ export function PipelineStagesEditor() {
         is_active: input.is_active ?? true,
       };
 
-      if (input.id && input.firm_id === firm.id) {
+      if (input.id && (adminMode ? input.firm_id === null : input.firm_id === firm?.id)) {
         const { error } = await supabase
           .from('vertical_pipeline_stages' as any)
-          .update(payload as any)
+          .update(payload)
           .eq('id', input.id);
         if (error) throw error;
+      } else if (adminMode) {
+        const existing = (await fetchSystemStages()).find((r) => r.stage_key === stage_key);
+        if (existing) {
+          const { error } = await supabase
+            .from('vertical_pipeline_stages' as any)
+            .update(payload)
+            .eq('id', existing.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('vertical_pipeline_stages' as any)
+            .insert(payload);
+          if (error) throw error;
+        }
       } else {
         const { error } = await supabase
           .from('vertical_pipeline_stages' as any)
-          .upsert(payload as any, { onConflict: 'vertical_id,firm_id,stage_key' });
+          .upsert(payload, { onConflict: 'vertical_id,firm_id,stage_key' });
         if (error) throw error;
       }
     },
@@ -116,8 +162,15 @@ export function PipelineStagesEditor() {
 
   const deleteStage = useMutation({
     mutationFn: async (stage: StageRow) => {
-      if (!firm?.id || !vertical?.id) throw new Error('Missing firm/vertical');
-      // Make sure firm owns a row for this stage_key, then delete the firm row.
+      if (!vertical?.id) throw new Error('Missing vertical');
+      if (adminMode) {
+        const sys = (await fetchSystemStages()).find((r) => r.stage_key === stage.stage_key);
+        if (!sys) throw new Error('Stage not found');
+        const { error } = await supabase.from('vertical_pipeline_stages' as any).delete().eq('id', sys.id);
+        if (error) throw error;
+        return;
+      }
+      if (!firm?.id) throw new Error('Missing firm');
       const firmRows = await ensureFirmStages();
       const target = firmRows.find((r) => r.stage_key === stage.stage_key);
       if (!target) throw new Error('Stage not found');
@@ -136,9 +189,9 @@ export function PipelineStagesEditor() {
 
   const reorder = useMutation({
     mutationFn: async ({ stage, direction }: { stage: StageRow; direction: -1 | 1 }) => {
-      if (!firm?.id || !vertical?.id) throw new Error('Missing firm/vertical');
-      const firmRows = await ensureFirmStages();
-      const ordered = [...firmRows].sort((a, b) => a.stage_order - b.stage_order);
+      if (!vertical?.id) throw new Error('Missing vertical');
+      const rows = adminMode ? await fetchSystemStages() : await ensureFirmStages();
+      const ordered = [...rows].sort((a, b) => a.stage_order - b.stage_order);
       const idx = ordered.findIndex((r) => r.stage_key === stage.stage_key);
       const swapIdx = idx + direction;
       if (idx < 0 || swapIdx < 0 || swapIdx >= ordered.length) return;
@@ -194,32 +247,38 @@ export function PipelineStagesEditor() {
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-4">
         <div>
-          <CardTitle className="text-base">Pipeline Stages</CardTitle>
+          <CardTitle className="text-base">
+            Pipeline Stages {adminMode && <Badge variant="destructive" className="ml-2">System defaults</Badge>}
+          </CardTitle>
           <CardDescription>
-            Stages your team moves leads through, in order. Customize labels, fees, and payment gates.
+            {adminMode
+              ? `Editing the system preset for ${vertical?.name}. Changes apply to every firm on this industry that hasn't customized their pipeline.`
+              : 'Stages your team moves leads through, in order. Customize labels, fees, and payment gates.'}
           </CardDescription>
         </div>
         <div className="flex gap-2">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm" disabled={resetDefaults.isPending}>
-                <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Reset
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Reset pipeline to industry defaults?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This removes all of your firm's custom pipeline stages and restores the {vertical?.name} system preset.
-                  Existing leads keep their data but may be remapped to the default stage labels.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => resetDefaults.mutate()}>Reset to defaults</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {!adminMode && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" disabled={resetDefaults.isPending}>
+                  <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Reset
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Reset pipeline to industry defaults?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This removes all of your firm's custom pipeline stages and restores the {vertical?.name} system preset.
+                    Existing leads keep their data but may be remapped to the default stage labels.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => resetDefaults.mutate()}>Reset to defaults</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
           <Dialog
             open={open}
             onOpenChange={(o) => {

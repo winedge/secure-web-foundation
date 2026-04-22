@@ -6,12 +6,13 @@
  * row over the system preset. Reset deletes the firm row, falling back to system.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useFirm } from '@/hooks/use-firm';
 import { useVertical } from '@/hooks/use-vertical';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -34,19 +35,37 @@ const FIELDS: { key: TerminologyKey; label: string; hint?: string; placeholder?:
   { key: 'evaluator_subject', label: 'Evaluator subject', placeholder: 'lead', hint: 'Used in sentences like "Evaluate this {subject}".' },
 ];
 
-export function TerminologyEditor() {
+export function TerminologyEditor({ adminMode = false }: { adminMode?: boolean } = {}) {
   const { data: firm } = useFirm();
   const { vertical, terminology, refetch } = useVertical();
   const qc = useQueryClient();
 
-  // Local draft seeded from current effective terminology (firm override OR system).
+  // In admin mode, fetch the system terminology row directly so we edit the preset
+  // rather than the firm override.
+  const { data: systemTerminology, refetch: refetchSystem } = useQuery({
+    queryKey: ['system-terminology', vertical?.id],
+    enabled: !!vertical?.id && adminMode,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vertical_terminology' as any)
+        .select('terminology')
+        .eq('vertical_id', vertical!.id)
+        .is('firm_id', null)
+        .maybeSingle();
+      if (error) throw error;
+      return ((data as any)?.terminology ?? {}) as Record<string, string>;
+    },
+  });
+
+  const sourceTerminology = adminMode ? (systemTerminology ?? {}) : (terminology as Record<string, string>);
+
   const initialDraft = useMemo(() => {
     const draft: Record<string, string> = {};
     for (const f of FIELDS) {
-      draft[f.key] = (terminology as any)?.[f.key] ?? '';
+      draft[f.key] = (sourceTerminology as any)?.[f.key] ?? '';
     }
     return draft;
-  }, [terminology]);
+  }, [sourceTerminology]);
 
   const [draft, setDraft] = useState<Record<string, string>>(initialDraft);
   const [dirty, setDirty] = useState(false);
@@ -63,29 +82,52 @@ export function TerminologyEditor() {
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['vertical-config'] });
+    qc.invalidateQueries({ queryKey: ['system-terminology', vertical?.id] });
     refetch();
+    if (adminMode) refetchSystem();
   };
 
   const save = useMutation({
     mutationFn: async () => {
-      if (!firm?.id || !vertical?.id) throw new Error('Missing firm/vertical');
-      // Strip empties so we don't override defaults with blank strings.
+      if (!vertical?.id) throw new Error('Missing vertical');
+      if (!adminMode && !firm?.id) throw new Error('Missing firm');
       const cleaned: Record<string, string> = {};
       for (const f of FIELDS) {
         const v = (draft[f.key] ?? '').trim();
         if (v) cleaned[f.key] = v;
       }
-      const { error } = await supabase
-        .from('vertical_terminology' as any)
-        .upsert(
-          {
-            vertical_id: vertical.id,
-            firm_id: firm.id,
-            terminology: cleaned,
-          } as any,
-          { onConflict: 'vertical_id,firm_id' }
-        );
-      if (error) throw error;
+      const targetFirmId: string | null = adminMode ? null : firm!.id;
+
+      if (adminMode) {
+        // Manual upsert: find existing system row, update, else insert.
+        const { data: existing, error: fetchErr } = await supabase
+          .from('vertical_terminology' as any)
+          .select('id')
+          .eq('vertical_id', vertical.id)
+          .is('firm_id', null)
+          .maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (existing) {
+          const { error } = await supabase
+            .from('vertical_terminology' as any)
+            .update({ terminology: cleaned } as any)
+            .eq('id', (existing as any).id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('vertical_terminology' as any)
+            .insert({ vertical_id: vertical.id, firm_id: null, terminology: cleaned } as any);
+          if (error) throw error;
+        }
+      } else {
+        const { error } = await supabase
+          .from('vertical_terminology' as any)
+          .upsert(
+            { vertical_id: vertical.id, firm_id: targetFirmId, terminology: cleaned } as any,
+            { onConflict: 'vertical_id,firm_id' }
+          );
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       toast.success('Terminology saved');
@@ -116,31 +158,37 @@ export function TerminologyEditor() {
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-4">
         <div>
-          <CardTitle className="text-base">Terminology Overrides</CardTitle>
+          <CardTitle className="text-base">
+            {adminMode ? 'System Terminology' : 'Terminology Overrides'}
+            {adminMode && <Badge variant="destructive" className="ml-2">System defaults</Badge>}
+          </CardTitle>
           <CardDescription>
-            Customize how leads, categories, and key sections are labeled across the app for the {vertical?.name} vertical.
-            Leave a field blank to use the industry default.
+            {adminMode
+              ? `Editing the system terminology for ${vertical?.name}. Changes apply to every firm on this industry that hasn't customized labels.`
+              : `Customize how leads, categories, and key sections are labeled across the app for the ${vertical?.name} vertical. Leave a field blank to use the industry default.`}
           </CardDescription>
         </div>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="outline" size="sm" disabled={reset.isPending}>
-              <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Reset
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Reset terminology to defaults?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Your firm's custom terminology will be cleared and the {vertical?.name} industry defaults will be used.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => reset.mutate()}>Reset</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {!adminMode && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" disabled={reset.isPending}>
+                <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Reset
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Reset terminology to defaults?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Your firm's custom terminology will be cleared and the {vertical?.name} industry defaults will be used.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => reset.mutate()}>Reset</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

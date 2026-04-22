@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useFirm } from '@/hooks/use-firm';
 import { useVertical } from '@/hooks/use-vertical';
+import { useIsAdmin } from '@/hooks/use-user-role';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +21,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Layers, Tag, MessageSquare, Sparkles, Lock, RefreshCw } from 'lucide-react';
+import { Loader2, Layers, Tag, MessageSquare, Sparkles, Lock, RefreshCw, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { VERTICAL_PRESETS } from '@/lib/verticals/presets';
 import type { ModuleKey } from '@/lib/verticals/types';
@@ -57,8 +58,10 @@ const ALL_MODULES: { key: ModuleKey; label: string }[] = [
 export function VerticalSettingsTab() {
   const { data: firm } = useFirm();
   const { vertical, terminology, enabledModules, refetch, isLoading } = useVertical();
+  const { isAdmin } = useIsAdmin();
   const queryClient = useQueryClient();
   const [pendingSwitch, setPendingSwitch] = useState<string | null>(null);
+  const [adminMode, setAdminMode] = useState(false);
 
   // Load list of all available verticals
   const { data: allVerticals } = useQuery({
@@ -96,16 +99,58 @@ export function VerticalSettingsTab() {
     },
   });
 
+  // System-level enabled modules (firm_id IS NULL) for admin mode display.
+  const { data: systemModules, refetch: refetchSystemModules } = useQuery({
+    queryKey: ['system-vertical-modules', vertical?.id],
+    enabled: !!vertical?.id && adminMode && isAdmin,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vertical_module_access' as any)
+        .select('module_key, is_enabled')
+        .eq('vertical_id', vertical!.id)
+        .is('firm_id', null);
+      if (error) throw error;
+      return new Set(((data ?? []) as any[]).filter((r) => r.is_enabled).map((r) => r.module_key as string));
+    },
+  });
+
   const toggleModule = useMutation({
     mutationFn: async ({ moduleKey, enable }: { moduleKey: ModuleKey; enable: boolean }) => {
-      if (!firm?.id || !vertical?.id) throw new Error('Missing firm/vertical');
-      // Upsert a firm-scoped override row
+      if (!vertical?.id) throw new Error('Missing vertical');
+      const useAdmin = adminMode && isAdmin;
+      if (!useAdmin && !firm?.id) throw new Error('Missing firm');
+
+      if (useAdmin) {
+        // System row: firm_id IS NULL — manual upsert because partial-unique can't be referenced.
+        const { data: existing, error: fetchErr } = await supabase
+          .from('vertical_module_access' as any)
+          .select('id')
+          .eq('vertical_id', vertical.id)
+          .eq('module_key', moduleKey)
+          .is('firm_id', null)
+          .maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (existing) {
+          const { error } = await supabase
+            .from('vertical_module_access' as any)
+            .update({ is_enabled: enable } as any)
+            .eq('id', (existing as any).id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('vertical_module_access' as any)
+            .insert({ vertical_id: vertical.id, firm_id: null, module_key: moduleKey, is_enabled: enable } as any);
+          if (error) throw error;
+        }
+        return;
+      }
+
       const { error } = await supabase
         .from('vertical_module_access' as any)
         .upsert(
           {
             vertical_id: vertical.id,
-            firm_id: firm.id,
+            firm_id: firm!.id,
             module_key: moduleKey,
             is_enabled: enable,
           } as any,
@@ -116,11 +161,16 @@ export function VerticalSettingsTab() {
     onSuccess: (_, vars) => {
       toast.success(`${vars.enable ? 'Enabled' : 'Disabled'} module`);
       refetch();
+      if (adminMode && isAdmin) refetchSystemModules();
+      queryClient.invalidateQueries({ queryKey: ['system-vertical-modules', vertical?.id] });
     },
     onError: (err: any) => toast.error('Failed: ' + err.message),
   });
 
-  const moduleSet = useMemo(() => new Set(enabledModules), [enabledModules]);
+  const moduleSet = useMemo(
+    () => (adminMode && isAdmin ? (systemModules ?? new Set<string>()) : new Set<string>(enabledModules)),
+    [adminMode, isAdmin, systemModules, enabledModules]
+  );
 
   if (isLoading || !vertical) {
     return (
@@ -132,6 +182,35 @@ export function VerticalSettingsTab() {
 
   return (
     <div className="space-y-6">
+      {/* Super-admin platform-mode banner */}
+      {isAdmin && (
+        <Card className="border-destructive/40 bg-destructive/5">
+          <CardContent className="flex items-center justify-between gap-4 py-4">
+            <div className="flex items-start gap-3">
+              <Shield className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+              <div>
+                <div className="text-sm font-semibold">Super admin: Platform settings mode</div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {adminMode
+                    ? `You are editing the SYSTEM defaults for ${vertical?.name}. Changes apply to every firm on this industry that hasn't customized their own settings.`
+                    : 'Toggle this to edit the system-wide defaults for this industry vertical instead of your firm overrides.'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Label htmlFor="admin-mode-toggle" className="text-xs text-muted-foreground">
+                {adminMode ? 'System' : 'Firm'}
+              </Label>
+              <Switch
+                id="admin-mode-toggle"
+                checked={adminMode}
+                onCheckedChange={setAdminMode}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Current Vertical */}
       <Card>
         <CardHeader>
@@ -207,8 +286,15 @@ export function VerticalSettingsTab() {
         <TabsContent value="modules">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Enabled AI Tools</CardTitle>
-              <CardDescription>Toggle which AI modules appear in the sidebar and are usable by your team.</CardDescription>
+              <CardTitle className="text-base flex items-center gap-2">
+                Enabled AI Tools
+                {adminMode && isAdmin && <Badge variant="destructive">System defaults</Badge>}
+              </CardTitle>
+              <CardDescription>
+                {adminMode && isAdmin
+                  ? `Toggle which AI modules are AVAILABLE on the ${vertical?.name} vertical platform-wide. Firms can still hide individual modules in their own settings.`
+                  : 'Toggle which AI modules appear in the sidebar and are usable by your team.'}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -235,12 +321,12 @@ export function VerticalSettingsTab() {
 
         {/* Terminology */}
         <TabsContent value="terminology">
-          <TerminologyEditor />
+          <TerminologyEditor adminMode={adminMode && isAdmin} />
         </TabsContent>
 
         {/* Pipeline Stages */}
         <TabsContent value="stages">
-          <PipelineStagesEditor />
+          <PipelineStagesEditor adminMode={adminMode && isAdmin} />
         </TabsContent>
 
         {/* Categories */}
