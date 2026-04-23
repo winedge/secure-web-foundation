@@ -161,7 +161,7 @@ Return JSON: {
           method: "POST",
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "google/gemini-3-pro-image-preview",
+            model: imageModel,
             messages: [{ role: "user", content: parsed.prompt }],
             modalities: ["image", "text"],
           }),
