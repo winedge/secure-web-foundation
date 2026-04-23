@@ -3,6 +3,7 @@ import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { createSupabaseClient } from "../_shared/auth.ts";
 import { getVerticalContext } from "../_shared/vertical.ts";
 import { buildQualityDirective, pickImageModel, type QualityControls } from "../_shared/quality.ts";
+import { checkPromptCompliance, summarizeCompliance } from "../_shared/compliance.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
@@ -29,6 +30,18 @@ serve(async (req) => {
 
     const { config: vCfg, prompt: customPrompt, verticalSlug } = await getVerticalContext(firm_id, "social");
     const verticalName = vCfg?.vertical?.name ?? "Mass Tort";
+
+    // Compliance check on the inbound user context (brief / topic / overlay copy)
+    const userInputText = typeof context === "string" ? context : JSON.stringify(context);
+    const inboundCompliance = checkPromptCompliance(userInputText, verticalSlug);
+    if (!inboundCompliance.allowed) {
+      return jsonResponse({
+        error: "Input blocked by compliance checker",
+        compliance: summarizeCompliance(inboundCompliance),
+        vertical: verticalSlug,
+      }, 422);
+    }
+    const safeUserContent = inboundCompliance.safe_prompt;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -130,7 +143,7 @@ Return JSON: {
         model: config.model || "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: typeof context === "string" ? context : JSON.stringify(context) },
+          { role: "user", content: safeUserContent },
         ],
         temperature,
       }),
@@ -155,14 +168,48 @@ Return JSON: {
       parsed = { raw: content };
     }
 
+    // Sanitize AI-generated text fields before returning / generating images
+    const aiRewrites: Array<{ field: string; findings: any[] }> = [];
+    const sanitizeField = (obj: any, key: string) => {
+      if (typeof obj?.[key] === "string") {
+        const r = checkPromptCompliance(obj[key], verticalSlug);
+        if (r.findings.length > 0) {
+          aiRewrites.push({ field: key, findings: r.findings });
+          obj[key] = r.safe_prompt;
+        }
+      }
+    };
+    if (parsed && typeof parsed === "object") {
+      ["content", "image_prompt", "video_prompt"].forEach((k) => sanitizeField(parsed, k));
+      if (parsed.platform_variants && typeof parsed.platform_variants === "object") {
+        Object.keys(parsed.platform_variants).forEach((p) => sanitizeField(parsed.platform_variants, p));
+      }
+    }
+
     if (action === "generate_image" && parsed.prompt) {
+      // Final compliance check on the image prompt before generation
+      const imgCompliance = checkPromptCompliance(parsed.prompt, verticalSlug);
+      if (!imgCompliance.allowed) {
+        return jsonResponse({
+          result: parsed,
+          vertical: verticalSlug,
+          compliance: {
+            ...summarizeCompliance(inboundCompliance),
+            image_prompt_blocked: summarizeCompliance(imgCompliance),
+            ai_rewrites: aiRewrites,
+          },
+          error: "Image prompt blocked by compliance checker",
+        }, 422);
+      }
+      const safeImgPrompt = imgCompliance.safe_prompt;
+
       try {
         const imgResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             model: imageModel,
-            messages: [{ role: "user", content: parsed.prompt }],
+            messages: [{ role: "user", content: safeImgPrompt }],
             modalities: ["image", "text"],
           }),
         });
@@ -190,7 +237,14 @@ Return JSON: {
       }
     }
 
-    return jsonResponse({ result: parsed, vertical: verticalSlug });
+    return jsonResponse({
+      result: parsed,
+      vertical: verticalSlug,
+      compliance: {
+        ...summarizeCompliance(inboundCompliance),
+        ai_rewrites: aiRewrites,
+      },
+    });
   } catch (e) {
     console.error("social-content-generator error:", e);
     return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
