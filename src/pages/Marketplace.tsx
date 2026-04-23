@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, ArrowUpDown, DollarSign } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LeadCard } from '@/components/leads/LeadCard';
@@ -22,12 +22,41 @@ export default function Marketplace() {
   const { data: firm, isLoading: firmLoading } = useFirm();
   const { term, vertical, categories } = useVertical();
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<LeadFilters>({});
-  const [sortBy, setSortBy] = useState<SortOption>('newest');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Initialize state from URL query params (so links are shareable / state persists on reload)
+  const [filters, setFilters] = useState<LeadFilters>(() => ({
+    tortType: searchParams.get('category') ?? undefined,
+    state: searchParams.get('state') ?? undefined,
+    tier: searchParams.get('tier') ?? undefined,
+  }));
+  const [sortBy, setSortBy] = useState<SortOption>(
+    (searchParams.get('sort') as SortOption) || 'newest'
+  );
+  const [priceRange, setPriceRange] = useState<[number, number]>(() => {
+    const min = Number(searchParams.get('priceMin'));
+    const max = Number(searchParams.get('priceMax'));
+    return [
+      Number.isFinite(min) && min > 0 ? min : 0,
+      Number.isFinite(max) && max > 0 ? max : 5000,
+    ];
+  });
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') ?? '');
   const { data: leads, isLoading: leadsLoading } = useLeads(filters);
   const { data: sourcesMap } = useLeadSources();
+
+  // Sync state -> URL whenever filters change (replace so back button isn't polluted)
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (filters.tortType) next.set('category', filters.tortType);
+    if (filters.state) next.set('state', filters.state);
+    if (filters.tier) next.set('tier', filters.tier);
+    if (sortBy && sortBy !== 'newest') next.set('sort', sortBy);
+    if (searchQuery) next.set('q', searchQuery);
+    if (priceRange[0] > 0) next.set('priceMin', String(priceRange[0]));
+    if (priceRange[1] > 0 && priceRange[1] < 5000) next.set('priceMax', String(priceRange[1]));
+    setSearchParams(next, { replace: true });
+  }, [filters, sortBy, searchQuery, priceRange, setSearchParams]);
 
   // Category options come from the active vertical config (DB-driven)
   const categoryOptions = useMemo(
