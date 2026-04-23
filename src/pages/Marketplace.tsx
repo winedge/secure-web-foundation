@@ -43,7 +43,70 @@ export default function Marketplace() {
   });
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') ?? '');
   const { data: leads, isLoading: leadsLoading } = useLeads(filters);
+  // Unfiltered pool used to compute per-option counts (respects only the OTHER active filters)
+  const { data: allLeads } = useLeads();
   const { data: sourcesMap } = useLeadSources();
+
+  // Category options come from the active vertical config (DB-driven)
+  const categoryOptions = useMemo(
+    () => (categories ?? []).filter((c) => c.is_active !== false).map((c) => c.label),
+    [categories]
+  );
+  const categoryLabel = term('category_label', 'Category');
+
+  // States are derived from the full marketplace inventory so dropdown counts stay stable
+  // when the user is filtering by category/tier.
+  const stateOptions = useMemo(() => {
+    const fromAll = Array.from(new Set((allLeads ?? []).map((l) => l.state).filter(Boolean)));
+    if (fromAll.length > 0) return fromAll.sort();
+    const fromLeads = Array.from(new Set((leads ?? []).map((l) => l.state).filter(Boolean)));
+    return fromLeads.length > 0 ? fromLeads.sort() : FALLBACK_STATES;
+  }, [allLeads, leads]);
+
+  // Helper: count leads in `allLeads` that match a partial filter set + price/search.
+  const countMatching = useMemo(() => {
+    return (override: Partial<LeadFilters>) => {
+      if (!allLeads) return 0;
+      const f = { ...filters, ...override };
+      return allLeads.filter((l) => {
+        if (f.tortType && l.tort_type !== f.tortType) return false;
+        if (f.state && l.state !== f.state) return false;
+        if (f.tier && l.tier !== f.tier) return false;
+        if (l.price < priceRange[0] || l.price > priceRange[1]) return false;
+        if (searchQuery) {
+          const q = searchQuery.toLowerCase();
+          const hit =
+            l.tort_type.toLowerCase().includes(q) ||
+            l.state.toLowerCase().includes(q) ||
+            (l.city && l.city.toLowerCase().includes(q));
+          if (!hit) return false;
+        }
+        return true;
+      }).length;
+    };
+  }, [allLeads, filters, priceRange, searchQuery]);
+
+  // Per-option counts (clearing the relevant filter so each row shows what selecting it would yield)
+  const categoryCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    map.set('all', countMatching({ tortType: undefined }));
+    for (const c of categoryOptions) map.set(c, countMatching({ tortType: c }));
+    return map;
+  }, [countMatching, categoryOptions]);
+
+  const stateCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    map.set('all', countMatching({ state: undefined }));
+    for (const s of stateOptions) map.set(s, countMatching({ state: s }));
+    return map;
+  }, [countMatching, stateOptions]);
+
+  const tierCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    map.set('all', countMatching({ tier: undefined }));
+    for (const t of ['A', 'B', 'C'] as const) map.set(t, countMatching({ tier: t }));
+    return map;
+  }, [countMatching]);
 
   // Sync state -> URL whenever filters change (replace so back button isn't polluted)
   useEffect(() => {
@@ -58,18 +121,6 @@ export default function Marketplace() {
     setSearchParams(next, { replace: true });
   }, [filters, sortBy, searchQuery, priceRange, setSearchParams]);
 
-  // Category options come from the active vertical config (DB-driven)
-  const categoryOptions = useMemo(
-    () => (categories ?? []).filter((c) => c.is_active !== false).map((c) => c.label),
-    [categories]
-  );
-  const categoryLabel = term('category_label', 'Category');
-
-  // States are derived from current marketplace inventory (vertical-agnostic)
-  const stateOptions = useMemo(() => {
-    const fromLeads = Array.from(new Set((leads ?? []).map((l) => l.state).filter(Boolean)));
-    return fromLeads.length > 0 ? fromLeads.sort() : FALLBACK_STATES;
-  }, [leads]);
   // Enable real-time updates
   useRealtimeLeads();
 
@@ -172,10 +223,25 @@ export default function Marketplace() {
                   <SelectValue placeholder={categoryLabel} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All {term('category_plural', `${categoryLabel}s`)}</SelectItem>
-                  {categoryOptions.map((type) => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
+                  <SelectItem value="all">
+                    <span className="flex w-full items-center justify-between gap-3">
+                      <span>All {term('category_plural', `${categoryLabel}s`)}</span>
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {categoryCounts.get('all') ?? 0}
+                      </span>
+                    </span>
+                  </SelectItem>
+                  {categoryOptions.map((type) => {
+                    const n = categoryCounts.get(type) ?? 0;
+                    return (
+                      <SelectItem key={type} value={type} disabled={n === 0}>
+                        <span className="flex w-full items-center justify-between gap-3">
+                          <span>{type}</span>
+                          <span className="text-xs text-muted-foreground tabular-nums">{n}</span>
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             )}
@@ -188,10 +254,25 @@ export default function Marketplace() {
                 <SelectValue placeholder="State" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All States</SelectItem>
-                {stateOptions.map((state) => (
-                  <SelectItem key={state} value={state}>{state}</SelectItem>
-                ))}
+                <SelectItem value="all">
+                  <span className="flex w-full items-center justify-between gap-3">
+                    <span>All States</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {stateCounts.get('all') ?? 0}
+                    </span>
+                  </span>
+                </SelectItem>
+                {stateOptions.map((state) => {
+                  const n = stateCounts.get(state) ?? 0;
+                  return (
+                    <SelectItem key={state} value={state} disabled={n === 0}>
+                      <span className="flex w-full items-center justify-between gap-3">
+                        <span>{state}</span>
+                        <span className="text-xs text-muted-foreground tabular-nums">{n}</span>
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
 
@@ -203,10 +284,26 @@ export default function Marketplace() {
                 <SelectValue placeholder="Tier" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Tiers</SelectItem>
-                <SelectItem value="A">Tier A (80-100)</SelectItem>
-                <SelectItem value="B">Tier B (60-79)</SelectItem>
-                <SelectItem value="C">Tier C (40-59)</SelectItem>
+                <SelectItem value="all">
+                  <span className="flex w-full items-center justify-between gap-3">
+                    <span>All Tiers</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {tierCounts.get('all') ?? 0}
+                    </span>
+                  </span>
+                </SelectItem>
+                {(['A', 'B', 'C'] as const).map((t) => {
+                  const n = tierCounts.get(t) ?? 0;
+                  const range = t === 'A' ? '80-100' : t === 'B' ? '60-79' : '40-59';
+                  return (
+                    <SelectItem key={t} value={t} disabled={n === 0}>
+                      <span className="flex w-full items-center justify-between gap-3">
+                        <span>Tier {t} ({range})</span>
+                        <span className="text-xs text-muted-foreground tabular-nums">{n}</span>
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
 
