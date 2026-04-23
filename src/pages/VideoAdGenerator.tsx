@@ -25,7 +25,6 @@ export default function VideoAdGenerator() {
   const [brief, setBrief] = useState('');
   const [tortType, setTortType] = useState('');
   const [duration, setDuration] = useState('30');
-  const [format, setFormat] = useState('9:16');
   const [isGenerating, setIsGenerating] = useState(false);
   const [script, setScript] = useState<any>(null);
   const [isGeneratingFrames, setIsGeneratingFrames] = useState(false);
@@ -98,14 +97,14 @@ export default function VideoAdGenerator() {
                   <SelectItem value="60">60 sec</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={format} onValueChange={setFormat}>
-                <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="9:16">9:16 (Reel)</SelectItem>
-                  <SelectItem value="16:9">16:9 (YouTube)</SelectItem>
-                  <SelectItem value="1:1">1:1 (Feed)</SelectItem>
-                </SelectContent>
-              </Select>
+              <Button onClick={generate} disabled={isGenerating || !categoryValid} className="gap-2">
+                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Film className="h-4 w-4" />}
+                {isGenerating ? 'Writing Script...' : 'Generate Script'}
+              </Button>
+            </div>
+            <QualityControls value={quality} onChange={setQuality} defaultOpen={false} />
+          </CardContent>
+        </Card>
               <Button onClick={generate} disabled={isGenerating || !categoryValid} className="gap-2">
                 {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Film className="h-4 w-4" />}
                 {isGenerating ? 'Writing Script...' : 'Generate Script'}
