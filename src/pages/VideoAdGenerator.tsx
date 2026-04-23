@@ -154,7 +154,7 @@ export default function VideoAdGenerator() {
                 scenes={script.script.scenes}
                 frames={frames}
                 title={script.title}
-                format={format}
+                format={quality.aspect_ratio}
                 openingHook={script.script.opening_hook}
                 closingCta={script.script.closing_cta}
                 voiceoverFullText={script.voiceover_full_text}
