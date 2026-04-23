@@ -43,9 +43,87 @@ export interface LeadFilters {
   isExclusive?: boolean;
 }
 
-export function useLeads(filters?: LeadFilters) {
+export interface LeadFilterValidationOptions {
+  /** Whitelist of allowed category labels for the active vertical. If omitted, no category check runs. */
+  allowedCategories?: string[];
+  /** Whitelist of allowed state codes (typically derived from current inventory). If omitted, no state check runs. */
+  allowedStates?: string[];
+  /** Show a toast when a filter is rejected. Defaults to true. */
+  notifyOnReject?: boolean;
+}
+
+// Zod schemas — runtime guarantees on shape & length even before whitelist checks.
+const TIER_VALUES = ['A', 'B', 'C', 'D'] as const;
+const FilterSchema = z.object({
+  tortType: z.string().trim().min(1).max(120).optional(),
+  state: z.string().trim().min(2).max(64).optional(),
+  tier: z.enum(TIER_VALUES).optional(),
+  minScore: z.number().int().min(0).max(100).optional(),
+  maxPrice: z.number().nonnegative().max(1_000_000).optional(),
+  isExclusive: z.boolean().optional(),
+});
+
+/**
+ * Validate filters against shape + active-vertical whitelists.
+ * Invalid values are STRIPPED (not sent to the DB) and surfaced via a single toast.
+ */
+export function validateLeadFilters(
+  raw: LeadFilters | undefined,
+  opts: LeadFilterValidationOptions = {}
+): { safe: LeadFilters; rejected: string[] } {
+  if (!raw) return { safe: {}, rejected: [] };
+  const parsed = FilterSchema.safeParse(raw);
+  const safe: LeadFilters = parsed.success ? { ...parsed.data } : {};
+  const rejected: string[] = [];
+
+  if (!parsed.success) {
+    for (const issue of parsed.error.issues) {
+      const field = String(issue.path[0] ?? 'filter');
+      if (!rejected.includes(field)) rejected.push(field);
+    }
+  }
+
+  if (
+    safe.tortType &&
+    opts.allowedCategories &&
+    opts.allowedCategories.length > 0 &&
+    !opts.allowedCategories.includes(safe.tortType)
+  ) {
+    rejected.push(`category "${safe.tortType}"`);
+    delete safe.tortType;
+  }
+
+  if (
+    safe.state &&
+    opts.allowedStates &&
+    opts.allowedStates.length > 0 &&
+    !opts.allowedStates.includes(safe.state)
+  ) {
+    rejected.push(`state "${safe.state}"`);
+    delete safe.state;
+  }
+
+  return { safe, rejected };
+}
+
+export function useLeads(
+  filters?: LeadFilters,
+  validation?: LeadFilterValidationOptions
+) {
+  const { safe: safeFilters, rejected } = validateLeadFilters(filters, validation);
+
+  // Surface rejected filters via toast (once per query key change)
+  if (rejected.length > 0 && validation?.notifyOnReject !== false) {
+    // Defer to avoid setState-in-render warnings from sonner
+    queueMicrotask(() =>
+      toast.warning(
+        `Ignored invalid filter${rejected.length > 1 ? 's' : ''}: ${rejected.join(', ')}`
+      )
+    );
+  }
+
   return useQuery({
-    queryKey: ['leads', filters],
+    queryKey: ['leads', safeFilters],
     queryFn: async () => {
       let query = supabase
         .from('leads')
@@ -53,23 +131,23 @@ export function useLeads(filters?: LeadFilters) {
         .eq('status', 'available')
         .order('created_at', { ascending: false });
 
-      if (filters?.tortType) {
-        query = query.eq('tort_type', filters.tortType);
+      if (safeFilters.tortType) {
+        query = query.eq('tort_type', safeFilters.tortType);
       }
-      if (filters?.state) {
-        query = query.eq('state', filters.state);
+      if (safeFilters.state) {
+        query = query.eq('state', safeFilters.state);
       }
-      if (filters?.tier) {
-        query = query.eq('tier', filters.tier as 'A' | 'B' | 'C' | 'D');
+      if (safeFilters.tier) {
+        query = query.eq('tier', safeFilters.tier as 'A' | 'B' | 'C' | 'D');
       }
-      if (filters?.minScore) {
-        query = query.gte('ai_quality_score', filters.minScore);
+      if (safeFilters.minScore) {
+        query = query.gte('ai_quality_score', safeFilters.minScore);
       }
-      if (filters?.maxPrice) {
-        query = query.lte('price', filters.maxPrice);
+      if (safeFilters.maxPrice) {
+        query = query.lte('price', safeFilters.maxPrice);
       }
-      if (filters?.isExclusive !== undefined) {
-        query = query.eq('is_exclusive', filters.isExclusive);
+      if (safeFilters.isExclusive !== undefined) {
+        query = query.eq('is_exclusive', safeFilters.isExclusive);
       }
 
       const { data, error } = await query;
