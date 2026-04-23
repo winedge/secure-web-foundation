@@ -12,6 +12,7 @@ import { VideoPlayer } from '@/components/video/VideoPlayer';
 import { useFirm } from '@/hooks/use-firm';
 import { CategorySelect, validateCategoryValue } from '@/components/verticals/CategorySelect';
 import { QualityControls, DEFAULT_QUALITY, type QualityControlsValue } from '@/components/ai/QualityControls';
+import { ComplianceNotice, type ComplianceSummary } from '@/components/ai/ComplianceNotice';
 
 interface SceneFrame {
   scene_number: number;
@@ -31,6 +32,8 @@ export default function VideoAdGenerator() {
   const [categoryError, setCategoryError] = useState<string | undefined>();
   const [categoryValid, setCategoryValid] = useState(true);
   const [quality, setQuality] = useState<QualityControlsValue>({ ...DEFAULT_QUALITY, aspect_ratio: '9:16' });
+  const [scriptCompliance, setScriptCompliance] = useState<ComplianceSummary | null>(null);
+  const [framesCompliance, setFramesCompliance] = useState<ComplianceSummary | null>(null);
 
   const generate = async () => {
     if (!brief) { toast.error('Enter a brief'); return; }
@@ -39,14 +42,22 @@ export default function VideoAdGenerator() {
     if (categoryValidation) { toast.error(categoryValidation); return; }
     setIsGenerating(true);
     setFrames([]);
+    setScriptCompliance(null);
+    setFramesCompliance(null);
     try {
       const { data, error } = await supabase.functions.invoke('ai-video-ads', {
         body: { firm_id: firm?.id, brief, category: tortType, duration: parseInt(duration), format: quality.aspect_ratio, quality },
       });
       if (error) throw error;
+      if (data?.compliance) setScriptCompliance(data.compliance);
       if (data?.error) throw new Error(data.error);
       setScript(data);
-      toast.success('Video script generated');
+      const rewrites = (data.compliance?.findings?.length ?? 0) + (data.compliance?.scene_rewrites?.length ?? 0);
+      if (rewrites > 0) {
+        toast.warning(`Script generated | ${rewrites} compliance rewrite${rewrites === 1 ? '' : 's'} applied`);
+      } else {
+        toast.success('Video script generated');
+      }
     } catch (err: any) { toast.error(err.message); }
     finally { setIsGenerating(false); }
   };
@@ -54,11 +65,13 @@ export default function VideoAdGenerator() {
   const generateFrames = async () => {
     if (!script?.script?.scenes) return;
     setIsGeneratingFrames(true);
+    setFramesCompliance(null);
     try {
       const { data, error } = await supabase.functions.invoke('generate-video-ad', {
         body: { scenes: script.script.scenes, title: script.title, format: quality.aspect_ratio, firm_id: firm?.id, quality },
       });
       if (error) throw error;
+      if (data?.compliance) setFramesCompliance(data.compliance);
       if (data?.error) throw new Error(data.error);
       if (data?.frames) {
         setFrames(data.frames);
@@ -104,6 +117,9 @@ export default function VideoAdGenerator() {
             <QualityControls value={quality} onChange={setQuality} />
           </CardContent>
         </Card>
+
+        {scriptCompliance && <ComplianceNotice compliance={scriptCompliance} />}
+        {framesCompliance && <ComplianceNotice compliance={framesCompliance} />}
 
         {script?.script && (
           <div className="space-y-4">
