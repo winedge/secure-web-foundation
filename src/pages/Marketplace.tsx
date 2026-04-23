@@ -42,9 +42,21 @@ export default function Marketplace() {
     ];
   });
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') ?? '');
-  const { data: leads, isLoading: leadsLoading } = useLeads(filters);
-  // Unfiltered pool used to compute per-option counts (respects only the OTHER active filters)
+  // Unfiltered pool: used both as the source of truth for valid states AND for per-option counts.
   const { data: allLeads } = useLeads();
+  // Whitelists for backend-side filter validation
+  const allowedCategoryLabels = useMemo(
+    () => (categories ?? []).filter((c) => c.is_active !== false).map((c) => c.label),
+    [categories]
+  );
+  const allowedStateCodes = useMemo(
+    () => Array.from(new Set((allLeads ?? []).map((l) => l.state).filter(Boolean))),
+    [allLeads]
+  );
+  const { data: leads, isLoading: leadsLoading } = useLeads(filters, {
+    allowedCategories: allowedCategoryLabels,
+    allowedStates: allowedStateCodes,
+  });
   const { data: sourcesMap } = useLeadSources();
 
   // Category options come from the active vertical config (DB-driven)
