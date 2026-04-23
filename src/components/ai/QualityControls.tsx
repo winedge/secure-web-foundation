@@ -2,10 +2,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Sliders } from "lucide-react";
+import { Sparkles, Sliders, Zap, Crown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 export type QualityTier = "draft" | "standard" | "premium";
 export type Resolution = "720p" | "1080p" | "1440p" | "2160p";
