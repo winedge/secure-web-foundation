@@ -277,10 +277,99 @@ export default function Marketplace() {
             </div>
           </>
         ) : (
-          <div className="text-center py-20">
-            <p className="text-xl font-medium text-muted-foreground">No leads found</p>
-            <p className="text-muted-foreground mt-2">Try adjusting your filters</p>
-          </div>
+          (() => {
+            const activeFilters: string[] = [];
+            if (filters.tortType) activeFilters.push(`${categoryLabel}: ${filters.tortType}`);
+            if (filters.state) activeFilters.push(`State: ${filters.state}`);
+            if (filters.tier) activeFilters.push(`Tier ${filters.tier}`);
+            if (searchQuery) activeFilters.push(`"${searchQuery}"`);
+            const priceNarrowed = priceRange[0] > priceStats.min || priceRange[1] < priceStats.max;
+            if (priceNarrowed) activeFilters.push(`$${priceRange[0]}–$${priceRange[1]}`);
+            const hasFilters = activeFilters.length > 0;
+            const leadWord = term('lead_plural', 'leads').toLowerCase();
+            const verticalName = vertical?.name || 'industry';
+
+            const resetAll = () => {
+              setFilters({});
+              setSearchQuery('');
+              setPriceRange([priceStats.min, priceStats.max]);
+              setSortBy('newest');
+            };
+
+            return (
+              <div className="text-center py-16 sm:py-20 px-4 max-w-xl mx-auto">
+                <div className="mx-auto mb-5 h-14 w-14 rounded-full bg-muted flex items-center justify-center">
+                  <Search className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 className="text-xl font-semibold">
+                  {hasFilters ? `No ${leadWord} match your filters` : `No ${leadWord} available yet`}
+                </h3>
+                <p className="text-muted-foreground mt-2">
+                  {hasFilters
+                    ? `We couldn't find any ${verticalName.toLowerCase()} ${leadWord} matching the current criteria.`
+                    : `New ${verticalName.toLowerCase()} ${leadWord} appear here in real time as they're verified. Check back shortly.`}
+                </p>
+
+                {hasFilters && (
+                  <div className="mt-5 flex flex-wrap justify-center gap-2">
+                    {activeFilters.map((f) => (
+                      <span
+                        key={f}
+                        className="inline-flex items-center rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground"
+                      >
+                        {f}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {hasFilters && (
+                  <div className="mt-6 text-left rounded-lg border border-border bg-card/50 p-4">
+                    <p className="text-sm font-medium mb-2">Try this:</p>
+                    <ul className="text-sm text-muted-foreground space-y-1.5 list-disc pl-5">
+                      {filters.tortType && categoryOptions.length > 1 && (
+                        <li>
+                          Broaden the {categoryLabel.toLowerCase()} — try a different {categoryLabel.toLowerCase()} or clear it
+                          to see all available {leadWord}.
+                        </li>
+                      )}
+                      {filters.state && (
+                        <li>
+                          Remove the <span className="font-medium">{filters.state}</span> state filter — most {verticalName.toLowerCase()}{' '}
+                          {leadWord} are not state-restricted.
+                        </li>
+                      )}
+                      {filters.tier && (
+                        <li>
+                          Tier {filters.tier} {leadWord} are limited. Include lower tiers to see more options.
+                        </li>
+                      )}
+                      {priceNarrowed && (
+                        <li>Widen the price range — your current band may be too narrow.</li>
+                      )}
+                      {searchQuery && (
+                        <li>
+                          Clear the search term <span className="font-medium">"{searchQuery}"</span> or try a shorter keyword.
+                        </li>
+                      )}
+                      {!filters.tortType && !filters.state && !filters.tier && !priceNarrowed && !searchQuery && (
+                        <li>Try removing one or more filters to broaden the search.</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="mt-6 flex flex-wrap justify-center gap-2">
+                  {hasFilters && (
+                    <Button onClick={resetAll}>Reset all filters</Button>
+                  )}
+                  <Button variant="outline" onClick={() => navigate('/intake-form-builder')}>
+                    Generate your own {leadWord}
+                  </Button>
+                </div>
+              </div>
+            );
+          })()
         )}
       </div>
     </DashboardLayout>
