@@ -125,26 +125,28 @@ export default function Marketplace() {
             <div className="flex-1 min-w-[180px]">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search leads..." 
+                <Input
+                  placeholder={`Search ${term('lead_plural', 'leads').toLowerCase()}...`}
                   className="pl-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
             </div>
-            
-            <Select onValueChange={(v) => setFilters({ ...filters, tortType: v === 'all' ? undefined : v })}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Tort Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                {tortTypes.map((type) => (
-                  <SelectItem key={type} value={type}>{type}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+            {categoryOptions.length > 0 && (
+              <Select onValueChange={(v) => setFilters({ ...filters, tortType: v === 'all' ? undefined : v })}>
+                <SelectTrigger className="w-full sm:w-[200px]">
+                  <SelectValue placeholder={categoryLabel} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All {term('category_plural', `${categoryLabel}s`)}</SelectItem>
+                  {categoryOptions.map((type) => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
 
             <Select onValueChange={(v) => setFilters({ ...filters, state: v === 'all' ? undefined : v })}>
               <SelectTrigger className="w-[calc(50%-6px)] sm:w-[120px]">
@@ -152,7 +154,7 @@ export default function Marketplace() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All States</SelectItem>
-                {states.map((state) => (
+                {stateOptions.map((state) => (
                   <SelectItem key={state} value={state}>{state}</SelectItem>
                 ))}
               </SelectContent>
