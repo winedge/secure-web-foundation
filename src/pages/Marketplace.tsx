@@ -13,15 +13,14 @@ import { useAuth } from '@/lib/auth-context';
 import { useFirm } from '@/hooks/use-firm';
 import { useVertical } from '@/hooks/use-vertical';
 
-const tortTypes = ['Camp Lejeune', 'Roundup', 'Talcum Powder', 'AFFF', 'Paraquat', '3M Earplugs'];
-const states = ['CA', 'TX', 'FL', 'NY', 'PA', 'IL', 'OH', 'GA', 'NC', 'MI'];
+const FALLBACK_STATES = ['CA', 'TX', 'FL', 'NY', 'PA', 'IL', 'OH', 'GA', 'NC', 'MI'];
 
 type SortOption = 'newest' | 'oldest' | 'price-low' | 'price-high' | 'score-high' | 'score-low';
 
 export default function Marketplace() {
   const { user, loading } = useAuth();
   const { data: firm, isLoading: firmLoading } = useFirm();
-  const { term, vertical } = useVertical();
+  const { term, vertical, categories } = useVertical();
   const navigate = useNavigate();
   const [filters, setFilters] = useState<LeadFilters>({});
   const [sortBy, setSortBy] = useState<SortOption>('newest');
@@ -29,6 +28,19 @@ export default function Marketplace() {
   const [searchQuery, setSearchQuery] = useState('');
   const { data: leads, isLoading: leadsLoading } = useLeads(filters);
   const { data: sourcesMap } = useLeadSources();
+
+  // Category options come from the active vertical config (DB-driven)
+  const categoryOptions = useMemo(
+    () => (categories ?? []).filter((c) => c.is_active !== false).map((c) => c.label),
+    [categories]
+  );
+  const categoryLabel = term('category_label', 'Category');
+
+  // States are derived from current marketplace inventory (vertical-agnostic)
+  const stateOptions = useMemo(() => {
+    const fromLeads = Array.from(new Set((leads ?? []).map((l) => l.state).filter(Boolean)));
+    return fromLeads.length > 0 ? fromLeads.sort() : FALLBACK_STATES;
+  }, [leads]);
   // Enable real-time updates
   useRealtimeLeads();
 
