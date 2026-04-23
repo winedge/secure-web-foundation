@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, ArrowUpDown, DollarSign } from 'lucide-react';
+import { Search, ArrowUpDown, DollarSign } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LeadCard } from '@/components/leads/LeadCard';
 import { Input } from '@/components/ui/input';
@@ -13,15 +13,14 @@ import { useAuth } from '@/lib/auth-context';
 import { useFirm } from '@/hooks/use-firm';
 import { useVertical } from '@/hooks/use-vertical';
 
-const tortTypes = ['Camp Lejeune', 'Roundup', 'Talcum Powder', 'AFFF', 'Paraquat', '3M Earplugs'];
-const states = ['CA', 'TX', 'FL', 'NY', 'PA', 'IL', 'OH', 'GA', 'NC', 'MI'];
+const FALLBACK_STATES = ['CA', 'TX', 'FL', 'NY', 'PA', 'IL', 'OH', 'GA', 'NC', 'MI'];
 
 type SortOption = 'newest' | 'oldest' | 'price-low' | 'price-high' | 'score-high' | 'score-low';
 
 export default function Marketplace() {
   const { user, loading } = useAuth();
   const { data: firm, isLoading: firmLoading } = useFirm();
-  const { term, vertical } = useVertical();
+  const { term, vertical, categories } = useVertical();
   const navigate = useNavigate();
   const [filters, setFilters] = useState<LeadFilters>({});
   const [sortBy, setSortBy] = useState<SortOption>('newest');
@@ -29,6 +28,19 @@ export default function Marketplace() {
   const [searchQuery, setSearchQuery] = useState('');
   const { data: leads, isLoading: leadsLoading } = useLeads(filters);
   const { data: sourcesMap } = useLeadSources();
+
+  // Category options come from the active vertical config (DB-driven)
+  const categoryOptions = useMemo(
+    () => (categories ?? []).filter((c) => c.is_active !== false).map((c) => c.label),
+    [categories]
+  );
+  const categoryLabel = term('category_label', 'Category');
+
+  // States are derived from current marketplace inventory (vertical-agnostic)
+  const stateOptions = useMemo(() => {
+    const fromLeads = Array.from(new Set((leads ?? []).map((l) => l.state).filter(Boolean)));
+    return fromLeads.length > 0 ? fromLeads.sort() : FALLBACK_STATES;
+  }, [leads]);
   // Enable real-time updates
   useRealtimeLeads();
 
@@ -113,26 +125,28 @@ export default function Marketplace() {
             <div className="flex-1 min-w-[180px]">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search leads..." 
+                <Input
+                  placeholder={`Search ${term('lead_plural', 'leads').toLowerCase()}...`}
                   className="pl-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
             </div>
-            
-            <Select onValueChange={(v) => setFilters({ ...filters, tortType: v === 'all' ? undefined : v })}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Tort Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                {tortTypes.map((type) => (
-                  <SelectItem key={type} value={type}>{type}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+            {categoryOptions.length > 0 && (
+              <Select onValueChange={(v) => setFilters({ ...filters, tortType: v === 'all' ? undefined : v })}>
+                <SelectTrigger className="w-full sm:w-[200px]">
+                  <SelectValue placeholder={categoryLabel} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All {term('category_plural', `${categoryLabel}s`)}</SelectItem>
+                  {categoryOptions.map((type) => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
 
             <Select onValueChange={(v) => setFilters({ ...filters, state: v === 'all' ? undefined : v })}>
               <SelectTrigger className="w-[calc(50%-6px)] sm:w-[120px]">
@@ -140,7 +154,7 @@ export default function Marketplace() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All States</SelectItem>
-                {states.map((state) => (
+                {stateOptions.map((state) => (
                   <SelectItem key={state} value={state}>{state}</SelectItem>
                 ))}
               </SelectContent>
