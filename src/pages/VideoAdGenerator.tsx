@@ -127,16 +127,16 @@ export default function VideoAdGenerator() {
         thumbnail_url: validFrames[0]?.image_url || null,
         status: 'saved',
         ai_metadata: {
-          best_platform: script.best_platform,
-          emotional_arc: script.emotional_arc,
-          hashtags: script.hashtags,
-          hook: script.script?.opening_hook,
-          cta: script.script?.closing_cta,
-          frames: validFrames,
-          quality,
+          best_platform: script.best_platform ?? null,
+          emotional_arc: script.emotional_arc ?? null,
+          hashtags: script.hashtags ?? [],
+          hook: script.script?.opening_hook ?? null,
+          cta: script.script?.closing_cta ?? null,
+          frames: validFrames.map((f) => ({ scene_number: f.scene_number, image_url: f.image_url })),
+          quality: quality as any,
           variant_index: script.variant_index ?? selectedVariantIdx,
           variant_count: variants.length,
-        },
+        } as any,
       }]);
       if (error) throw error;
       toast.success('Saved to ad history');
