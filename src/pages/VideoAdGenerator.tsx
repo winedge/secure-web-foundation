@@ -3,10 +3,9 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Video, Film, Clock, Download, Sparkles, ImageIcon } from 'lucide-react';
+import { Loader2, Video, Film, Clock, Sparkles, ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { VideoPlayer } from '@/components/video/VideoPlayer';
@@ -102,14 +101,7 @@ export default function VideoAdGenerator() {
                 {isGenerating ? 'Writing Script...' : 'Generate Script'}
               </Button>
             </div>
-            <QualityControls value={quality} onChange={setQuality} defaultOpen={false} />
-          </CardContent>
-        </Card>
-              <Button onClick={generate} disabled={isGenerating || !categoryValid} className="gap-2">
-                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Film className="h-4 w-4" />}
-                {isGenerating ? 'Writing Script...' : 'Generate Script'}
-              </Button>
-            </div>
+            <QualityControls value={quality} onChange={setQuality} />
           </CardContent>
         </Card>
 
@@ -119,10 +111,10 @@ export default function VideoAdGenerator() {
               <h2 className="text-xl font-semibold text-foreground">{script.title}</h2>
               <Badge variant="outline"><Clock className="h-3 w-3 mr-1" />{script.duration_seconds}s</Badge>
               <Badge variant="secondary">{script.format}</Badge>
+              <Badge variant="outline">{quality.resolution} | {quality.tier}</Badge>
               {script.best_platform && <Badge className="bg-accent/10 text-accent">Best: {script.best_platform}</Badge>}
             </div>
 
-            {/* Generate Frames CTA */}
             {validFrames.length === 0 && (
               <Card className="border-primary/30 bg-primary/5">
                 <CardContent className="pt-6">
@@ -133,7 +125,7 @@ export default function VideoAdGenerator() {
                         Generate Video with Voiceover
                       </h3>
                       <p className="text-sm text-muted-foreground mt-1">
-                        AI generates cinematic frames for each scene. Then play as a video with synchronized voiceover narration - completely free, no extra API key.
+                        AI generates cinematic frames for each scene at {quality.resolution} ({quality.tier} tier). Then play as a video with synchronized voiceover narration.
                       </p>
                     </div>
                     <Button onClick={generateFrames} disabled={isGeneratingFrames} size="lg" className="gap-2 whitespace-nowrap">
@@ -148,7 +140,6 @@ export default function VideoAdGenerator() {
               </Card>
             )}
 
-            {/* Video Player */}
             {validFrames.length > 0 && (
               <VideoPlayer
                 scenes={script.script.scenes}
