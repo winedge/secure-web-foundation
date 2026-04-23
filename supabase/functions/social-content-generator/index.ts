@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { createSupabaseClient } from "../_shared/auth.ts";
 import { getVerticalContext } from "../_shared/vertical.ts";
+import { buildQualityDirective, pickImageModel, type QualityControls } from "../_shared/quality.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
@@ -10,7 +11,10 @@ serve(async (req) => {
   const supabase = createSupabaseClient(true);
 
   try {
-    const { action, context, firm_id } = await req.json();
+    const { action, context, firm_id, quality } = await req.json();
+    const q: QualityControls = quality || {};
+    const qualityDirective = buildQualityDirective(q);
+    const imageModel = pickImageModel(q);
 
     const { data: aiConfig } = await supabase
       .from("admin_settings")
@@ -90,6 +94,9 @@ CRITICAL RULES:
 - Ensure text is legible against the background
 - Match the aspect ratio requested
 
+Production directives (must be reflected in the prompt you return):
+${qualityDirective}
+
 Return JSON: {
   "prompt": "Ultra detailed image generation prompt that explicitly describes text placement, typography, and CTA button styling on the image",
   "style": "photograph|illustration|infographic|quote-card",
@@ -154,7 +161,7 @@ Return JSON: {
           method: "POST",
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "google/gemini-3-pro-image-preview",
+            model: imageModel,
             messages: [{ role: "user", content: parsed.prompt }],
             modalities: ["image", "text"],
           }),

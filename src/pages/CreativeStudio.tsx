@@ -15,6 +15,7 @@ import { useMetaPixel } from '@/hooks/use-meta-pixel';
 import { useFirm } from '@/hooks/use-firm';
 import { useVertical } from '@/hooks/use-vertical';
 import { CategorySelect, validateCategoryValue } from '@/components/verticals/CategorySelect';
+import { QualityControls, DEFAULT_QUALITY, type QualityControlsValue } from '@/components/ai/QualityControls';
 
 export default function CreativeStudio() {
   const [brief, setBrief] = useState('');
@@ -27,6 +28,7 @@ export default function CreativeStudio() {
   const [metaWizardPrefill, setMetaWizardPrefill] = useState<any>({});
   const [categoryError, setCategoryError] = useState<string | undefined>();
   const [categoryValid, setCategoryValid] = useState(true);
+  const [quality, setQuality] = useState<QualityControlsValue>({ ...DEFAULT_QUALITY, aspect_ratio: '1:1' });
   const createCampaign = useCreateCampaign();
   const navigate = useNavigate();
   const pixel = useMetaPixel();
@@ -42,7 +44,7 @@ export default function CreativeStudio() {
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('ai-creative-studio', {
-        body: { firm_id: firm?.id, brief, category: tortType, brand_tone: brandTone, num_variants: 6 },
+        body: { firm_id: firm?.id, brief, category: tortType, brand_tone: brandTone, num_variants: 6, quality },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -118,6 +120,7 @@ export default function CreativeStudio() {
                 {isGenerating ? 'Generating...' : 'Generate Campaign'}
               </Button>
             </div>
+            <QualityControls value={quality} onChange={setQuality} />
           </CardContent>
         </Card>
 

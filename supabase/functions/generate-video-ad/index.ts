@@ -1,13 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { getVerticalContext } from "../_shared/vertical.ts";
+import { buildQualityDirective, pickImageModel, type QualityControls } from "../_shared/quality.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
   if (corsResp) return corsResp;
 
   try {
-    const { scenes, title, format, firm_id } = await req.json();
+    const { scenes, title, format, firm_id, quality } = await req.json();
     if (!scenes || !Array.isArray(scenes) || scenes.length === 0) {
       throw new Error("scenes array required");
     }
@@ -18,6 +19,13 @@ serve(async (req) => {
     const { config, verticalSlug } = await getVerticalContext(firm_id, "video");
     const verticalName = config?.vertical?.name ?? "Mass Tort";
 
+    const q: QualityControls = {
+      ...(quality || {}),
+      aspect_ratio: quality?.aspect_ratio ?? format ?? "9:16",
+    };
+    const qualityDirective = buildQualityDirective(q);
+    const model = pickImageModel(q);
+
     const framePromises = scenes.map(async (scene: any, i: number) => {
       const prompt = `Create a cinematic, photorealistic still frame for scene ${i + 1} of a professional ${verticalName} industry advertisement video titled "${title || `${verticalName} Ad`}".
 
@@ -27,7 +35,7 @@ Mood: ${scene.music_mood || 'dramatic'}
 Voiceover context: ${scene.voiceover || ''}
 
 Style: Ultra high quality, dramatic cinematic lighting, shallow depth of field, professional broadcast TV commercial quality tailored to the ${verticalName} industry.
-Aspect ratio: ${format === '16:9' ? 'widescreen 16:9' : format === '1:1' ? 'square 1:1' : 'vertical 9:16 mobile'}.
+${qualityDirective}
 Do NOT include any watermarks.`;
 
       try {
@@ -35,7 +43,7 @@ Do NOT include any watermarks.`;
           method: "POST",
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "google/gemini-3-pro-image-preview",
+            model,
             messages: [{ role: "user", content: prompt }],
             modalities: ["image", "text"],
           }),
@@ -62,7 +70,10 @@ Do NOT include any watermarks.`;
       frames,
       total_scenes: scenes.length,
       generated_count: successCount,
-      format: format || '9:16',
+      format: q.aspect_ratio,
+      resolution: q.resolution ?? "1080p",
+      quality_tier: q.tier ?? "standard",
+      model_used: model,
       status: successCount > 0 ? 'completed' : 'failed',
       vertical: verticalSlug,
     });
