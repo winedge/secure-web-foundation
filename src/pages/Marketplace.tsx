@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, ArrowUpDown, DollarSign } from 'lucide-react';
+import { Search, ArrowUpDown, DollarSign } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LeadCard } from '@/components/leads/LeadCard';
 import { Input } from '@/components/ui/input';
