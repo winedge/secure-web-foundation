@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { createSupabaseClient } from "../_shared/auth.ts";
 import { getVerticalContext } from "../_shared/vertical.ts";
+import { buildQualityDirective, pickImageModel, type QualityControls } from "../_shared/quality.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
@@ -10,7 +11,10 @@ serve(async (req) => {
   const supabase = createSupabaseClient(true);
 
   try {
-    const { action, context, firm_id } = await req.json();
+    const { action, context, firm_id, quality } = await req.json();
+    const q: QualityControls = quality || {};
+    const qualityDirective = buildQualityDirective(q);
+    const imageModel = pickImageModel(q);
 
     const { data: aiConfig } = await supabase
       .from("admin_settings")
