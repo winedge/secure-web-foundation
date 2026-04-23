@@ -72,70 +72,104 @@ Return JSON:
   "hashtags": ["tag1"]
 }`;
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: `Create a ${duration || 30}-second ${q.aspect_ratio} video ad script for the ${verticalName} industry. Brief: ${safeBrief}. Focus area: ${subject || verticalName}. Make it emotionally compelling and conversion-focused.`,
-          },
-        ],
-        temperature: 0.6,
-      }),
-    });
+    const generateOne = async (variantIndex: number) => {
+      const variantHint = variationCount > 1
+        ? ` This is variation ${variantIndex + 1} of ${variationCount} | make it distinctly different from other variations in tone, hook, or angle while staying on-brief.`
+        : "";
+      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            {
+              role: "user",
+              content: `Create a ${duration || 30}-second ${q.aspect_ratio} video ad script for the ${verticalName} industry. Brief: ${safeBrief}. Focus area: ${subject || verticalName}. Make it emotionally compelling and conversion-focused.${variantHint}`,
+            },
+          ],
+          temperature: variationCount > 1 ? 0.85 : 0.6,
+        }),
+      });
 
-    if (!aiResponse.ok) {
-      if (aiResponse.status === 429) return jsonResponse({ error: "Rate limit exceeded" }, 429);
-      if (aiResponse.status === 402) return jsonResponse({ error: "AI credits exhausted" }, 402);
-      throw new Error("AI gateway error");
-    }
+      if (!aiResponse.ok) {
+        if (aiResponse.status === 429) return { __error: "Rate limit exceeded", __status: 429 };
+        if (aiResponse.status === 402) return { __error: "AI credits exhausted", __status: 402 };
+        return { __error: "AI gateway error", __status: 500 };
+      }
 
-    const aiData = await aiResponse.json();
-    const content = aiData.choices?.[0]?.message?.content || "";
-    let parsed;
-    try {
-      const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
-      parsed = jsonMatch ? JSON.parse(jsonMatch[1]) : JSON.parse(content);
-    } catch { parsed = { error: "Could not parse script" }; }
+      const aiData = await aiResponse.json();
+      const content = aiData.choices?.[0]?.message?.content || "";
+      let parsed: any;
+      try {
+        const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+        parsed = jsonMatch ? JSON.parse(jsonMatch[1]) : JSON.parse(content);
+      } catch { parsed = { error: "Could not parse script" }; }
 
-    // Sanitize AI-generated scene fields (voiceover, text_overlay, visual_description)
-    const sceneFindings: Array<{ scene_number: number; field: string; findings: any[] }> = [];
-    if (parsed?.script?.scenes && Array.isArray(parsed.script.scenes)) {
-      parsed.script.scenes = parsed.script.scenes.map((s: any) => {
-        for (const f of ["visual_description", "text_overlay", "voiceover"]) {
-          if (typeof s[f] === "string") {
-            const r = checkPromptCompliance(s[f], verticalSlug);
-            if (r.findings.length > 0) {
-              sceneFindings.push({ scene_number: s.scene_number, field: f, findings: r.findings });
-              s[f] = r.safe_prompt;
+      // Sanitize AI-generated scene fields
+      const sceneFindings: Array<{ scene_number: number; field: string; findings: any[] }> = [];
+      if (parsed?.script?.scenes && Array.isArray(parsed.script.scenes)) {
+        parsed.script.scenes = parsed.script.scenes.map((s: any) => {
+          for (const f of ["visual_description", "text_overlay", "voiceover"]) {
+            if (typeof s[f] === "string") {
+              const r = checkPromptCompliance(s[f], verticalSlug);
+              if (r.findings.length > 0) {
+                sceneFindings.push({ scene_number: s.scene_number, field: f, findings: r.findings });
+                s[f] = r.safe_prompt;
+              }
             }
           }
-        }
-        return s;
-      });
-    }
-    if (typeof parsed?.voiceover_full_text === "string") {
-      const r = checkPromptCompliance(parsed.voiceover_full_text, verticalSlug);
-      if (r.findings.length > 0) {
-        sceneFindings.push({ scene_number: 0, field: "voiceover_full_text", findings: r.findings });
-        parsed.voiceover_full_text = r.safe_prompt;
+          return s;
+        });
       }
+      if (typeof parsed?.voiceover_full_text === "string") {
+        const r = checkPromptCompliance(parsed.voiceover_full_text, verticalSlug);
+        if (r.findings.length > 0) {
+          sceneFindings.push({ scene_number: 0, field: "voiceover_full_text", findings: r.findings });
+          parsed.voiceover_full_text = r.safe_prompt;
+        }
+      }
+
+      return {
+        ...parsed,
+        variant_index: variantIndex,
+        compliance: {
+          ...summarizeCompliance(compliance),
+          scene_rewrites: sceneFindings,
+        },
+      };
+    };
+
+    const results = await Promise.all(Array.from({ length: variationCount }, (_, i) => generateOne(i)));
+
+    // Surface rate-limit / payment errors if ALL variations failed with the same blocking status
+    const blockingError = results.find((r: any) => r?.__status === 429 || r?.__status === 402);
+    if (blockingError && results.every((r: any) => r?.__error)) {
+      return jsonResponse({ error: blockingError.__error }, blockingError.__status);
+    }
+
+    const variants = results.filter((r: any) => !r?.__error);
+
+    // Back-compat: if only 1 variation requested, return the same flat shape as before
+    if (variationCount === 1) {
+      return jsonResponse({
+        ...variants[0],
+        vertical: verticalSlug,
+        quality_tier: q.tier ?? "standard",
+        resolution: q.resolution ?? "1080p",
+        model_used: model,
+      });
     }
 
     return jsonResponse({
-      ...parsed,
+      variants,
+      variant_count: variants.length,
+      requested_count: variationCount,
       vertical: verticalSlug,
       quality_tier: q.tier ?? "standard",
       resolution: q.resolution ?? "1080p",
       model_used: model,
-      compliance: {
-        ...summarizeCompliance(compliance),
-        scene_rewrites: sceneFindings,
-      },
+      compliance: summarizeCompliance(compliance),
     });
   } catch (e) {
     console.error("ai-video-ads error:", e);
