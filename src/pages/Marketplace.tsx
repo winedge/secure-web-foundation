@@ -47,6 +47,22 @@ export default function Marketplace() {
   const { data: allLeads } = useLeads();
   const { data: sourcesMap } = useLeadSources();
 
+  // Category options come from the active vertical config (DB-driven)
+  const categoryOptions = useMemo(
+    () => (categories ?? []).filter((c) => c.is_active !== false).map((c) => c.label),
+    [categories]
+  );
+  const categoryLabel = term('category_label', 'Category');
+
+  // States are derived from the full marketplace inventory so dropdown counts stay stable
+  // when the user is filtering by category/tier.
+  const stateOptions = useMemo(() => {
+    const fromAll = Array.from(new Set((allLeads ?? []).map((l) => l.state).filter(Boolean)));
+    if (fromAll.length > 0) return fromAll.sort();
+    const fromLeads = Array.from(new Set((leads ?? []).map((l) => l.state).filter(Boolean)));
+    return fromLeads.length > 0 ? fromLeads.sort() : FALLBACK_STATES;
+  }, [allLeads, leads]);
+
   // Helper: count leads in `allLeads` that match a partial filter set + price/search.
   const countMatching = useMemo(() => {
     return (override: Partial<LeadFilters>) => {
@@ -70,22 +86,20 @@ export default function Marketplace() {
     };
   }, [allLeads, filters, priceRange, searchQuery]);
 
-  // Per-option counts (clearing the relevant filter so the dropdown shows what each option would yield)
+  // Per-option counts (clearing the relevant filter so each row shows what selecting it would yield)
   const categoryCounts = useMemo(() => {
     const map = new Map<string, number>();
     map.set('all', countMatching({ tortType: undefined }));
-    for (const c of categoryOptionsRaw(categories))
-      map.set(c, countMatching({ tortType: c }));
+    for (const c of categoryOptions) map.set(c, countMatching({ tortType: c }));
     return map;
-  }, [countMatching, categories]);
+  }, [countMatching, categoryOptions]);
 
   const stateCounts = useMemo(() => {
     const map = new Map<string, number>();
     map.set('all', countMatching({ state: undefined }));
-    const list = Array.from(new Set((allLeads ?? []).map((l) => l.state).filter(Boolean)));
-    for (const s of list) map.set(s, countMatching({ state: s }));
+    for (const s of stateOptions) map.set(s, countMatching({ state: s }));
     return map;
-  }, [countMatching, allLeads]);
+  }, [countMatching, stateOptions]);
 
   const tierCounts = useMemo(() => {
     const map = new Map<string, number>();
@@ -107,18 +121,6 @@ export default function Marketplace() {
     setSearchParams(next, { replace: true });
   }, [filters, sortBy, searchQuery, priceRange, setSearchParams]);
 
-  // Category options come from the active vertical config (DB-driven)
-  const categoryOptions = useMemo(
-    () => (categories ?? []).filter((c) => c.is_active !== false).map((c) => c.label),
-    [categories]
-  );
-  const categoryLabel = term('category_label', 'Category');
-
-  // States are derived from current marketplace inventory (vertical-agnostic)
-  const stateOptions = useMemo(() => {
-    const fromLeads = Array.from(new Set((leads ?? []).map((l) => l.state).filter(Boolean)));
-    return fromLeads.length > 0 ? fromLeads.sort() : FALLBACK_STATES;
-  }, [leads]);
   // Enable real-time updates
   useRealtimeLeads();
 
