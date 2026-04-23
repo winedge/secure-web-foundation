@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Video, Film, Clock, Sparkles, ImageIcon } from 'lucide-react';
+import { Loader2, Video, Film, Clock, Sparkles, ImageIcon, Check, Save, Layers } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { VideoPlayer } from '@/components/video/VideoPlayer';
@@ -15,6 +15,7 @@ import { QualityControls, DEFAULT_QUALITY, type QualityControlsValue } from '@/c
 import { ComplianceNotice, type ComplianceSummary } from '@/components/ai/ComplianceNotice';
 import { GenerationProgress } from '@/components/ai/GenerationProgress';
 import { useFrameStream } from '@/hooks/use-frame-stream';
+import { cn } from '@/lib/utils';
 
 interface SceneFrame {
   scene_number: number;
@@ -27,16 +28,21 @@ export default function VideoAdGenerator() {
   const [brief, setBrief] = useState('');
   const [tortType, setTortType] = useState('');
   const [duration, setDuration] = useState('30');
+  const [variationCount, setVariationCount] = useState('3');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [script, setScript] = useState<any>(null);
+  const [variants, setVariants] = useState<any[]>([]);
+  const [selectedVariantIdx, setSelectedVariantIdx] = useState<number>(0);
   const [frames, setFrames] = useState<SceneFrame[]>([]);
   const [categoryError, setCategoryError] = useState<string | undefined>();
   const [categoryValid, setCategoryValid] = useState(true);
   const [quality, setQuality] = useState<QualityControlsValue>({ ...DEFAULT_QUALITY, aspect_ratio: '9:16' });
   const [scriptCompliance, setScriptCompliance] = useState<ComplianceSummary | null>(null);
   const [framesCompliance, setFramesCompliance] = useState<ComplianceSummary | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const frameStream = useFrameStream();
   const isGeneratingFrames = frameStream.isStreaming;
+
+  const script = variants[selectedVariantIdx] ?? null;
 
   const generate = async () => {
     if (!brief) { toast.error('Enter a brief'); return; }
@@ -45,25 +51,43 @@ export default function VideoAdGenerator() {
     if (categoryValidation) { toast.error(categoryValidation); return; }
     setIsGenerating(true);
     setFrames([]);
+    setVariants([]);
+    setSelectedVariantIdx(0);
     setScriptCompliance(null);
     setFramesCompliance(null);
     frameStream.reset();
     try {
+      const reqVariations = parseInt(variationCount, 10) || 1;
       const { data, error } = await supabase.functions.invoke('ai-video-ads', {
-        body: { firm_id: firm?.id, brief, category: tortType, duration: parseInt(duration), format: quality.aspect_ratio, quality },
+        body: { firm_id: firm?.id, brief, category: tortType, duration: parseInt(duration), format: quality.aspect_ratio, quality, variations: reqVariations },
       });
       if (error) throw error;
-      if (data?.compliance) setScriptCompliance(data.compliance);
       if (data?.error) throw new Error(data.error);
-      setScript(data);
-      const rewrites = (data.compliance?.findings?.length ?? 0) + (data.compliance?.scene_rewrites?.length ?? 0);
-      if (rewrites > 0) {
-        toast.warning(`Script generated | ${rewrites} compliance rewrite${rewrites === 1 ? '' : 's'} applied`);
+      if (data?.compliance) setScriptCompliance(data.compliance);
+
+      // Backend returns either { variants: [...] } when count > 1, or a flat single script
+      const list: any[] = Array.isArray(data?.variants) ? data.variants : [data];
+      const usable = list.filter((v) => v?.script);
+      if (usable.length === 0) throw new Error('No usable scripts returned');
+      setVariants(usable);
+      setSelectedVariantIdx(0);
+
+      if (usable.length > 1) {
+        toast.success(`${usable.length} script variations generated | pick the one you like best`);
       } else {
         toast.success('Video script generated');
       }
     } catch (err: any) { toast.error(err.message); }
     finally { setIsGenerating(false); }
+  };
+
+  const onSelectVariant = (idx: number) => {
+    if (idx === selectedVariantIdx) return;
+    setSelectedVariantIdx(idx);
+    // Reset frames since they belong to the previously-selected script
+    setFrames([]);
+    frameStream.reset();
+    setFramesCompliance(null);
   };
 
   const generateFrames = async () => {
@@ -83,6 +107,43 @@ export default function VideoAdGenerator() {
       toast.success(`${ok}/${collected.length} scene frames generated! Press play to watch with voiceover.`);
     } catch (err: any) {
       toast.error(err.message);
+    }
+  };
+
+  const saveToHistory = async () => {
+    if (!script || !firm?.id) return;
+    setIsSaving(true);
+    try {
+      const validFrames = frames.filter((f) => f.image_url);
+      const { error } = await supabase.from('video_ad_projects').insert([{
+        firm_id: firm.id,
+        title: script.title || 'Untitled Video Ad',
+        brief,
+        tort_type: tortType || null,
+        format: quality.aspect_ratio,
+        duration_seconds: script.duration_seconds || parseInt(duration),
+        script: JSON.stringify(script.script ?? {}),
+        voiceover_text: script.voiceover_full_text || null,
+        thumbnail_url: validFrames[0]?.image_url || null,
+        status: 'saved',
+        ai_metadata: {
+          best_platform: script.best_platform ?? null,
+          emotional_arc: script.emotional_arc ?? null,
+          hashtags: script.hashtags ?? [],
+          hook: script.script?.opening_hook ?? null,
+          cta: script.script?.closing_cta ?? null,
+          frames: validFrames.map((f) => ({ scene_number: f.scene_number, image_url: f.image_url })),
+          quality: quality as any,
+          variant_index: script.variant_index ?? selectedVariantIdx,
+          variant_count: variants.length,
+        } as any,
+      }]);
+      if (error) throw error;
+      toast.success('Saved to ad history');
+    } catch (err: any) {
+      toast.error(err.message ?? 'Failed to save');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -106,17 +167,35 @@ export default function VideoAdGenerator() {
             <Textarea placeholder="Describe your video ad... (e.g. 'Emotional testimonial-style ad for mesothelioma victims')" value={brief} onChange={(e) => setBrief(e.target.value)} rows={3} />
             <div className="flex flex-wrap gap-4 items-end">
               <div className="max-w-xs flex-1"><CategorySelect value={tortType} onChange={(v) => { setTortType(v); if (categoryError) setCategoryError(undefined); }} error={categoryError} required onValidityChange={setCategoryValid} /></div>
-              <Select value={duration} onValueChange={setDuration}>
-                <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="15">15 sec</SelectItem>
-                  <SelectItem value="30">30 sec</SelectItem>
-                  <SelectItem value="60">60 sec</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Duration</label>
+                <Select value={duration} onValueChange={setDuration}>
+                  <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15 sec</SelectItem>
+                    <SelectItem value="30">30 sec</SelectItem>
+                    <SelectItem value="60">60 sec</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                  <Layers className="h-3 w-3" /> Variations
+                </label>
+                <Select value={variationCount} onValueChange={setVariationCount}>
+                  <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 option</SelectItem>
+                    <SelectItem value="3">3 options</SelectItem>
+                    <SelectItem value="5">5 options</SelectItem>
+                    <SelectItem value="7">7 options</SelectItem>
+                    <SelectItem value="10">10 options</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <Button onClick={generate} disabled={isGenerating || !categoryValid} className="gap-2">
                 {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Film className="h-4 w-4" />}
-                {isGenerating ? 'Writing Script...' : 'Generate Script'}
+                {isGenerating ? `Writing ${variationCount} Script${variationCount === '1' ? '' : 's'}...` : `Generate ${variationCount === '1' ? 'Script' : `${variationCount} Variations`}`}
               </Button>
             </div>
             <QualityControls value={quality} onChange={setQuality} />
@@ -126,6 +205,52 @@ export default function VideoAdGenerator() {
         {scriptCompliance && <ComplianceNotice compliance={scriptCompliance} />}
         {framesCompliance && <ComplianceNotice compliance={framesCompliance} />}
 
+        {variants.length > 1 && (
+          <Card className="border-primary/30">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Layers className="h-4 w-4 text-primary" />
+                Pick your favorite ({variants.length} variations)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {variants.map((v, idx) => {
+                  const selected = idx === selectedVariantIdx;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => onSelectVariant(idx)}
+                      className={cn(
+                        'text-left rounded-lg border p-4 transition-all hover:border-primary/60 hover:bg-muted/40',
+                        selected ? 'border-primary bg-primary/5 ring-2 ring-primary/30' : 'border-border'
+                      )}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge variant={selected ? 'default' : 'outline'}>Option {idx + 1}</Badge>
+                        {selected && (
+                          <span className="text-xs text-primary flex items-center gap-1">
+                            <Check className="h-3 w-3" /> Selected
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm font-semibold text-foreground line-clamp-2">{v.title}</p>
+                      {v.script?.opening_hook && (
+                        <p className="text-xs text-muted-foreground mt-2 line-clamp-3 italic">"{v.script.opening_hook}"</p>
+                      )}
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {v.best_platform && <Badge variant="secondary" className="text-xs">{v.best_platform}</Badge>}
+                        {v.script?.scenes && <Badge variant="outline" className="text-xs">{v.script.scenes.length} scenes</Badge>}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {script?.script && (
           <div className="space-y-4">
             <div className="flex items-center gap-3 flex-wrap">
@@ -134,6 +259,12 @@ export default function VideoAdGenerator() {
               <Badge variant="secondary">{script.format}</Badge>
               <Badge variant="outline">{quality.resolution} | {quality.tier}</Badge>
               {script.best_platform && <Badge className="bg-accent/10 text-accent">Best: {script.best_platform}</Badge>}
+              <div className="ml-auto">
+                <Button onClick={saveToHistory} disabled={isSaving} variant="outline" size="sm" className="gap-2">
+                  {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  Save to History
+                </Button>
+              </div>
             </div>
 
             {validFrames.length === 0 && frameStream.totalScenes === 0 && (
