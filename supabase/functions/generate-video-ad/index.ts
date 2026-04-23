@@ -1,15 +1,34 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { handleCors, jsonResponse } from "../_shared/cors.ts";
+import { corsHeaders, handleCors, jsonResponse } from "../_shared/cors.ts";
 import { getVerticalContext } from "../_shared/vertical.ts";
 import { buildQualityDirective, pickImageModel, type QualityControls } from "../_shared/quality.ts";
-import { checkPromptCompliance, summarizeCompliance } from "../_shared/compliance.ts";
+import { checkPromptCompliance } from "../_shared/compliance.ts";
 
+/**
+ * Streams scene frame generation progress as NDJSON.
+ *
+ * Event shapes (one JSON object per line):
+ *   { type: "init",     total_scenes: number, vertical: string, model: string }
+ *   { type: "stage",    scene_number: number, status: "starting" | "generating" | "uploading" }
+ *   { type: "frame",    scene_number: number, image_url: string | null, error?: string }
+ *   { type: "blocked",  scene_number: number, findings: any[] }
+ *   { type: "done",     generated_count: number, total_scenes: number, status: "completed" | "failed" }
+ *   { type: "error",    message: string }
+ *
+ * If the client passes ?stream=1 (or { stream: true } in the body) we stream;
+ * otherwise we fall back to the original buffered JSON response so existing
+ * callers keep working.
+ */
 serve(async (req) => {
   const corsResp = handleCors(req);
   if (corsResp) return corsResp;
 
   try {
-    const { scenes, title, format, firm_id, quality } = await req.json();
+    const url = new URL(req.url);
+    const body = await req.json();
+    const { scenes, title, format, firm_id, quality } = body;
+    const wantsStream = body.stream === true || url.searchParams.get("stream") === "1";
+
     if (!scenes || !Array.isArray(scenes) || scenes.length === 0) {
       throw new Error("scenes array required");
     }
@@ -21,25 +40,22 @@ serve(async (req) => {
     const verticalName = config?.vertical?.name ?? "Mass Tort";
 
     const q: QualityControls = {
-      ...(quality || {}),
+      ...quality,
       aspect_ratio: quality?.aspect_ratio ?? format ?? "9:16",
     };
     const qualityDirective = buildQualityDirective(q);
     const model = pickImageModel(q);
 
-    // Pre-scan every scene's image prompt for risky claims
-    const blockedScenes: Array<{ scene_number: number; findings: any[] }> = [];
+    // Pre-scan scenes for compliance (same logic as before)
     const sceneRewrites: Array<{ scene_number: number; field: string; findings: any[] }> = [];
-
+    const blockedScenes: Array<{ scene_number: number; findings: any[] }> = [];
     const safeScenes = scenes.map((scene: any, i: number) => {
       const sn = i + 1;
       const safe = { ...scene };
       for (const f of ["visual_description", "description", "text_overlay", "voiceover"]) {
         if (typeof safe[f] === "string") {
           const r = checkPromptCompliance(safe[f], verticalSlug);
-          if (!r.allowed) {
-            blockedScenes.push({ scene_number: sn, findings: r.findings });
-          }
+          if (!r.allowed) blockedScenes.push({ scene_number: sn, findings: r.findings });
           if (r.findings.length > 0) {
             sceneRewrites.push({ scene_number: sn, field: f, findings: r.findings });
             safe[f] = r.safe_prompt;
@@ -57,8 +73,7 @@ serve(async (req) => {
       }, 422);
     }
 
-    const framePromises = safeScenes.map(async (scene: any, i: number) => {
-      const prompt = `Create a cinematic, photorealistic still frame for scene ${i + 1} of a professional ${verticalName} industry advertisement video titled "${title || `${verticalName} Ad`}".
+    const buildPrompt = (scene: any, i: number) => `Create a cinematic, photorealistic still frame for scene ${i + 1} of a professional ${verticalName} industry advertisement video titled "${title || `${verticalName} Ad`}".
 
 Scene description: ${scene.visual_description || scene.description || `Professional ${verticalName} scene`}
 Text overlay to show on screen: "${scene.text_overlay || ''}"
@@ -69,12 +84,12 @@ Style: Ultra high quality, dramatic cinematic lighting, shallow depth of field, 
 ${qualityDirective}
 Do NOT include any watermarks.`;
 
-      // Final guard on the assembled prompt
+    const generateOne = async (scene: any, i: number) => {
+      const prompt = buildPrompt(scene, i);
       const promptCheck = checkPromptCompliance(prompt, verticalSlug);
       if (!promptCheck.allowed) {
-        return { scene_number: i + 1, image_url: null, error: "Blocked by compliance checker" };
+        return { scene_number: i + 1, image_url: null as string | null, error: "Blocked by compliance checker" };
       }
-
       try {
         const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
@@ -85,22 +100,75 @@ Do NOT include any watermarks.`;
             modalities: ["image", "text"],
           }),
         });
-
         if (!resp.ok) {
-          console.error(`Scene ${i + 1} generation failed: ${resp.status}`);
-          return { scene_number: i + 1, image_url: null, error: `Generation failed (${resp.status})` };
+          return { scene_number: i + 1, image_url: null as string | null, error: `Generation failed (${resp.status})` };
         }
-
         const data = await resp.json();
         const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
         return { scene_number: i + 1, image_url: imageUrl || null };
       } catch (err) {
         console.error(`Scene ${i + 1} error:`, err);
-        return { scene_number: i + 1, image_url: null, error: "Generation error" };
+        return { scene_number: i + 1, image_url: null as string | null, error: "Generation error" };
       }
-    });
+    };
 
-    const frames = await Promise.all(framePromises);
+    // -------- Streaming branch --------
+    if (wantsStream) {
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        async start(controller) {
+          const send = (obj: unknown) =>
+            controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
+
+          send({ type: "init", total_scenes: safeScenes.length, vertical: verticalSlug, model });
+
+          // Emit any compliance rewrites up-front so the UI can warn
+          if (sceneRewrites.length > 0) {
+            send({ type: "compliance", rewrites: sceneRewrites });
+          }
+
+          let generatedCount = 0;
+          // Run scenes in parallel but stream as each settles
+          const tasks = safeScenes.map(async (scene, i) => {
+            send({ type: "stage", scene_number: i + 1, status: "generating" });
+            const frame = await generateOne(scene, i);
+            if (frame.image_url) generatedCount += 1;
+            send({ type: "frame", ...frame });
+            return frame;
+          });
+
+          try {
+            await Promise.all(tasks);
+            send({
+              type: "done",
+              generated_count: generatedCount,
+              total_scenes: safeScenes.length,
+              status: generatedCount > 0 ? "completed" : "failed",
+              format: q.aspect_ratio,
+              resolution: q.resolution ?? "1080p",
+              quality_tier: q.tier ?? "standard",
+              model_used: model,
+            });
+          } catch (err) {
+            send({ type: "error", message: err instanceof Error ? err.message : "Unknown error" });
+          } finally {
+            controller.close();
+          }
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/x-ndjson",
+          "Cache-Control": "no-cache, no-transform",
+          "X-Accel-Buffering": "no",
+        },
+      });
+    }
+
+    // -------- Buffered branch (back-compat) --------
+    const frames = await Promise.all(safeScenes.map((s, i) => generateOne(s, i)));
     const successCount = frames.filter((f) => f.image_url).length;
 
     return jsonResponse({
@@ -111,12 +179,9 @@ Do NOT include any watermarks.`;
       resolution: q.resolution ?? "1080p",
       quality_tier: q.tier ?? "standard",
       model_used: model,
-      status: successCount > 0 ? 'completed' : 'failed',
+      status: successCount > 0 ? "completed" : "failed",
       vertical: verticalSlug,
-      compliance: {
-        scene_rewrites: sceneRewrites,
-        rewritten: sceneRewrites.length > 0,
-      },
+      compliance: { scene_rewrites: sceneRewrites, rewritten: sceneRewrites.length > 0 },
     });
   } catch (e) {
     console.error("generate-video-ad error:", e);
