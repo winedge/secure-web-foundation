@@ -137,7 +137,7 @@ export default function VideoAdGenerator() {
           variant_index: script.variant_index ?? selectedVariantIdx,
           variant_count: variants.length,
         },
-      });
+      }]);
       if (error) throw error;
       toast.success('Saved to ad history');
     } catch (err: any) {
