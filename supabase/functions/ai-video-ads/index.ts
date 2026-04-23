@@ -9,8 +9,9 @@ serve(async (req) => {
   if (corsResp) return corsResp;
 
   try {
-    const { brief, tort_type, category, duration, format, firm_id, quality } = await req.json();
+    const { brief, tort_type, category, duration, format, firm_id, quality, variations } = await req.json();
     if (!brief) throw new Error("brief required");
+    const variationCount = Math.max(1, Math.min(10, Number(variations) || 1));
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
