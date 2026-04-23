@@ -164,7 +164,10 @@ export default function Marketplace() {
             </div>
 
             {categoryOptions.length > 0 && (
-              <Select onValueChange={(v) => setFilters({ ...filters, tortType: v === 'all' ? undefined : v })}>
+              <Select
+                value={filters.tortType ?? 'all'}
+                onValueChange={(v) => setFilters({ ...filters, tortType: v === 'all' ? undefined : v })}
+              >
                 <SelectTrigger className="w-full sm:w-[200px]">
                   <SelectValue placeholder={categoryLabel} />
                 </SelectTrigger>
@@ -177,7 +180,10 @@ export default function Marketplace() {
               </Select>
             )}
 
-            <Select onValueChange={(v) => setFilters({ ...filters, state: v === 'all' ? undefined : v })}>
+            <Select
+              value={filters.state ?? 'all'}
+              onValueChange={(v) => setFilters({ ...filters, state: v === 'all' ? undefined : v })}
+            >
               <SelectTrigger className="w-[calc(50%-6px)] sm:w-[120px]">
                 <SelectValue placeholder="State" />
               </SelectTrigger>
@@ -189,7 +195,10 @@ export default function Marketplace() {
               </SelectContent>
             </Select>
 
-            <Select onValueChange={(v) => setFilters({ ...filters, tier: v === 'all' ? undefined : v })}>
+            <Select
+              value={filters.tier ?? 'all'}
+              onValueChange={(v) => setFilters({ ...filters, tier: v === 'all' ? undefined : v })}
+            >
               <SelectTrigger className="w-[calc(50%-6px)] sm:w-[140px]">
                 <SelectValue placeholder="Tier" />
               </SelectTrigger>
