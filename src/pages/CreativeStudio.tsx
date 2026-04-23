@@ -16,6 +16,7 @@ import { useFirm } from '@/hooks/use-firm';
 import { useVertical } from '@/hooks/use-vertical';
 import { CategorySelect, validateCategoryValue } from '@/components/verticals/CategorySelect';
 import { QualityControls, DEFAULT_QUALITY, type QualityControlsValue } from '@/components/ai/QualityControls';
+import { ComplianceNotice } from '@/components/ai/ComplianceNotice';
 
 export default function CreativeStudio() {
   const [brief, setBrief] = useState('');
@@ -47,10 +48,19 @@ export default function CreativeStudio() {
         body: { firm_id: firm?.id, brief, category: tortType, brand_tone: brandTone, num_variants: 6, quality },
       });
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (data?.error) {
+        // Surface compliance-block payload to the user with full context
+        if (data.compliance) setResult({ compliance: data.compliance, blocked: true });
+        throw new Error(data.error);
+      }
       setResult(data);
       pixel.creativeGenerated({ variant_count: (data.variants || []).length, tort_type: tortType });
-      toast.success(`Generated ${(data.variants || []).length} creative variants`);
+      const rewriteCount = (data.compliance?.findings?.length ?? 0) + (data.compliance?.variant_rewrites?.length ?? 0);
+      if (rewriteCount > 0) {
+        toast.warning(`Generated ${(data.variants || []).length} variants | ${rewriteCount} compliance rewrite${rewriteCount === 1 ? '' : 's'} applied`);
+      } else {
+        toast.success(`Generated ${(data.variants || []).length} creative variants`);
+      }
     } catch (err: any) { toast.error(err.message); }
     finally { setIsGenerating(false); }
   };
@@ -123,6 +133,8 @@ export default function CreativeStudio() {
             <QualityControls value={quality} onChange={setQuality} />
           </CardContent>
         </Card>
+
+        {result?.compliance && <ComplianceNotice compliance={result.compliance} />}
 
         {result?.variants && (
           <div className="space-y-4">

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { getVerticalContext } from "../_shared/vertical.ts";
 import { buildQualityDirective, pickImageModel, type QualityControls } from "../_shared/quality.ts";
+import { checkPromptCompliance, summarizeCompliance } from "../_shared/compliance.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
@@ -26,7 +27,37 @@ serve(async (req) => {
     const qualityDirective = buildQualityDirective(q);
     const model = pickImageModel(q);
 
-    const framePromises = scenes.map(async (scene: any, i: number) => {
+    // Pre-scan every scene's image prompt for risky claims
+    const blockedScenes: Array<{ scene_number: number; findings: any[] }> = [];
+    const sceneRewrites: Array<{ scene_number: number; field: string; findings: any[] }> = [];
+
+    const safeScenes = scenes.map((scene: any, i: number) => {
+      const sn = i + 1;
+      const safe = { ...scene };
+      for (const f of ["visual_description", "description", "text_overlay", "voiceover"]) {
+        if (typeof safe[f] === "string") {
+          const r = checkPromptCompliance(safe[f], verticalSlug);
+          if (!r.allowed) {
+            blockedScenes.push({ scene_number: sn, findings: r.findings });
+          }
+          if (r.findings.length > 0) {
+            sceneRewrites.push({ scene_number: sn, field: f, findings: r.findings });
+            safe[f] = r.safe_prompt;
+          }
+        }
+      }
+      return safe;
+    });
+
+    if (blockedScenes.length > 0) {
+      return jsonResponse({
+        error: "One or more scenes blocked by compliance checker",
+        blocked_scenes: blockedScenes,
+        vertical: verticalSlug,
+      }, 422);
+    }
+
+    const framePromises = safeScenes.map(async (scene: any, i: number) => {
       const prompt = `Create a cinematic, photorealistic still frame for scene ${i + 1} of a professional ${verticalName} industry advertisement video titled "${title || `${verticalName} Ad`}".
 
 Scene description: ${scene.visual_description || scene.description || `Professional ${verticalName} scene`}
@@ -38,13 +69,19 @@ Style: Ultra high quality, dramatic cinematic lighting, shallow depth of field, 
 ${qualityDirective}
 Do NOT include any watermarks.`;
 
+      // Final guard on the assembled prompt
+      const promptCheck = checkPromptCompliance(prompt, verticalSlug);
+      if (!promptCheck.allowed) {
+        return { scene_number: i + 1, image_url: null, error: "Blocked by compliance checker" };
+      }
+
       try {
         const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             model,
-            messages: [{ role: "user", content: prompt }],
+            messages: [{ role: "user", content: promptCheck.safe_prompt }],
             modalities: ["image", "text"],
           }),
         });
@@ -76,6 +113,10 @@ Do NOT include any watermarks.`;
       model_used: model,
       status: successCount > 0 ? 'completed' : 'failed',
       vertical: verticalSlug,
+      compliance: {
+        scene_rewrites: sceneRewrites,
+        rewritten: sceneRewrites.length > 0,
+      },
     });
   } catch (e) {
     console.error("generate-video-ad error:", e);

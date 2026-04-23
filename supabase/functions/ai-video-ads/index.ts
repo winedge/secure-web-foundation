@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { getVerticalContext, buildSystemPrompt, resolveCategory } from "../_shared/vertical.ts";
 import { buildQualityDirective, pickScriptModel, type QualityControls } from "../_shared/quality.ts";
+import { checkPromptCompliance, summarizeCompliance } from "../_shared/compliance.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
@@ -18,6 +19,17 @@ serve(async (req) => {
     const verticalName = config?.vertical?.name ?? "Mass Tort";
     const resolved = resolveCategory(config, category ?? tort_type);
     const subject = resolved.category;
+
+    // Vertical-aware compliance check on the user brief
+    const compliance = checkPromptCompliance(brief, verticalSlug);
+    if (!compliance.allowed) {
+      return jsonResponse({
+        error: "Brief blocked by compliance checker",
+        compliance: summarizeCompliance(compliance),
+        vertical: verticalSlug,
+      }, 422);
+    }
+    const safeBrief = compliance.safe_prompt;
 
     const q: QualityControls = {
       ...(quality || {}),
@@ -68,7 +80,7 @@ Return JSON:
           { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: `Create a ${duration || 30}-second ${q.aspect_ratio} video ad script for the ${verticalName} industry. Brief: ${brief}. Focus area: ${subject || verticalName}. Make it emotionally compelling and conversion-focused.`,
+            content: `Create a ${duration || 30}-second ${q.aspect_ratio} video ad script for the ${verticalName} industry. Brief: ${safeBrief}. Focus area: ${subject || verticalName}. Make it emotionally compelling and conversion-focused.`,
           },
         ],
         temperature: 0.6,
@@ -89,12 +101,40 @@ Return JSON:
       parsed = jsonMatch ? JSON.parse(jsonMatch[1]) : JSON.parse(content);
     } catch { parsed = { error: "Could not parse script" }; }
 
+    // Sanitize AI-generated scene fields (voiceover, text_overlay, visual_description)
+    const sceneFindings: Array<{ scene_number: number; field: string; findings: any[] }> = [];
+    if (parsed?.script?.scenes && Array.isArray(parsed.script.scenes)) {
+      parsed.script.scenes = parsed.script.scenes.map((s: any) => {
+        for (const f of ["visual_description", "text_overlay", "voiceover"]) {
+          if (typeof s[f] === "string") {
+            const r = checkPromptCompliance(s[f], verticalSlug);
+            if (r.findings.length > 0) {
+              sceneFindings.push({ scene_number: s.scene_number, field: f, findings: r.findings });
+              s[f] = r.safe_prompt;
+            }
+          }
+        }
+        return s;
+      });
+    }
+    if (typeof parsed?.voiceover_full_text === "string") {
+      const r = checkPromptCompliance(parsed.voiceover_full_text, verticalSlug);
+      if (r.findings.length > 0) {
+        sceneFindings.push({ scene_number: 0, field: "voiceover_full_text", findings: r.findings });
+        parsed.voiceover_full_text = r.safe_prompt;
+      }
+    }
+
     return jsonResponse({
       ...parsed,
       vertical: verticalSlug,
       quality_tier: q.tier ?? "standard",
       resolution: q.resolution ?? "1080p",
       model_used: model,
+      compliance: {
+        ...summarizeCompliance(compliance),
+        scene_rewrites: sceneFindings,
+      },
     });
   } catch (e) {
     console.error("ai-video-ads error:", e);
