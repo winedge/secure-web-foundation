@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { VideoPlayer } from '@/components/video/VideoPlayer';
 import { useFirm } from '@/hooks/use-firm';
 import { CategorySelect, validateCategoryValue } from '@/components/verticals/CategorySelect';
+import { QualityControls, DEFAULT_QUALITY, type QualityControlsValue } from '@/components/ai/QualityControls';
 
 interface SceneFrame {
   scene_number: number;
@@ -31,6 +32,7 @@ export default function VideoAdGenerator() {
   const [frames, setFrames] = useState<SceneFrame[]>([]);
   const [categoryError, setCategoryError] = useState<string | undefined>();
   const [categoryValid, setCategoryValid] = useState(true);
+  const [quality, setQuality] = useState<QualityControlsValue>({ ...DEFAULT_QUALITY, aspect_ratio: '9:16' });
 
   const generate = async () => {
     if (!brief) { toast.error('Enter a brief'); return; }
@@ -41,7 +43,7 @@ export default function VideoAdGenerator() {
     setFrames([]);
     try {
       const { data, error } = await supabase.functions.invoke('ai-video-ads', {
-        body: { firm_id: firm?.id, brief, category: tortType, duration: parseInt(duration), format },
+        body: { firm_id: firm?.id, brief, category: tortType, duration: parseInt(duration), format: quality.aspect_ratio, quality },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -56,7 +58,7 @@ export default function VideoAdGenerator() {
     setIsGeneratingFrames(true);
     try {
       const { data, error } = await supabase.functions.invoke('generate-video-ad', {
-        body: { scenes: script.script.scenes, title: script.title, format },
+        body: { scenes: script.script.scenes, title: script.title, format: quality.aspect_ratio, firm_id: firm?.id, quality },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
