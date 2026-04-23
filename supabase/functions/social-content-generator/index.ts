@@ -94,6 +94,9 @@ CRITICAL RULES:
 - Ensure text is legible against the background
 - Match the aspect ratio requested
 
+Production directives (must be reflected in the prompt you return):
+${qualityDirective}
+
 Return JSON: {
   "prompt": "Ultra detailed image generation prompt that explicitly describes text placement, typography, and CTA button styling on the image",
   "style": "photograph|illustration|infographic|quote-card",
