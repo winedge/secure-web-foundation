@@ -43,7 +43,56 @@ export default function Marketplace() {
   });
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') ?? '');
   const { data: leads, isLoading: leadsLoading } = useLeads(filters);
+  // Unfiltered pool used to compute per-option counts (respects only the OTHER active filters)
+  const { data: allLeads } = useLeads();
   const { data: sourcesMap } = useLeadSources();
+
+  // Helper: count leads in `allLeads` that match a partial filter set + price/search.
+  const countMatching = useMemo(() => {
+    return (override: Partial<LeadFilters>) => {
+      if (!allLeads) return 0;
+      const f = { ...filters, ...override };
+      return allLeads.filter((l) => {
+        if (f.tortType && l.tort_type !== f.tortType) return false;
+        if (f.state && l.state !== f.state) return false;
+        if (f.tier && l.tier !== f.tier) return false;
+        if (l.price < priceRange[0] || l.price > priceRange[1]) return false;
+        if (searchQuery) {
+          const q = searchQuery.toLowerCase();
+          const hit =
+            l.tort_type.toLowerCase().includes(q) ||
+            l.state.toLowerCase().includes(q) ||
+            (l.city && l.city.toLowerCase().includes(q));
+          if (!hit) return false;
+        }
+        return true;
+      }).length;
+    };
+  }, [allLeads, filters, priceRange, searchQuery]);
+
+  // Per-option counts (clearing the relevant filter so the dropdown shows what each option would yield)
+  const categoryCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    map.set('all', countMatching({ tortType: undefined }));
+    for (const c of categoryOptionsRaw(categories))
+      map.set(c, countMatching({ tortType: c }));
+    return map;
+  }, [countMatching, categories]);
+
+  const stateCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    map.set('all', countMatching({ state: undefined }));
+    const list = Array.from(new Set((allLeads ?? []).map((l) => l.state).filter(Boolean)));
+    for (const s of list) map.set(s, countMatching({ state: s }));
+    return map;
+  }, [countMatching, allLeads]);
+
+  const tierCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    map.set('all', countMatching({ tier: undefined }));
+    for (const t of ['A', 'B', 'C'] as const) map.set(t, countMatching({ tier: t }));
+    return map;
+  }, [countMatching]);
 
   // Sync state -> URL whenever filters change (replace so back button isn't polluted)
   useEffect(() => {
