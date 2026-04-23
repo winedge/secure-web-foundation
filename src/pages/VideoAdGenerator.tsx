@@ -13,6 +13,8 @@ import { useFirm } from '@/hooks/use-firm';
 import { CategorySelect, validateCategoryValue } from '@/components/verticals/CategorySelect';
 import { QualityControls, DEFAULT_QUALITY, type QualityControlsValue } from '@/components/ai/QualityControls';
 import { ComplianceNotice, type ComplianceSummary } from '@/components/ai/ComplianceNotice';
+import { GenerationProgress } from '@/components/ai/GenerationProgress';
+import { useFrameStream } from '@/hooks/use-frame-stream';
 
 interface SceneFrame {
   scene_number: number;
@@ -27,13 +29,14 @@ export default function VideoAdGenerator() {
   const [duration, setDuration] = useState('30');
   const [isGenerating, setIsGenerating] = useState(false);
   const [script, setScript] = useState<any>(null);
-  const [isGeneratingFrames, setIsGeneratingFrames] = useState(false);
   const [frames, setFrames] = useState<SceneFrame[]>([]);
   const [categoryError, setCategoryError] = useState<string | undefined>();
   const [categoryValid, setCategoryValid] = useState(true);
   const [quality, setQuality] = useState<QualityControlsValue>({ ...DEFAULT_QUALITY, aspect_ratio: '9:16' });
   const [scriptCompliance, setScriptCompliance] = useState<ComplianceSummary | null>(null);
   const [framesCompliance, setFramesCompliance] = useState<ComplianceSummary | null>(null);
+  const frameStream = useFrameStream();
+  const isGeneratingFrames = frameStream.isStreaming;
 
   const generate = async () => {
     if (!brief) { toast.error('Enter a brief'); return; }
@@ -44,6 +47,7 @@ export default function VideoAdGenerator() {
     setFrames([]);
     setScriptCompliance(null);
     setFramesCompliance(null);
+    frameStream.reset();
     try {
       const { data, error } = await supabase.functions.invoke('ai-video-ads', {
         body: { firm_id: firm?.id, brief, category: tortType, duration: parseInt(duration), format: quality.aspect_ratio, quality },
@@ -64,21 +68,22 @@ export default function VideoAdGenerator() {
 
   const generateFrames = async () => {
     if (!script?.script?.scenes) return;
-    setIsGeneratingFrames(true);
     setFramesCompliance(null);
+    setFrames([]);
     try {
-      const { data, error } = await supabase.functions.invoke('generate-video-ad', {
-        body: { scenes: script.script.scenes, title: script.title, format: quality.aspect_ratio, firm_id: firm?.id, quality },
+      const collected = await frameStream.start({
+        scenes: script.script.scenes,
+        title: script.title,
+        format: quality.aspect_ratio,
+        firm_id: firm?.id,
+        quality,
       });
-      if (error) throw error;
-      if (data?.compliance) setFramesCompliance(data.compliance);
-      if (data?.error) throw new Error(data.error);
-      if (data?.frames) {
-        setFrames(data.frames);
-        toast.success(`${data.generated_count}/${data.total_scenes} scene frames generated! Press play to watch with voiceover.`);
-      }
-    } catch (err: any) { toast.error(err.message); }
-    finally { setIsGeneratingFrames(false); }
+      setFrames(collected);
+      const ok = collected.filter((f) => f.image_url).length;
+      toast.success(`${ok}/${collected.length} scene frames generated! Press play to watch with voiceover.`);
+    } catch (err: any) {
+      toast.error(err.message);
+    }
   };
 
   const validFrames = frames.filter(f => f.image_url);
@@ -131,7 +136,7 @@ export default function VideoAdGenerator() {
               {script.best_platform && <Badge className="bg-accent/10 text-accent">Best: {script.best_platform}</Badge>}
             </div>
 
-            {validFrames.length === 0 && (
+            {validFrames.length === 0 && frameStream.totalScenes === 0 && (
               <Card className="border-primary/30 bg-primary/5">
                 <CardContent className="pt-6">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -154,6 +159,18 @@ export default function VideoAdGenerator() {
                   </div>
                 </CardContent>
               </Card>
+            )}
+
+            {frameStream.totalScenes > 0 && (
+              <GenerationProgress
+                totalScenes={frameStream.totalScenes}
+                generatedCount={frameStream.generatedCount}
+                failedCount={frameStream.failedCount}
+                progress={frameStream.progress}
+                isStreaming={frameStream.isStreaming}
+                finalStatus={frameStream.finalStatus}
+                modelUsed={frameStream.modelUsed}
+              />
             )}
 
             {validFrames.length > 0 && (
