@@ -59,11 +59,8 @@ export default function Marketplace() {
   });
   const { data: sourcesMap } = useLeadSources();
 
-  // Category options come from the active vertical config (DB-driven)
-  const categoryOptions = useMemo(
-    () => (categories ?? []).filter((c) => c.is_active !== false).map((c) => c.label),
-    [categories]
-  );
+  // Category options reuse the validation whitelist (single source of truth)
+  const categoryOptions = allowedCategoryLabels;
   const categoryLabel = term('category_label', 'Category');
 
   // States are derived from the full marketplace inventory so dropdown counts stay stable
