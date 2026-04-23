@@ -223,10 +223,25 @@ export default function Marketplace() {
                   <SelectValue placeholder={categoryLabel} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All {term('category_plural', `${categoryLabel}s`)}</SelectItem>
-                  {categoryOptions.map((type) => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
+                  <SelectItem value="all">
+                    <span className="flex w-full items-center justify-between gap-3">
+                      <span>All {term('category_plural', `${categoryLabel}s`)}</span>
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {categoryCounts.get('all') ?? 0}
+                      </span>
+                    </span>
+                  </SelectItem>
+                  {categoryOptions.map((type) => {
+                    const n = categoryCounts.get(type) ?? 0;
+                    return (
+                      <SelectItem key={type} value={type} disabled={n === 0}>
+                        <span className="flex w-full items-center justify-between gap-3">
+                          <span>{type}</span>
+                          <span className="text-xs text-muted-foreground tabular-nums">{n}</span>
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             )}
@@ -239,10 +254,25 @@ export default function Marketplace() {
                 <SelectValue placeholder="State" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All States</SelectItem>
-                {stateOptions.map((state) => (
-                  <SelectItem key={state} value={state}>{state}</SelectItem>
-                ))}
+                <SelectItem value="all">
+                  <span className="flex w-full items-center justify-between gap-3">
+                    <span>All States</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {stateCounts.get('all') ?? 0}
+                    </span>
+                  </span>
+                </SelectItem>
+                {stateOptions.map((state) => {
+                  const n = stateCounts.get(state) ?? 0;
+                  return (
+                    <SelectItem key={state} value={state} disabled={n === 0}>
+                      <span className="flex w-full items-center justify-between gap-3">
+                        <span>{state}</span>
+                        <span className="text-xs text-muted-foreground tabular-nums">{n}</span>
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
 
@@ -254,10 +284,26 @@ export default function Marketplace() {
                 <SelectValue placeholder="Tier" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Tiers</SelectItem>
-                <SelectItem value="A">Tier A (80-100)</SelectItem>
-                <SelectItem value="B">Tier B (60-79)</SelectItem>
-                <SelectItem value="C">Tier C (40-59)</SelectItem>
+                <SelectItem value="all">
+                  <span className="flex w-full items-center justify-between gap-3">
+                    <span>All Tiers</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {tierCounts.get('all') ?? 0}
+                    </span>
+                  </span>
+                </SelectItem>
+                {(['A', 'B', 'C'] as const).map((t) => {
+                  const n = tierCounts.get(t) ?? 0;
+                  const range = t === 'A' ? '80-100' : t === 'B' ? '60-79' : '40-59';
+                  return (
+                    <SelectItem key={t} value={t} disabled={n === 0}>
+                      <span className="flex w-full items-center justify-between gap-3">
+                        <span>Tier {t} ({range})</span>
+                        <span className="text-xs text-muted-foreground tabular-nums">{n}</span>
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
 
