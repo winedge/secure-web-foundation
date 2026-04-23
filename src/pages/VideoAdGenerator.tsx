@@ -115,7 +115,7 @@ export default function VideoAdGenerator() {
     setIsSaving(true);
     try {
       const validFrames = frames.filter((f) => f.image_url);
-      const { error } = await supabase.from('video_ad_projects').insert({
+      const { error } = await supabase.from('video_ad_projects').insert([{
         firm_id: firm.id,
         title: script.title || 'Untitled Video Ad',
         brief,
