@@ -521,3 +521,44 @@ export default function Marketplace() {
     </DashboardLayout>
   );
 }
+
+// Inline notice rendered under a filter control when its current value was
+// stripped by validation (bad shape, not in the active vertical's whitelist,
+// or not present in the current inventory).
+function FilterRejectionNotice({
+  rejections,
+  onClear,
+}: {
+  rejections?: { value: unknown; reason: string }[];
+  onClear: () => void;
+}) {
+  if (!rejections || rejections.length === 0) return null;
+  const formatValue = (v: unknown): string => {
+    if (v === undefined || v === null) return '∅';
+    if (typeof v === 'string') return `"${v}"`;
+    return String(v);
+  };
+  return (
+    <div
+      role="alert"
+      className="flex items-start gap-1.5 rounded-md border border-destructive/30 bg-destructive/5 px-2 py-1.5 text-[11px] leading-tight text-destructive"
+    >
+      <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" aria-hidden="true" />
+      <div className="flex-1 min-w-0">
+        <p className="font-medium">
+          Ignored {rejections.map((r) => formatValue(r.value)).join(', ')}
+        </p>
+        <p className="text-destructive/80 truncate" title={rejections.map((r) => r.reason).join(' • ')}>
+          {rejections[0].reason}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onClear}
+        className="text-[11px] font-medium underline underline-offset-2 hover:no-underline shrink-0"
+      >
+        Clear
+      </button>
+    </div>
+  );
+}
