@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, ArrowUpDown, DollarSign } from 'lucide-react';
+import { Search, ArrowUpDown, DollarSign, AlertCircle } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LeadCard } from '@/components/leads/LeadCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { useLeads, useLeadSources, LeadFilters } from '@/hooks/use-leads';
+import { useLeads, useLeadSources, validateLeadFilters, LeadFilters } from '@/hooks/use-leads';
 import { useRealtimeLeads } from '@/hooks/use-realtime-leads';
 import { useAuth } from '@/lib/auth-context';
 import { useFirm } from '@/hooks/use-firm';
