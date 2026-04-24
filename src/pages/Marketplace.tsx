@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, ArrowUpDown, DollarSign } from 'lucide-react';
+import { Search, ArrowUpDown, DollarSign, AlertCircle } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LeadCard } from '@/components/leads/LeadCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { useLeads, useLeadSources, LeadFilters } from '@/hooks/use-leads';
+import { useLeads, useLeadSources, validateLeadFilters, LeadFilters } from '@/hooks/use-leads';
 import { useRealtimeLeads } from '@/hooks/use-realtime-leads';
 import { useAuth } from '@/lib/auth-context';
 import { useFirm } from '@/hooks/use-firm';
@@ -53,10 +53,31 @@ export default function Marketplace() {
     () => Array.from(new Set((allLeads ?? []).map((l) => l.state).filter(Boolean))),
     [allLeads]
   );
+  // Compute rejections at the page level so we can show inline notices per filter.
+  // Suppress the toast in useLeads to avoid duplicate notifications.
+  const { rejections } = useMemo(
+    () =>
+      validateLeadFilters(filters, {
+        allowedCategories: allowedCategoryLabels,
+        allowedStates: allowedStateCodes,
+      }),
+    [filters, allowedCategoryLabels, allowedStateCodes]
+  );
+  const rejectionsByField = useMemo(() => {
+    const map = new Map<string, { value: unknown; reason: string }[]>();
+    for (const r of rejections) {
+      const arr = map.get(r.field) ?? [];
+      arr.push({ value: r.value, reason: r.reason });
+      map.set(r.field, arr);
+    }
+    return map;
+  }, [rejections]);
+
   const { data: leads, isLoading: leadsLoading } = useLeads(filters, {
     allowedCategories: allowedCategoryLabels,
     allowedStates: allowedStateCodes,
     verticalSlug: vertical?.slug,
+    notifyOnReject: false,
   });
   const { data: sourcesMap } = useLeadSources();
 
@@ -225,28 +246,66 @@ export default function Marketplace() {
             </div>
 
             {categoryOptions.length > 0 && (
+              <div className="flex flex-col gap-1 w-full sm:w-[200px]">
+                <Select
+                  value={filters.tortType ?? 'all'}
+                  onValueChange={(v) => setFilters({ ...filters, tortType: v === 'all' ? undefined : v })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={categoryLabel} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      <span className="flex w-full items-center justify-between gap-3">
+                        <span>All {term('category_plural', `${categoryLabel}s`)}</span>
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                          {categoryCounts.get('all') ?? 0}
+                        </span>
+                      </span>
+                    </SelectItem>
+                    {categoryOptions.map((type) => {
+                      const n = categoryCounts.get(type) ?? 0;
+                      return (
+                        <SelectItem key={type} value={type} disabled={n === 0}>
+                          <span className="flex w-full items-center justify-between gap-3">
+                            <span>{type}</span>
+                            <span className="text-xs text-muted-foreground tabular-nums">{n}</span>
+                          </span>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                <FilterRejectionNotice
+                  rejections={rejectionsByField.get('tortType')}
+                  onClear={() => setFilters({ ...filters, tortType: undefined })}
+                />
+              </div>
+            )}
+
+            <div className="flex flex-col gap-1 w-[calc(50%-6px)] sm:w-[120px]">
               <Select
-                value={filters.tortType ?? 'all'}
-                onValueChange={(v) => setFilters({ ...filters, tortType: v === 'all' ? undefined : v })}
+                value={filters.state ?? 'all'}
+                onValueChange={(v) => setFilters({ ...filters, state: v === 'all' ? undefined : v })}
               >
-                <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder={categoryLabel} />
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="State" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
                     <span className="flex w-full items-center justify-between gap-3">
-                      <span>All {term('category_plural', `${categoryLabel}s`)}</span>
+                      <span>All States</span>
                       <span className="text-xs text-muted-foreground tabular-nums">
-                        {categoryCounts.get('all') ?? 0}
+                        {stateCounts.get('all') ?? 0}
                       </span>
                     </span>
                   </SelectItem>
-                  {categoryOptions.map((type) => {
-                    const n = categoryCounts.get(type) ?? 0;
+                  {stateOptions.map((state) => {
+                    const n = stateCounts.get(state) ?? 0;
                     return (
-                      <SelectItem key={type} value={type} disabled={n === 0}>
+                      <SelectItem key={state} value={state} disabled={n === 0}>
                         <span className="flex w-full items-center justify-between gap-3">
-                          <span>{type}</span>
+                          <span>{state}</span>
                           <span className="text-xs text-muted-foreground tabular-nums">{n}</span>
                         </span>
                       </SelectItem>
@@ -254,68 +313,48 @@ export default function Marketplace() {
                   })}
                 </SelectContent>
               </Select>
-            )}
+              <FilterRejectionNotice
+                rejections={rejectionsByField.get('state')}
+                onClear={() => setFilters({ ...filters, state: undefined })}
+              />
+            </div>
 
-            <Select
-              value={filters.state ?? 'all'}
-              onValueChange={(v) => setFilters({ ...filters, state: v === 'all' ? undefined : v })}
-            >
-              <SelectTrigger className="w-[calc(50%-6px)] sm:w-[120px]">
-                <SelectValue placeholder="State" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  <span className="flex w-full items-center justify-between gap-3">
-                    <span>All States</span>
-                    <span className="text-xs text-muted-foreground tabular-nums">
-                      {stateCounts.get('all') ?? 0}
-                    </span>
-                  </span>
-                </SelectItem>
-                {stateOptions.map((state) => {
-                  const n = stateCounts.get(state) ?? 0;
-                  return (
-                    <SelectItem key={state} value={state} disabled={n === 0}>
-                      <span className="flex w-full items-center justify-between gap-3">
-                        <span>{state}</span>
-                        <span className="text-xs text-muted-foreground tabular-nums">{n}</span>
+            <div className="flex flex-col gap-1 w-[calc(50%-6px)] sm:w-[140px]">
+              <Select
+                value={filters.tier ?? 'all'}
+                onValueChange={(v) => setFilters({ ...filters, tier: v === 'all' ? undefined : v })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Tier" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    <span className="flex w-full items-center justify-between gap-3">
+                      <span>All Tiers</span>
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {tierCounts.get('all') ?? 0}
                       </span>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={filters.tier ?? 'all'}
-              onValueChange={(v) => setFilters({ ...filters, tier: v === 'all' ? undefined : v })}
-            >
-              <SelectTrigger className="w-[calc(50%-6px)] sm:w-[140px]">
-                <SelectValue placeholder="Tier" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  <span className="flex w-full items-center justify-between gap-3">
-                    <span>All Tiers</span>
-                    <span className="text-xs text-muted-foreground tabular-nums">
-                      {tierCounts.get('all') ?? 0}
                     </span>
-                  </span>
-                </SelectItem>
-                {(['A', 'B', 'C'] as const).map((t) => {
-                  const n = tierCounts.get(t) ?? 0;
-                  const range = t === 'A' ? '80-100' : t === 'B' ? '60-79' : '40-59';
-                  return (
-                    <SelectItem key={t} value={t} disabled={n === 0}>
-                      <span className="flex w-full items-center justify-between gap-3">
-                        <span>Tier {t} ({range})</span>
-                        <span className="text-xs text-muted-foreground tabular-nums">{n}</span>
-                      </span>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+                  </SelectItem>
+                  {(['A', 'B', 'C'] as const).map((t) => {
+                    const n = tierCounts.get(t) ?? 0;
+                    const range = t === 'A' ? '80-100' : t === 'B' ? '60-79' : '40-59';
+                    return (
+                      <SelectItem key={t} value={t} disabled={n === 0}>
+                        <span className="flex w-full items-center justify-between gap-3">
+                          <span>Tier {t} ({range})</span>
+                          <span className="text-xs text-muted-foreground tabular-nums">{n}</span>
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+              <FilterRejectionNotice
+                rejections={rejectionsByField.get('tier')}
+                onClear={() => setFilters({ ...filters, tier: undefined })}
+              />
+            </div>
 
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
               <SelectTrigger className="w-full sm:w-[160px]">
@@ -480,5 +519,46 @@ export default function Marketplace() {
         )}
       </div>
     </DashboardLayout>
+  );
+}
+
+// Inline notice rendered under a filter control when its current value was
+// stripped by validation (bad shape, not in the active vertical's whitelist,
+// or not present in the current inventory).
+function FilterRejectionNotice({
+  rejections,
+  onClear,
+}: {
+  rejections?: { value: unknown; reason: string }[];
+  onClear: () => void;
+}) {
+  if (!rejections || rejections.length === 0) return null;
+  const formatValue = (v: unknown): string => {
+    if (v === undefined || v === null) return '∅';
+    if (typeof v === 'string') return `"${v}"`;
+    return String(v);
+  };
+  return (
+    <div
+      role="alert"
+      className="flex items-start gap-1.5 rounded-md border border-destructive/30 bg-destructive/5 px-2 py-1.5 text-[11px] leading-tight text-destructive"
+    >
+      <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" aria-hidden="true" />
+      <div className="flex-1 min-w-0">
+        <p className="font-medium">
+          Ignored {rejections.map((r) => formatValue(r.value)).join(', ')}
+        </p>
+        <p className="text-destructive/80 truncate" title={rejections.map((r) => r.reason).join(' • ')}>
+          {rejections[0].reason}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onClear}
+        className="text-[11px] font-medium underline underline-offset-2 hover:no-underline shrink-0"
+      >
+        Clear
+      </button>
+    </div>
   );
 }
