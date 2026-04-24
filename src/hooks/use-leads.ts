@@ -92,16 +92,6 @@ const FilterSchema = z.object({
 /**
  * Validate filters against shape + active-vertical whitelists.
  * Invalid values are STRIPPED (not sent to the DB) and surfaced via a single toast.
- */
-export function validateLeadFilters(
-  raw: LeadFilters | undefined,
-  opts: LeadFilterValidationOptions = {}
-): { safe: LeadFilters; rejected: string[] } {
-  if (!raw) return { safe: {}, rejected: [] };
-  const parsed = FilterSchema.safeParse(raw);
-/**
- * Validate filters against shape + active-vertical whitelists.
- * Invalid values are STRIPPED (not sent to the DB) and surfaced via a single toast.
  * Returns both a flat `rejected` list (for legacy callers / toast text) and
  * a structured `rejections` list (field, value, reason) for backend logging.
  */
