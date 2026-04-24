@@ -52,14 +52,30 @@ export interface LeadFilterValidationOptions {
   notifyOnReject?: boolean;
 }
 
-// Zod schemas — runtime guarantees on shape & length even before whitelist checks.
+// Zod schemas — runtime guarantees on shape, type, and bounds before any DB call.
+// Numeric inputs are coerced (so "85" from URL params parses cleanly), then bounded.
+// Anything outside the bounds — NaN, Infinity, negatives, over-cap — is dropped.
 const TIER_VALUES = ['A', 'B', 'C', 'D'] as const;
+const MIN_SCORE_BOUNDS = { min: 0, max: 100 } as const;
+const MAX_PRICE_BOUNDS = { min: 0, max: 1_000_000 } as const;
+
 const FilterSchema = z.object({
   tortType: z.string().trim().min(1).max(120).optional(),
   state: z.string().trim().min(2).max(64).optional(),
   tier: z.enum(TIER_VALUES).optional(),
-  minScore: z.number().int().min(0).max(100).optional(),
-  maxPrice: z.number().nonnegative().max(1_000_000).optional(),
+  minScore: z.coerce
+    .number()
+    .refine((n) => Number.isFinite(n), { message: 'minScore must be a finite number' })
+    .int()
+    .min(MIN_SCORE_BOUNDS.min)
+    .max(MIN_SCORE_BOUNDS.max)
+    .optional(),
+  maxPrice: z.coerce
+    .number()
+    .refine((n) => Number.isFinite(n), { message: 'maxPrice must be a finite number' })
+    .min(MAX_PRICE_BOUNDS.min)
+    .max(MAX_PRICE_BOUNDS.max)
+    .optional(),
   isExclusive: z.boolean().optional(),
 });
 
