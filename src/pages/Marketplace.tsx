@@ -277,6 +277,8 @@ export default function Marketplace() {
     if (searchQuery) next.set('q', searchQuery);
     if (priceRange[0] > 0) next.set('priceMin', String(priceRange[0]));
     if (priceRange[1] > 0 && priceRange[1] < 5000) next.set('priceMax', String(priceRange[1]));
+    if (filters.minScore !== undefined) next.set('minScore', String(filters.minScore));
+    if (filters.maxPrice !== undefined) next.set('maxPrice', String(filters.maxPrice));
     setSearchParams(next, { replace: true });
   }, [filters, sortBy, searchQuery, priceRange, setSearchParams]);
 
