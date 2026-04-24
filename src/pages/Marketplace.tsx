@@ -53,10 +53,31 @@ export default function Marketplace() {
     () => Array.from(new Set((allLeads ?? []).map((l) => l.state).filter(Boolean))),
     [allLeads]
   );
+  // Compute rejections at the page level so we can show inline notices per filter.
+  // Suppress the toast in useLeads to avoid duplicate notifications.
+  const { rejections } = useMemo(
+    () =>
+      validateLeadFilters(filters, {
+        allowedCategories: allowedCategoryLabels,
+        allowedStates: allowedStateCodes,
+      }),
+    [filters, allowedCategoryLabels, allowedStateCodes]
+  );
+  const rejectionsByField = useMemo(() => {
+    const map = new Map<string, { value: unknown; reason: string }[]>();
+    for (const r of rejections) {
+      const arr = map.get(r.field) ?? [];
+      arr.push({ value: r.value, reason: r.reason });
+      map.set(r.field, arr);
+    }
+    return map;
+  }, [rejections]);
+
   const { data: leads, isLoading: leadsLoading } = useLeads(filters, {
     allowedCategories: allowedCategoryLabels,
     allowedStates: allowedStateCodes,
     verticalSlug: vertical?.slug,
+    notifyOnReject: false,
   });
   const { data: sourcesMap } = useLeadSources();
 
