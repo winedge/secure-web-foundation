@@ -100,17 +100,37 @@ export function validateLeadFilters(
   opts: LeadFilterValidationOptions = {}
 ): { safe: LeadFilters; rejected: string[]; rejections: FilterRejection[] } {
   if (!raw) return { safe: {}, rejected: [], rejections: [] };
-  const parsed = FilterSchema.safeParse(raw);
-  const safe: LeadFilters = parsed.success ? ({ ...parsed.data } as LeadFilters) : {};
+
+  // Per-field validation so a single malformed value can't strip valid siblings.
+  // Previously we ran one whole-object `safeParse` and reset `safe = {}` on any
+  // failure, which meant junk in `minScore` would drop a perfectly valid `tier`.
+  // We build `safe` field-by-field instead, capturing each rejection independently.
+  const safe: LeadFilters = {};
   const rejected: string[] = [];
   const rejections: FilterRejection[] = [];
 
-  if (!parsed.success) {
-    for (const issue of parsed.error.issues) {
-      const field = String(issue.path[0] ?? 'filter');
-      const value = (raw as Record<string, unknown>)[field];
+  const FIELD_SCHEMAS: Record<keyof LeadFilters, z.ZodTypeAny> = {
+    tortType: FilterSchema.shape.tortType,
+    state: FilterSchema.shape.state,
+    tier: FilterSchema.shape.tier,
+    minScore: FilterSchema.shape.minScore,
+    maxPrice: FilterSchema.shape.maxPrice,
+    isExclusive: FilterSchema.shape.isExclusive,
+  };
+
+  const rawRecord = raw as Record<string, unknown>;
+  for (const field of Object.keys(FIELD_SCHEMAS) as (keyof LeadFilters)[]) {
+    const value = rawRecord[field];
+    if (value === undefined) continue; // explicitly omitted — not an error
+    const fieldParsed = FIELD_SCHEMAS[field].safeParse(value);
+    if (fieldParsed.success) {
+      if (fieldParsed.data !== undefined) {
+        (safe as Record<string, unknown>)[field] = fieldParsed.data;
+      }
+    } else {
       if (!rejected.includes(field)) rejected.push(field);
-      rejections.push({ field, value, reason: `schema: ${issue.message}` });
+      const reason = fieldParsed.error.issues[0]?.message ?? 'invalid';
+      rejections.push({ field, value, reason: `schema: ${reason}` });
     }
   }
 
