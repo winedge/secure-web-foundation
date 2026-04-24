@@ -52,14 +52,30 @@ export interface LeadFilterValidationOptions {
   notifyOnReject?: boolean;
 }
 
-// Zod schemas — runtime guarantees on shape & length even before whitelist checks.
+// Zod schemas — runtime guarantees on shape, type, and bounds before any DB call.
+// Numeric inputs are coerced (so "85" from URL params parses cleanly), then bounded.
+// Anything outside the bounds — NaN, Infinity, negatives, over-cap — is dropped.
 const TIER_VALUES = ['A', 'B', 'C', 'D'] as const;
+const MIN_SCORE_BOUNDS = { min: 0, max: 100 } as const;
+const MAX_PRICE_BOUNDS = { min: 0, max: 1_000_000 } as const;
+
 const FilterSchema = z.object({
   tortType: z.string().trim().min(1).max(120).optional(),
   state: z.string().trim().min(2).max(64).optional(),
   tier: z.enum(TIER_VALUES).optional(),
-  minScore: z.number().int().min(0).max(100).optional(),
-  maxPrice: z.number().nonnegative().max(1_000_000).optional(),
+  minScore: z.coerce
+    .number()
+    .int()
+    .min(MIN_SCORE_BOUNDS.min)
+    .max(MIN_SCORE_BOUNDS.max)
+    .refine((n) => Number.isFinite(n), { message: 'minScore must be a finite number' })
+    .optional(),
+  maxPrice: z.coerce
+    .number()
+    .min(MAX_PRICE_BOUNDS.min)
+    .max(MAX_PRICE_BOUNDS.max)
+    .refine((n) => Number.isFinite(n), { message: 'maxPrice must be a finite number' })
+    .optional(),
   isExclusive: z.boolean().optional(),
 });
 
@@ -73,7 +89,7 @@ export function validateLeadFilters(
 ): { safe: LeadFilters; rejected: string[] } {
   if (!raw) return { safe: {}, rejected: [] };
   const parsed = FilterSchema.safeParse(raw);
-  const safe: LeadFilters = parsed.success ? { ...parsed.data } : {};
+  const safe: LeadFilters = parsed.success ? ({ ...parsed.data } as LeadFilters) : {};
   const rejected: string[] = [];
 
   if (!parsed.success) {
@@ -130,7 +146,7 @@ export function useLeads(
     queryKey: ['leads', safeFilters],
     queryFn: async () => {
       const reparsed = FilterSchema.safeParse(safeFilters);
-      const f: LeadFilters = reparsed.success ? reparsed.data : {};
+      const f: LeadFilters = reparsed.success ? (reparsed.data as LeadFilters) : {};
 
       // Explicit allow-list of (filter key -> column + operator) bindings.
       // Anything not listed here is silently ignored.
