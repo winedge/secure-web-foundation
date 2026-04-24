@@ -50,6 +50,16 @@ export interface LeadFilterValidationOptions {
   allowedStates?: string[];
   /** Show a toast when a filter is rejected. Defaults to true. */
   notifyOnReject?: boolean;
+  /** Active vertical slug — included in backend rejection logs for analytics. */
+  verticalSlug?: string;
+  /** Send rejected filters to the `filter_rejection_logs` table. Defaults to true. */
+  logRejections?: boolean;
+}
+
+export interface FilterRejection {
+  field: string;
+  value: unknown;
+  reason: string;
 }
 
 // Zod schemas — runtime guarantees on shape, type, and bounds before any DB call.
