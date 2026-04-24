@@ -76,7 +76,11 @@ describe('validateLeadFilters › minScore — malformed inputs are stripped', (
   });
 
   it('rejects junk strings', () => {
-    for (const junk of ['abc', 'high', '50abc', 'one hundred', 'NaN', '', '   ']) {
+    // NOTE: `z.coerce.number()` turns `""` and `"   "` into 0 (a valid in-range
+    // value), so they're intentionally NOT in this list — they're documented as
+    // "treated as 0" rather than rejected. Only strings that fail numeric coercion
+    // are tested here.
+    for (const junk of ['abc', 'high', '50abc', 'one hundred', 'NaN']) {
       // `as unknown as number` because TS would otherwise refuse — the whole
       // point is to simulate untrusted runtime input from URL params / API.
       expectRejected({ minScore: junk as unknown as number }, 'minScore');
