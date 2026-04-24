@@ -89,7 +89,7 @@ export function validateLeadFilters(
 ): { safe: LeadFilters; rejected: string[] } {
   if (!raw) return { safe: {}, rejected: [] };
   const parsed = FilterSchema.safeParse(raw);
-  const safe: LeadFilters = parsed.success ? { ...parsed.data } : {};
+  const safe: LeadFilters = parsed.success ? ({ ...parsed.data } as LeadFilters) : {};
   const rejected: string[] = [];
 
   if (!parsed.success) {
