@@ -531,6 +531,105 @@ export default function Marketplace() {
               </Button>
             )}
           </div>
+
+          {/* Numeric filters: minScore (0–100) and maxPrice (0–1,000,000).
+              These are clamped client-side and surface inline validation errors
+              so the backend never sees out-of-bounds values. */}
+          <div className="flex flex-wrap gap-4 pt-2 border-t border-border">
+            <div className="flex flex-col gap-1 w-full sm:w-[180px]">
+              <label
+                htmlFor="filter-min-score"
+                className="text-xs font-medium text-muted-foreground"
+              >
+                Min AI score (0–100)
+              </label>
+              <Input
+                id="filter-min-score"
+                type="number"
+                inputMode="numeric"
+                min={MIN_SCORE_BOUNDS.min}
+                max={MIN_SCORE_BOUNDS.max}
+                step={1}
+                placeholder="e.g. 75"
+                value={minScoreInput}
+                onChange={(e) => setMinScoreInput(e.target.value)}
+                onBlur={() => {
+                  // On blur, normalize the visible text to the clamped value so the
+                  // user sees exactly what the query will use.
+                  if (minScoreParsed.value !== undefined && minScoreParsed.clamped) {
+                    setMinScoreInput(String(minScoreParsed.value));
+                  }
+                }}
+                aria-invalid={minScoreParsed.error ? true : undefined}
+                aria-describedby={minScoreParsed.error ? 'filter-min-score-error' : undefined}
+                className={minScoreParsed.error ? 'border-destructive focus-visible:ring-destructive' : ''}
+              />
+              {minScoreParsed.error && (
+                <p
+                  id="filter-min-score-error"
+                  role="alert"
+                  className="flex items-start gap-1 text-[11px] text-destructive"
+                >
+                  <AlertCircle className="h-3 w-3 shrink-0 mt-0.5" aria-hidden="true" />
+                  <span>{minScoreParsed.error}</span>
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1 w-full sm:w-[200px]">
+              <label
+                htmlFor="filter-max-price"
+                className="text-xs font-medium text-muted-foreground"
+              >
+                Max price ($0–$1,000,000)
+              </label>
+              <Input
+                id="filter-max-price"
+                type="number"
+                inputMode="decimal"
+                min={MAX_PRICE_BOUNDS.min}
+                max={MAX_PRICE_BOUNDS.max}
+                step={50}
+                placeholder="e.g. 1500"
+                value={maxPriceInput}
+                onChange={(e) => setMaxPriceInput(e.target.value)}
+                onBlur={() => {
+                  if (maxPriceParsed.value !== undefined && maxPriceParsed.clamped) {
+                    setMaxPriceInput(String(maxPriceParsed.value));
+                  }
+                }}
+                aria-invalid={maxPriceParsed.error ? true : undefined}
+                aria-describedby={maxPriceParsed.error ? 'filter-max-price-error' : undefined}
+                className={maxPriceParsed.error ? 'border-destructive focus-visible:ring-destructive' : ''}
+              />
+              {maxPriceParsed.error && (
+                <p
+                  id="filter-max-price-error"
+                  role="alert"
+                  className="flex items-start gap-1 text-[11px] text-destructive"
+                >
+                  <AlertCircle className="h-3 w-3 shrink-0 mt-0.5" aria-hidden="true" />
+                  <span>{maxPriceParsed.error}</span>
+                </p>
+              )}
+            </div>
+
+            {(minScoreInput !== '' || maxPriceInput !== '') && (
+              <div className="flex items-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setMinScoreInput('');
+                    setMaxPriceInput('');
+                  }}
+                  className="text-xs"
+                >
+                  Clear numeric
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Leads Grid */}
