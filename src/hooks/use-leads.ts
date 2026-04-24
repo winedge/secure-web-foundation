@@ -50,6 +50,16 @@ export interface LeadFilterValidationOptions {
   allowedStates?: string[];
   /** Show a toast when a filter is rejected. Defaults to true. */
   notifyOnReject?: boolean;
+  /** Active vertical slug — included in backend rejection logs for analytics. */
+  verticalSlug?: string;
+  /** Send rejected filters to the `filter_rejection_logs` table. Defaults to true. */
+  logRejections?: boolean;
+}
+
+export interface FilterRejection {
+  field: string;
+  value: unknown;
+  reason: string;
 }
 
 // Zod schemas — runtime guarantees on shape, type, and bounds before any DB call.
@@ -82,20 +92,25 @@ const FilterSchema = z.object({
 /**
  * Validate filters against shape + active-vertical whitelists.
  * Invalid values are STRIPPED (not sent to the DB) and surfaced via a single toast.
+ * Returns both a flat `rejected` list (for legacy callers / toast text) and
+ * a structured `rejections` list (field, value, reason) for backend logging.
  */
 export function validateLeadFilters(
   raw: LeadFilters | undefined,
   opts: LeadFilterValidationOptions = {}
-): { safe: LeadFilters; rejected: string[] } {
-  if (!raw) return { safe: {}, rejected: [] };
+): { safe: LeadFilters; rejected: string[]; rejections: FilterRejection[] } {
+  if (!raw) return { safe: {}, rejected: [], rejections: [] };
   const parsed = FilterSchema.safeParse(raw);
   const safe: LeadFilters = parsed.success ? ({ ...parsed.data } as LeadFilters) : {};
   const rejected: string[] = [];
+  const rejections: FilterRejection[] = [];
 
   if (!parsed.success) {
     for (const issue of parsed.error.issues) {
       const field = String(issue.path[0] ?? 'filter');
+      const value = (raw as Record<string, unknown>)[field];
       if (!rejected.includes(field)) rejected.push(field);
+      rejections.push({ field, value, reason: `schema: ${issue.message}` });
     }
   }
 
@@ -106,6 +121,11 @@ export function validateLeadFilters(
     !opts.allowedCategories.includes(safe.tortType)
   ) {
     rejected.push(`category "${safe.tortType}"`);
+    rejections.push({
+      field: 'tortType',
+      value: safe.tortType,
+      reason: 'not in active vertical category whitelist',
+    });
     delete safe.tortType;
   }
 
@@ -116,17 +136,68 @@ export function validateLeadFilters(
     !opts.allowedStates.includes(safe.state)
   ) {
     rejected.push(`state "${safe.state}"`);
+    rejections.push({
+      field: 'state',
+      value: safe.state,
+      reason: 'not in current inventory states',
+    });
     delete safe.state;
   }
 
-  return { safe, rejected };
+  return { safe, rejected, rejections };
+}
+
+/**
+ * Fire-and-forget logger for rejected filter values.
+ * Inserts one row per rejection into `filter_rejection_logs` so admins can
+ * see why a category or state was dropped (typo, stale URL, vertical change, etc.).
+ * Failures are swallowed — logging must never break the marketplace query.
+ */
+async function logFilterRejections(
+  rejections: FilterRejection[],
+  verticalSlug?: string
+): Promise<void> {
+  if (rejections.length === 0) return;
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return; // RLS requires authenticated user_id
+
+    let firmId: string | null = null;
+    const { data: member } = await supabase
+      .from('firm_members')
+      .select('firm_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (member) firmId = member.firm_id;
+
+    const rows = rejections.map((r) => ({
+      user_id: user.id,
+      firm_id: firmId,
+      vertical_slug: verticalSlug ?? null,
+      field: r.field,
+      rejected_value:
+        r.value === undefined || r.value === null
+          ? null
+          : typeof r.value === 'string'
+            ? r.value.slice(0, 500)
+            : JSON.stringify(r.value).slice(0, 500),
+      reason: r.reason.slice(0, 500),
+      context: { source: 'useLeads' },
+    }));
+
+    await supabase.from('filter_rejection_logs').insert(rows);
+  } catch {
+    // Silent — diagnostic logging must not surface to the user.
+  }
 }
 
 export function useLeads(
   filters?: LeadFilters,
   validation?: LeadFilterValidationOptions
 ) {
-  const { safe: safeFilters, rejected } = validateLeadFilters(filters, validation);
+  const { safe: safeFilters, rejected, rejections } = validateLeadFilters(filters, validation);
 
   // Surface rejected filters via toast (once per query key change)
   if (rejected.length > 0 && validation?.notifyOnReject !== false) {
@@ -136,6 +207,13 @@ export function useLeads(
         `Ignored invalid filter${rejected.length > 1 ? 's' : ''}: ${rejected.join(', ')}`
       )
     );
+  }
+
+  // Backend logging — fire and forget, never blocks the query.
+  if (rejections.length > 0 && validation?.logRejections !== false) {
+    queueMicrotask(() => {
+      void logFilterRejections(rejections, validation?.verticalSlug);
+    });
   }
 
   // Re-validate inside the query function and re-pick ONLY known keys.

@@ -56,6 +56,7 @@ export default function Marketplace() {
   const { data: leads, isLoading: leadsLoading } = useLeads(filters, {
     allowedCategories: allowedCategoryLabels,
     allowedStates: allowedStateCodes,
+    verticalSlug: vertical?.slug,
   });
   const { data: sourcesMap } = useLeadSources();
 
