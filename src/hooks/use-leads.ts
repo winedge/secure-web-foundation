@@ -65,16 +65,16 @@ const FilterSchema = z.object({
   tier: z.enum(TIER_VALUES).optional(),
   minScore: z.coerce
     .number()
-    .refine((n) => Number.isFinite(n), { message: 'minScore must be a finite number' })
     .int()
     .min(MIN_SCORE_BOUNDS.min)
     .max(MIN_SCORE_BOUNDS.max)
+    .refine((n) => Number.isFinite(n), { message: 'minScore must be a finite number' })
     .optional(),
   maxPrice: z.coerce
     .number()
-    .refine((n) => Number.isFinite(n), { message: 'maxPrice must be a finite number' })
     .min(MAX_PRICE_BOUNDS.min)
     .max(MAX_PRICE_BOUNDS.max)
+    .refine((n) => Number.isFinite(n), { message: 'maxPrice must be a finite number' })
     .optional(),
   isExclusive: z.boolean().optional(),
 });
