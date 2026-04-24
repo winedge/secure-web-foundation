@@ -43,6 +43,82 @@ export default function Marketplace() {
     ];
   });
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') ?? '');
+
+  // Bounds mirror the backend Zod schema in use-leads.ts (single source of truth
+  // for valid ranges: minScore 0–100 integer, maxPrice 0–1,000,000).
+  const MIN_SCORE_BOUNDS = { min: 0, max: 100 } as const;
+  const MAX_PRICE_BOUNDS = { min: 0, max: 1_000_000 } as const;
+
+  // Raw text state for the numeric inputs so we can show the user's literal entry
+  // (including invalid characters) and surface inline errors before clamping.
+  const [minScoreInput, setMinScoreInput] = useState<string>(
+    () => searchParams.get('minScore') ?? ''
+  );
+  const [maxPriceInput, setMaxPriceInput] = useState<string>(
+    () => searchParams.get('maxPrice') ?? ''
+  );
+
+  // Parse + validate a numeric input. Returns the clamped value (or undefined when
+  // empty), plus an `error` message describing why the raw input is invalid.
+  // The clamp guarantees we never send out-of-bounds values to the backend, even
+  // if the user types past the bounds; the error message tells them what we did.
+  const parseNumericFilter = (
+    raw: string,
+    bounds: { min: number; max: number },
+    opts: { integer?: boolean; label: string }
+  ): { value: number | undefined; error: string | null; clamped: boolean } => {
+    const trimmed = raw.trim();
+    if (trimmed === '') return { value: undefined, error: null, clamped: false };
+    const n = Number(trimmed);
+    if (!Number.isFinite(n)) {
+      return { value: undefined, error: `${opts.label} must be a number`, clamped: false };
+    }
+    if (opts.integer && !Number.isInteger(n)) {
+      const rounded = Math.round(n);
+      const clampedRounded = Math.min(bounds.max, Math.max(bounds.min, rounded));
+      return {
+        value: clampedRounded,
+        error: `${opts.label} must be a whole number — using ${clampedRounded}`,
+        clamped: true,
+      };
+    }
+    if (n < bounds.min) {
+      return {
+        value: bounds.min,
+        error: `${opts.label} must be ≥ ${bounds.min} — using ${bounds.min}`,
+        clamped: true,
+      };
+    }
+    if (n > bounds.max) {
+      return {
+        value: bounds.max,
+        error: `${opts.label} must be ≤ ${bounds.max.toLocaleString()} — using ${bounds.max.toLocaleString()}`,
+        clamped: true,
+      };
+    }
+    return { value: n, error: null, clamped: false };
+  };
+
+  const minScoreParsed = useMemo(
+    () => parseNumericFilter(minScoreInput, MIN_SCORE_BOUNDS, { integer: true, label: 'Min score' }),
+    [minScoreInput]
+  );
+  const maxPriceParsed = useMemo(
+    () => parseNumericFilter(maxPriceInput, MAX_PRICE_BOUNDS, { integer: false, label: 'Max price' }),
+    [maxPriceInput]
+  );
+
+  // Push the clamped values into the filter object whenever the parsed result changes.
+  // We never put the raw (potentially invalid) input into `filters` — the query only
+  // ever sees sanitized numbers, so the backend validator has nothing to reject.
+  useEffect(() => {
+    setFilters((prev) => {
+      if (prev.minScore === minScoreParsed.value && prev.maxPrice === maxPriceParsed.value) {
+        return prev;
+      }
+      return { ...prev, minScore: minScoreParsed.value, maxPrice: maxPriceParsed.value };
+    });
+  }, [minScoreParsed.value, maxPriceParsed.value]);
   // Unfiltered pool: used both as the source of truth for valid states AND for per-option counts.
   const { data: allLeads } = useLeads();
   // Whitelists for backend-side filter validation
