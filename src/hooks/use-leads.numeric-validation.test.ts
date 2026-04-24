@@ -104,6 +104,7 @@ describe('validateLeadFilters › minScore — malformed inputs are stripped', (
     const { safe: sNull } = validateLeadFilters({ minScore: null as unknown as number });
     expect(sNull.minScore === undefined || sNull.minScore === 0).toBe(true);
 
+    // Multi-element arrays + objects: definitely junk, definitely rejected.
     expectRejected({ minScore: [1, 2, 3] as unknown as number }, 'minScore');
     expectRejected({ minScore: { value: 50 } as unknown as number }, 'minScore');
   });
