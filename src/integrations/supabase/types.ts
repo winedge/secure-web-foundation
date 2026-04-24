@@ -1979,6 +1979,50 @@ export type Database = {
           },
         ]
       }
+      filter_rejection_logs: {
+        Row: {
+          context: Json | null
+          created_at: string
+          field: string
+          firm_id: string | null
+          id: string
+          reason: string
+          rejected_value: string | null
+          user_id: string | null
+          vertical_slug: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          field: string
+          firm_id?: string | null
+          id?: string
+          reason: string
+          rejected_value?: string | null
+          user_id?: string | null
+          vertical_slug?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          field?: string
+          firm_id?: string | null
+          id?: string
+          reason?: string
+          rejected_value?: string | null
+          user_id?: string | null
+          vertical_slug?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filter_rejection_logs_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firm_benchmarks: {
         Row: {
           avg_case_value: number | null
