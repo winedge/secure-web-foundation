@@ -122,32 +122,56 @@ export function useLeads(
     );
   }
 
+  // Re-validate inside the query function and re-pick ONLY known keys.
+  // This is a defense-in-depth layer: even if a caller mutates `safeFilters`
+  // between render and fetch, or passes extra props, only whitelisted
+  // (key, value) pairs reach the Supabase query builder.
   return useQuery({
     queryKey: ['leads', safeFilters],
     queryFn: async () => {
+      const reparsed = FilterSchema.safeParse(safeFilters);
+      const f: LeadFilters = reparsed.success ? reparsed.data : {};
+
+      // Explicit allow-list of (filter key -> column + operator) bindings.
+      // Anything not listed here is silently ignored.
+      const ALLOWED_KEYS = ['tortType', 'state', 'tier', 'minScore', 'maxPrice', 'isExclusive'] as const;
+
       let query = supabase
         .from('leads')
         .select('id, tort_type, state, age_bucket, ai_quality_score, fraud_risk_score, tier, is_verified, is_exclusive, price, status, created_at, source, source_id')
         .eq('status', 'available')
         .order('created_at', { ascending: false });
 
-      if (safeFilters.tortType) {
-        query = query.eq('tort_type', safeFilters.tortType);
-      }
-      if (safeFilters.state) {
-        query = query.eq('state', safeFilters.state);
-      }
-      if (safeFilters.tier) {
-        query = query.eq('tier', safeFilters.tier as 'A' | 'B' | 'C' | 'D');
-      }
-      if (safeFilters.minScore) {
-        query = query.gte('ai_quality_score', safeFilters.minScore);
-      }
-      if (safeFilters.maxPrice) {
-        query = query.lte('price', safeFilters.maxPrice);
-      }
-      if (safeFilters.isExclusive !== undefined) {
-        query = query.eq('is_exclusive', safeFilters.isExclusive);
+      for (const key of ALLOWED_KEYS) {
+        const value = (f as Record<string, unknown>)[key];
+        if (value === undefined || value === null || value === '') continue;
+
+        switch (key) {
+          case 'tortType':
+            if (typeof value === 'string') query = query.eq('tort_type', value);
+            break;
+          case 'state':
+            if (typeof value === 'string') query = query.eq('state', value);
+            break;
+          case 'tier':
+            if (typeof value === 'string' && (TIER_VALUES as readonly string[]).includes(value)) {
+              query = query.eq('tier', value as 'A' | 'B' | 'C' | 'D');
+            }
+            break;
+          case 'minScore':
+            if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+              query = query.gte('ai_quality_score', value);
+            }
+            break;
+          case 'maxPrice':
+            if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
+              query = query.lte('price', value);
+            }
+            break;
+          case 'isExclusive':
+            if (typeof value === 'boolean') query = query.eq('is_exclusive', value);
+            break;
+        }
       }
 
       const { data, error } = await query;
