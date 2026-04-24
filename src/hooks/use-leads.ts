@@ -146,7 +146,7 @@ export function useLeads(
     queryKey: ['leads', safeFilters],
     queryFn: async () => {
       const reparsed = FilterSchema.safeParse(safeFilters);
-      const f: LeadFilters = reparsed.success ? reparsed.data : {};
+      const f: LeadFilters = reparsed.success ? (reparsed.data as LeadFilters) : {};
 
       // Explicit allow-list of (filter key -> column + operator) bindings.
       // Anything not listed here is silently ignored.
