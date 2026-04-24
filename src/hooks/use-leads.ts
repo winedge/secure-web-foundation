@@ -199,14 +199,60 @@ export function useLeads(
 ) {
   const { safe: safeFilters, rejected, rejections } = validateLeadFilters(filters, validation);
 
-  // Surface rejected filters via toast (once per query key change)
-  if (rejected.length > 0 && validation?.notifyOnReject !== false) {
-    // Defer to avoid setState-in-render warnings from sonner
-    queueMicrotask(() =>
-      toast.warning(
-        `Ignored invalid filter${rejected.length > 1 ? 's' : ''}: ${rejected.join(', ')}`
-      )
-    );
+  // Surface rejected filters via a detailed toast.
+  // Numeric rejections (minScore/maxPrice) get explicit "field: value" callouts so
+  // the user can see exactly what was malformed. We also confirm which filters
+  // remain in effect so they know the query is still scoped, not wide open.
+  if (rejections.length > 0 && validation?.notifyOnReject !== false) {
+    queueMicrotask(() => {
+      const fmtVal = (v: unknown): string => {
+        if (v === undefined || v === null) return '∅';
+        if (typeof v === 'number' && !Number.isFinite(v)) return String(v); // NaN / Infinity
+        if (typeof v === 'string') return `"${v}"`;
+        if (typeof v === 'object') {
+          try { return JSON.stringify(v); } catch { return '[unserializable]'; }
+        }
+        return String(v);
+      };
+
+      // Group rejections so numeric ones get their own clear bullet line.
+      const NUMERIC_FIELDS = new Set(['minScore', 'maxPrice']);
+      const numeric = rejections.filter((r) => NUMERIC_FIELDS.has(r.field));
+      const other = rejections.filter((r) => !NUMERIC_FIELDS.has(r.field));
+
+      const lines: string[] = [];
+      if (numeric.length > 0) {
+        lines.push(
+          `Invalid numeric filter${numeric.length > 1 ? 's' : ''} ignored: ` +
+            numeric.map((r) => `${r.field}=${fmtVal(r.value)}`).join(', ')
+        );
+      }
+      if (other.length > 0) {
+        lines.push(
+          `Other ignored: ${other.map((r) => `${r.field}=${fmtVal(r.value)}`).join(', ')}`
+        );
+      }
+
+      // Confirm which filters are still applied after sanitization.
+      const stillApplied: string[] = [];
+      if (safeFilters.tortType) stillApplied.push(`category=${fmtVal(safeFilters.tortType)}`);
+      if (safeFilters.state) stillApplied.push(`state=${fmtVal(safeFilters.state)}`);
+      if (safeFilters.tier) stillApplied.push(`tier=${safeFilters.tier}`);
+      if (safeFilters.minScore !== undefined) stillApplied.push(`minScore=${safeFilters.minScore}`);
+      if (safeFilters.maxPrice !== undefined) stillApplied.push(`maxPrice=${safeFilters.maxPrice}`);
+      if (safeFilters.isExclusive !== undefined) stillApplied.push(`exclusive=${safeFilters.isExclusive}`);
+
+      lines.push(
+        stillApplied.length > 0
+          ? `Still applied: ${stillApplied.join(', ')}`
+          : 'No other filters applied — showing all available leads.'
+      );
+
+      toast.warning('Some filters were rejected', {
+        description: lines.join('\n'),
+        duration: 6000,
+      });
+    });
   }
 
   // Backend logging — fire and forget, never blocks the query.

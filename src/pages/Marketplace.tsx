@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { toast } from 'sonner';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, ArrowUpDown, DollarSign, AlertCircle } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -72,6 +73,57 @@ export default function Marketplace() {
     }
     return map;
   }, [rejections]);
+
+  // Numeric filters (minScore/maxPrice) have no UI control — surface them via a
+  // detailed toast that names each invalid value and confirms the remaining filters.
+  // We use a ref + signature to fire the toast only when the rejection set actually
+  // changes (not on every render).
+  const lastNumericToastRef = useRef<string>('');
+  useEffect(() => {
+    const NUMERIC_FIELDS = ['minScore', 'maxPrice'] as const;
+    const numericRejections = rejections.filter((r) =>
+      (NUMERIC_FIELDS as readonly string[]).includes(r.field)
+    );
+    if (numericRejections.length === 0) {
+      lastNumericToastRef.current = '';
+      return;
+    }
+    const signature = numericRejections
+      .map((r) => `${r.field}=${JSON.stringify(r.value)}`)
+      .join('|');
+    if (signature === lastNumericToastRef.current) return;
+    lastNumericToastRef.current = signature;
+
+    const fmt = (v: unknown): string => {
+      if (v === undefined || v === null) return '∅';
+      if (typeof v === 'number' && !Number.isFinite(v)) return String(v);
+      if (typeof v === 'string') return `"${v}"`;
+      return String(v);
+    };
+
+    // Confirm what's still in effect after sanitization (so the user knows the
+    // query is still scoped, not silently widened).
+    const stillApplied: string[] = [];
+    if (filters.tortType && !rejectionsByField.has('tortType'))
+      stillApplied.push(`category=${fmt(filters.tortType)}`);
+    if (filters.state && !rejectionsByField.has('state'))
+      stillApplied.push(`state=${fmt(filters.state)}`);
+    if (filters.tier && !rejectionsByField.has('tier'))
+      stillApplied.push(`tier=${filters.tier}`);
+
+    const lines = [
+      `Invalid numeric filter${numericRejections.length > 1 ? 's' : ''}: ` +
+        numericRejections.map((r) => `${r.field}=${fmt(r.value)}`).join(', '),
+      stillApplied.length > 0
+        ? `Still applied: ${stillApplied.join(', ')}`
+        : 'No other filters applied — showing all available leads.',
+    ];
+
+    toast.warning('Some numeric filters were rejected', {
+      description: lines.join('\n'),
+      duration: 6000,
+    });
+  }, [rejections, rejectionsByField, filters]);
 
   const { data: leads, isLoading: leadsLoading } = useLeads(filters, {
     allowedCategories: allowedCategoryLabels,
