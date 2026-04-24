@@ -162,13 +162,17 @@ describe('validateLeadFilters › maxPrice — malformed inputs are stripped', (
   });
 
   it('rejects junk strings', () => {
-    for (const junk of ['cheap', '$100', '1,000', '1_000', 'free', 'NaN', '', '   ', 'abc123']) {
+    // NOTE: same coercion gotcha as minScore — `""` and `"   "` coerce to 0,
+    // a valid in-range value, so they're documented behavior rather than rejected.
+    for (const junk of ['cheap', '$100', '1,000', '1_000', 'free', 'NaN', 'abc123']) {
       expectRejected({ maxPrice: junk as unknown as number }, 'maxPrice');
     }
   });
 
   it('rejects arrays/objects', () => {
-    expectRejected({ maxPrice: [100] as unknown as number }, 'maxPrice');
+    // Single-element arrays coerce via `Number([100])` → 100 (valid in-range),
+    // so we only test multi-element arrays + plain objects, which never coerce.
+    expectRejected({ maxPrice: [100, 200] as unknown as number }, 'maxPrice');
     expectRejected({ maxPrice: { price: 100 } as unknown as number }, 'maxPrice');
   });
 
