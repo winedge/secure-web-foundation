@@ -40,8 +40,11 @@ const makeChain = () => {
   for (const m of ['select', 'eq', 'gte', 'lte', 'order', 'in', 'maybeSingle']) {
     chain[m] = passthrough(m);
   }
-  // Terminal: awaiting the chain resolves with `{ data, error }`.
-  (chain as unknown as PromiseLike<unknown>).then = (resolve: (v: unknown) => unknown) =>
+  // Terminal: awaiting the chain resolves with `{ data, error }`. We attach
+  // a `.then` so `await query` works (the production code awaits the chain
+  // directly). The `any` cast is intentional — this is a test thenable.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (chain as any).then = (resolve: (v: unknown) => unknown) =>
     Promise.resolve({ data: [], error: null }).then(resolve);
   return chain;
 };
