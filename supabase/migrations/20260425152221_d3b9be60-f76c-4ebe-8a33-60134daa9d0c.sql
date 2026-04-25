@@ -1,0 +1,1 @@
+ALTER TABLE public.firms ADD COLUMN IF NOT EXISTS categories text[] NOT NULL DEFAULT '{}';
