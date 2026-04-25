@@ -32,7 +32,6 @@ const STEPS = [
 const firmSchema = z.object({
   name: z.string().min(2, 'Firm name must be at least 2 characters'),
   website: z.string().url().optional().or(z.literal('')),
-  practice_type: z.string().optional(),
   contact_email: z.string().email().optional().or(z.literal('')),
   contact_phone: z.string().optional(),
   country: z.string().length(2, 'Select a country').default('US'),
@@ -52,6 +51,12 @@ export default function Onboarding() {
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [selectedVertical, setSelectedVertical] = useState<VerticalPreset | null>(null);
   const [assigningVertical, setAssigningVertical] = useState(false);
+  // Categories pulled from `vertical_lead_categories` for the chosen vertical.
+  // We let the firm pick which ones they handle (this replaces the free-text
+  // "Practice Type" input that used to nudge everyone toward tort terminology).
+  const [verticalCategories, setVerticalCategories] = useState<{ key: string; label: string }[]>([]);
+  const [selectedCategoryKeys, setSelectedCategoryKeys] = useState<Set<string>>(new Set());
+  const [categoryError, setCategoryError] = useState<string | null>(null);
 
   const metaConnected = connections?.some(
     (c) => c.platform === 'facebook' && c.is_active
@@ -75,12 +80,53 @@ export default function Onboarding() {
     defaultValues: {
       name: '',
       website: '',
-      practice_type: '',
       contact_email: '',
       contact_phone: '',
       country: 'US',
     },
   });
+
+  // Whenever a vertical is picked, load its category whitelist so the firm can
+  // pick which practice areas / services they cover. Vertical-scoped — no tort
+  // categories shown to a Solar firm, etc.
+  useEffect(() => {
+    let cancelled = false;
+    async function loadCategories() {
+      if (!selectedVertical) {
+        setVerticalCategories([]);
+        return;
+      }
+      const { data: vRow } = await supabase
+        .from('industry_verticals')
+        .select('id')
+        .eq('slug', selectedVertical.slug)
+        .maybeSingle();
+      if (!vRow?.id || cancelled) return;
+      const { data: cats } = await supabase
+        .from('vertical_lead_categories')
+        .select('key, label')
+        .eq('vertical_id', vRow.id)
+        .is('firm_id', null)
+        .eq('is_active', true)
+        .order('label');
+      if (cancelled) return;
+      setVerticalCategories((cats ?? []).map((c) => ({ key: c.key as string, label: c.label as string })));
+      setSelectedCategoryKeys(new Set());
+      setCategoryError(null);
+    }
+    void loadCategories();
+    return () => { cancelled = true; };
+  }, [selectedVertical?.slug]);
+
+  const toggleCategory = (key: string) => {
+    setSelectedCategoryKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+    setCategoryError(null);
+  };
 
   const handleVerticalContinue = async (preset: VerticalPreset) => {
     setSelectedVertical(preset);
