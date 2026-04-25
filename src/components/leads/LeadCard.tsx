@@ -66,6 +66,11 @@ export function LeadCard({ lead, isPurchased = false, sourceName }: LeadCardProp
 
           {/* Badges */}
           <div className="flex flex-wrap gap-2 mb-4">
+            {lead.metadata && (lead.metadata as Record<string, unknown>)?.demo === true && (
+              <Badge variant="outline" className="gap-1 border-muted-foreground/30 text-muted-foreground">
+                Demo
+              </Badge>
+            )}
             {(sourceName || lead.source) && (
               <Badge variant="outline" className="gap-1">
                 <Globe className="h-3 w-3" />

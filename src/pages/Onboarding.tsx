@@ -32,7 +32,6 @@ const STEPS = [
 const firmSchema = z.object({
   name: z.string().min(2, 'Firm name must be at least 2 characters'),
   website: z.string().url().optional().or(z.literal('')),
-  practice_type: z.string().optional(),
   contact_email: z.string().email().optional().or(z.literal('')),
   contact_phone: z.string().optional(),
   country: z.string().length(2, 'Select a country').default('US'),
@@ -52,6 +51,12 @@ export default function Onboarding() {
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [selectedVertical, setSelectedVertical] = useState<VerticalPreset | null>(null);
   const [assigningVertical, setAssigningVertical] = useState(false);
+  // Categories pulled from `vertical_lead_categories` for the chosen vertical.
+  // We let the firm pick which ones they handle (this replaces the free-text
+  // "Practice Type" input that used to nudge everyone toward tort terminology).
+  const [verticalCategories, setVerticalCategories] = useState<{ key: string; label: string }[]>([]);
+  const [selectedCategoryKeys, setSelectedCategoryKeys] = useState<Set<string>>(new Set());
+  const [categoryError, setCategoryError] = useState<string | null>(null);
 
   const metaConnected = connections?.some(
     (c) => c.platform === 'facebook' && c.is_active
@@ -75,12 +80,53 @@ export default function Onboarding() {
     defaultValues: {
       name: '',
       website: '',
-      practice_type: '',
       contact_email: '',
       contact_phone: '',
       country: 'US',
     },
   });
+
+  // Whenever a vertical is picked, load its category whitelist so the firm can
+  // pick which practice areas / services they cover. Vertical-scoped — no tort
+  // categories shown to a Solar firm, etc.
+  useEffect(() => {
+    let cancelled = false;
+    async function loadCategories() {
+      if (!selectedVertical) {
+        setVerticalCategories([]);
+        return;
+      }
+      const { data: vRow } = await supabase
+        .from('industry_verticals')
+        .select('id')
+        .eq('slug', selectedVertical.slug)
+        .maybeSingle();
+      if (!vRow?.id || cancelled) return;
+      const { data: cats } = await supabase
+        .from('vertical_lead_categories')
+        .select('key, label')
+        .eq('vertical_id', vRow.id)
+        .is('firm_id', null)
+        .eq('is_active', true)
+        .order('label');
+      if (cancelled) return;
+      setVerticalCategories((cats ?? []).map((c) => ({ key: c.key as string, label: c.label as string })));
+      setSelectedCategoryKeys(new Set());
+      setCategoryError(null);
+    }
+    void loadCategories();
+    return () => { cancelled = true; };
+  }, [selectedVertical?.slug]);
+
+  const toggleCategory = (key: string) => {
+    setSelectedCategoryKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+    setCategoryError(null);
+  };
 
   const handleVerticalContinue = async (preset: VerticalPreset) => {
     setSelectedVertical(preset);
@@ -95,18 +141,36 @@ export default function Onboarding() {
   };
 
   const onFirmSubmit = async (data: FirmFormData) => {
+    // Vertical-aware: require at least one practice area / service.
+    // The picked labels are used both for the legacy `practice_type` text field
+    // (kept for backwards compat with `match_lead_to_firms`) and the structured
+    // `categories` text[] column added in the latest migration.
+    const selectedLabels = verticalCategories
+      .filter((c) => selectedCategoryKeys.has(c.key))
+      .map((c) => c.label);
+    if (verticalCategories.length > 0 && selectedLabels.length === 0) {
+      setCategoryError(`Pick at least one ${selectedVertical?.slug === 'mass_tort' ? 'practice area' : 'service'} you handle`);
+      return;
+    }
+
     const created = await createFirm.mutateAsync({
       name: data.name,
       website: data.website || undefined,
-      practice_type: data.practice_type || selectedVertical?.name || undefined,
+      practice_type: selectedLabels.join(', ') || selectedVertical?.name || undefined,
       contact_email: data.contact_email || undefined,
       contact_phone: data.contact_phone || undefined,
     });
 
-    // Persist country on the firm so currency/billing reflects it.
-    if (created?.id && data.country) {
+    // Persist country + structured categories on the firm.
+    if (created?.id) {
       try {
-        await supabase.from('firms').update({ country: data.country } as any).eq('id', created.id);
+        await supabase
+          .from('firms')
+          .update({
+            ...(data.country ? { country: data.country } : {}),
+            categories: selectedLabels,
+          } as any)
+          .eq('id', created.id);
       } catch {
         // non-blocking
       }
@@ -261,11 +325,46 @@ export default function Onboarding() {
                     <Input id="website" placeholder="https://yourfirm.com" className="h-11" {...register('website')} />
                     {errors.website && <p className="text-sm text-destructive">{errors.website.message}</p>}
                   </div>
+                  {/* Vertical-aware category multi-select. Replaces the old free-text
+                      "Practice Type" field that used to suggest "Mass Tort, Personal Injury"
+                      to every firm regardless of their vertical. */}
                   <div className="space-y-2">
-                    <label htmlFor="practice_type" className="text-sm font-medium flex items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-muted-foreground" /> Practice Type
+                    <label className="text-sm font-medium flex items-center gap-2">
+                      <Briefcase className="h-4 w-4 text-muted-foreground" />
+                      {selectedVertical?.slug === 'mass_tort' ? 'Practice areas' : 'Services you offer'}
+                      <span className="text-destructive">*</span>
                     </label>
-                    <Input id="practice_type" placeholder="Mass Tort, Personal Injury" className="h-11" {...register('practice_type')} />
+                    {verticalCategories.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">Loading options…</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {verticalCategories.map((c) => {
+                          const active = selectedCategoryKeys.has(c.key);
+                          return (
+                            <button
+                              key={c.key}
+                              type="button"
+                              onClick={() => toggleCategory(c.key)}
+                              className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                                active
+                                  ? 'border-primary bg-primary text-primary-foreground'
+                                  : 'border-border bg-background text-foreground hover:border-primary/40'
+                              }`}
+                              aria-pressed={active}
+                            >
+                              {active && <Check className="inline h-3 w-3 mr-1" />}
+                              {c.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <p className="text-[11px] text-muted-foreground">
+                      Select all that apply — we'll only show you matching {selectedVertical?.name.toLowerCase() || 'industry'} leads.
+                    </p>
+                    {categoryError && (
+                      <p className="text-sm text-destructive">{categoryError}</p>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">

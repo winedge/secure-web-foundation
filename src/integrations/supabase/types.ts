@@ -2225,6 +2225,7 @@ export type Database = {
       }
       firms: {
         Row: {
+          categories: string[]
           contact_email: string | null
           contact_phone: string | null
           country: string
@@ -2245,6 +2246,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          categories?: string[]
           contact_email?: string | null
           contact_phone?: string | null
           country?: string
@@ -2265,6 +2267,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          categories?: string[]
           contact_email?: string | null
           contact_phone?: string | null
           country?: string
