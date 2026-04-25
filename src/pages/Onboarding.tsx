@@ -141,18 +141,36 @@ export default function Onboarding() {
   };
 
   const onFirmSubmit = async (data: FirmFormData) => {
+    // Vertical-aware: require at least one practice area / service.
+    // The picked labels are used both for the legacy `practice_type` text field
+    // (kept for backwards compat with `match_lead_to_firms`) and the structured
+    // `categories` text[] column added in the latest migration.
+    const selectedLabels = verticalCategories
+      .filter((c) => selectedCategoryKeys.has(c.key))
+      .map((c) => c.label);
+    if (verticalCategories.length > 0 && selectedLabels.length === 0) {
+      setCategoryError(`Pick at least one ${term('category_label', 'category').toLowerCase()} you handle`);
+      return;
+    }
+
     const created = await createFirm.mutateAsync({
       name: data.name,
       website: data.website || undefined,
-      practice_type: data.practice_type || selectedVertical?.name || undefined,
+      practice_type: selectedLabels.join(', ') || selectedVertical?.name || undefined,
       contact_email: data.contact_email || undefined,
       contact_phone: data.contact_phone || undefined,
     });
 
-    // Persist country on the firm so currency/billing reflects it.
-    if (created?.id && data.country) {
+    // Persist country + structured categories on the firm.
+    if (created?.id) {
       try {
-        await supabase.from('firms').update({ country: data.country } as any).eq('id', created.id);
+        await supabase
+          .from('firms')
+          .update({
+            ...(data.country ? { country: data.country } : {}),
+            categories: selectedLabels,
+          } as any)
+          .eq('id', created.id);
       } catch {
         // non-blocking
       }
