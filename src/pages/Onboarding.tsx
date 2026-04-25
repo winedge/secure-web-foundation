@@ -149,7 +149,7 @@ export default function Onboarding() {
       .filter((c) => selectedCategoryKeys.has(c.key))
       .map((c) => c.label);
     if (verticalCategories.length > 0 && selectedLabels.length === 0) {
-      setCategoryError(`Pick at least one ${term('category_label', 'category').toLowerCase()} you handle`);
+      setCategoryError(`Pick at least one ${selectedVertical?.slug === 'mass_tort' ? 'practice area' : 'service'} you handle`);
       return;
     }
 
@@ -325,11 +325,46 @@ export default function Onboarding() {
                     <Input id="website" placeholder="https://yourfirm.com" className="h-11" {...register('website')} />
                     {errors.website && <p className="text-sm text-destructive">{errors.website.message}</p>}
                   </div>
+                  {/* Vertical-aware category multi-select. Replaces the old free-text
+                      "Practice Type" field that used to suggest "Mass Tort, Personal Injury"
+                      to every firm regardless of their vertical. */}
                   <div className="space-y-2">
-                    <label htmlFor="practice_type" className="text-sm font-medium flex items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-muted-foreground" /> Practice Type
+                    <label className="text-sm font-medium flex items-center gap-2">
+                      <Briefcase className="h-4 w-4 text-muted-foreground" />
+                      {selectedVertical?.slug === 'mass_tort' ? 'Practice areas' : 'Services you offer'}
+                      <span className="text-destructive">*</span>
                     </label>
-                    <Input id="practice_type" placeholder="Mass Tort, Personal Injury" className="h-11" {...register('practice_type')} />
+                    {verticalCategories.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">Loading options…</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {verticalCategories.map((c) => {
+                          const active = selectedCategoryKeys.has(c.key);
+                          return (
+                            <button
+                              key={c.key}
+                              type="button"
+                              onClick={() => toggleCategory(c.key)}
+                              className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                                active
+                                  ? 'border-primary bg-primary text-primary-foreground'
+                                  : 'border-border bg-background text-foreground hover:border-primary/40'
+                              }`}
+                              aria-pressed={active}
+                            >
+                              {active && <Check className="inline h-3 w-3 mr-1" />}
+                              {c.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <p className="text-[11px] text-muted-foreground">
+                      Select all that apply — we'll only show you matching {selectedVertical?.name.toLowerCase() || 'industry'} leads.
+                    </p>
+                    {categoryError && (
+                      <p className="text-sm text-destructive">{categoryError}</p>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
