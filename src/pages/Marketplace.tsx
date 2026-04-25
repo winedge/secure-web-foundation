@@ -119,8 +119,14 @@ export default function Marketplace() {
       return { ...prev, minScore: minScoreParsed.value, maxPrice: maxPriceParsed.value };
     });
   }, [minScoreParsed.value, maxPriceParsed.value]);
-  // Unfiltered pool: used both as the source of truth for valid states AND for per-option counts.
-  const { data: allLeads } = useLeads();
+  // The firm's vertical_id scopes the marketplace so each firm only sees leads
+  // from their own industry. Admin-managed firms with no vertical see everything.
+  const firmVerticalId = (firm as { vertical_id?: string } | null | undefined)?.vertical_id;
+  // Unfiltered pool (within this vertical): used both as the source of truth for valid states AND for per-option counts.
+  const { data: allLeads } = useLeads(
+    firmVerticalId ? { verticalId: firmVerticalId } : undefined,
+    { notifyOnReject: false, logRejections: false }
+  );
   // Whitelists for backend-side filter validation
   const allowedCategoryLabels = useMemo(
     () => (categories ?? []).filter((c) => c.is_active !== false).map((c) => c.label),
@@ -201,12 +207,15 @@ export default function Marketplace() {
     });
   }, [rejections, rejectionsByField, filters]);
 
-  const { data: leads, isLoading: leadsLoading } = useLeads(filters, {
-    allowedCategories: allowedCategoryLabels,
-    allowedStates: allowedStateCodes,
-    verticalSlug: vertical?.slug,
-    notifyOnReject: false,
-  });
+  const { data: leads, isLoading: leadsLoading } = useLeads(
+    { ...filters, verticalId: firmVerticalId ?? filters.verticalId },
+    {
+      allowedCategories: allowedCategoryLabels,
+      allowedStates: allowedStateCodes,
+      verticalSlug: vertical?.slug,
+      notifyOnReject: false,
+    }
+  );
   const { data: sourcesMap } = useLeadSources();
 
   // Category options reuse the validation whitelist (single source of truth)
@@ -357,6 +366,11 @@ export default function Marketplace() {
           <p className="text-muted-foreground mt-1">
             Browse and purchase AI-verified {vertical?.name || 'industry'} {term('lead_plural', 'leads').toLowerCase()}
           </p>
+          {vertical?.name && firmVerticalId && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Showing leads for: <span className="font-medium text-foreground">{vertical.name}</span>
+            </p>
+          )}
         </div>
 
         {/* Filters */}
