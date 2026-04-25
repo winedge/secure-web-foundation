@@ -41,6 +41,8 @@ export interface LeadFilters {
   minScore?: number;
   maxPrice?: number;
   isExclusive?: boolean;
+  /** Restrict marketplace results to a specific industry vertical id (uuid). */
+  verticalId?: string;
 }
 
 export interface LeadFilterValidationOptions {
@@ -87,6 +89,7 @@ const FilterSchema = z.object({
     .refine((n) => Number.isFinite(n), { message: 'maxPrice must be a finite number' })
     .optional(),
   isExclusive: z.boolean().optional(),
+  verticalId: z.string().uuid().optional(),
 });
 
 /**
@@ -116,6 +119,7 @@ export function validateLeadFilters(
     minScore: FilterSchema.shape.minScore,
     maxPrice: FilterSchema.shape.maxPrice,
     isExclusive: FilterSchema.shape.isExclusive,
+    verticalId: FilterSchema.shape.verticalId,
   };
 
   const rawRecord = raw as Record<string, unknown>;
@@ -294,11 +298,11 @@ export function useLeads(
 
       // Explicit allow-list of (filter key -> column + operator) bindings.
       // Anything not listed here is silently ignored.
-      const ALLOWED_KEYS = ['tortType', 'state', 'tier', 'minScore', 'maxPrice', 'isExclusive'] as const;
+      const ALLOWED_KEYS = ['tortType', 'state', 'tier', 'minScore', 'maxPrice', 'isExclusive', 'verticalId'] as const;
 
       let query = supabase
         .from('leads')
-        .select('id, tort_type, state, age_bucket, ai_quality_score, fraud_risk_score, tier, is_verified, is_exclusive, price, status, created_at, source, source_id')
+        .select('id, tort_type, state, age_bucket, ai_quality_score, fraud_risk_score, tier, is_verified, is_exclusive, price, status, created_at, source, source_id, vertical_id, metadata')
         .eq('status', 'available')
         .order('created_at', { ascending: false });
 
@@ -330,6 +334,9 @@ export function useLeads(
             break;
           case 'isExclusive':
             if (typeof value === 'boolean') query = query.eq('is_exclusive', value);
+            break;
+          case 'verticalId':
+            if (typeof value === 'string') query = query.eq('vertical_id', value);
             break;
         }
       }
