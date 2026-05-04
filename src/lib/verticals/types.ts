@@ -76,7 +76,16 @@ export type ModuleKey =
   | 'tool_sms_conversational'
   | 'tool_crm_hygiene'
   | 'tool_email_sequence'
-  | 'tool_compliance_auditor';
+  | 'tool_compliance_auditor'
+  // ===== Local Presence: SEO + GMB (non mass-tort) =====
+  | 'gmb_manager'
+  | 'seo_suite'
+  | 'tool_seo_deep_scan'
+  | 'tool_keyword_research'
+  | 'tool_backlink_audit'
+  | 'tool_local_citations'
+  | 'tool_review_manager'
+  | 'tool_gmb_post_scheduler';
 
 export interface IndustryVertical {
   id: string;

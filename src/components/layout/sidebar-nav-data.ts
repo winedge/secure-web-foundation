@@ -39,6 +39,14 @@ import {
   Layers,
   ShieldAlert,
   Plug,
+  Store,
+  Search,
+  ScanLine,
+  KeyRound,
+  Link2,
+  ListChecks,
+  Star,
+  CalendarPlus,
 } from 'lucide-react';
 import type { ModuleKey } from '@/lib/verticals/types';
 import { AI_TOOLS } from '@/lib/ai-tools/registry';
@@ -138,6 +146,20 @@ export const navGroups: NavGroup[] = [
       { name: 'Referral Network', href: '/referral-network', icon: Handshake },
       { name: 'Fraud Detection', href: '/fraud-detection', icon: ShieldAlert, module: 'fraud_detection' },
       { name: 'CRM Integrations', href: '/crm-integrations', icon: Plug },
+    ],
+  },
+  {
+    label: 'Local Presence',
+    icon: MapPin,
+    items: [
+      { name: 'Google My Business', href: '/gmb', icon: Store, module: 'gmb_manager' },
+      { name: 'GMB Reviews', href: '/gmb/reviews', icon: Star, module: 'tool_review_manager' },
+      { name: 'GMB Posts', href: '/gmb/posts', icon: CalendarPlus, module: 'tool_gmb_post_scheduler' },
+      { name: 'SEO Suite', href: '/seo', icon: Search, module: 'seo_suite' },
+      { name: 'SEO Deep Scan', href: '/seo/deep-scan', icon: ScanLine, module: 'tool_seo_deep_scan' },
+      { name: 'Keyword Research', href: '/seo/keywords', icon: KeyRound, module: 'tool_keyword_research' },
+      { name: 'Backlink Audit', href: '/seo/backlinks', icon: Link2, module: 'tool_backlink_audit' },
+      { name: 'Local Citations', href: '/seo/citations', icon: ListChecks, module: 'tool_local_citations' },
     ],
   },
 ];

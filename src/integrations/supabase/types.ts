@@ -2407,6 +2407,172 @@ export type Database = {
           },
         ]
       }
+      gmb_locations: {
+        Row: {
+          address: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          firm_id: string
+          hours: Json | null
+          id: string
+          is_connected: boolean
+          last_synced_at: string | null
+          name: string
+          phone: string | null
+          place_id: string | null
+          postal_code: string | null
+          primary_category: string | null
+          raw_payload: Json | null
+          region: string | null
+          status: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          firm_id: string
+          hours?: Json | null
+          id?: string
+          is_connected?: boolean
+          last_synced_at?: string | null
+          name: string
+          phone?: string | null
+          place_id?: string | null
+          postal_code?: string | null
+          primary_category?: string | null
+          raw_payload?: Json | null
+          region?: string | null
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          firm_id?: string
+          hours?: Json | null
+          id?: string
+          is_connected?: boolean
+          last_synced_at?: string | null
+          name?: string
+          phone?: string | null
+          place_id?: string | null
+          postal_code?: string | null
+          primary_category?: string | null
+          raw_payload?: Json | null
+          region?: string | null
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      gmb_posts: {
+        Row: {
+          created_at: string
+          cta_label: string | null
+          cta_url: string | null
+          firm_id: string
+          id: string
+          location_id: string
+          media_url: string | null
+          post_type: string
+          scheduled_for: string | null
+          status: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          firm_id: string
+          id?: string
+          location_id: string
+          media_url?: string | null
+          post_type?: string
+          scheduled_for?: string | null
+          status?: string
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          firm_id?: string
+          id?: string
+          location_id?: string
+          media_url?: string | null
+          post_type?: string
+          scheduled_for?: string | null
+          status?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gmb_posts_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "gmb_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gmb_reviews: {
+        Row: {
+          created_at: string
+          external_id: string | null
+          firm_id: string
+          id: string
+          location_id: string
+          rating: number | null
+          replied_at: string | null
+          reply_text: string | null
+          reviewer_name: string | null
+          text: string | null
+        }
+        Insert: {
+          created_at?: string
+          external_id?: string | null
+          firm_id: string
+          id?: string
+          location_id: string
+          rating?: number | null
+          replied_at?: string | null
+          reply_text?: string | null
+          reviewer_name?: string | null
+          text?: string | null
+        }
+        Update: {
+          created_at?: string
+          external_id?: string | null
+          firm_id?: string
+          id?: string
+          location_id?: string
+          rating?: number | null
+          replied_at?: string | null
+          reply_text?: string | null
+          reviewer_name?: string | null
+          text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gmb_reviews_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "gmb_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       industry_verticals: {
         Row: {
           created_at: string
@@ -3926,6 +4092,98 @@ export type Database = {
           role?: string
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      seo_issues: {
+        Row: {
+          category: string
+          created_at: string
+          firm_id: string
+          id: string
+          message: string
+          page_url: string | null
+          recommendation: string | null
+          scan_id: string
+          severity: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          firm_id: string
+          id?: string
+          message: string
+          page_url?: string | null
+          recommendation?: string | null
+          scan_id: string
+          severity?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          firm_id?: string
+          id?: string
+          message?: string
+          page_url?: string | null
+          recommendation?: string | null
+          scan_id?: string
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_issues_scan_id_fkey"
+            columns: ["scan_id"]
+            isOneToOne: false
+            referencedRelation: "seo_scans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seo_scans: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          errors_count: number | null
+          firm_id: string
+          id: string
+          overall_score: number | null
+          pages_crawled: number | null
+          raw_report: Json | null
+          status: string
+          summary: Json | null
+          url: string
+          warnings_count: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          errors_count?: number | null
+          firm_id: string
+          id?: string
+          overall_score?: number | null
+          pages_crawled?: number | null
+          raw_report?: Json | null
+          status?: string
+          summary?: Json | null
+          url: string
+          warnings_count?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          errors_count?: number | null
+          firm_id?: string
+          id?: string
+          overall_score?: number | null
+          pages_crawled?: number | null
+          raw_report?: Json | null
+          status?: string
+          summary?: Json | null
+          url?: string
+          warnings_count?: number | null
         }
         Relationships: []
       }
