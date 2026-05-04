@@ -46,6 +46,7 @@ export const VERTICAL_PRESETS: VerticalPreset[] = [
       'lead_scoring','case_evaluator','document_analyzer','intake_chatbot','background_check',
       'creative_studio','viral_content','video_ads','social_calendar','competitor_intel',
       'lookalike','meta_ads','google_ads','cross_platform_autopilot','benchmarks','fraud_detection',
+      'gmb_manager','seo_suite','tool_seo_deep_scan','tool_keyword_research','tool_backlink_audit','tool_local_citations','tool_review_manager','tool_gmb_post_scheduler',
     ],
   },
   {
@@ -61,6 +62,7 @@ export const VERTICAL_PRESETS: VerticalPreset[] = [
       'predictive_leads','creative_studio','viral_content','video_ads','social_calendar',
       'competitor_intel','market_pulse','intent_signals','dark_funnel','lookalike',
       'geofence','fraud_detection','meta_ads','google_ads','cross_platform_autopilot','benchmarks',
+      'gmb_manager','seo_suite','tool_seo_deep_scan','tool_keyword_research','tool_backlink_audit','tool_local_citations','tool_review_manager','tool_gmb_post_scheduler',
     ],
   },
   {
@@ -76,6 +78,7 @@ export const VERTICAL_PRESETS: VerticalPreset[] = [
       'creative_studio','viral_content','video_ads','social_calendar','competitor_intel',
       'intent_signals','geofence','fraud_detection','meta_ads','google_ads',
       'cross_platform_autopilot','benchmarks',
+      'gmb_manager','seo_suite','tool_seo_deep_scan','tool_keyword_research','tool_backlink_audit','tool_local_citations','tool_review_manager','tool_gmb_post_scheduler',
     ],
   },
   {
@@ -90,6 +93,7 @@ export const VERTICAL_PRESETS: VerticalPreset[] = [
       'lead_scoring','case_evaluator','document_analyzer','intake_chatbot','background_check',
       'creative_studio','viral_content','video_ads','social_calendar','competitor_intel',
       'lookalike','meta_ads','google_ads','cross_platform_autopilot','benchmarks','fraud_detection',
+      'gmb_manager','seo_suite','tool_seo_deep_scan','tool_keyword_research','tool_backlink_audit','tool_local_citations','tool_review_manager','tool_gmb_post_scheduler',
     ],
   },
   {
@@ -105,6 +109,7 @@ export const VERTICAL_PRESETS: VerticalPreset[] = [
       'creative_studio','viral_content','video_ads','social_calendar','competitor_intel',
       'intent_signals','geofence','fraud_detection','meta_ads','google_ads',
       'cross_platform_autopilot','benchmarks',
+      'gmb_manager','seo_suite','tool_seo_deep_scan','tool_keyword_research','tool_backlink_audit','tool_local_citations','tool_review_manager','tool_gmb_post_scheduler',
     ],
   },
 ];
