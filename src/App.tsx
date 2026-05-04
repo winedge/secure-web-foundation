@@ -74,6 +74,15 @@ const LandingPage = lazy(() => import("./pages/LandingPage"));
 const VerifyChain = lazy(() => import("./pages/VerifyChain"));
 const AiCaseEvaluator = lazy(() => import("./pages/AiCaseEvaluator"));
 const AiToolPage = lazy(() => import("./pages/AiToolPage"));
+const GmbDashboard = lazy(() => import("./pages/gmb/GmbDashboard"));
+const GmbReviews = lazy(() => import("./pages/gmb/GmbReviews"));
+const GmbPosts = lazy(() => import("./pages/gmb/GmbPosts"));
+const SeoHub = lazy(() => import("./pages/seo/SeoHub"));
+const SeoDeepScan = lazy(() => import("./pages/seo/SeoDeepScan"));
+const SeoDeepScanReport = lazy(() => import("./pages/seo/SeoDeepScanReport"));
+const SeoKeywords = lazy(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoKeywords })));
+const SeoBacklinks = lazy(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoBacklinks })));
+const SeoCitations = lazy(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoCitations })));
 const queryClient = new QueryClient();
 
 function PageLoader() {
@@ -166,6 +175,17 @@ const App = () => (
 
                 {/* Dynamic AI tool route - all 40 vertical-specific tools */}
                 <Route path="/tools/:toolKey" element={<ProtectedRoute><LazyRoute><AiToolPage /></LazyRoute></ProtectedRoute>} />
+
+                {/* Local Presence: SEO + GMB (non-mass-tort verticals) */}
+                <Route path="/gmb" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="gmb_manager" label="Google My Business"><GmbDashboard /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/gmb/reviews" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_review_manager" label="Review Manager"><GmbReviews /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/gmb/posts" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_gmb_post_scheduler" label="GMB Post Scheduler"><GmbPosts /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/seo" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="seo_suite" label="SEO Suite"><SeoHub /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/seo/deep-scan" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_seo_deep_scan" label="SEO Deep Scan"><SeoDeepScan /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/seo/deep-scan/:reportId" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_seo_deep_scan" label="SEO Deep Scan"><SeoDeepScanReport /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/seo/keywords" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_keyword_research" label="Keyword Research"><SeoKeywords /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/seo/backlinks" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_backlink_audit" label="Backlink Audit"><SeoBacklinks /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/seo/citations" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_local_citations" label="Local Citations"><SeoCitations /></ModuleGate></LazyRoute></ProtectedRoute>} />
 
                 {/* Admin routes */}
                 <Route path="/admin" element={<ProtectedRoute requireAdmin><LazyRoute><AdminDashboard /></LazyRoute></ProtectedRoute>} />
