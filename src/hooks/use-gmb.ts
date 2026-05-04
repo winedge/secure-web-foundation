@@ -45,10 +45,10 @@ export function useUpsertGmbLocation() {
   return useMutation({
     mutationFn: async (payload: Partial<GmbLocation> & { name: string }) => {
       if (!firm?.id) throw new Error('No firm');
-      const row = { ...payload, firm_id: firm.id };
+      const row = { ...payload, firm_id: firm.id, hours: (payload.hours ?? {}) as never };
       const { data, error } = await supabase
         .from('gmb_locations')
-        .upsert([row])
+        .upsert([row as never])
         .select()
         .single();
       if (error) throw error;
