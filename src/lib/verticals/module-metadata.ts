@@ -330,6 +330,55 @@ export const MODULE_METADATA: Partial<Record<ModuleKey, ModuleMetadata>> = {
       'Scans recordings, SMS logs, and marketing copy for TCPA, HIPAA, and advertising-rule risk. Available across all verticals.',
     eligibleVerticals: ALL_VERTICALS,
   },
+  // ===== Local Presence: SEO + GMB (excluded from mass_tort) =====
+  gmb_manager: {
+    label: 'Google My Business',
+    tagline: 'Create and manage Google Business Profiles',
+    reason: 'GMB management is built for service businesses with physical locations | clinics, real estate offices, contractors, and showrooms. Mass tort firms typically rely on attorney directories instead.',
+    eligibleVerticals: ['skin_clinic', 'real_estate', 'solar', 'dental', 'home_services'],
+  },
+  seo_suite: {
+    label: 'SEO Suite',
+    tagline: 'Local SEO, deep scans, and ranking signals',
+    reason: 'The SEO Suite focuses on local-intent search and Google Business Profile signals, which are most impactful for service-area businesses outside of legal advertising restrictions.',
+    eligibleVerticals: ['skin_clinic', 'real_estate', 'solar', 'dental', 'home_services'],
+  },
+  tool_seo_deep_scan: {
+    label: 'SEO Deep Scan',
+    tagline: 'Full-site technical and on-page audit',
+    reason: 'Crawl your site for meta, content, accessibility, and mobile issues with prioritized fixes.',
+    eligibleVerticals: ['skin_clinic', 'real_estate', 'solar', 'dental', 'home_services'],
+  },
+  tool_keyword_research: {
+    label: 'Keyword Research',
+    tagline: 'AI keyword discovery and intent grouping',
+    reason: 'Find high-intent local keywords your customers search for.',
+    eligibleVerticals: ['skin_clinic', 'real_estate', 'solar', 'dental', 'home_services'],
+  },
+  tool_backlink_audit: {
+    label: 'Backlink Audit',
+    tagline: 'Link quality, toxicity, and opportunities',
+    reason: 'Audit your link profile and surface outreach targets.',
+    eligibleVerticals: ['skin_clinic', 'real_estate', 'solar', 'dental', 'home_services'],
+  },
+  tool_local_citations: {
+    label: 'Local Citations',
+    tagline: 'NAP consistency across directories',
+    reason: 'Verify name, address, and phone consistency across major business directories.',
+    eligibleVerticals: ['skin_clinic', 'real_estate', 'solar', 'dental', 'home_services'],
+  },
+  tool_review_manager: {
+    label: 'Review Manager',
+    tagline: 'AI-assisted review responses',
+    reason: 'Triage and reply to Google reviews with AI-suggested responses.',
+    eligibleVerticals: ['skin_clinic', 'real_estate', 'solar', 'dental', 'home_services'],
+  },
+  tool_gmb_post_scheduler: {
+    label: 'GMB Post Scheduler',
+    tagline: 'Schedule offers, events, and updates',
+    reason: 'Plan and publish Google Business posts across all your locations.',
+    eligibleVerticals: ['skin_clinic', 'real_estate', 'solar', 'dental', 'home_services'],
+  },
 };
 
 export function getModuleMetadata(key: ModuleKey): ModuleMetadata | undefined {
