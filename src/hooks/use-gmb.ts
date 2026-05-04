@@ -48,7 +48,7 @@ export function useUpsertGmbLocation() {
       const row = { ...payload, firm_id: firm.id };
       const { data, error } = await supabase
         .from('gmb_locations')
-        .upsert(row)
+        .upsert([row])
         .select()
         .single();
       if (error) throw error;
