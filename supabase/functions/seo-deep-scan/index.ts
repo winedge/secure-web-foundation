@@ -190,7 +190,17 @@ Deno.serve(async (req: Request) => {
 
         const errors = issues.filter((i) => i.severity === 'error' || i.severity === 'critical').length;
         const warnings = issues.filter((i) => i.severity === 'warning').length;
-        const score = Math.max(0, 100 - errors * 8 - warnings * 3);
+        const infos = issues.filter((i) => i.severity === 'info').length;
+        // Normalize per page so larger crawls aren't unfairly penalized.
+        const pageDivisor = Math.max(1, pageReports.length);
+        const errorsPerPage = errors / pageDivisor;
+        const warningsPerPage = warnings / pageDivisor;
+        const infosPerPage = infos / pageDivisor;
+        // Weighted deductions, capped so a single category can't zero the score.
+        const errorPenalty = Math.min(55, errorsPerPage * 6);
+        const warningPenalty = Math.min(25, warningsPerPage * 2);
+        const infoPenalty = Math.min(10, infosPerPage * 0.5);
+        const score = Math.round(Math.max(5, Math.min(100, 100 - errorPenalty - warningPenalty - infoPenalty)));
 
         if (issues.length) {
           await admin.from('seo_issues').insert(
