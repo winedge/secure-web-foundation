@@ -107,3 +107,66 @@ export function useGmbPosts(locationId?: string) {
     },
   });
 }
+
+export function useReplyToReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, reply_text }: { id: string; reply_text: string }) => {
+      const { data, error } = await supabase
+        .from('gmb_reviews')
+        .update({ reply_text, replied_at: new Date().toISOString() } as never)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['gmb-reviews'] });
+      toast.success('Reply saved');
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
+export function useCreateGmbPost() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {
+      location_id: string;
+      post_type: string;
+      summary: string;
+      cta_url?: string | null;
+      scheduled_for?: string | null;
+    }) => {
+      const row = {
+        ...payload,
+        status: payload.scheduled_for ? 'scheduled' : 'published',
+      };
+      const { data, error } = await supabase
+        .from('gmb_posts')
+        .insert([row as never])
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['gmb-posts'] });
+      toast.success('Post created');
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
+export function useDeleteGmbPost() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('gmb_posts').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['gmb-posts'] }),
+  });
+}
+
