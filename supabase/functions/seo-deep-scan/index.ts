@@ -64,7 +64,7 @@ Deno.serve(async (req: Request) => {
       .single();
     if (scanErr) throw scanErr;
 
-    (async () => {
+    const work = (async () => {
       try {
         const origin = new URL(url).origin;
 
