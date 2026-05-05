@@ -78,6 +78,8 @@ const GmbDashboard = lazy(() => import("./pages/gmb/GmbDashboard"));
 const GmbReviews = lazy(() => import("./pages/gmb/GmbReviews"));
 const GmbPosts = lazy(() => import("./pages/gmb/GmbPosts"));
 const GmbSyncStatus = lazy(() => import("./pages/gmb/GmbSyncStatus"));
+const GmbReplyTemplates = lazy(() => import("./pages/gmb/GmbReplyTemplates"));
+const GmbReplyApprovals = lazy(() => import("./pages/gmb/GmbReplyApprovals"));
 const SeoHub = lazy(() => import("./pages/seo/SeoHub"));
 const SeoDeepScan = lazy(() => import("./pages/seo/SeoDeepScan"));
 const SeoDeepScanReport = lazy(() => import("./pages/seo/SeoDeepScanReport"));
