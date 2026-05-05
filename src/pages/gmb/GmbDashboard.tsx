@@ -17,6 +17,7 @@ export default function GmbDashboard() {
   const upsert = useUpsertGmbLocation();
   const del = useDeleteGmbLocation();
   const [open, setOpen] = useState(false);
+  const [consentOpen, setConsentOpen] = useState(false);
   const [form, setForm] = useState({
     name: '', address: '', city: '', region: '', postal_code: '',
     country: 'US', phone: '', website: '', primary_category: '',
