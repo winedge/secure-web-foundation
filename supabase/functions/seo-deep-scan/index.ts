@@ -264,6 +264,8 @@ Deno.serve(async (req: Request) => {
           .eq('id', scan.id);
       }
     })();
+    // @ts-ignore - EdgeRuntime is available in Supabase edge functions
+    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(work);
 
     return json({ scan_id: scan.id });
   } catch (err) {
