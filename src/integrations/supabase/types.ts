@@ -2473,6 +2473,57 @@ export type Database = {
         }
         Relationships: []
       }
+      gmb_oauth_consents: {
+        Row: {
+          consented: boolean
+          created_at: string
+          data_categories: string[]
+          disclosure_sha256: string
+          disclosure_version: string
+          firm_id: string
+          id: string
+          ip_address: string | null
+          purposes: string[]
+          retention_days: number
+          revoked_at: string | null
+          scopes: string[]
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          consented?: boolean
+          created_at?: string
+          data_categories?: string[]
+          disclosure_sha256: string
+          disclosure_version: string
+          firm_id: string
+          id?: string
+          ip_address?: string | null
+          purposes?: string[]
+          retention_days?: number
+          revoked_at?: string | null
+          scopes?: string[]
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          consented?: boolean
+          created_at?: string
+          data_categories?: string[]
+          disclosure_sha256?: string
+          disclosure_version?: string
+          firm_id?: string
+          id?: string
+          ip_address?: string | null
+          purposes?: string[]
+          retention_days?: number
+          revoked_at?: string | null
+          scopes?: string[]
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       gmb_posts: {
         Row: {
           created_at: string
