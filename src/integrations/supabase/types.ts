@@ -2624,6 +2624,65 @@ export type Database = {
           },
         ]
       }
+      gmb_sync_logs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          error_message: string | null
+          firm_id: string
+          id: string
+          insights_synced: number
+          location_id: string | null
+          posts_synced: number
+          reviews_synced: number
+          started_at: string
+          status: string
+          sync_type: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          error_message?: string | null
+          firm_id: string
+          id?: string
+          insights_synced?: number
+          location_id?: string | null
+          posts_synced?: number
+          reviews_synced?: number
+          started_at?: string
+          status?: string
+          sync_type?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          error_message?: string | null
+          firm_id?: string
+          id?: string
+          insights_synced?: number
+          location_id?: string | null
+          posts_synced?: number
+          reviews_synced?: number
+          started_at?: string
+          status?: string
+          sync_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gmb_sync_logs_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "gmb_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       industry_verticals: {
         Row: {
           created_at: string

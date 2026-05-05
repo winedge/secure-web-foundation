@@ -77,6 +77,7 @@ const AiToolPage = lazy(() => import("./pages/AiToolPage"));
 const GmbDashboard = lazy(() => import("./pages/gmb/GmbDashboard"));
 const GmbReviews = lazy(() => import("./pages/gmb/GmbReviews"));
 const GmbPosts = lazy(() => import("./pages/gmb/GmbPosts"));
+const GmbSyncStatus = lazy(() => import("./pages/gmb/GmbSyncStatus"));
 const SeoHub = lazy(() => import("./pages/seo/SeoHub"));
 const SeoDeepScan = lazy(() => import("./pages/seo/SeoDeepScan"));
 const SeoDeepScanReport = lazy(() => import("./pages/seo/SeoDeepScanReport"));
@@ -180,6 +181,7 @@ const App = () => (
                 <Route path="/gmb" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="gmb_manager" label="Google My Business"><GmbDashboard /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/gmb/reviews" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_review_manager" label="Review Manager"><GmbReviews /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/gmb/posts" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_gmb_post_scheduler" label="GMB Post Scheduler"><GmbPosts /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/gmb/sync" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="gmb_manager" label="GMB Sync Status"><GmbSyncStatus /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/seo" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="seo_suite" label="SEO Suite"><SeoHub /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/seo/deep-scan" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_seo_deep_scan" label="SEO Deep Scan"><SeoDeepScan /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/seo/deep-scan/:reportId" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_seo_deep_scan" label="SEO Deep Scan"><SeoDeepScanReport /></ModuleGate></LazyRoute></ProtectedRoute>} />
