@@ -8,7 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Loader2, AlertTriangle, AlertCircle, Info, CheckCircle2, Download, RefreshCw } from 'lucide-react';
 import { useSeoScan, useSeoIssues, useStartSeoScan } from '@/hooks/use-seo-scans';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+
+const SEV_ORDER: Record<string, number> = { critical: 0, error: 1, warning: 2, info: 3 };
 
 const SEV_COLORS: Record<string, string> = {
   critical: 'destructive',
