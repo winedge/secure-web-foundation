@@ -86,10 +86,9 @@ export function useSeoIssues(scanId?: string) {
 export function useStartSeoScan() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (url: string) => {
-      const { data, error } = await supabase.functions.invoke('seo-deep-scan', {
-        body: { url },
-      });
+    mutationFn: async (input: string | { url: string; max_pages?: number }) => {
+      const body = typeof input === 'string' ? { url: input } : input;
+      const { data, error } = await supabase.functions.invoke('seo-deep-scan', { body });
       if (error) throw error;
       return data as { scan_id: string };
     },

@@ -4,13 +4,16 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScanLine, SlidersHorizontal } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScanLine, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { useStartSeoScan } from '@/hooks/use-seo-scans';
 
 export default function SeoDeepScan() {
   const start = useStartSeoScan();
   const nav = useNavigate();
   const [url, setUrl] = useState('');
+  const [maxPages, setMaxPages] = useState('5');
 
   return (
     <DashboardLayout>
