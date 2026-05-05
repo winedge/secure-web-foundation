@@ -1,0 +1,1 @@
+UPDATE public.seo_scans SET overall_score = 71 WHERE id='dee6afff-87ca-43f8-b338-39278d8ba8d4';
