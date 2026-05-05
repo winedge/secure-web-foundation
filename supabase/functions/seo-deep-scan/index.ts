@@ -62,7 +62,7 @@ Deno.serve(async (req: Request) => {
             },
             body: JSON.stringify({
               url,
-              formats: ['markdown', 'links', 'summary'],
+              formats: ['markdown', 'html', 'rawHtml', 'links', 'summary', 'screenshot'],
               onlyMainContent: false,
             }),
           });
