@@ -156,7 +156,7 @@ Deno.serve(async (req: Request) => {
         } catch (_) { /* skip */ }
 
         const wordCount = pageMd ? pageMd.split(/\s+/).filter(Boolean).length : 0;
-        if (wordCount > 0 && wordCount < 300) issues.push({ severity: 'warning', category: 'content', page_url: url, message: `Thin content (${wordCount} words)`, recommendation: 'Aim for 600+ words of substantive content.' });
+        if (wordCount > 0 && wordCount < T.word_count_min) issues.push({ severity: 'warning', category: 'content', page_url: url, message: `Thin content (${wordCount} words, min ${T.word_count_min})`, recommendation: `Aim for at least ${T.word_count_min} words of substantive content.` });
 
         // AI recommendations (optional)
         let aiSummary = summary;
