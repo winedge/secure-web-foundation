@@ -41,6 +41,21 @@ Deno.serve(async (req: Request) => {
     const url = (body.url || '').trim();
     if (!/^https?:\/\//i.test(url)) return json({ error: 'invalid url' }, 400);
 
+    // Load firm thresholds (with defaults)
+    const { data: thr } = await admin
+      .from('seo_thresholds')
+      .select('*')
+      .eq('firm_id', membership.firm_id)
+      .maybeSingle();
+    const T = {
+      title_min: thr?.title_min ?? 30,
+      title_max: thr?.title_max ?? 60,
+      description_min: thr?.description_min ?? 50,
+      description_max: thr?.description_max ?? 160,
+      word_count_min: thr?.word_count_min ?? 300,
+      h1_max: thr?.h1_max ?? 1,
+    };
+
     // Create scan row
     const { data: scan, error: scanErr } = await admin
       .from('seo_scans')
