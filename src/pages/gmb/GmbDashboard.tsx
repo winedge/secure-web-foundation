@@ -5,12 +5,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { Store, Plus, MapPin, Phone, Globe, Trash2 } from 'lucide-react';
-import { useGmbLocations, useUpsertGmbLocation, useDeleteGmbLocation } from '@/hooks/use-gmb';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Store, Plus, MapPin, Phone, Globe, Trash2, Pencil } from 'lucide-react';
+import { useGmbLocations, useUpsertGmbLocation, useDeleteGmbLocation, GmbLocation } from '@/hooks/use-gmb';
 import { Link } from 'react-router-dom';
 import { GoogleConsentDialog } from '@/components/gmb/GoogleConsentDialog';
+import { NapPreviewDialog } from '@/components/gmb/NapPreviewDialog';
+import { napSchema, NapPayload } from '@/lib/gmb/nap';
 import { toast } from 'sonner';
+
+const EMPTY: NapPayload = {
+  name: '', address: '', city: '', region: '', postal_code: '',
+  country: 'US', phone: '', website: '', primary_category: '',
+};
 
 export default function GmbDashboard() {
   const { data: locations = [], isLoading } = useGmbLocations();
@@ -18,10 +25,42 @@ export default function GmbDashboard() {
   const del = useDeleteGmbLocation();
   const [open, setOpen] = useState(false);
   const [consentOpen, setConsentOpen] = useState(false);
-  const [form, setForm] = useState({
-    name: '', address: '', city: '', region: '', postal_code: '',
-    country: 'US', phone: '', website: '', primary_category: '',
-  });
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [editing, setEditing] = useState<GmbLocation | null>(null);
+  const [form, setForm] = useState<NapPayload>(EMPTY);
+
+  const startNew = () => { setEditing(null); setForm(EMPTY); setOpen(true); };
+  const startEdit = (loc: GmbLocation) => {
+    setEditing(loc);
+    setForm({
+      name: loc.name ?? '', address: loc.address ?? '', city: loc.city ?? '',
+      region: loc.region ?? '', postal_code: loc.postal_code ?? '',
+      country: (loc.country ?? 'US').toUpperCase(), phone: loc.phone ?? '',
+      website: loc.website ?? '', primary_category: loc.primary_category ?? '',
+    });
+    setOpen(true);
+  };
+
+  const openPreview = () => {
+    const parsed = napSchema.safeParse(form);
+    if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
+    setForm(parsed.data);
+    setPreviewOpen(true);
+  };
+
+  const publish = async () => {
+    const data = { ...form, name: form.name } as { name: string } & Partial<GmbLocation>;
+    await upsert.mutateAsync(editing ? { ...data, id: editing.id } : data);
+    setPreviewOpen(false);
+    setOpen(false);
+  };
+
+  const before: Partial<NapPayload> = editing ? {
+    name: editing.name ?? '', address: editing.address ?? '', city: editing.city ?? '',
+    region: editing.region ?? '', postal_code: editing.postal_code ?? '',
+    country: (editing.country ?? '').toUpperCase(), phone: editing.phone ?? '',
+    website: editing.website ?? '', primary_category: editing.primary_category ?? '',
+  } : {};
 
   return (
     <DashboardLayout>
@@ -35,28 +74,7 @@ export default function GmbDashboard() {
               Create, claim, and manage your Google Business Profiles | reviews, posts, hours, and photos in one place.
             </p>
           </div>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-2" /> Add Location</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>New Business Location</DialogTitle></DialogHeader>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2"><Label>Business name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-                <div className="col-span-2"><Label>Street address</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
-                <div><Label>City</Label><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
-                <div><Label>State / Region</Label><Input value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })} /></div>
-                <div><Label>Postal code</Label><Input value={form.postal_code} onChange={(e) => setForm({ ...form, postal_code: e.target.value })} /></div>
-                <div><Label>Country</Label><Input value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} /></div>
-                <div><Label>Phone</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
-                <div><Label>Website</Label><Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
-                <div className="col-span-2"><Label>Primary category</Label><Input placeholder="e.g. Dental Clinic" value={form.primary_category} onChange={(e) => setForm({ ...form, primary_category: e.target.value })} /></div>
-              </div>
-              <DialogFooter>
-                <Button onClick={async () => { await upsert.mutateAsync(form); setOpen(false); }} disabled={!form.name}>Save</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={startNew}><Plus className="h-4 w-4 mr-2" /> Add Location</Button>
         </header>
 
         <Card className="border-primary/20 bg-primary/5">
@@ -97,7 +115,8 @@ export default function GmbDashboard() {
                   {loc.address && <div className="flex items-start gap-2"><MapPin className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" /><span>{loc.address}, {loc.city}, {loc.region} {loc.postal_code}</span></div>}
                   {loc.phone && <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /><span>{loc.phone}</span></div>}
                   {loc.website && <div className="flex items-center gap-2"><Globe className="h-4 w-4 text-muted-foreground" /><span className="truncate">{loc.website}</span></div>}
-                  <div className="flex gap-2 pt-3">
+                  <div className="flex gap-2 pt-3 flex-wrap">
+                    <Button size="sm" variant="outline" onClick={() => startEdit(loc)}><Pencil className="h-3.5 w-3.5 mr-1" />Edit</Button>
                     <Button asChild size="sm" variant="outline"><Link to={`/gmb/reviews?loc=${loc.id}`}>Reviews</Link></Button>
                     <Button asChild size="sm" variant="outline"><Link to={`/gmb/posts?loc=${loc.id}`}>Posts</Link></Button>
                     <Button size="sm" variant="ghost" onClick={() => del.mutate(loc.id)}><Trash2 className="h-4 w-4" /></Button>
@@ -107,6 +126,36 @@ export default function GmbDashboard() {
             ))}
           </div>
         )}
+
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader><DialogTitle>{editing ? 'Edit Location' : 'New Business Location'}</DialogTitle></DialogHeader>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2"><Label>Business name</Label><Input value={form.name} maxLength={100} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              <div className="col-span-2"><Label>Street address</Label><Input value={form.address} maxLength={200} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+              <div><Label>City</Label><Input value={form.city} maxLength={80} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
+              <div><Label>State / Region</Label><Input value={form.region} maxLength={80} onChange={(e) => setForm({ ...form, region: e.target.value })} /></div>
+              <div><Label>Postal code</Label><Input value={form.postal_code} maxLength={20} onChange={(e) => setForm({ ...form, postal_code: e.target.value })} /></div>
+              <div><Label>Country (2-letter)</Label><Input value={form.country} maxLength={2} onChange={(e) => setForm({ ...form, country: e.target.value.toUpperCase() })} /></div>
+              <div><Label>Phone</Label><Input value={form.phone} maxLength={20} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+              <div><Label>Website</Label><Input value={form.website ?? ''} maxLength={255} placeholder="https://" onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
+              <div className="col-span-2"><Label>Primary category</Label><Input placeholder="e.g. Dental Clinic" value={form.primary_category} maxLength={80} onChange={(e) => setForm({ ...form, primary_category: e.target.value })} /></div>
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button onClick={openPreview}>Validate &amp; Preview</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <NapPreviewDialog
+          open={previewOpen}
+          onOpenChange={setPreviewOpen}
+          before={before}
+          after={form}
+          isPending={upsert.isPending}
+          onConfirm={publish}
+        />
       </div>
     </DashboardLayout>
   );
