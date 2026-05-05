@@ -2577,6 +2577,114 @@ export type Database = {
           },
         ]
       }
+      gmb_reply_templates: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          firm_id: string
+          id: string
+          is_active: boolean
+          name: string
+          rating_filter: number | null
+          tone: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          firm_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          rating_filter?: number | null
+          tone?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          firm_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          rating_filter?: number | null
+          tone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gmb_review_replies: {
+        Row: {
+          ai_generated: boolean
+          ai_model: string | null
+          approved_at: string | null
+          approved_by: string | null
+          body: string
+          created_at: string
+          created_by: string | null
+          firm_id: string
+          id: string
+          rejected_reason: string | null
+          review_id: string
+          sent_at: string | null
+          status: string
+          template_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          ai_generated?: boolean
+          ai_model?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          body: string
+          created_at?: string
+          created_by?: string | null
+          firm_id: string
+          id?: string
+          rejected_reason?: string | null
+          review_id: string
+          sent_at?: string | null
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ai_generated?: boolean
+          ai_model?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          firm_id?: string
+          id?: string
+          rejected_reason?: string | null
+          review_id?: string
+          sent_at?: string | null
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gmb_review_replies_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "gmb_reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gmb_review_replies_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "gmb_reply_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gmb_reviews: {
         Row: {
           created_at: string
@@ -2586,6 +2694,7 @@ export type Database = {
           location_id: string
           rating: number | null
           replied_at: string | null
+          reply_status: string
           reply_text: string | null
           reviewer_name: string | null
           text: string | null
@@ -2598,6 +2707,7 @@ export type Database = {
           location_id: string
           rating?: number | null
           replied_at?: string | null
+          reply_status?: string
           reply_text?: string | null
           reviewer_name?: string | null
           text?: string | null
@@ -2610,6 +2720,7 @@ export type Database = {
           location_id?: string
           rating?: number | null
           replied_at?: string | null
+          reply_status?: string
           reply_text?: string | null
           reviewer_name?: string | null
           text?: string | null
