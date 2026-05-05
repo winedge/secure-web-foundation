@@ -8,7 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Loader2, AlertTriangle, AlertCircle, Info, CheckCircle2, Download, RefreshCw } from 'lucide-react';
 import { useSeoScan, useSeoIssues, useStartSeoScan } from '@/hooks/use-seo-scans';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+
+const SEV_ORDER: Record<string, number> = { critical: 0, error: 1, warning: 2, info: 3 };
 
 const SEV_COLORS: Record<string, string> = {
   critical: 'destructive',
@@ -163,27 +165,7 @@ export default function SeoDeepScanReport() {
           </TabsContent>
 
           <TabsContent value="issues">
-            <Card>
-              <CardContent className="p-0">
-                {issues.length === 0 ? (
-                  <div className="py-12 text-center text-muted-foreground"><CheckCircle2 className="h-10 w-10 text-primary mx-auto mb-2" />No issues found. Excellent!</div>
-                ) : (
-                  <Table>
-                    <TableHeader><TableRow><TableHead>Severity</TableHead><TableHead>Category</TableHead><TableHead>Issue</TableHead><TableHead>Recommendation</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                      {issues.map((i) => (
-                        <TableRow key={i.id}>
-                          <TableCell><div className="flex items-center gap-2"><SevIcon s={i.severity} /><Badge variant={SEV_COLORS[i.severity] as 'destructive' | 'secondary' | 'outline' | 'default'}>{i.severity}</Badge></div></TableCell>
-                          <TableCell className="capitalize">{i.category}</TableCell>
-                          <TableCell className="font-medium">{i.message}</TableCell>
-                          <TableCell className="text-muted-foreground text-sm">{i.recommendation}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
+            <IssuesPanel issues={issues} />
           </TabsContent>
 
           <TabsContent value="charts">
@@ -206,5 +188,124 @@ export default function SeoDeepScanReport() {
         </Tabs>
       </div>
     </DashboardLayout>
+  );
+}
+
+type IssueLike = {
+  id: string;
+  severity: string;
+  category: string;
+  message: string;
+  recommendation: string | null;
+  page_url: string | null;
+};
+
+function IssuesPanel({ issues }: { issues: IssueLike[] }) {
+  const [filter, setFilter] = useState<'all' | 'critical' | 'error' | 'warning' | 'info'>('all');
+
+  const counts = useMemo(() => {
+    const c = { all: issues.length, critical: 0, error: 0, warning: 0, info: 0 };
+    for (const i of issues) {
+      if (i.severity === 'critical') c.critical++;
+      else if (i.severity === 'error') c.error++;
+      else if (i.severity === 'warning') c.warning++;
+      else c.info++;
+    }
+    return c;
+  }, [issues]);
+
+  const sorted = useMemo(
+    () => [...issues].sort((a, b) => (SEV_ORDER[a.severity] ?? 9) - (SEV_ORDER[b.severity] ?? 9)),
+    [issues],
+  );
+
+  const filtered = filter === 'all' ? sorted : sorted.filter((i) => i.severity === filter);
+
+  if (issues.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center text-muted-foreground">
+          <CheckCircle2 className="h-10 w-10 text-primary mx-auto mb-2" />No issues found. Excellent!
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const FILTERS: Array<{ key: typeof filter; label: string }> = [
+    { key: 'all', label: 'All' },
+    { key: 'critical', label: 'Critical' },
+    { key: 'error', label: 'Errors' },
+    { key: 'warning', label: 'Warnings' },
+    { key: 'info', label: 'Info' },
+  ];
+
+  const jump = (id: string) => {
+    const el = document.getElementById(`issue-${id}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      el.classList.add('ring-2', 'ring-primary');
+      setTimeout(() => el.classList.remove('ring-2', 'ring-primary'), 1500);
+    }
+  };
+
+  return (
+    <div className="grid gap-4 md:grid-cols-[260px_1fr]">
+      <Card className="md:sticky md:top-4 self-start">
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Filter & Jump</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap gap-1">
+            {FILTERS.map((f) => (
+              <Button
+                key={f.key}
+                size="sm"
+                variant={filter === f.key ? 'default' : 'outline'}
+                className="h-7 px-2 text-xs"
+                onClick={() => setFilter(f.key)}
+              >
+                {f.label} ({counts[f.key]})
+              </Button>
+            ))}
+          </div>
+          <div className="border-t pt-2 max-h-[60vh] overflow-y-auto space-y-1">
+            {filtered.map((i) => (
+              <button
+                key={i.id}
+                onClick={() => jump(i.id)}
+                className="w-full text-left text-xs flex items-start gap-2 p-1.5 rounded hover:bg-muted transition"
+              >
+                <SevIcon s={i.severity} />
+                <span className="line-clamp-2 flex-1">{i.message}</span>
+              </button>
+            ))}
+            {filtered.length === 0 && (
+              <p className="text-xs text-muted-foreground p-2">No issues at this severity.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-3">
+        {filtered.map((i) => (
+          <Card key={i.id} id={`issue-${i.id}`} className="scroll-mt-20 transition-all">
+            <CardContent className="p-4 space-y-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <SevIcon s={i.severity} />
+                <Badge variant={SEV_COLORS[i.severity] as 'destructive' | 'secondary' | 'outline' | 'default'}>
+                  {i.severity}
+                </Badge>
+                <Badge variant="outline" className="capitalize">{i.category}</Badge>
+              </div>
+              <div className="font-medium">{i.message}</div>
+              {i.recommendation && (
+                <div className="text-sm text-muted-foreground">{i.recommendation}</div>
+              )}
+              {i.page_url && (
+                <div className="text-xs font-mono text-muted-foreground break-all">{i.page_url}</div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
   );
 }
