@@ -48,6 +48,8 @@ import {
   Star,
   CalendarPlus,
   Activity,
+  MessageSquare,
+  CheckCircle2,
 } from 'lucide-react';
 import type { ModuleKey } from '@/lib/verticals/types';
 import { AI_TOOLS } from '@/lib/ai-tools/registry';
@@ -157,6 +159,8 @@ export const navGroups: NavGroup[] = [
       { name: 'GMB Reviews', href: '/gmb/reviews', icon: Star, module: 'tool_review_manager' },
       { name: 'GMB Posts', href: '/gmb/posts', icon: CalendarPlus, module: 'tool_gmb_post_scheduler' },
       { name: 'GMB Sync Status', href: '/gmb/sync', icon: Activity, module: 'gmb_manager' },
+      { name: 'Reply Templates', href: '/gmb/reply-templates', icon: MessageSquare, module: 'tool_review_manager' },
+      { name: 'Reply Approvals', href: '/gmb/reply-approvals', icon: CheckCircle2, module: 'tool_review_manager' },
       { name: 'SEO Suite', href: '/seo', icon: Search, module: 'seo_suite' },
       { name: 'SEO Deep Scan', href: '/seo/deep-scan', icon: ScanLine, module: 'tool_seo_deep_scan' },
       { name: 'Keyword Research', href: '/seo/keywords', icon: KeyRound, module: 'tool_keyword_research' },

@@ -143,3 +143,6 @@ verify_jwt = false
 
 [functions.gmb-sync]
 verify_jwt = false
+
+[functions.gmb-generate-reply]
+verify_jwt = false
