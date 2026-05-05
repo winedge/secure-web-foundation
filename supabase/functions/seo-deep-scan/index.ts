@@ -78,7 +78,11 @@ Deno.serve(async (req: Request) => {
               body: JSON.stringify({ url: origin, limit: maxPages * 3, includeSubdomains: false }),
             });
             const mapData = await mapRes.json();
-            const discovered: string[] = (mapData?.links || mapData?.data?.links || []).slice(0, maxPages * 3);
+            const rawLinks = (mapData?.links || mapData?.data?.links || []) as any[];
+            const discovered: string[] = rawLinks
+              .map((l) => (typeof l === 'string' ? l : (l?.url ?? '')))
+              .filter((u) => typeof u === 'string' && u.length > 0)
+              .slice(0, maxPages * 3);
             for (const u of discovered) {
               if (pagesToScan.length >= maxPages) break;
               if (!pagesToScan.includes(u)) pagesToScan.push(u);
