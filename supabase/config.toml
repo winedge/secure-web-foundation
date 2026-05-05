@@ -137,3 +137,9 @@ verify_jwt = false
 
 [functions.verify-lead-chain]
 verify_jwt = false
+
+[functions.gmb-webhook]
+verify_jwt = false
+
+[functions.gmb-sync]
+verify_jwt = false
