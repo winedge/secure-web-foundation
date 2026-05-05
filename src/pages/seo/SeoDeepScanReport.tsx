@@ -111,15 +111,55 @@ export default function SeoDeepScanReport() {
 
           <TabsContent value="overview" className="space-y-4">
             <Card>
-              <CardHeader><CardTitle className="text-base">AI Summary</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">AI Executive Summary</CardTitle></CardHeader>
               <CardContent className="text-sm whitespace-pre-wrap">
                 {(summary.ai_summary as string) || 'No summary generated.'}
               </CardContent>
             </Card>
+            {summary.ai_recommendations ? (
+              <Card>
+                <CardHeader><CardTitle className="text-base">Top AI Recommendations</CardTitle></CardHeader>
+                <CardContent className="text-sm whitespace-pre-wrap prose prose-sm dark:prose-invert max-w-none">
+                  {summary.ai_recommendations as string}
+                </CardContent>
+              </Card>
+            ) : null}
             <div className="grid gap-3 md:grid-cols-2">
-              <Card><CardHeader className="pb-2"><CardDescription>Title</CardDescription></CardHeader><CardContent className="text-sm">{(summary.title as string) ?? '—'}</CardContent></Card>
-              <Card><CardHeader className="pb-2"><CardDescription>Meta Description</CardDescription></CardHeader><CardContent className="text-sm">{(summary.description as string) ?? '—'}</CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardDescription>Title</CardDescription></CardHeader><CardContent className="text-sm break-words">{(summary.title as string) || '—'}<div className="text-xs text-muted-foreground mt-1">{((summary.title as string)?.length ?? 0)} chars</div></CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardDescription>Meta Description</CardDescription></CardHeader><CardContent className="text-sm break-words">{(summary.description as string) || '—'}<div className="text-xs text-muted-foreground mt-1">{((summary.description as string)?.length ?? 0)} chars</div></CardContent></Card>
             </div>
+            <div className="grid gap-3 md:grid-cols-3 sm:grid-cols-2">
+              <Card><CardHeader className="pb-2"><CardDescription>Word Count</CardDescription></CardHeader><CardContent className="text-2xl font-bold">{(summary.word_count as number) ?? 0}</CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardDescription>Internal Links</CardDescription></CardHeader><CardContent className="text-2xl font-bold">{(summary.internal_links as number) ?? 0}</CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardDescription>External Links</CardDescription></CardHeader><CardContent className="text-2xl font-bold">{(summary.external_links as number) ?? 0}</CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardDescription>Images</CardDescription></CardHeader><CardContent className="text-2xl font-bold">{(summary.images as number) ?? 0}<div className="text-xs text-muted-foreground font-normal mt-1">{(summary.images_missing_alt as number) ?? 0} missing alt</div></CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardDescription>Headings</CardDescription></CardHeader><CardContent className="text-sm">H1: <span className="font-semibold">{(summary.h1_count as number) ?? 0}</span> · H2: <span className="font-semibold">{(summary.h2_count as number) ?? 0}</span> · H3: <span className="font-semibold">{(summary.h3_count as number) ?? 0}</span></CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardDescription>Language</CardDescription></CardHeader><CardContent className="text-2xl font-bold uppercase">{(summary.language as string) || '—'}</CardContent></Card>
+            </div>
+            <Card>
+              <CardHeader><CardTitle className="text-base">Technical Checks</CardTitle></CardHeader>
+              <CardContent className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 text-sm">
+                {[
+                  ['Canonical', summary.has_canonical],
+                  ['Viewport', summary.has_viewport],
+                  ['Open Graph', summary.has_og],
+                  ['Twitter Cards', summary.has_twitter],
+                  ['JSON-LD', summary.has_json_ld],
+                  ['Favicon', summary.has_favicon],
+                ].map(([label, ok]) => (
+                  <div key={String(label)} className="flex items-center gap-2">
+                    {ok ? <CheckCircle2 className="h-4 w-4 text-primary" /> : <AlertCircle className="h-4 w-4 text-destructive" />}
+                    <span>{label as string}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+            {summary.screenshot ? (
+              <Card>
+                <CardHeader><CardTitle className="text-base">Page Screenshot</CardTitle></CardHeader>
+                <CardContent><img src={summary.screenshot as string} alt="Page screenshot" className="rounded-md border w-full" loading="lazy" /></CardContent>
+              </Card>
+            ) : null}
           </TabsContent>
 
           <TabsContent value="issues">
