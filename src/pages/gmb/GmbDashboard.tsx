@@ -62,11 +62,17 @@ export default function GmbDashboard() {
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="py-4 flex items-center justify-between flex-wrap gap-3">
             <div className="text-sm">
-              <strong>Connect Google to sync live data.</strong> Until then, you can manage listings here and we'll publish them when you connect.
+              <strong>Connect Google to sync live data.</strong> You'll review a GDPR data-processing notice before any redirect to Google.
             </div>
-            <Button variant="outline" disabled>Connect Google (coming soon)</Button>
+            <Button variant="outline" onClick={() => setConsentOpen(true)}>Connect Google</Button>
           </CardContent>
         </Card>
+
+        <GoogleConsentDialog
+          open={consentOpen}
+          onOpenChange={setConsentOpen}
+          onConsented={() => toast.info('Consent recorded. OAuth handoff will be enabled once Google credentials are configured.')}
+        />
 
         {isLoading ? (
           <p className="text-muted-foreground">Loading locations…</p>
