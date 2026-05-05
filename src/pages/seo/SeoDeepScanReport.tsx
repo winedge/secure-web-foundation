@@ -165,27 +165,7 @@ export default function SeoDeepScanReport() {
           </TabsContent>
 
           <TabsContent value="issues">
-            <Card>
-              <CardContent className="p-0">
-                {issues.length === 0 ? (
-                  <div className="py-12 text-center text-muted-foreground"><CheckCircle2 className="h-10 w-10 text-primary mx-auto mb-2" />No issues found. Excellent!</div>
-                ) : (
-                  <Table>
-                    <TableHeader><TableRow><TableHead>Severity</TableHead><TableHead>Category</TableHead><TableHead>Issue</TableHead><TableHead>Recommendation</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                      {issues.map((i) => (
-                        <TableRow key={i.id}>
-                          <TableCell><div className="flex items-center gap-2"><SevIcon s={i.severity} /><Badge variant={SEV_COLORS[i.severity] as 'destructive' | 'secondary' | 'outline' | 'default'}>{i.severity}</Badge></div></TableCell>
-                          <TableCell className="capitalize">{i.category}</TableCell>
-                          <TableCell className="font-medium">{i.message}</TableCell>
-                          <TableCell className="text-muted-foreground text-sm">{i.recommendation}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
+            <IssuesPanel issues={issues} />
           </TabsContent>
 
           <TabsContent value="charts">
