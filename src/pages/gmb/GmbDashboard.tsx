@@ -49,7 +49,8 @@ export default function GmbDashboard() {
   };
 
   const publish = async () => {
-    await upsert.mutateAsync(editing ? { id: editing.id, ...form } : form);
+    const payload = editing ? { id: editing.id, ...form } : { ...form };
+    await upsert.mutateAsync(payload);
     setPreviewOpen(false);
     setOpen(false);
   };
