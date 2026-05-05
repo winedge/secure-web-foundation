@@ -47,6 +47,7 @@ import {
   ListChecks,
   Star,
   CalendarPlus,
+  Activity,
 } from 'lucide-react';
 import type { ModuleKey } from '@/lib/verticals/types';
 import { AI_TOOLS } from '@/lib/ai-tools/registry';
