@@ -111,15 +111,15 @@ export default function SeoDeepScanReport() {
           <Card>
             <CardHeader className="pb-2"><CardDescription>Overall Score</CardDescription></CardHeader>
             <CardContent>
-              <div className="h-32">
+              <div className="relative h-32">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadialBarChart innerRadius="70%" outerRadius="100%" data={[{ name: 'score', value: score, fill: score >= 80 ? 'hsl(var(--primary))' : score >= 60 ? '#f59e0b' : 'hsl(var(--destructive))' }]} startAngle={90} endAngle={-270}>
                     <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
                     <RadialBar background dataKey="value" cornerRadius={8} />
                   </RadialBarChart>
                 </ResponsiveContainer>
+                <div className="absolute inset-0 flex items-center justify-center text-3xl font-bold pointer-events-none">{score}</div>
               </div>
-              <div className="text-center text-3xl font-bold -mt-12">{score}</div>
             </CardContent>
           </Card>
           <Card><CardHeader className="pb-2"><CardDescription>Pages Crawled</CardDescription></CardHeader><CardContent><div className="text-3xl font-bold">{scan.pages_crawled}</div></CardContent></Card>
