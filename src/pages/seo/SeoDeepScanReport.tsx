@@ -237,17 +237,21 @@ export default function SeoDeepScanReport() {
                     </tr>
                   </thead>
                   <tbody>
-                    {pageReports.map((p, i) => (
+                    {pageReports.map((p, i) => {
+                      const pUrl = typeof p.url === 'string' ? p.url : (p.url?.url ?? '');
+                      const pTitle = typeof p.title === 'string' && p.title ? p.title : (typeof p.url === 'object' ? p.url?.title : '') || '—';
+                      return (
                       <tr key={i} className="border-b">
-                        <td className="p-3 font-mono text-xs break-all max-w-xs">{p.url}</td>
-                        <td className="p-3 max-w-xs truncate">{p.title || '—'}</td>
-                        <td className="p-3">{p.wordCount}</td>
-                        <td className="p-3">{p.h1Count}</td>
-                        <td className="p-3">{p.imagesMissingAlt}</td>
+                        <td className="p-3 font-mono text-xs break-all max-w-xs">{pUrl}</td>
+                        <td className="p-3 max-w-xs truncate">{pTitle}</td>
+                        <td className="p-3">{p.wordCount ?? 0}</td>
+                        <td className="p-3">{p.h1Count ?? 0}</td>
+                        <td className="p-3">{p.imagesMissingAlt ?? 0}</td>
                         <td className="p-3 text-xs">{(p.schemaTypes || []).join(', ') || '—'}</td>
-                        <td className="p-3"><Badge variant={p.issueCount > 0 ? 'secondary' : 'outline'}>{p.issueCount}</Badge></td>
+                        <td className="p-3"><Badge variant={p.issueCount > 0 ? 'secondary' : 'outline'}>{p.issueCount ?? 0}</Badge></td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </CardContent>
