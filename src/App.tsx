@@ -83,6 +83,7 @@ const GmbReplyApprovals = lazy(() => import("./pages/gmb/GmbReplyApprovals"));
 const SeoHub = lazy(() => import("./pages/seo/SeoHub"));
 const SeoDeepScan = lazy(() => import("./pages/seo/SeoDeepScan"));
 const SeoDeepScanReport = lazy(() => import("./pages/seo/SeoDeepScanReport"));
+const SeoThresholdsSettings = lazy(() => import("./pages/seo/SeoThresholdsSettings"));
 const SeoKeywords = lazy(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoKeywords })));
 const SeoBacklinks = lazy(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoBacklinks })));
 const SeoCitations = lazy(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoCitations })));
@@ -189,6 +190,7 @@ const App = () => (
                 <Route path="/seo" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="seo_suite" label="SEO Suite"><SeoHub /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/seo/deep-scan" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_seo_deep_scan" label="SEO Deep Scan"><SeoDeepScan /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/seo/deep-scan/:reportId" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_seo_deep_scan" label="SEO Deep Scan"><SeoDeepScanReport /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/seo/thresholds" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_seo_deep_scan" label="SEO Deep Scan"><SeoThresholdsSettings /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/seo/keywords" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_keyword_research" label="Keyword Research"><SeoKeywords /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/seo/backlinks" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_backlink_audit" label="Backlink Audit"><SeoBacklinks /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/seo/citations" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_local_citations" label="Local Citations"><SeoCitations /></ModuleGate></LazyRoute></ProtectedRoute>} />

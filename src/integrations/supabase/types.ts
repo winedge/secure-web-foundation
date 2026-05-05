@@ -4444,6 +4444,50 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_thresholds: {
+        Row: {
+          description_max: number
+          description_min: number
+          firm_id: string
+          h1_max: number
+          title_max: number
+          title_min: number
+          updated_at: string
+          updated_by: string | null
+          word_count_min: number
+        }
+        Insert: {
+          description_max?: number
+          description_min?: number
+          firm_id: string
+          h1_max?: number
+          title_max?: number
+          title_min?: number
+          updated_at?: string
+          updated_by?: string | null
+          word_count_min?: number
+        }
+        Update: {
+          description_max?: number
+          description_min?: number
+          firm_id?: string
+          h1_max?: number
+          title_max?: number
+          title_min?: number
+          updated_at?: string
+          updated_by?: string | null
+          word_count_min?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_thresholds_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: true
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       social_posts: {
         Row: {
           ai_generated: boolean | null

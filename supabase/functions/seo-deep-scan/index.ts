@@ -41,6 +41,21 @@ Deno.serve(async (req: Request) => {
     const url = (body.url || '').trim();
     if (!/^https?:\/\//i.test(url)) return json({ error: 'invalid url' }, 400);
 
+    // Load firm thresholds (with defaults)
+    const { data: thr } = await admin
+      .from('seo_thresholds')
+      .select('*')
+      .eq('firm_id', membership.firm_id)
+      .maybeSingle();
+    const T = {
+      title_min: thr?.title_min ?? 30,
+      title_max: thr?.title_max ?? 60,
+      description_min: thr?.description_min ?? 50,
+      description_max: thr?.description_max ?? 160,
+      word_count_min: thr?.word_count_min ?? 300,
+      h1_max: thr?.h1_max ?? 1,
+    };
+
     // Create scan row
     const { data: scan, error: scanErr } = await admin
       .from('seo_scans')
@@ -88,15 +103,15 @@ Deno.serve(async (req: Request) => {
 
         const titleStr = String(meta.title || '');
         const descStr = String(meta.description || meta.ogDescription || '');
-        if (!titleStr || titleStr.length < 10) {
-          issues.push({ severity: 'error', category: 'meta', page_url: url, message: 'Missing or too-short <title> tag', recommendation: 'Add a descriptive title between 50-60 characters.' });
-        } else if (titleStr.length > 65) {
-          issues.push({ severity: 'warning', category: 'meta', page_url: url, message: `Title too long (${titleStr.length} chars)`, recommendation: 'Keep title under 60 characters to avoid SERP truncation.' });
+        if (!titleStr || titleStr.length < T.title_min) {
+          issues.push({ severity: 'error', category: 'meta', page_url: url, message: `Title missing or too short (${titleStr.length} chars, min ${T.title_min})`, recommendation: `Aim for ${T.title_min}-${T.title_max} characters.` });
+        } else if (titleStr.length > T.title_max) {
+          issues.push({ severity: 'warning', category: 'meta', page_url: url, message: `Title too long (${titleStr.length} chars, max ${T.title_max})`, recommendation: `Keep title under ${T.title_max} characters to avoid SERP truncation.` });
         }
-        if (!descStr || descStr.length < 50) {
-          issues.push({ severity: 'error', category: 'meta', page_url: url, message: 'Missing or too-short meta description', recommendation: 'Write a 120-160 char meta description summarizing the page.' });
-        } else if (descStr.length > 170) {
-          issues.push({ severity: 'warning', category: 'meta', page_url: url, message: `Meta description too long (${descStr.length} chars)`, recommendation: 'Trim to 120-160 characters.' });
+        if (!descStr || descStr.length < T.description_min) {
+          issues.push({ severity: 'error', category: 'meta', page_url: url, message: `Meta description missing or too short (${descStr.length} chars, min ${T.description_min})`, recommendation: `Write a ${T.description_min}-${T.description_max} char description.` });
+        } else if (descStr.length > T.description_max) {
+          issues.push({ severity: 'warning', category: 'meta', page_url: url, message: `Meta description too long (${descStr.length} chars, max ${T.description_max})`, recommendation: `Trim to ${T.description_min}-${T.description_max} characters.` });
         }
 
         const h1Matches = html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/gi) || [];
@@ -104,7 +119,7 @@ Deno.serve(async (req: Request) => {
         const h3Count = (html.match(/<h3\b/gi) || []).length;
         const h1Count = h1Matches.length;
         if (h1Count === 0) issues.push({ severity: 'error', category: 'content', page_url: url, message: 'No H1 heading detected', recommendation: 'Add a single, descriptive H1 to anchor the page topic.' });
-        if (h1Count > 1) issues.push({ severity: 'warning', category: 'content', page_url: url, message: `Multiple H1 tags (${h1Count})`, recommendation: 'Use a single H1; demote others to H2/H3.' });
+        if (h1Count > T.h1_max) issues.push({ severity: 'warning', category: 'content', page_url: url, message: `Too many H1 tags (${h1Count}, max ${T.h1_max})`, recommendation: `Use at most ${T.h1_max} H1; demote others to H2/H3.` });
 
         const imgs = html.match(/<img\b[^>]*>/gi) || [];
         const noAlt = imgs.filter((t) => !/alt\s*=\s*["'][^"']+["']/i.test(t)).length;
@@ -141,7 +156,7 @@ Deno.serve(async (req: Request) => {
         } catch (_) { /* skip */ }
 
         const wordCount = pageMd ? pageMd.split(/\s+/).filter(Boolean).length : 0;
-        if (wordCount > 0 && wordCount < 300) issues.push({ severity: 'warning', category: 'content', page_url: url, message: `Thin content (${wordCount} words)`, recommendation: 'Aim for 600+ words of substantive content.' });
+        if (wordCount > 0 && wordCount < T.word_count_min) issues.push({ severity: 'warning', category: 'content', page_url: url, message: `Thin content (${wordCount} words, min ${T.word_count_min})`, recommendation: `Aim for at least ${T.word_count_min} words of substantive content.` });
 
         // AI recommendations (optional)
         let aiSummary = summary;

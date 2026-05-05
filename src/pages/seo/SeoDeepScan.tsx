@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScanLine } from 'lucide-react';
+import { ScanLine, SlidersHorizontal } from 'lucide-react';
 import { useStartSeoScan } from '@/hooks/use-seo-scans';
 
 export default function SeoDeepScan() {
@@ -15,13 +15,18 @@ export default function SeoDeepScan() {
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-2xl mx-auto">
-        <header>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <ScanLine className="h-7 w-7 text-primary" /> SEO Deep Scan
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Full technical and on-page audit | meta tags, headings, images, mobile, accessibility, and more.
-          </p>
+        <header className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+              <ScanLine className="h-7 w-7 text-primary" /> SEO Deep Scan
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Full technical and on-page audit | meta tags, headings, images, mobile, accessibility, and more.
+            </p>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/seo/thresholds"><SlidersHorizontal className="h-4 w-4 mr-1" /> Thresholds</Link>
+          </Button>
         </header>
 
         <Card>
