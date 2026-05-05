@@ -38,7 +38,8 @@ export default function GmbReplyTemplates() {
   const save = async () => {
     const parsed = schema.safeParse(form);
     if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
-    await upsert.mutateAsync(editing ? { id: editing.id, ...parsed.data } : parsed.data);
+    const payload = { ...parsed.data, ...(editing ? { id: editing.id } : {}) };
+    await upsert.mutateAsync(payload);
     setOpen(false);
   };
 
