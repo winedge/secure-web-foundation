@@ -101,6 +101,7 @@ export default function GmbDashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-6xl mx-auto">
+        <GmbSubNav />
         <header className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
