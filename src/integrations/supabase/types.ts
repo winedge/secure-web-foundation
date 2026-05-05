@@ -2407,6 +2407,36 @@ export type Database = {
           },
         ]
       }
+      gmb_account_links: {
+        Row: {
+          created_at: string
+          email: string | null
+          firm_id: string
+          google_account_id: string
+          id: string
+          pubsub_topic: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          firm_id: string
+          google_account_id: string
+          id?: string
+          pubsub_topic?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          firm_id?: string
+          google_account_id?: string
+          id?: string
+          pubsub_topic?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gmb_locations: {
         Row: {
           address: string | null
@@ -2414,6 +2444,8 @@ export type Database = {
           country: string | null
           created_at: string
           firm_id: string
+          google_account_id: string | null
+          google_location_id: string | null
           hours: Json | null
           id: string
           is_connected: boolean
@@ -2435,6 +2467,8 @@ export type Database = {
           country?: string | null
           created_at?: string
           firm_id: string
+          google_account_id?: string | null
+          google_location_id?: string | null
           hours?: Json | null
           id?: string
           is_connected?: boolean
@@ -2456,6 +2490,8 @@ export type Database = {
           country?: string | null
           created_at?: string
           firm_id?: string
+          google_account_id?: string | null
+          google_location_id?: string | null
           hours?: Json | null
           id?: string
           is_connected?: boolean
