@@ -6,7 +6,43 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Store, Plus, MapPin, Phone, Globe, Trash2, Pencil } from 'lucide-react';
+import { Store, Plus, MapPin, Phone, Globe, Trash2, Pencil, Star, CalendarPlus, Activity, MessageSquare, CheckCircle2, LayoutGrid } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+
+const GMB_TABS = [
+  { name: 'Locations', href: '/gmb', icon: LayoutGrid, end: true },
+  { name: 'Reviews', href: '/gmb/reviews', icon: Star },
+  { name: 'Posts', href: '/gmb/posts', icon: CalendarPlus },
+  { name: 'Reply Templates', href: '/gmb/reply-templates', icon: MessageSquare },
+  { name: 'Reply Approvals', href: '/gmb/reply-approvals', icon: CheckCircle2 },
+  { name: 'Sync Status', href: '/gmb/sync', icon: Activity },
+];
+
+export function GmbSubNav() {
+  return (
+    <nav className="flex flex-wrap gap-1 border-b border-border pb-2 overflow-x-auto">
+      {GMB_TABS.map((t) => (
+        <NavLink
+          key={t.href}
+          to={t.href}
+          end={t.end}
+          className={({ isActive }) =>
+            cn(
+              'flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap',
+              isActive
+                ? 'bg-primary/10 text-primary'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            )
+          }
+        >
+          <t.icon className="h-4 w-4" />
+          {t.name}
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
 import { useGmbLocations, useUpsertGmbLocation, useDeleteGmbLocation, GmbLocation } from '@/hooks/use-gmb';
 import { Link } from 'react-router-dom';
 import { GoogleConsentDialog } from '@/components/gmb/GoogleConsentDialog';
@@ -65,6 +101,7 @@ export default function GmbDashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-6xl mx-auto">
+        <GmbSubNav />
         <header className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">

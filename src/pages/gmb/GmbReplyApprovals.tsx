@@ -1,3 +1,4 @@
+import { GmbSubNav } from './GmbDashboard';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -74,6 +75,7 @@ export default function GmbReplyApprovals() {
 
   return (
     <DashboardLayout>
+      <div className="max-w-6xl mx-auto mb-4"><GmbSubNav /></div>
       <div className="space-y-6 max-w-6xl mx-auto">
         <header className="flex items-start justify-between gap-4 flex-wrap">
           <div>
