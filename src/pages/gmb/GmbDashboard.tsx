@@ -49,8 +49,8 @@ export default function GmbDashboard() {
   };
 
   const publish = async () => {
-    const payload = editing ? { id: editing.id, ...form } : { ...form };
-    await upsert.mutateAsync(payload);
+    const data = { ...form, name: form.name } as { name: string } & Partial<GmbLocation>;
+    await upsert.mutateAsync(editing ? { ...data, id: editing.id } : data);
     setPreviewOpen(false);
     setOpen(false);
   };
