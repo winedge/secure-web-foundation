@@ -48,6 +48,8 @@ import {
   Star,
   CalendarPlus,
   Activity,
+  MessageSquare,
+  CheckCircle2,
 } from 'lucide-react';
 import type { ModuleKey } from '@/lib/verticals/types';
 import { AI_TOOLS } from '@/lib/ai-tools/registry';
