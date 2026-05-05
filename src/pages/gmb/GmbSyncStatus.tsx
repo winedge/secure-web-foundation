@@ -1,3 +1,4 @@
+import { GmbSubNav } from './GmbDashboard';
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -105,6 +106,7 @@ export default function GmbSyncStatus() {
 
   return (
     <DashboardLayout>
+      <div className="max-w-6xl mx-auto mb-4"><GmbSubNav /></div>
       <div className="space-y-6 max-w-6xl mx-auto">
         <header className="flex items-start justify-between gap-4 flex-wrap">
           <div>

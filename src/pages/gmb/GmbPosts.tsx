@@ -1,3 +1,4 @@
+import { GmbSubNav } from './GmbDashboard';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -40,6 +41,7 @@ export default function GmbPosts() {
 
   return (
     <DashboardLayout>
+      <div className="max-w-6xl mx-auto mb-4"><GmbSubNav /></div>
       <div className="space-y-6 max-w-5xl mx-auto">
         <header className="flex items-start justify-between gap-4 flex-wrap">
           <div>
