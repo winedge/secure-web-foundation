@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Store, Plus, MapPin, Phone, Globe, Trash2 } from 'lucide-react';
 import { useGmbLocations, useUpsertGmbLocation, useDeleteGmbLocation } from '@/hooks/use-gmb';
 import { Link } from 'react-router-dom';
+import { GoogleConsentDialog } from '@/components/gmb/GoogleConsentDialog';
+import { toast } from 'sonner';
 
 export default function GmbDashboard() {
   const { data: locations = [], isLoading } = useGmbLocations();
