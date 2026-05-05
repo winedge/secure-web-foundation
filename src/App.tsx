@@ -83,6 +83,7 @@ const GmbReplyApprovals = lazy(() => import("./pages/gmb/GmbReplyApprovals"));
 const SeoHub = lazy(() => import("./pages/seo/SeoHub"));
 const SeoDeepScan = lazy(() => import("./pages/seo/SeoDeepScan"));
 const SeoDeepScanReport = lazy(() => import("./pages/seo/SeoDeepScanReport"));
+const SeoThresholdsSettings = lazy(() => import("./pages/seo/SeoThresholdsSettings"));
 const SeoKeywords = lazy(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoKeywords })));
 const SeoBacklinks = lazy(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoBacklinks })));
 const SeoCitations = lazy(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoCitations })));
