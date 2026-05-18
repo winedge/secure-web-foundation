@@ -13,6 +13,16 @@ import { toast } from 'sonner';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import { SectionRenderer } from '@/components/landing-sections/SectionRenderer';
 
+const FALLBACK_THEME: SectionTheme = {
+  primary: '210 90% 50%',
+  background: '0 0% 100%',
+  accent: '160 70% 45%',
+  radius: 'lg',
+  spacing: 'normal',
+  buttonStyle: 'solid',
+  maxWidth: 'normal',
+};
+
 interface Props {
   hasExisting: boolean;
   theme?: SectionTheme;
