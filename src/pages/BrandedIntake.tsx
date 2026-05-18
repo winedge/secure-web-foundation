@@ -21,6 +21,7 @@ import { SectionRenderer } from '@/components/landing-sections/SectionRenderer';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import { LandingSeoHead } from '@/components/landing-builder/SeoSettingsPanel';
 import type { SeoConfig } from '@/lib/landing-seo';
+import { buildAudienceContext, type AudienceContext } from '@/lib/landing-sections/visibility';
 
 const tortTypes = [
   'Camp Lejeune', 'Roundup', 'Talcum Powder', 'AFFF', 'Paraquat',
@@ -137,6 +138,16 @@ export default function BrandedIntake() {
     }).catch(() => {});
   }, [slug, campaignId]);
 
+  // Audience context (device, UTM, referrer, visitor) for conditional section visibility.
+  const [audience, setAudience] = useState<AudienceContext>(() => buildAudienceContext({ slug }));
+  useEffect(() => {
+    setAudience(buildAudienceContext({ slug }));
+    const onResize = () => setAudience((a) => ({ ...a, device: window.innerWidth < 640 ? 'mobile' : window.innerWidth < 1024 ? 'tablet' : 'desktop' }));
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [slug]);
+  // Live form values feed the `form` visibility source.
+  const liveFormValues = watch();
   const trackFocus = useCallback((fieldName: string) => {
     recorderRef.current.trackFieldFocus(fieldName, 'input');
   }, []);
@@ -439,7 +450,12 @@ export default function BrandedIntake() {
     return (
       <div style={{ background: backgroundColor }}>
         {seoHead}
-        <SectionRenderer sections={sections} theme={sectionTheme} formSlot={intakeContent} />
+        <SectionRenderer
+          sections={sections}
+          theme={sectionTheme}
+          formSlot={intakeContent}
+          visibilityContext={{ audience, form: liveFormValues }}
+        />
       </div>
     );
   }

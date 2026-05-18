@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, Settings2 } from 'lucide-react';
-import type { Section, SectionTheme } from '@/lib/landing-sections/types';
+import type { Section, SectionTheme, VisibilityConfig } from '@/lib/landing-sections/types';
 import { newSection, SECTION_REGISTRY } from '@/lib/landing-sections/registry';
 import { SectionList } from './SectionList';
 import { SectionPicker } from './SectionPicker';
@@ -11,15 +11,21 @@ import { Inspector } from './Inspector';
 import { AiSectionsAssistant } from './AiSectionsAssistant';
 import { SectionRenderer } from '@/components/landing-sections/SectionRenderer';
 import { starterStack } from '@/lib/landing-sections/starter-stacks';
+import { VisibilityEditor, intakeFormKeys } from './VisibilityEditor';
+import type { CustomField } from '@/hooks/use-firm-branding';
 
 interface Props {
   sections: Section[];
   onChange: (sections: Section[]) => void;
   theme: SectionTheme;
   themeKey: string | null;
+  /** Built-in form field names currently enabled in the intake form. */
+  visibleFormFields?: string[];
+  /** Custom intake fields (provides additional keys for form-response rules). */
+  customFormFields?: CustomField[];
 }
 
-export function SectionsTab({ sections, onChange, theme, themeKey }: Props) {
+export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFields = [], customFormFields = [] }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(sections[0]?.id ?? null);
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -54,6 +60,13 @@ export function SectionsTab({ sections, onChange, theme, themeKey }: Props) {
     onChange(sections.filter((s) => s.id !== id));
     if (selectedId === id) setSelectedId(null);
   };
+  const updateVisibility = (id: string, visibility: VisibilityConfig | undefined) =>
+    onChange(sections.map((s) => s.id === id ? { ...s, visibility } : s));
+
+  const formFieldKeys = useMemo(
+    () => intakeFormKeys(visibleFormFields, customFormFields),
+    [visibleFormFields, customFormFields],
+  );
 
   if (sections.length === 0) {
     return (
@@ -127,11 +140,18 @@ export function SectionsTab({ sections, onChange, theme, themeKey }: Props) {
         </div>
         <ScrollArea className="h-[600px] pr-2">
           {selected && selectedDef ? (
-            <Inspector
-              schema={selectedDef.schema}
-              value={selected.props}
-              onChange={(next) => onChange(sections.map((s) => s.id === selected.id ? { ...s, props: next } : s))}
-            />
+            <div className="space-y-4">
+              <VisibilityEditor
+                section={selected}
+                onChange={(v) => updateVisibility(selected.id, v)}
+                formFieldKeys={formFieldKeys}
+              />
+              <Inspector
+                schema={selectedDef.schema}
+                value={selected.props}
+                onChange={(next) => onChange(sections.map((s) => s.id === selected.id ? { ...s, props: next } : s))}
+              />
+            </div>
           ) : (
             <p className="text-sm text-muted-foreground italic">Click a section in the list or preview to edit it here.</p>
           )}
