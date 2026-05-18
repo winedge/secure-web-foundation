@@ -3,6 +3,8 @@ import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import { SECTION_REGISTRY } from '@/lib/landing-sections/registry';
 import { isSectionVisible, type VisibilityContext } from '@/lib/landing-sections/visibility';
 import { AnimatedSection } from './AnimatedSection';
+import { SectionBackground } from './SectionBackground';
+
 
 interface Props {
   sections: Section[];
