@@ -115,6 +115,13 @@ export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFi
             <Redo2 className="h-4 w-4" />
           </Button>
         </div>
+        <AiPageGenerator
+          hasExisting
+          theme={theme}
+          variant="compact"
+          onGenerated={(s) => { commit(s); setSelectedId(s[0]?.id ?? null); }}
+        />
+
         <Card className="p-2">
           <ScrollArea className="h-[520px] pr-1">
             <SectionList
