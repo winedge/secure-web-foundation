@@ -62,6 +62,9 @@ export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFi
     commit(sections.map((s) => s.id === id ? { ...s, visibility } : s));
   const updateAnimation = (id: string, animation: SectionAnimation | undefined) =>
     commit(sections.map((s) => s.id === id ? { ...s, animation } : s));
+  const updateBackground = (id: string, background: SectionBackground | undefined) =>
+    commit(sections.map((s) => s.id === id ? { ...s, background } : s));
+
 
   const formFieldKeys = useMemo(
     () => intakeFormKeys(visibleFormFields, customFormFields),
