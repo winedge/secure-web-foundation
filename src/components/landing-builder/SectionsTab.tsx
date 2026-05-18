@@ -60,6 +60,13 @@ export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFi
     onChange(sections.filter((s) => s.id !== id));
     if (selectedId === id) setSelectedId(null);
   };
+  const updateVisibility = (id: string, visibility: VisibilityConfig | undefined) =>
+    onChange(sections.map((s) => s.id === id ? { ...s, visibility } : s));
+
+  const formFieldKeys = useMemo(
+    () => intakeFormKeys(visibleFormFields, customFormFields),
+    [visibleFormFields, customFormFields],
+  );
 
   if (sections.length === 0) {
     return (
