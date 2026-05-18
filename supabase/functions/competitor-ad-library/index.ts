@@ -30,6 +30,89 @@ const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
+const GOOGLE_ADS_BASE = 'https://adstransparency.google.com';
+const GOOGLE_HEADERS = {
+  'Accept': 'application/json, text/plain, */*',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+};
+const REGION_NUMERIC_IDS: Record<string, number> = {
+  IN: 2356,
+  US: 2840,
+  GB: 2826,
+  CA: 2124,
+  AU: 2036,
+  AE: 2784,
+  SG: 2702,
+  DE: 2276,
+};
+
+function normalizeSearchValue(value: string) {
+  return value.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function adCountFromSuggestion(info: any): number {
+  const raw = info?.['4']?.['2']?.['2'] ?? info?.['4']?.['2']?.['1'];
+  const parsed = Number(String(raw || '').replace(/[^0-9]/g, ''));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function dateFromGoogleTimestamp(value: any): string | undefined {
+  const seconds = Number(value?.['1']);
+  if (!Number.isFinite(seconds) || seconds <= 0) return undefined;
+  return new Date(seconds * 1000).toISOString();
+}
+
+async function googleRpc(path: string, payload: Record<string, unknown>, authuser = '0') {
+  const body = new URLSearchParams({ 'f.req': JSON.stringify(payload) });
+  const r = await fetch(`${GOOGLE_ADS_BASE}${path}?authuser=${encodeURIComponent(authuser)}`, {
+    method: 'POST',
+    headers: GOOGLE_HEADERS,
+    body,
+  });
+  const text = await r.text();
+  if (!r.ok) throw new Error(`Google Ads Transparency ${r.status}: ${text.slice(0, 300)}`);
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Google Ads Transparency returned non-JSON response: ${text.slice(0, 160)}`);
+  }
+}
+
+async function googleSearchSuggestions(query: string): Promise<any[]> {
+  if (!query.trim()) return [];
+  try {
+    const res = await googleRpc('/anji/_/rpc/SearchService/SearchSuggestions', { '1': query.trim(), '2': 10, '3': 10 });
+    return Array.isArray(res?.['1']) ? res['1'] : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+async function googleSearchAdvertiserByDomain(domain: string): Promise<{ advertiser_id: string; name: string; region?: string; ad_count: number } | null> {
+  if (!domain.trim()) return null;
+  const cleaned = domain.trim().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+  try {
+    const res = await googleRpc('/anji/_/rpc/SearchService/SearchCreatives', {
+      '1': cleaned,
+      '2': 1,
+      '3': { '12': { '1': cleaned } },
+      '7': { '1': 1 },
+    }, '');
+    const first = Array.isArray(res?.['1']) ? res['1'][0] : null;
+    if (!first?.['1']) return null;
+    return {
+      advertiser_id: first['1'],
+      name: first['12'] || cleaned,
+      region: first['17'],
+      ad_count: 0,
+    };
+  } catch (_) {
+    return null;
+  }
+}
+
 async function firecrawlScrape(url: string, waitFor = 4000) {
   if (!FIRECRAWL_API_KEY) throw new Error('FIRECRAWL_API_KEY is not configured');
   const r = await fetch('https://api.firecrawl.dev/v2/scrape', {
