@@ -256,6 +256,14 @@ export function SeoSettingsPanel({ value, onChange, context }: Props) {
           </CardContent>
         </Card>
       </div>
+      <ImageCropDialog
+        file={pending}
+        open={cropOpen}
+        onOpenChange={setCropOpen}
+        preset="og"
+        defaultAspect={1200 / 630}
+        onConfirm={onConfirmCrop}
+      />
     </div>
   );
 }
