@@ -77,6 +77,23 @@ export function PerformancePanel({ sections, onJumpTo }: Props) {
         </Card>
       </div>
 
+      {/* Core Web Vitals */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Core Web Vitals (live preview)
+          </div>
+          <span className="text-[10px] text-muted-foreground">Updates as you interact</span>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <VitalTile k="LCP" label="Largest Contentful Paint" icon={<ImageIcon className="h-3.5 w-3.5" />} v={vitals.LCP} />
+          <VitalTile k="CLS" label="Cumulative Layout Shift" icon={<Move className="h-3.5 w-3.5" />} v={vitals.CLS} />
+          <VitalTile k="INP" label="Interaction to Next Paint" icon={<MousePointerClick className="h-3.5 w-3.5" />} v={vitals.INP} />
+          <VitalTile k="FCP" label="First Contentful Paint" icon={<Sparkles className="h-3.5 w-3.5" />} v={vitals.FCP} />
+          <VitalTile k="TTFB" label="Time to First Byte" icon={<Timer className="h-3.5 w-3.5" />} v={vitals.TTFB} />
+        </div>
+      </Card>
+
       {/* Budgets */}
       <Card className="p-4">
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
