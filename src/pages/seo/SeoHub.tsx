@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ScanLine, KeyRound, Link2, ListChecks } from 'lucide-react';
+import { Search, ScanLine, KeyRound, Link2, ListChecks, Megaphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useSeoScans, useStartSeoScan } from '@/hooks/use-seo-scans';
 import { AI_SEO_TOOLS } from './ai/tool-configs';
@@ -76,6 +76,16 @@ export default function SeoHub() {
             Optimize for ChatGPT, Perplexity, Gemini, Claude, and Google AI Overviews | the next era of search.
           </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <Link to="/seo/ai/competitor-ad-library">
+              <Card className="hover:border-primary/50 transition-colors h-full">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Megaphone className="h-5 w-5 text-primary" />Competitor Ad Library
+                  </CardTitle>
+                  <CardDescription>See competitors' live Google ads from the Ads Transparency Center, with AI insights and counter-ad ideas.</CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
             {AI_SEO_TOOLS.map((t) => (
               <Link key={t.slug} to={`/seo/ai/${t.slug}`}>
                 <Card className="hover:border-primary/50 transition-colors h-full">
