@@ -28,7 +28,7 @@ export const MODULE_LABELS: Record<string, string> = {
   cross_platform_autopilot: 'Cross-Platform AI',
   wallet: 'Wallet',
   reports: 'Reports',
-  intake_builder: 'Intake Form Builder',
+  intake_builder: 'Landing Page Builder',
   teams: 'Teams',
   smart_alerts: 'Smart Alerts',
   referral_network: 'Referral Network',

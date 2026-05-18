@@ -15,7 +15,7 @@ export const SUBSCRIPTION_TIERS = {
       'Lead Marketplace Access',
       'Campaign Management',
       'Basic Analytics & Reports',
-      'Intake Form Builder',
+      'Landing Page Builder',
       'Wallet & Billing',
     ],
   },
