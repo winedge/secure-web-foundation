@@ -62,7 +62,8 @@ export default function IntakeFormBuilder() {
   const [layoutConfig, setLayoutConfig] = useState<Record<string, any>>({});
   const [heroConfig, setHeroConfig] = useState<Record<string, any>>({});
   const [sections, setSections] = useState<Section[]>([]);
-  const [activeTab, setActiveTab] = useState<'sections' | 'themes' | 'branding' | 'fields' | 'preview'>('sections');
+  const [seoConfig, setSeoConfig] = useState<SeoConfig>({});
+  const [activeTab, setActiveTab] = useState<'sections' | 'themes' | 'branding' | 'fields' | 'seo' | 'preview'>('sections');
 
   // Populate from existing branding
   useEffect(() => {
