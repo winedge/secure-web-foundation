@@ -33,37 +33,33 @@ export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFi
 
   const selected = useMemo(() => sections.find((s) => s.id === selectedId) ?? null, [sections, selectedId]);
 
+  // Undo/redo history; external `sections` prop changes reset the baseline.
+  const history = useBuilderHistory<Section[]>(sections, onChange);
+  useEffect(() => { history.reset(sections); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  const commit = (next: Section[]) => history.commit(next);
+
   const addSection = (type: any) => {
     const s = newSection(type);
-    onChange([...sections, s]);
+    commit([...sections, s]);
     setSelectedId(s.id);
   };
-  const updateSelected = (patch: Record<string, any>) => {
-    if (!selected) return;
-    onChange(sections.map((s) => s.id === selected.id ? { ...s, props: { ...s.props, ...patch } } : s));
-  };
-  const move = (id: string, dir: -1 | 1) => {
-    const i = sections.findIndex((s) => s.id === id);
-    const j = i + dir;
-    if (j < 0 || j >= sections.length) return;
-    const next = [...sections];
-    [next[i], next[j]] = [next[j], next[i]];
-    onChange(next);
-  };
-  const toggleVis = (id: string) => onChange(sections.map((s) => s.id === id ? { ...s, visible: !s.visible } : s));
+  const reorder = (next: Section[]) => commit(next);
+  const toggleVis = (id: string) => commit(sections.map((s) => s.id === id ? { ...s, visible: !s.visible } : s));
   const duplicate = (id: string) => {
     const idx = sections.findIndex((s) => s.id === id);
     if (idx < 0) return;
     const copy = { ...sections[idx], id: crypto.randomUUID() };
-    onChange([...sections.slice(0, idx + 1), copy, ...sections.slice(idx + 1)]);
+    commit([...sections.slice(0, idx + 1), copy, ...sections.slice(idx + 1)]);
     setSelectedId(copy.id);
   };
   const remove = (id: string) => {
-    onChange(sections.filter((s) => s.id !== id));
+    commit(sections.filter((s) => s.id !== id));
     if (selectedId === id) setSelectedId(null);
   };
   const updateVisibility = (id: string, visibility: VisibilityConfig | undefined) =>
-    onChange(sections.map((s) => s.id === id ? { ...s, visibility } : s));
+    commit(sections.map((s) => s.id === id ? { ...s, visibility } : s));
+  const updateAnimation = (id: string, animation: SectionAnimation | undefined) =>
+    commit(sections.map((s) => s.id === id ? { ...s, animation } : s));
 
   const formFieldKeys = useMemo(
     () => intakeFormKeys(visibleFormFields, customFormFields),
