@@ -5,10 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Activity, AlertTriangle, Gauge, ImageIcon, Layers, Sparkles, Zap, Info } from 'lucide-react';
+import { Activity, AlertTriangle, Gauge, ImageIcon, Layers, Sparkles, Zap, Info, MousePointerClick, Move, Timer } from 'lucide-react';
 import type { Section } from '@/lib/landing-sections/types';
 import { analyzeSections, PERF_BUDGETS } from '@/lib/landing-builder/performance';
 import { useFpsMonitor } from '@/hooks/use-fps-monitor';
+import { useWebVitals, formatVital, ratingTone, ratingLabel, type WebVitals, type WebVitalValue } from '@/hooks/use-web-vitals';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -19,6 +20,7 @@ interface Props {
 export function PerformancePanel({ sections, onJumpTo }: Props) {
   const [liveFps, setLiveFps] = useState(true);
   const fps = useFpsMonitor(liveFps);
+  const vitals = useWebVitals(true);
   const analysis = useMemo(() => analyzeSections(sections), [sections]);
 
   const grade =
@@ -74,6 +76,23 @@ export function PerformancePanel({ sections, onJumpTo }: Props) {
           </div>
         </Card>
       </div>
+
+      {/* Core Web Vitals */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Core Web Vitals (live preview)
+          </div>
+          <span className="text-[10px] text-muted-foreground">Updates as you interact</span>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <VitalTile k="LCP" label="Largest Contentful Paint" icon={<ImageIcon className="h-3.5 w-3.5" />} v={vitals.LCP} />
+          <VitalTile k="CLS" label="Cumulative Layout Shift" icon={<Move className="h-3.5 w-3.5" />} v={vitals.CLS} />
+          <VitalTile k="INP" label="Interaction to Next Paint" icon={<MousePointerClick className="h-3.5 w-3.5" />} v={vitals.INP} />
+          <VitalTile k="FCP" label="First Contentful Paint" icon={<Sparkles className="h-3.5 w-3.5" />} v={vitals.FCP} />
+          <VitalTile k="TTFB" label="Time to First Byte" icon={<Timer className="h-3.5 w-3.5" />} v={vitals.TTFB} />
+        </div>
+      </Card>
 
       {/* Budgets */}
       <Card className="p-4">
@@ -163,6 +182,19 @@ function BudgetBar({ icon, label, value, budget }: { icon: React.ReactNode; labe
       <div className="h-1.5 bg-muted rounded-full overflow-hidden">
         <div className={cn('h-full transition-all', over ? 'bg-destructive' : 'bg-primary')} style={{ width: `${pct}%` }} />
       </div>
+    </div>
+  );
+}
+
+function VitalTile({ k, label, icon, v }: { k: keyof WebVitals; label: string; icon: React.ReactNode; v: WebVitalValue }) {
+  return (
+    <div className="rounded-md border border-border bg-muted/30 p-2.5">
+      <div className="flex items-center justify-between text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
+        <span className="flex items-center gap-1">{icon} {k}</span>
+        <span className={cn('font-medium', ratingTone(v.rating))}>{ratingLabel(v.rating)}</span>
+      </div>
+      <div className={cn('text-xl font-bold tabular-nums', ratingTone(v.rating))}>{formatVital(k, v)}</div>
+      <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{label}</div>
     </div>
   );
 }
