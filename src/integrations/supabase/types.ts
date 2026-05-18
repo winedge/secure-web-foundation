@@ -2241,10 +2241,17 @@ export type Database = {
           firm_display_name: string | null
           firm_id: string
           heading_text: string | null
+          hero_config: Json
           id: string
+          layout_config: Json
           logo_url: string | null
           primary_color: string | null
+          seo_config: Json
           slug: string
+          testimonials: Json
+          theme_key: string | null
+          trust_signals: Json
+          typography: Json
           updated_at: string
           visible_fields: Json | null
         }
@@ -2260,10 +2267,17 @@ export type Database = {
           firm_display_name?: string | null
           firm_id: string
           heading_text?: string | null
+          hero_config?: Json
           id?: string
+          layout_config?: Json
           logo_url?: string | null
           primary_color?: string | null
+          seo_config?: Json
           slug: string
+          testimonials?: Json
+          theme_key?: string | null
+          trust_signals?: Json
+          typography?: Json
           updated_at?: string
           visible_fields?: Json | null
         }
@@ -2279,10 +2293,17 @@ export type Database = {
           firm_display_name?: string | null
           firm_id?: string
           heading_text?: string | null
+          hero_config?: Json
           id?: string
+          layout_config?: Json
           logo_url?: string | null
           primary_color?: string | null
+          seo_config?: Json
           slug?: string
+          testimonials?: Json
+          theme_key?: string | null
+          trust_signals?: Json
+          typography?: Json
           updated_at?: string
           visible_fields?: Json | null
         }

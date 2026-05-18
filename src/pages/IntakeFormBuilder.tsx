@@ -11,10 +11,13 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Save, Upload, Eye, Link as LinkIcon, Palette, Type, FormInput,
-  Plus, Trash2, GripVertical, Loader2, Copy, ExternalLink,
+  Plus, Trash2, GripVertical, Loader2, Copy, ExternalLink, Sparkles,
 } from 'lucide-react';
 import { useFirmBranding, useUpsertBranding, useUploadLogo, type CustomField } from '@/hooks/use-firm-branding';
 import { useFirm } from '@/hooks/use-firm';
+import { ThemeGallery } from '@/components/landing-builder/ThemeGallery';
+import { AiThemeTweaker } from '@/components/landing-builder/AiThemeTweaker';
+import { LANDING_THEMES, type LandingTheme } from '@/lib/landing-themes';
 import { toast } from 'sonner';
 
 const DEFAULT_FIELDS = [
@@ -50,7 +53,11 @@ export default function IntakeFormBuilder() {
     DEFAULT_FIELDS.map(f => f.id)
   );
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
-  const [activeTab, setActiveTab] = useState<'branding' | 'fields' | 'preview'>('branding');
+  const [themeKey, setThemeKey] = useState<string | null>(null);
+  const [typography, setTypography] = useState<Record<string, any>>({});
+  const [layoutConfig, setLayoutConfig] = useState<Record<string, any>>({});
+  const [heroConfig, setHeroConfig] = useState<Record<string, any>>({});
+  const [activeTab, setActiveTab] = useState<'themes' | 'branding' | 'fields' | 'preview'>('themes');
 
   // Populate from existing branding
   useEffect(() => {
@@ -73,6 +80,10 @@ export default function IntakeFormBuilder() {
           ? branding.custom_fields
           : []
       );
+      setThemeKey((branding as any).theme_key ?? null);
+      setTypography((branding as any).typography ?? {});
+      setLayoutConfig((branding as any).layout_config ?? {});
+      setHeroConfig((branding as any).hero_config ?? {});
     } else if (firm) {
       // Auto-generate slug from firm name
       setSlug(firm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
@@ -108,7 +119,34 @@ export default function IntakeFormBuilder() {
       description_text: descriptionText,
       visible_fields: visibleFields,
       custom_fields: customFields,
+      theme_key: themeKey,
+      typography,
+      layout_config: layoutConfig,
+      hero_config: heroConfig,
     });
+  };
+
+  const applyTheme = (theme: LandingTheme) => {
+    setThemeKey(theme.key);
+    setPrimaryColor(theme.colors.primary);
+    setBackgroundColor(theme.colors.background);
+    setAccentColor(theme.colors.accent);
+    setTypography({ heading: theme.typography.heading, body: theme.typography.body });
+    setLayoutConfig({ ...theme.layout });
+    setHeroConfig({ ...theme.hero });
+    toast.success(`Applied "${theme.name}" theme`);
+  };
+
+  const applyAiUpdates = (updates: Record<string, any>) => {
+    if (updates.primary_color) setPrimaryColor(updates.primary_color);
+    if (updates.background_color) setBackgroundColor(updates.background_color);
+    if (updates.accent_color) setAccentColor(updates.accent_color);
+    if (updates.heading_text) setHeadingText(updates.heading_text);
+    if (updates.description_text) setDescriptionText(updates.description_text);
+    if (updates.typography) setTypography((prev) => ({ ...prev, ...updates.typography }));
+    if (updates.layout_config) setLayoutConfig((prev) => ({ ...prev, ...updates.layout_config }));
+    if (updates.hero_config) setHeroConfig((prev) => ({ ...prev, ...updates.hero_config }));
+    setThemeKey(null); // mark as custom
   };
 
   const toggleField = (fieldId: string) => {
@@ -161,9 +199,9 @@ export default function IntakeFormBuilder() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Intake Form Builder</h1>
+            <h1 className="text-3xl font-bold">Landing Page Builder</h1>
             <p className="text-muted-foreground">
-              Customize your branded intake form for claimants
+              Pick a theme, customize the look, and publish a branded landing page for your business
             </p>
           </div>
           <div className="flex gap-2">
@@ -188,7 +226,7 @@ export default function IntakeFormBuilder() {
             <div className="flex items-center gap-3">
               <LinkIcon className="h-5 w-5 text-muted-foreground shrink-0" />
               <div className="flex-1 min-w-0">
-                <Label className="text-xs text-muted-foreground">Your Intake Form URL</Label>
+                <Label className="text-xs text-muted-foreground">Your Landing Page URL</Label>
                 <div className="flex items-center gap-2 mt-1">
                   <code className="text-sm bg-muted px-3 py-1.5 rounded-md truncate block flex-1">
                     {intakeUrl}
@@ -203,8 +241,9 @@ export default function IntakeFormBuilder() {
         </Card>
 
         {/* Tab buttons */}
-        <div className="flex gap-2 border-b pb-2">
+        <div className="flex gap-2 border-b pb-2 flex-wrap">
           {[
+            { id: 'themes' as const, label: 'Themes', icon: Sparkles },
             { id: 'branding' as const, label: 'Branding & Colors', icon: Palette },
             { id: 'fields' as const, label: 'Form Fields', icon: FormInput },
             { id: 'preview' as const, label: 'Preview', icon: Eye },
@@ -220,6 +259,37 @@ export default function IntakeFormBuilder() {
             </Button>
           ))}
         </div>
+
+        {/* Themes Tab */}
+        {activeTab === 'themes' && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Pick a starting theme</CardTitle>
+                <CardDescription>
+                  Choose a preset that matches your business. You can fully customize colors, fonts, and layout in the next tabs, or use the AI assistant below.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ThemeGallery selectedKey={themeKey} onSelect={applyTheme} />
+              </CardContent>
+            </Card>
+
+            <AiThemeTweaker
+              current={{
+                primary_color: primaryColor,
+                background_color: backgroundColor,
+                accent_color: accentColor,
+                heading_text: headingText,
+                description_text: descriptionText,
+                typography,
+                layout_config: layoutConfig,
+                hero_config: heroConfig,
+              }}
+              onApply={applyAiUpdates}
+            />
+          </div>
+        )}
 
         {/* Branding Tab */}
         {activeTab === 'branding' && (

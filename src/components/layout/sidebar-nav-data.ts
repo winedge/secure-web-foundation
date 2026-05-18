@@ -143,7 +143,7 @@ export const navGroups: NavGroup[] = [
     label: 'Tools',
     icon: Wrench,
     items: [
-      { name: 'Intake Form', href: '/intake-builder', icon: Paintbrush },
+      { name: 'Landing Page Builder', href: '/intake-builder', icon: Paintbrush },
       { name: 'Teams', href: '/teams', icon: Users },
       { name: 'Smart Alerts', href: '/smart-alerts', icon: Bell },
       { name: 'Referral Network', href: '/referral-network', icon: Handshake },

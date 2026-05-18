@@ -16,6 +16,13 @@ export interface FirmBranding {
   description_text: string;
   custom_fields: CustomField[];
   visible_fields: string[];
+  theme_key?: string | null;
+  typography?: Record<string, any>;
+  layout_config?: Record<string, any>;
+  hero_config?: Record<string, any>;
+  trust_signals?: any[];
+  testimonials?: any[];
+  seo_config?: Record<string, any>;
   created_at: string;
   updated_at: string;
 }
@@ -39,6 +46,13 @@ export interface UpsertBrandingInput {
   description_text?: string;
   custom_fields?: CustomField[];
   visible_fields?: string[];
+  theme_key?: string | null;
+  typography?: Record<string, any>;
+  layout_config?: Record<string, any>;
+  hero_config?: Record<string, any>;
+  trust_signals?: any[];
+  testimonials?: any[];
+  seo_config?: Record<string, any>;
 }
 
 export function useFirmBranding() {
@@ -126,10 +140,10 @@ export function useUpsertBranding() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['firm-branding'] });
-      toast.success('Branding saved successfully!');
+      toast.success('Landing page saved!');
     },
     onError: (error) => {
-      toast.error('Failed to save branding: ' + error.message);
+      toast.error('Failed to save: ' + error.message);
     },
   });
 }
