@@ -30,6 +30,89 @@ const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
+const GOOGLE_ADS_BASE = 'https://adstransparency.google.com';
+const GOOGLE_HEADERS = {
+  'Accept': 'application/json, text/plain, */*',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+};
+const REGION_NUMERIC_IDS: Record<string, number> = {
+  IN: 2356,
+  US: 2840,
+  GB: 2826,
+  CA: 2124,
+  AU: 2036,
+  AE: 2784,
+  SG: 2702,
+  DE: 2276,
+};
+
+function normalizeSearchValue(value: string) {
+  return value.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function adCountFromSuggestion(info: any): number {
+  const raw = info?.['4']?.['2']?.['2'] ?? info?.['4']?.['2']?.['1'];
+  const parsed = Number(String(raw || '').replace(/[^0-9]/g, ''));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function dateFromGoogleTimestamp(value: any): string | undefined {
+  const seconds = Number(value?.['1']);
+  if (!Number.isFinite(seconds) || seconds <= 0) return undefined;
+  return new Date(seconds * 1000).toISOString();
+}
+
+async function googleRpc(path: string, payload: Record<string, unknown>, authuser = '0') {
+  const body = new URLSearchParams({ 'f.req': JSON.stringify(payload) });
+  const r = await fetch(`${GOOGLE_ADS_BASE}${path}?authuser=${encodeURIComponent(authuser)}`, {
+    method: 'POST',
+    headers: GOOGLE_HEADERS,
+    body,
+  });
+  const text = await r.text();
+  if (!r.ok) throw new Error(`Google Ads Transparency ${r.status}: ${text.slice(0, 300)}`);
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Google Ads Transparency returned non-JSON response: ${text.slice(0, 160)}`);
+  }
+}
+
+async function googleSearchSuggestions(query: string): Promise<any[]> {
+  if (!query.trim()) return [];
+  try {
+    const res = await googleRpc('/anji/_/rpc/SearchService/SearchSuggestions', { '1': query.trim(), '2': 10, '3': 10 });
+    return Array.isArray(res?.['1']) ? res['1'] : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+async function googleSearchAdvertiserByDomain(domain: string): Promise<{ advertiser_id: string; name: string; region?: string; ad_count: number } | null> {
+  if (!domain.trim()) return null;
+  const cleaned = domain.trim().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+  try {
+    const res = await googleRpc('/anji/_/rpc/SearchService/SearchCreatives', {
+      '1': cleaned,
+      '2': 1,
+      '3': { '12': { '1': cleaned } },
+      '7': { '1': 1 },
+    }, '');
+    const first = Array.isArray(res?.['1']) ? res['1'][0] : null;
+    if (!first?.['1']) return null;
+    return {
+      advertiser_id: first['1'],
+      name: first['12'] || cleaned,
+      region: first['17'],
+      ad_count: 0,
+    };
+  } catch (_) {
+    return null;
+  }
+}
+
 async function firecrawlScrape(url: string, waitFor = 4000) {
   if (!FIRECRAWL_API_KEY) throw new Error('FIRECRAWL_API_KEY is not configured');
   const r = await fetch('https://api.firecrawl.dev/v2/scrape', {
@@ -67,28 +150,66 @@ async function firecrawlSearch(query: string, limit = 10) {
 /** Find an advertiser AR id via several strategies. Returns AR id or null. */
 async function discoverAdvertiserId(brand: string, domain: string, region: string): Promise<{ id: string | null; tried: string[] }> {
   const tried: string[] = [];
-  const candidates: string[] = [];
+  const candidates: Array<{ id: string; score: number; name?: string; region?: string; source: string }> = [];
 
-  // Strategy 1: Google search (via Firecrawl /search) for the advertiser's Transparency Center page.
+  // Strategy 1: use Google's internal Transparency Center RPC suggestions. This is the same data source the UI uses.
+  const suggestionQueries = Array.from(new Set([brand, domain].filter(Boolean).map(q => q.trim())));
+  for (const q of suggestionQueries) {
+    tried.push(`google-rpc suggestions: ${q}`);
+    const suggestions = await googleSearchSuggestions(q);
+    const normalizedQuery = normalizeSearchValue(q);
+    for (const suggestion of suggestions) {
+      const info = suggestion?.['1'];
+      if (info?.['2']) {
+        const name = String(info['1'] || '');
+        const suggestionRegion = String(info['3'] || '');
+        const normalizedName = normalizeSearchValue(name);
+        const exactBoost = normalizedName === normalizedQuery ? 100 : normalizedName.includes(normalizedQuery) || normalizedQuery.includes(normalizedName) ? 40 : 0;
+        const regionBoost = suggestionRegion.toUpperCase() === region ? 30 : 0;
+        candidates.push({ id: info['2'], score: 100 + exactBoost + regionBoost + adCountFromSuggestion(info), name, region: suggestionRegion, source: `suggestion:${q}` });
+      }
+      const suggestedDomain = suggestion?.['2']?.['1'];
+      if (suggestedDomain) {
+        tried.push(`google-rpc domain: ${suggestedDomain}`);
+        const domainMatch = await googleSearchAdvertiserByDomain(suggestedDomain);
+        if (domainMatch?.advertiser_id) {
+          candidates.push({ id: domainMatch.advertiser_id, score: 80 + domainMatch.ad_count, name: domainMatch.name, region: domainMatch.region, source: `domain:${suggestedDomain}` });
+        }
+      }
+    }
+    if (candidates.length) break;
+  }
+
+  if (!candidates.length && domain) {
+    tried.push(`google-rpc domain: ${domain}`);
+    const domainMatch = await googleSearchAdvertiserByDomain(domain);
+    if (domainMatch?.advertiser_id) {
+      candidates.push({ id: domainMatch.advertiser_id, score: 80 + domainMatch.ad_count, name: domainMatch.name, region: domainMatch.region, source: `domain:${domain}` });
+    }
+  }
+
+  // Strategy 2: Google search (via Firecrawl /search) for the advertiser's Transparency Center page.
   const queries = [
     brand && `site:adstransparency.google.com "${brand}"`,
     domain && `site:adstransparency.google.com ${domain}`,
     brand && `"${brand}" adstransparency.google.com advertiser`,
   ].filter(Boolean) as string[];
 
-  for (const q of queries) {
-    tried.push(`search: ${q}`);
-    const res = await firecrawlSearch(q, 10);
-    const arr: any[] = (res?.data?.web ?? res?.data ?? res?.web ?? []);
-    for (const item of arr) {
-      const u: string = item?.url || item?.link || '';
-      const m = u.match(/\/advertiser\/(AR[0-9A-Za-z_-]+)/);
-      if (m) candidates.push(m[1]);
+  if (!candidates.length) {
+    for (const q of queries) {
+      tried.push(`search: ${q}`);
+      const res = await firecrawlSearch(q, 10);
+      const arr: any[] = (res?.data?.web ?? res?.data ?? res?.web ?? []);
+      for (const item of arr) {
+        const u: string = item?.url || item?.link || '';
+        const m = u.match(/\/advertiser\/(AR[0-9A-Za-z_-]+)/);
+        if (m) candidates.push({ id: m[1], score: 20, source: `firecrawl:${q}` });
+      }
+      if (candidates.length) break;
     }
-    if (candidates.length) break;
   }
 
-  // Strategy 2: scrape the Transparency Center search page directly (rarely works due to JS, but worth a shot).
+  // Strategy 3: scrape the Transparency Center search page directly (rarely works due to JS, but worth a shot).
   if (!candidates.length) {
     const q = brand || domain;
     if (q) {
@@ -98,12 +219,13 @@ async function discoverAdvertiserId(brand: string, domain: string, region: strin
         const search = await firecrawlScrape(searchUrl, 6000);
         const blob = (search?.html || '') + '\n' + (search?.rawHtml || '') + '\n' + JSON.stringify(search?.links || []);
         const m = blob.match(/\/advertiser\/(AR[0-9A-Za-z_-]+)/);
-        if (m) candidates.push(m[1]);
+        if (m) candidates.push({ id: m[1], score: 10, source: `scrape:${searchUrl}` });
       } catch (_) { /* ignore */ }
     }
   }
 
-  return { id: candidates[0] ?? null, tried };
+  candidates.sort((a, b) => b.score - a.score);
+  return { id: candidates[0]?.id ?? null, tried };
 }
 
 
@@ -152,6 +274,50 @@ function parseCreatives(scrape: any, transparencyUrl: string): Creative[] {
   }
 
   return creatives.slice(0, 60);
+}
+
+function extractGoogleCreativeLink(container: any): string | undefined {
+  const raw = container?.['3']?.['2'] || container?.['1']?.['4'] || container?.['2']?.['4'] || container?.['4'];
+  if (typeof raw !== 'string') return undefined;
+  const src = raw.match(/src=["']([^"']+)["']/i)?.[1];
+  if (src) return src.replace(/\\u003d/g, '=').replace(/&amp;/g, '&');
+  const quoted = raw.match(/["'](https?:\/\/[^"']+)["']/)?.[1];
+  return (quoted || raw).replace(/\\u003d/g, '=').replace(/&amp;/g, '&');
+}
+
+async function fetchGoogleCreativeRows(advertiserId: string, region: string, count = 60, nextPageId = ''): Promise<any[]> {
+  const filters: Record<string, unknown> = { '12': { '1': '', '2': true }, '13': { '1': [advertiserId] } };
+  const regionNumber = REGION_NUMERIC_IDS[region.toUpperCase()];
+  if (regionNumber) filters['8'] = [regionNumber];
+  const reqBody: Record<string, unknown> = { '2': Math.min(count, 100), '3': filters, '7': { '1': 1 } };
+  if (nextPageId) reqBody['4'] = nextPageId;
+  const res = await googleRpc('/anji/_/rpc/SearchService/SearchCreatives', reqBody, '');
+  const rows = Array.isArray(res?.['1']) ? res['1'] : [];
+  const next = res?.['2'];
+  if (count <= 100 || !next || rows.length >= count) return rows.slice(0, count);
+  return rows.concat(await fetchGoogleCreativeRows(advertiserId, region, count - rows.length, next)).slice(0, count);
+}
+
+function parseGoogleCreativeRows(rows: any[], advertiserId: string, transparencyUrl: string): Creative[] {
+  return rows.map((row) => {
+    const creativeId = row?.['2'];
+    const link = extractGoogleCreativeLink(row?.['3']);
+    const format = link?.match(/\.(mp4)(?:\?|$)/i) ? 'video'
+      : link?.match(/(?:simgad|\.jpg|\.jpeg|\.png|\.gif|\.webp)(?:\?|$)/i) ? 'image'
+        : 'text';
+    return {
+      creative_id: creativeId,
+      format,
+      headline: row?.['12'] || undefined,
+      body: creativeId ? `Creative ${creativeId}` : undefined,
+      media_url: format === 'text' ? undefined : link,
+      destination_url: format === 'text' ? link : undefined,
+      first_seen: dateFromGoogleTimestamp(row?.['6']),
+      last_seen: dateFromGoogleTimestamp(row?.['7']),
+      transparency_url: creativeId ? `${GOOGLE_ADS_BASE}/advertiser/${advertiserId}/creative/${creativeId}` : transparencyUrl,
+      raw: row,
+    };
+  }).filter((creative) => creative.creative_id || creative.media_url || creative.destination_url).slice(0, 60);
 }
 
 async function aiInsights(brand: string, creatives: Creative[]) {
@@ -225,8 +391,16 @@ async function processRun(runId: string, input: RunInput, supa: ReturnType<typeo
     }
 
 
-    const scrape = await firecrawlScrape(url);
-    const creatives = parseCreatives(scrape, url);
+    let creatives: Creative[] = [];
+    if (advertiserId) {
+      const rows = await fetchGoogleCreativeRows(advertiserId, region, 60);
+      creatives = parseGoogleCreativeRows(rows, advertiserId, url);
+    }
+
+    if (!creatives.length) {
+      const scrape = await firecrawlScrape(url);
+      creatives = parseCreatives(scrape, url);
+    }
 
     if (creatives.length > 0) {
       await supa.from('competitor_ad_creatives').insert(
