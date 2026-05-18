@@ -19,6 +19,8 @@ import { useSessionRecording } from '@/hooks/use-session-recording';
 import { useBrandingBySlug, type CustomField } from '@/hooks/use-firm-branding';
 import { SectionRenderer } from '@/components/landing-sections/SectionRenderer';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
+import { LandingSeoHead } from '@/components/landing-builder/SeoSettingsPanel';
+import type { SeoConfig } from '@/lib/landing-seo';
 
 const tortTypes = [
   'Camp Lejeune', 'Roundup', 'Talcum Powder', 'AFFF', 'Paraquat',
