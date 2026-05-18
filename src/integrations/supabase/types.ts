@@ -360,6 +360,45 @@ export type Database = {
           },
         ]
       }
+      ai_seo_runs: {
+        Row: {
+          created_at: string
+          error: string | null
+          firm_id: string | null
+          id: string
+          input: Json
+          model: string | null
+          output: Json
+          status: string
+          tool: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          firm_id?: string | null
+          id?: string
+          input?: Json
+          model?: string | null
+          output?: Json
+          status?: string
+          tool: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          firm_id?: string | null
+          id?: string
+          input?: Json
+          model?: string | null
+          output?: Json
+          status?: string
+          tool?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ai_tool_results: {
         Row: {
           created_at: string
