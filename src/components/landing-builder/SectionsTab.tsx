@@ -3,12 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, Settings2, Undo2, Redo2 } from 'lucide-react';
-import type { Section, SectionTheme, VisibilityConfig, SectionAnimation } from '@/lib/landing-sections/types';
+import type { Section, SectionTheme, VisibilityConfig, SectionAnimation, SectionBackground } from '@/lib/landing-sections/types';
 import { newSection, SECTION_REGISTRY } from '@/lib/landing-sections/registry';
 import { SectionList } from './SectionList';
 import { SectionPicker } from './SectionPicker';
 import { Inspector } from './Inspector';
 import { MotionInspector } from './MotionInspector';
+import { BackgroundInspector } from './BackgroundInspector';
+
 import { AiSectionsAssistant } from './AiSectionsAssistant';
 import { SectionRenderer } from '@/components/landing-sections/SectionRenderer';
 import { starterStack } from '@/lib/landing-sections/starter-stacks';
