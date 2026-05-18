@@ -36,10 +36,70 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { instruction, current } = await req.json() as {
-      instruction: string;
-      current: ThemeInput;
-    };
+    const body = await req.json() as any;
+
+    // Sections mode | rewrite/reorder landing-page section blocks
+    if (body?.mode === 'sections') {
+      const { prompt, sections } = body as { prompt: string; sections: any[] };
+      if (!prompt || prompt.trim().length < 3) {
+        return new Response(JSON.stringify({ error: 'prompt is required' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const sys = `You are a landing-page editor. You receive the current ordered list of section blocks for a landing page and an instruction in plain English. Return an UPDATED sections array (full replacement) in the same shape: [{id, type, visible, props}]. Allowed types: hero, features, logo_cloud, stats, testimonials, faq, pricing, steps, gallery, cta, content, form, footer. Preserve existing ids when keeping a section. Generate new uuid-like ids for new sections. Keep edits minimal and on-instruction. Return STRICT JSON.`;
+      const user = `CURRENT SECTIONS:\n${JSON.stringify(sections ?? [], null, 2)}\n\nINSTRUCTION:\n${prompt}\n\nReturn the updated sections array.`;
+      const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [{ role: 'system', content: sys }, { role: 'user', content: user }],
+          tools: [{
+            type: 'function',
+            function: {
+              name: 'update_sections',
+              description: 'Return the updated sections array',
+              parameters: {
+                type: 'object',
+                properties: {
+                  sections: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string' },
+                        type: { type: 'string' },
+                        visible: { type: 'boolean' },
+                        props: { type: 'object', additionalProperties: true },
+                      },
+                      required: ['id', 'type', 'visible', 'props'],
+                    },
+                  },
+                  explanation: { type: 'string' },
+                },
+                required: ['sections'],
+              },
+            },
+          }],
+          tool_choice: { type: 'function', function: { name: 'update_sections' } },
+        }),
+      });
+      if (!resp.ok) {
+        const text = await resp.text();
+        return new Response(JSON.stringify({ error: 'AI gateway error', detail: text }), {
+          status: resp.status === 429 ? 429 : resp.status === 402 ? 402 : 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const data = await resp.json();
+      const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+      const args = toolCall?.function?.arguments ? JSON.parse(toolCall.function.arguments) : {};
+      return new Response(JSON.stringify(args), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { instruction, current } = body as { instruction: string; current: ThemeInput };
 
     if (!instruction || instruction.trim().length < 3) {
       return new Response(JSON.stringify({ error: 'instruction is required' }), {
