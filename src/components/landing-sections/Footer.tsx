@@ -13,13 +13,14 @@ export function Footer({ props, theme }: { props: FooterProps; theme: SectionThe
           {props.tagline && <div style={{ fontSize: 14, opacity: 0.7, marginTop: 6, maxWidth: 360 }}>{props.tagline}</div>}
         </div>
         <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-          {props.links.map((l, i) => (
+          {(props.links ?? []).map((l, i) => (
             <a key={i} href={l.href} style={{ color: '#fff', opacity: 0.8, textDecoration: 'none', fontSize: 14 }}>{l.label}</a>
           ))}
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
-          {props.social.map((s, i) => {
+          {(props.social ?? []).map((s, i) => {
             const Icon = ICONS[s.type];
+            if (!Icon) return null;
             return (
               <a key={i} href={s.href} aria-label={s.type} style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
                 <Icon size={16} />
