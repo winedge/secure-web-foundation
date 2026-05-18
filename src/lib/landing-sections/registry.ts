@@ -1,20 +1,32 @@
 import {
   LayoutTemplate, Sparkles, Image as ImageIcon, BarChart3, Quote, HelpCircle,
   Tag, ListOrdered, GalleryHorizontal, Megaphone, FileText, ClipboardList, PanelBottom,
+  Film, LayoutGrid, Repeat, History, ArrowLeftRight, Columns3, Users, Timer, Code2, Mail, Minus,
 } from 'lucide-react';
 import type { SectionType, InspectorField } from '@/lib/landing-sections/types';
 
 import { Hero } from '@/components/landing-sections/Hero';
+import { VideoHero } from '@/components/landing-sections/VideoHero';
 import { Features } from '@/components/landing-sections/Features';
+import { Bento } from '@/components/landing-sections/Bento';
 import { LogoCloud } from '@/components/landing-sections/LogoCloud';
+import { Marquee } from '@/components/landing-sections/Marquee';
 import { Stats } from '@/components/landing-sections/Stats';
 import { Testimonials } from '@/components/landing-sections/Testimonials';
 import { Faq } from '@/components/landing-sections/Faq';
 import { Pricing } from '@/components/landing-sections/Pricing';
 import { Steps } from '@/components/landing-sections/Steps';
+import { Timeline } from '@/components/landing-sections/Timeline';
 import { Gallery } from '@/components/landing-sections/Gallery';
+import { BeforeAfter } from '@/components/landing-sections/BeforeAfter';
+import { Comparison } from '@/components/landing-sections/Comparison';
+import { Team } from '@/components/landing-sections/Team';
+import { Countdown } from '@/components/landing-sections/Countdown';
+import { Embed } from '@/components/landing-sections/Embed';
+import { Newsletter } from '@/components/landing-sections/Newsletter';
 import { Cta } from '@/components/landing-sections/Cta';
 import { Content } from '@/components/landing-sections/Content';
+import { Divider } from '@/components/landing-sections/Divider';
 import { FormSection } from '@/components/landing-sections/FormSection';
 import { Footer } from '@/components/landing-sections/Footer';
 
