@@ -3188,6 +3188,36 @@ export type Database = {
         }
         Relationships: []
       }
+      landing_design_presets: {
+        Row: {
+          background: Json
+          created_at: string
+          firm_id: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          background: Json
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          background?: Json
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       landing_page_previews: {
         Row: {
           created_at: string
