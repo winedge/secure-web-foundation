@@ -11,10 +11,13 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Save, Upload, Eye, Link as LinkIcon, Palette, Type, FormInput,
-  Plus, Trash2, GripVertical, Loader2, Copy, ExternalLink,
+  Plus, Trash2, GripVertical, Loader2, Copy, ExternalLink, Sparkles,
 } from 'lucide-react';
 import { useFirmBranding, useUpsertBranding, useUploadLogo, type CustomField } from '@/hooks/use-firm-branding';
 import { useFirm } from '@/hooks/use-firm';
+import { ThemeGallery } from '@/components/landing-builder/ThemeGallery';
+import { AiThemeTweaker } from '@/components/landing-builder/AiThemeTweaker';
+import { LANDING_THEMES, type LandingTheme } from '@/lib/landing-themes';
 import { toast } from 'sonner';
 
 const DEFAULT_FIELDS = [
@@ -50,7 +53,11 @@ export default function IntakeFormBuilder() {
     DEFAULT_FIELDS.map(f => f.id)
   );
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
-  const [activeTab, setActiveTab] = useState<'branding' | 'fields' | 'preview'>('branding');
+  const [themeKey, setThemeKey] = useState<string | null>(null);
+  const [typography, setTypography] = useState<Record<string, any>>({});
+  const [layoutConfig, setLayoutConfig] = useState<Record<string, any>>({});
+  const [heroConfig, setHeroConfig] = useState<Record<string, any>>({});
+  const [activeTab, setActiveTab] = useState<'themes' | 'branding' | 'fields' | 'preview'>('themes');
 
   // Populate from existing branding
   useEffect(() => {
