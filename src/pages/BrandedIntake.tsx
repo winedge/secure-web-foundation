@@ -138,6 +138,16 @@ export default function BrandedIntake() {
     }).catch(() => {});
   }, [slug, campaignId]);
 
+  // Audience context (device, UTM, referrer, visitor) for conditional section visibility.
+  const [audience, setAudience] = useState<AudienceContext>(() => buildAudienceContext({ slug }));
+  useEffect(() => {
+    setAudience(buildAudienceContext({ slug }));
+    const onResize = () => setAudience((a) => ({ ...a, device: window.innerWidth < 640 ? 'mobile' : window.innerWidth < 1024 ? 'tablet' : 'desktop' }));
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [slug]);
+  // Live form values feed the `form` visibility source.
+  const liveFormValues = watch();
   const trackFocus = useCallback((fieldName: string) => {
     recorderRef.current.trackFieldFocus(fieldName, 'input');
   }, []);
