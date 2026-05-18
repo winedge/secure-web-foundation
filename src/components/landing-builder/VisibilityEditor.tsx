@@ -245,6 +245,6 @@ function hintFor(rule: VisibilityRule): string {
 /** Helper to derive the field-key options from intake config. */
 export function intakeFormKeys(visible: string[], custom: CustomField[]): { value: string; label: string }[] {
   const builtIn = visible.map((k) => ({ value: k, label: k.replace(/_/g, ' ') }));
-  const customOpts = (custom ?? []).map((c) => ({ value: c.name, label: c.label || c.name }));
+  const customOpts = (custom ?? []).map((c) => ({ value: c.id, label: c.label || c.id }));
   return [...builtIn, ...customOpts];
 }
