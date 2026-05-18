@@ -75,8 +75,16 @@ export function AiPageGenerator({ hasExisting, theme, onGenerated, variant = 'de
     }
     setLoading(true);
     try {
+      const benefitsArr = benefits.split('\n').map((b) => b.trim()).filter(Boolean).slice(0, 8);
       const { data, error } = await supabase.functions.invoke('landing-theme-ai', {
-        body: { mode: 'generate', prompt, audience, tone, businessType, theme },
+        body: {
+          mode: 'generate',
+          prompt, audience, tone, businessType, theme,
+          product: product.trim() || undefined,
+          benefits: benefitsArr.length ? benefitsArr : undefined,
+          offer: offer.trim() || undefined,
+          cta: cta.trim() || undefined,
+        },
       });
       if (error) throw error;
       const sections = data?.sections;
