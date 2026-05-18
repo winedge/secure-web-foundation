@@ -12,6 +12,7 @@ import { Upload, Loader2, Image as ImageIcon, Code2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { SeoConfig } from '@/lib/landing-seo';
 import { buildJsonLd, DEFAULT_SEO } from '@/lib/landing-seo';
+import { ImageCropDialog } from './ImageCropDialog';
 
 interface Props {
   value: SeoConfig;
