@@ -35,9 +35,9 @@ const TOOLS: Record<string, Tool> = {
     systemPrompt:
       'You are a Generative Engine Optimization (GEO) expert. Score and optimize content for AI engines. Return strictly valid JSON only.',
     buildUserPrompt: (i) =>
-      `Analyze this content/URL for GEO (AI search optimization). ${
+      `Analyze this content/URL for GEO (AI search optimization)${i.location ? ` targeting the "${i.location}" audience (localize rewrite suggestions, examples, currency, and entities accordingly)` : ''}. ${
         i.url ? `URL: ${i.url}.` : ''
-      } ${i.content ? `Content: ${i.content.slice(0, 4000)}` : 'Use the URL context to reason about likely on-page content.'}\n\nReturn JSON: {\n  "overall_score": 0-100,\n  "scores": { "ai_readability": 0-100, "semantic_chunking": 0-100, "citation_friendliness": 0-100, "answer_extraction": 0-100, "entity_clarity": 0-100, "factual_density": 0-100 },\n  "engine_scores": { "chatgpt": 0-100, "perplexity": 0-100, "google_aio": 0-100 },\n  "citation_simulation": { "confidence": 0-100, "likely_to_appear_in_aio": boolean, "likely_cited_by_perplexity": boolean, "missing_trust_signals": [str] },\n  "weaknesses": [str],\n  "rewrite_suggestions": [{ "section": str, "current_issue": str, "rewrite": str }] (3-5 items),\n  "faq_additions": [{ "question": str, "answer": str }] (3-5 items)\n}`,
+      } ${i.content ? `Content: ${i.content.slice(0, 4000)}` : 'Use the URL context to reason about likely on-page content.'}\n\nReturn JSON: {\n  "overall_score": 0-100,\n  "target_location": str,\n  "scores": { "ai_readability": 0-100, "semantic_chunking": 0-100, "citation_friendliness": 0-100, "answer_extraction": 0-100, "entity_clarity": 0-100, "factual_density": 0-100, "geo_relevance": 0-100 },\n  "engine_scores": { "chatgpt": 0-100, "perplexity": 0-100, "google_aio": 0-100 },\n  "citation_simulation": { "confidence": 0-100, "likely_to_appear_in_aio": boolean, "likely_cited_by_perplexity": boolean, "missing_trust_signals": [str] },\n  "weaknesses": [str],\n  "rewrite_suggestions": [{ "section": str, "current_issue": str, "rewrite": str }] (3-5 items),\n  "faq_additions": [{ "question": str, "answer": str }] (3-5 items),\n  "local_entities_to_add": [str]\n}`,
   },
   entity_authority: {
     key: 'entity_authority',
