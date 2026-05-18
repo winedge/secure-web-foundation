@@ -248,6 +248,7 @@ export default function IntakeFormBuilder() {
         {/* Tab buttons */}
         <div className="flex gap-2 border-b pb-2 flex-wrap">
           {[
+            { id: 'sections' as const, label: 'Sections', icon: LayoutTemplate },
             { id: 'themes' as const, label: 'Themes', icon: Sparkles },
             { id: 'branding' as const, label: 'Branding & Colors', icon: Palette },
             { id: 'fields' as const, label: 'Form Fields', icon: FormInput },
@@ -264,6 +265,26 @@ export default function IntakeFormBuilder() {
             </Button>
           ))}
         </div>
+
+        {/* Sections Tab | the new multi-section composer */}
+        {activeTab === 'sections' && (
+          <SectionsTab
+            sections={sections}
+            onChange={setSections}
+            themeKey={themeKey}
+            theme={{
+              primary: primaryColor,
+              background: backgroundColor,
+              accent: accentColor,
+              headingFont: (typography as any)?.heading,
+              bodyFont: (typography as any)?.body,
+              radius: ((layoutConfig as any)?.radius ?? 'lg') as SectionTheme['radius'],
+              spacing: ((layoutConfig as any)?.spacing ?? 'normal') as SectionTheme['spacing'],
+              buttonStyle: ((layoutConfig as any)?.buttonStyle ?? 'solid') as SectionTheme['buttonStyle'],
+              maxWidth: ((layoutConfig as any)?.maxWidth ?? 'normal') as SectionTheme['maxWidth'],
+            }}
+          />
+        )}
 
         {/* Themes Tab */}
         {activeTab === 'themes' && (
