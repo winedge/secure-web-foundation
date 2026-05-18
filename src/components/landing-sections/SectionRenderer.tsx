@@ -44,7 +44,12 @@ export function SectionRenderer({
           const inner = s.type === 'form'
             ? <Comp props={s.props} theme={theme} formSlot={formSlot} />
             : <Comp props={s.props} theme={theme} />;
-          const node = <AnimatedSection animation={s.animation}>{inner}</AnimatedSection>;
+          const node = (
+            <SectionBackground bg={s.background}>
+              <AnimatedSection animation={s.animation}>{inner}</AnimatedSection>
+            </SectionBackground>
+          );
+
 
           if (!selectable) return <div key={s.id}>{node}</div>;
           return (
