@@ -450,7 +450,12 @@ export default function BrandedIntake() {
     return (
       <div style={{ background: backgroundColor }}>
         {seoHead}
-        <SectionRenderer sections={sections} theme={sectionTheme} formSlot={intakeContent} />
+        <SectionRenderer
+          sections={sections}
+          theme={sectionTheme}
+          formSlot={intakeContent}
+          visibilityContext={{ audience, form: liveFormValues }}
+        />
       </div>
     );
   }
