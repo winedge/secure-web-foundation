@@ -2246,6 +2246,7 @@ export type Database = {
           layout_config: Json
           logo_url: string | null
           primary_color: string | null
+          sections: Json
           seo_config: Json
           slug: string
           testimonials: Json
@@ -2272,6 +2273,7 @@ export type Database = {
           layout_config?: Json
           logo_url?: string | null
           primary_color?: string | null
+          sections?: Json
           seo_config?: Json
           slug: string
           testimonials?: Json
@@ -2298,6 +2300,7 @@ export type Database = {
           layout_config?: Json
           logo_url?: string | null
           primary_color?: string | null
+          sections?: Json
           seo_config?: Json
           slug?: string
           testimonials?: Json
