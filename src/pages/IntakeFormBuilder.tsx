@@ -132,6 +132,7 @@ export default function IntakeFormBuilder() {
       layout_config: layoutConfig,
       hero_config: heroConfig,
       sections,
+      seo_config: seoConfig,
     } as any);
   };
 
