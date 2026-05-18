@@ -1,112 +1,152 @@
-# Sophisticated Multi-Section Landing Page Builder
+## Landing Builder | Modern Upgrade
 
-Today the Landing Page Builder (`/intake-builder`, editing `firm_branding`) only outputs a single branded intake page: logo, headline, one description, and a form. The goal is to turn it into a real landing-page composer where you can stack and edit multiple section blocks (Hero, Features, Logos, Stats, Testimonials, FAQ, Pricing, Gallery, CTA, Footer, etc.), keep the existing theme + AI tweaker, and render the result at `/intake/:slug`.
+Goal: turn the current section builder into a "game-changer" page builder with cinematic animations, modern section types, richer theming, and pro authoring tools | while staying compatible with existing saved pages (`firm_branding.sections`).
 
-## Sections library (v1)
+---
 
-Each section is a typed block with its own editable fields. All sections inherit the active theme (colors, typography, radius, button style, spacing).
+### 1. Animation System (new)
+
+Add a per-section `animation` config + a shared `AnimatedSection` wrapper in `src/components/landing-sections/`.
+
+```ts
+// types.ts (additive)
+animation?: {
+  entrance: 'none'|'fade'|'slide-up'|'slide-left'|'slide-right'|'zoom'|'blur-in'|'mask-reveal';
+  trigger: 'on-load'|'on-scroll'|'on-hover';
+  duration: number;       // ms
+  delay: number;          // ms
+  stagger?: number;       // children stagger ms
+  easing: 'ease'|'spring'|'bounce'|'linear';
+  parallax?: number;      // 0-1 scroll parallax intensity
+  repeat?: boolean;
+}
+```
+
+- Powered by `framer-motion` (already React-friendly) + IntersectionObserver.
+- New global "Motion preset" picker in theme: `subtle | balanced | cinematic | none` (respects `prefers-reduced-motion`).
+- Add hover micro-interactions: button magnetic hover, card tilt (3D), image zoom-on-hover, gradient sweep.
+- Scroll effects: parallax backgrounds, sticky reveal, scroll-progress bar, section pinning for "scrollytelling".
+
+Inspector gets a new "Motion" tab per section (collapsed by default so existing UX stays simple).
+
+---
+
+### 2. New Section Types
+
+Add to `SectionType` and registry:
+
+- `video_hero` | full-bleed background video / mux URL with overlay + CTA.
+- `bento` | Apple/Linear-style bento grid (mixed card sizes, icons, mini-charts).
+- `comparison` | "Us vs. Them" table.
+- `marquee` | infinite scrolling logos / quotes / images.
+- `timeline` | vertical / horizontal milestone story.
+- `team` | member cards with social links.
+- `countdown` | event/launch timer.
+- `before_after` | drag slider image compare.
+- `embed` | YouTube / Loom / Calendly / Typeform / custom iframe.
+- `code` | syntax-highlighted snippet (developer landings).
+- `map` | static map + address (Leaflet or static image).
+- `social_proof_bar` | small ticker "12 firms signed up today".
+- `interactive_demo` | tabbed product screenshots with hotspots.
+- `newsletter` | inline email capture mini-form.
+- `divider` | shaped section breaks (wave / slant / arc / blob SVG).
+
+Each ships with default content, inspector schema, and is added to `SECTION_ORDER` + `SectionPicker`.
+
+---
+
+### 3. Theming v2
+
+Extend `SectionTheme`:
+
+- `mode: 'light' | 'dark' | 'auto'` (per section override).
+- `gradients`: named gradient presets + custom angle/stops.
+- `noiseTexture`, `grainOverlay`, `meshGradient` toggles.
+- `glassmorphism` (backdrop-blur cards).
+- `shadowStyle`: `none | soft | hard | glow | neon`.
+- `cursor`: `default | dot | spotlight` (custom cursor overlay).
+- Per-section `backgroundType`: solid | gradient | image | video | mesh | pattern | particles.
+- Live theme tweaker upgrade: AI suggests palette from uploaded logo (already partially in `AiThemeTweaker`).
+
+---
+
+### 4. Authoring Experience
+
+In `src/pages/IntakeFormBuilder.tsx` + `landing-builder/`:
+
+- **Drag-and-drop reorder** with `@dnd-kit` (smooth, with drop indicator).
+- **Inline editing** in preview: click headline → edit in place (contentEditable bridge to props).
+- **Undo / redo stack** (cmd-Z) with bounded history.
+- **Section duplicate / lock / hide** quick actions on hover.
+- **Multi-device preview toggle** (desktop / tablet / mobile breakpoint switcher with width slider).
+- **Template gallery v2**: pre-built page templates (SaaS, agency, law firm, ebook, webinar, event, coming-soon).
+- **AI Page Generator**: prompt → full multi-section page (extends `AiSectionsAssistant`).
+- **AI Copy Rewriter**: rewrite any text block in tone presets (bold, friendly, formal, punchy).
+- **AI Image Generator**: inline "generate image" for hero/gallery via Lovable AI (`google/gemini-3-pro-image-preview`).
+- **Asset library** drawer: previously uploaded images, Unsplash search, brand kit.
+- **Brand Kit**: store logo, colors, fonts firm-wide; one-click apply.
+- **Section variants**: each section type ships 3-5 layout variants picker (cards in inspector).
+- **Keyboard shortcuts**: D duplicate, ⌫ delete, ⌘S save, ⌘Z undo.
+- **Comments / collaboration markers** (per-section comment thread, stored on `landing_versions`).
+
+---
+
+### 5. Performance & SEO
+
+- Lazy-load section images with blur-up placeholders.
+- Auto-generate Open Graph image from hero (server-side render via edge function).
+- Schema.org JSON-LD per section (FAQ, Product, Organization, Review).
+- Built-in A/B test: two variants of any section, randomized + tracked.
+- Conversion analytics per section (scroll-depth + CTA clicks → `lead_activity_logs`).
+
+---
+
+### 6. Backward Compatibility
+
+- All new fields are optional; old sections render unchanged.
+- Migration in `SectionRenderer.tsx`: defaults `animation.entrance = 'fade'` for new sections only.
+- Bump version in `firm_branding.builder_version` to 2 for new pages.
+
+---
+
+### Phased Rollout
 
 ```text
-hero          headline, subheadline, eyebrow, primary CTA, secondary CTA, media (image/video), layout (centered | split-left | split-right | image-bg)
-features      heading, intro, items[] (icon, title, description), columns (2|3|4)
-logo_cloud    heading, logos[] (image + alt)
-stats         items[] (value, label, suffix)
-testimonials  items[] (quote, author, role, avatar, rating), layout (grid|carousel)
-faq           heading, items[] (q, a)
-pricing       plans[] (name, price, period, features[], cta, highlighted)
-gallery       images[] (url, caption), layout (grid|masonry|carousel)
-steps         heading, items[] (step number, title, description)
-cta           heading, subheading, primary CTA, secondary CTA, background style
-content       rich text block (markdown/HTML-safe)
-form          existing intake form (fields configured in Fields tab)
-footer        firm name, links[], legal text, social[]
+Phase 1 (foundation)
+  | Add framer-motion + AnimatedSection wrapper
+  | Animation inspector tab + theme motion preset
+  | Drag-and-drop reorder, undo/redo, inline editing
+
+Phase 2 (sections)
+  | bento, marquee, video_hero, timeline, comparison,
+    before_after, embed, divider, team, countdown
+
+Phase 3 (theming v2)
+  | gradients, glassmorphism, noise, shadows, custom cursor,
+    mesh / particle backgrounds, section variants picker
+
+Phase 4 (AI + assets)
+  | AI page generator, copy rewriter, image generator
+  | Asset library + brand kit
+  | Template gallery v2
+
+Phase 5 (perf / growth)
+  | Lazy images + blur-up, OG image gen, JSON-LD,
+    A/B testing, per-section conversion analytics
 ```
 
-Sections can be reordered, duplicated, hidden, and deleted. The form section is special: it's the existing intake form and is always available but can be placed anywhere or rendered as a sticky sidebar.
+---
 
-## Builder UX
+### Files Touched (preview)
 
-Replace the current flat tab layout with a three-pane composer:
+- New: `src/components/landing-sections/AnimatedSection.tsx`, `Bento.tsx`, `Marquee.tsx`, `VideoHero.tsx`, `Timeline.tsx`, `Comparison.tsx`, `BeforeAfter.tsx`, `Embed.tsx`, `Divider.tsx`, `Team.tsx`, `Countdown.tsx`, `Newsletter.tsx`, `InteractiveDemo.tsx`, `Map.tsx`, `SocialProofBar.tsx`, `Code.tsx`
+- New: `src/components/landing-builder/MotionInspector.tsx`, `VariantPicker.tsx`, `AssetLibrary.tsx`, `BrandKitPanel.tsx`, `TemplateGalleryV2.tsx`, `HistoryProvider.tsx`, `InlineEditableText.tsx`
+- New hook: `src/hooks/use-builder-history.ts`, `use-brand-kit.ts`
+- Edited: `src/lib/landing-sections/types.ts`, `registry.ts`, `starter-stacks.ts`, `Inspector.tsx`, `SectionList.tsx`, `SectionsTab.tsx`, `SectionRenderer.tsx`, `_shared.ts`
+- Edge functions: `generate-og-image`, `ai-page-generator` (extend existing AI assistant)
 
-```text
-┌──────────────┬──────────────────────────────┬─────────────────┐
-│ Section list │  Live preview (iframe-like)  │ Inspector       │
-│  + add btn   │  click a section to select   │ edits selected  │
-│  drag handle │                              │ section's props │
-└──────────────┴──────────────────────────────┴─────────────────┘
-```
+---
 
-- Left rail: ordered list of sections with drag handles (`@dnd-kit/sortable`, already in repo if available; otherwise add). "+ Add section" opens a picker grid of section types with thumbnails.
-- Center: live preview rendered with the same components used at `/intake/:slug`. Clicking a section selects it and outlines it.
-- Right: Inspector. Renders a schema-driven form for the selected section type. Common controls: text, textarea, image upload (uses existing `firm-logos` bucket or new `landing-media`), repeater for `items[]`, color, select.
-- Top bar keeps: Themes gallery, AI Theme Tweaker, Save, Preview, Open public URL. The existing per-firm `firm_branding` slug, logo, color, typography, and form-fields tabs remain accessible via a "Global settings" drawer.
+### Open Question
 
-AI Theme Tweaker is extended with a second mode "AI Section Assistant": describe a change in natural language ("add a 3-step how-it-works section after the hero", "rewrite the testimonials in a more confident tone") and the existing `landing-theme-ai` function returns a section patch the user can accept.
-
-## Data model
-
-Add one new JSONB column on `firm_branding`:
-
-```text
-sections  jsonb  default '[]'
-```
-
-Shape:
-
-```json
-[
-  { "id": "uuid", "type": "hero", "visible": true, "props": { ... } },
-  { "id": "uuid", "type": "features", "visible": true, "props": { ... } }
-]
-```
-
-No new table needed — sections are per-firm landing page, edited in the builder, read by `BrandedIntake`. RLS already covers `firm_branding`.
-
-For media uploads beyond logos, add a public `landing-media` storage bucket with read-public, write-by-firm policy.
-
-## Rendering
-
-Create `src/components/landing-sections/` with one component per section type plus an index map. `BrandedIntake.tsx` (the `/intake/:slug` page) becomes a thin renderer:
-
-```text
-sections.filter(visible).map(s => <SectionRenderer key={s.id} section={s} theme={theme} firm={firm} />)
-```
-
-Theme tokens (colors, typography, radius, spacing, button style) are applied via CSS variables on a wrapper `<div>` so every section automatically picks them up — no hard-coded colors in section components.
-
-The new `LandingPage.tsx` (`/lp/:slug`, AI-generated campaign pages) can later opt into the same renderer; out of scope for this change.
-
-## Theme presets seed sections
-
-When a user picks a theme from the gallery and `sections` is empty, seed a sensible starter stack for that theme (e.g. Clean Slate → Hero + Features + FAQ + CTA + Form; Estate Luxe → Hero (image-right) + Gallery + Testimonials + CTA). This makes the builder feel "ready" instead of blank.
-
-## Files
-
-New
-- `src/lib/landing-sections/types.ts` — `Section`, `SectionType`, per-type prop interfaces, JSON schemas for inspector.
-- `src/lib/landing-sections/registry.ts` — type → { label, icon, defaultProps, schema, Component }.
-- `src/lib/landing-sections/starter-stacks.ts` — per-theme starter section arrays.
-- `src/components/landing-sections/` — `Hero.tsx`, `Features.tsx`, `LogoCloud.tsx`, `Stats.tsx`, `Testimonials.tsx`, `Faq.tsx`, `Pricing.tsx`, `Gallery.tsx`, `Steps.tsx`, `Cta.tsx`, `Content.tsx`, `FormSection.tsx`, `Footer.tsx`, `SectionRenderer.tsx`.
-- `src/components/landing-builder/SectionList.tsx` — sortable left rail.
-- `src/components/landing-builder/SectionPicker.tsx` — add-section modal.
-- `src/components/landing-builder/Inspector.tsx` — schema-driven form, with `RepeaterField`, `MediaField`, `IconPicker`, `ColorField`.
-- `src/components/landing-builder/LivePreview.tsx` — renders selected sections with click-to-select overlays.
-
-Changed
-- `src/pages/IntakeFormBuilder.tsx` — replaced flat tabs with the 3-pane composer; existing Themes/Branding/Fields/Preview content moved into a "Global" drawer.
-- `src/pages/BrandedIntake.tsx` — render via `SectionRenderer`; fall back to old layout when `sections` is empty.
-- `src/hooks/use-firm-branding.ts` — add `sections` to the type and the upsert payload.
-- `src/components/landing-builder/AiThemeTweaker.tsx` — add "Edit sections" mode.
-- `supabase/functions/landing-theme-ai/index.ts` — accept current sections, return either a theme patch or a sections patch.
-
-Migration
-- `ALTER TABLE firm_branding ADD COLUMN sections jsonb NOT NULL DEFAULT '[]'::jsonb;`
-- Create public `landing-media` bucket + policies (read public, write where firm owner).
-
-## Out of scope (call out)
-
-- A/B testing of sections, version history, scheduled publishing.
-- Per-section animation editor (sections will animate with sensible defaults).
-- Migrating the AI-generated `/lp/:slug` pages onto the same renderer.
-
-I'll implement the section library, the 3-pane builder, the migration, and the renderer in `BrandedIntake` once you approve.
+This is a large surface area. Want me to start with **Phase 1 only** (animations + DnD + inline editing + undo/redo) and ship that end-to-end before moving on, or kick off Phases 1+2 together (animations + ~10 new sections)?
