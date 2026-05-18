@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useFirm } from '@/hooks/use-firm';
 import { toast } from 'sonner';
 import type { InspectorField } from '@/lib/landing-sections/types';
+import { ImageCropDialog } from './ImageCropDialog';
 
 interface Props {
   schema: InspectorField[];
