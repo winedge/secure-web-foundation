@@ -122,7 +122,7 @@ export function AiPageGenerator({ hasExisting, theme, onGenerated, variant = 'de
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className={step === 'preview' ? 'max-w-6xl' : 'max-w-2xl'}>
+      <DialogContent className={(step === 'preview' ? 'max-w-6xl' : 'max-w-2xl') + ' max-h-[90vh] overflow-y-auto'}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
