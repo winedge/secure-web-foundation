@@ -3,12 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, Settings2, Undo2, Redo2 } from 'lucide-react';
-import type { Section, SectionTheme, VisibilityConfig, SectionAnimation } from '@/lib/landing-sections/types';
+import type { Section, SectionTheme, VisibilityConfig, SectionAnimation, SectionBackground } from '@/lib/landing-sections/types';
 import { newSection, SECTION_REGISTRY } from '@/lib/landing-sections/registry';
 import { SectionList } from './SectionList';
 import { SectionPicker } from './SectionPicker';
 import { Inspector } from './Inspector';
 import { MotionInspector } from './MotionInspector';
+import { BackgroundInspector } from './BackgroundInspector';
+
 import { AiSectionsAssistant } from './AiSectionsAssistant';
 import { SectionRenderer } from '@/components/landing-sections/SectionRenderer';
 import { starterStack } from '@/lib/landing-sections/starter-stacks';
@@ -60,6 +62,9 @@ export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFi
     commit(sections.map((s) => s.id === id ? { ...s, visibility } : s));
   const updateAnimation = (id: string, animation: SectionAnimation | undefined) =>
     commit(sections.map((s) => s.id === id ? { ...s, animation } : s));
+  const updateBackground = (id: string, background: SectionBackground | undefined) =>
+    commit(sections.map((s) => s.id === id ? { ...s, background } : s));
+
 
   const formFieldKeys = useMemo(
     () => intakeFormKeys(visibleFormFields, customFormFields),
@@ -156,6 +161,11 @@ export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFi
                 value={selected.animation}
                 onChange={(a) => updateAnimation(selected.id, a)}
               />
+              <BackgroundInspector
+                value={selected.background}
+                onChange={(b) => updateBackground(selected.id, b)}
+              />
+
               <Inspector
                 schema={selectedDef.schema}
                 value={selected.props}

@@ -41,6 +41,31 @@ export interface SectionAnimation {
   repeat?: boolean;
 }
 
+export interface SectionBackground {
+  kind: 'none' | 'gradient' | 'mesh' | 'glass' | 'solid';
+  /** Solid color or glass tint base */
+  color?: string;
+  /** Gradient config */
+  gradient?: {
+    type: 'linear' | 'radial' | 'conic';
+    angle?: number; // for linear
+    stops: { color: string; pos: number }[]; // pos 0-100
+  };
+  /** Mesh: 2-5 colored blobs blended over the base */
+  mesh?: {
+    base?: string;
+    blobs: { color: string; x: number; y: number; size: number; opacity?: number }[];
+    grain?: boolean;
+  };
+  /** Glassmorphism: blur + translucent tint over what's underneath/an image */
+  glass?: {
+    blur: number; // px
+    opacity: number; // 0-1 tint strength
+    border?: boolean;
+    imageUrl?: string; // optional backdrop image
+  };
+}
+
 export interface Section<T = Record<string, any>> {
   id: string;
   type: SectionType;
@@ -49,8 +74,11 @@ export interface Section<T = Record<string, any>> {
   visibility?: VisibilityConfig;
   /** Optional motion config rendered through <AnimatedSection>. */
   animation?: SectionAnimation;
+  /** Optional decorative background (gradient / mesh / glass). */
+  background?: SectionBackground;
   props: T;
 }
+
 
 // -- Conditional visibility -------------------------------------------------
 

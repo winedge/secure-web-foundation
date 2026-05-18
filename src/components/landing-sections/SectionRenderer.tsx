@@ -3,6 +3,8 @@ import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import { SECTION_REGISTRY } from '@/lib/landing-sections/registry';
 import { isSectionVisible, type VisibilityContext } from '@/lib/landing-sections/visibility';
 import { AnimatedSection } from './AnimatedSection';
+import { SectionBackground } from './SectionBackground';
+
 
 interface Props {
   sections: Section[];
@@ -42,7 +44,12 @@ export function SectionRenderer({
           const inner = s.type === 'form'
             ? <Comp props={s.props} theme={theme} formSlot={formSlot} />
             : <Comp props={s.props} theme={theme} />;
-          const node = <AnimatedSection animation={s.animation}>{inner}</AnimatedSection>;
+          const node = (
+            <SectionBackground bg={s.background}>
+              <AnimatedSection animation={s.animation}>{inner}</AnimatedSection>
+            </SectionBackground>
+          );
+
 
           if (!selectable) return <div key={s.id}>{node}</div>;
           return (
