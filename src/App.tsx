@@ -225,6 +225,7 @@ const App = () => (
       </SubscriptionProvider>
     </AuthProvider>
   </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;
