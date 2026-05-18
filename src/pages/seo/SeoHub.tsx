@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, ScanLine, KeyRound, Link2, ListChecks } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useSeoScans, useStartSeoScan } from '@/hooks/use-seo-scans';
+import { AI_SEO_TOOLS } from './ai/tool-configs';
 
 const TOOLS = [
   { name: 'Deep Scan', href: '/seo/deep-scan', icon: ScanLine, desc: 'Full site audit with score + issue list.' },
@@ -59,6 +60,30 @@ export default function SeoHub() {
                   <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2"><t.icon className="h-5 w-5 text-primary" />{t.name}</CardTitle>
                     <CardDescription>{t.desc}</CardDescription>
+                  </CardHeader>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xl font-semibold">AI Search & GEO Tools</h2>
+            <Badge variant="secondary">NEW</Badge>
+          </div>
+          <p className="text-sm text-muted-foreground mb-3">
+            Optimize for ChatGPT, Perplexity, Gemini, Claude, and Google AI Overviews | the next era of search.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {AI_SEO_TOOLS.map((t) => (
+              <Link key={t.slug} to={`/seo/ai/${t.slug}`}>
+                <Card className="hover:border-primary/50 transition-colors h-full">
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <t.icon className="h-5 w-5 text-primary" />{t.title}
+                    </CardTitle>
+                    <CardDescription>{t.description}</CardDescription>
                   </CardHeader>
                 </Card>
               </Link>
