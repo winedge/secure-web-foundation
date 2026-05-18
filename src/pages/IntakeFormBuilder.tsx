@@ -287,7 +287,7 @@ export default function IntakeFormBuilder() {
               <ExternalLink className="mr-2 h-4 w-4" />
               Preview Live
             </Button>
-            <Button onClick={handleSave} disabled={upsertBranding.isPending}>
+            <Button onClick={() => handleSave()} disabled={upsertBranding.isPending}>
               {upsertBranding.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
