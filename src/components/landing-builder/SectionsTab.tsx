@@ -161,6 +161,11 @@ export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFi
                 value={selected.animation}
                 onChange={(a) => updateAnimation(selected.id, a)}
               />
+              <BackgroundInspector
+                value={selected.background}
+                onChange={(b) => updateBackground(selected.id, b)}
+              />
+
               <Inspector
                 schema={selectedDef.schema}
                 value={selected.props}
