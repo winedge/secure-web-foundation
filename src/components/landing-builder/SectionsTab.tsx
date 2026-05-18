@@ -12,6 +12,8 @@ import { MotionInspector } from './MotionInspector';
 import { BackgroundInspector } from './BackgroundInspector';
 
 import { AiSectionsAssistant } from './AiSectionsAssistant';
+import { AiPageGenerator } from './AiPageGenerator';
+
 import { SectionRenderer } from '@/components/landing-sections/SectionRenderer';
 import { starterStack } from '@/lib/landing-sections/starter-stacks';
 import { VisibilityEditor, intakeFormKeys } from './VisibilityEditor';
