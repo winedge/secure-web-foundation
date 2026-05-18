@@ -38,7 +38,89 @@ Deno.serve(async (req) => {
 
     const body = await req.json() as any;
 
+    // Generate mode | build a full landing page from a single prompt
+    if (body?.mode === 'generate') {
+      const { prompt, audience, tone, businessType, theme } = body as {
+        prompt: string; audience?: string; tone?: string; businessType?: string; theme?: any;
+      };
+      if (!prompt || prompt.trim().length < 5) {
+        return new Response(JSON.stringify({ error: 'prompt is required' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const sys = `You are a senior conversion copywriter + landing-page designer. Given a business description, generate a COMPLETE landing page as an ordered array of section blocks.
+Allowed section types: hero, video_hero, features, bento, logo_cloud, marquee, stats, testimonials, faq, pricing, steps, timeline, gallery, before_after, comparison, team, countdown, embed, newsletter, cta, content, divider, form, footer.
+Always include a hero first, a form section near the bottom, and a footer last. Use 6-10 sections total. Vary section types so the page feels rich (mix proof, features, social proof, FAQ, CTA).
+Each section must have: id (uuid), type, visible:true, props (typed for the section), and optional animation { entrance, trigger:"on-scroll", duration:600, delay:0, easing:"ease" } and background { kind: "none"|"gradient"|"mesh"|"glass", ... }.
+- Use background.kind="gradient" or "mesh" for hero / cta / stats to add visual interest. Provide gradient {type,angle,stops:[{color,pos}]} or mesh {base,blobs:[{color,x,y,size}]}.
+- Use animation entrance from: fade, slide-up, slide-left, slide-right, zoom, blur-in, mask-reveal. Vary across sections.
+Write specific, benefit-driven copy referencing the business. No lorem ipsum. Real headlines, real stat numbers, real testimonial quotes with named personas. Keep button labels short and action-oriented.
+Return STRICT JSON via the tool call.`;
+      const user = `BUSINESS BRIEF:\n${prompt}\n\nAUDIENCE: ${audience || 'general'}\nTONE: ${tone || 'confident, friendly'}\nBUSINESS TYPE: ${businessType || 'service business'}\n\nTHEME CONTEXT: ${JSON.stringify(theme || {})}\n\nGenerate the full landing page now.`;
+      const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [{ role: 'system', content: sys }, { role: 'user', content: user }],
+          tools: [{
+            type: 'function',
+            function: {
+              name: 'generate_page',
+              description: 'Return the generated full landing page sections',
+              parameters: {
+                type: 'object',
+                properties: {
+                  sections: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string' },
+                        type: { type: 'string' },
+                        visible: { type: 'boolean' },
+                        props: { type: 'object', additionalProperties: true },
+                        animation: { type: 'object', additionalProperties: true },
+                        background: { type: 'object', additionalProperties: true },
+                      },
+                      required: ['id', 'type', 'visible', 'props'],
+                    },
+                  },
+                  summary: { type: 'string' },
+                },
+                required: ['sections'],
+              },
+            },
+          }],
+          tool_choice: { type: 'function', function: { name: 'generate_page' } },
+        }),
+      });
+      if (!resp.ok) {
+        const text = await resp.text();
+        return new Response(JSON.stringify({ error: 'AI gateway error', detail: text }), {
+          status: resp.status === 429 ? 429 : resp.status === 402 ? 402 : 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const data = await resp.json();
+      const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+      const args = toolCall?.function?.arguments ? JSON.parse(toolCall.function.arguments) : {};
+      // Ensure every section has an id
+      if (Array.isArray(args?.sections)) {
+        args.sections = args.sections.map((s: any) => ({
+          ...s,
+          id: s.id || crypto.randomUUID(),
+          visible: s.visible !== false,
+          props: s.props || {},
+        }));
+      }
+      return new Response(JSON.stringify(args), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Sections mode | rewrite/reorder landing-page section blocks
+
     if (body?.mode === 'sections') {
       const { prompt, sections } = body as { prompt: string; sections: any[] };
       if (!prompt || prompt.trim().length < 3) {

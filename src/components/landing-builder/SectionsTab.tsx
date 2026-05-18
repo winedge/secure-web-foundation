@@ -12,6 +12,8 @@ import { MotionInspector } from './MotionInspector';
 import { BackgroundInspector } from './BackgroundInspector';
 
 import { AiSectionsAssistant } from './AiSectionsAssistant';
+import { AiPageGenerator } from './AiPageGenerator';
+
 import { SectionRenderer } from '@/components/landing-sections/SectionRenderer';
 import { starterStack } from '@/lib/landing-sections/starter-stacks';
 import { VisibilityEditor, intakeFormKeys } from './VisibilityEditor';
@@ -81,14 +83,16 @@ export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFi
         <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
           Start with a ready-made set of sections for your theme, or build from scratch by adding sections one at a time.
         </p>
-        <div className="flex gap-2 justify-center mt-6">
-          <Button onClick={() => onChange(starterStack(themeKey))}>
+        <div className="flex gap-2 justify-center mt-6 flex-wrap">
+          <AiPageGenerator hasExisting={false} theme={theme} onGenerated={(s) => { commit(s); setSelectedId(s[0]?.id ?? null); }} />
+          <Button variant="outline" onClick={() => onChange(starterStack(themeKey))}>
             <Plus className="h-4 w-4 mr-2" /> Use starter stack
           </Button>
-          <Button variant="outline" onClick={() => setPickerOpen(true)}>
+          <Button variant="ghost" onClick={() => setPickerOpen(true)}>
             Add single section
           </Button>
         </div>
+
         <SectionPicker open={pickerOpen} onOpenChange={setPickerOpen} onPick={addSection} />
       </Card>
     );
@@ -111,6 +115,13 @@ export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFi
             <Redo2 className="h-4 w-4" />
           </Button>
         </div>
+        <AiPageGenerator
+          hasExisting
+          theme={theme}
+          variant="compact"
+          onGenerated={(s) => { commit(s); setSelectedId(s[0]?.id ?? null); }}
+        />
+
         <Card className="p-2">
           <ScrollArea className="h-[520px] pr-1">
             <SectionList
