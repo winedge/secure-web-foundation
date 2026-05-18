@@ -65,7 +65,47 @@ export default function IntakeFormBuilder() {
   const [heroConfig, setHeroConfig] = useState<Record<string, any>>({});
   const [sections, setSections] = useState<Section[]>([]);
   const [seoConfig, setSeoConfig] = useState<SeoConfig>({});
-  const [activeTab, setActiveTab] = useState<'sections' | 'themes' | 'branding' | 'fields' | 'seo' | 'preview'>('sections');
+  const [activeTab, setActiveTab] = useState<'sections' | 'themes' | 'branding' | 'fields' | 'seo' | 'versions' | 'preview'>('sections');
+
+  // Current editor state captured as a snapshot for version history.
+  const currentSnapshot: LandingSnapshot = {
+    slug,
+    firm_display_name: firmDisplayName || null,
+    logo_url: logoUrl,
+    primary_color: primaryColor,
+    background_color: backgroundColor,
+    accent_color: accentColor,
+    heading_text: headingText,
+    description_text: descriptionText,
+    visible_fields: visibleFields,
+    custom_fields: customFields,
+    theme_key: themeKey,
+    typography,
+    layout_config: layoutConfig,
+    hero_config: heroConfig,
+    sections,
+    seo_config: seoConfig as any,
+  };
+
+  const restoreSnapshot = (s: LandingSnapshot) => {
+    if (s.slug) setSlug(s.slug);
+    setFirmDisplayName(s.firm_display_name ?? '');
+    setLogoUrl(s.logo_url ?? null);
+    setPrimaryColor(s.primary_color);
+    setBackgroundColor(s.background_color);
+    setAccentColor(s.accent_color);
+    setHeadingText(s.heading_text);
+    setDescriptionText(s.description_text);
+    setVisibleFields(Array.isArray(s.visible_fields) ? s.visible_fields : []);
+    setCustomFields(Array.isArray(s.custom_fields) ? s.custom_fields : []);
+    setThemeKey(s.theme_key ?? null);
+    setTypography(s.typography ?? {});
+    setLayoutConfig(s.layout_config ?? {});
+    setHeroConfig(s.hero_config ?? {});
+    setSections(Array.isArray(s.sections) ? s.sections : []);
+    setSeoConfig((s.seo_config ?? {}) as SeoConfig);
+    setActiveTab('sections');
+  };
 
   // Populate from existing branding
   useEffect(() => {
