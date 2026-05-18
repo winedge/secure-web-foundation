@@ -15,6 +15,7 @@ import { ZKUnlockDialog } from "@/components/auth/ZKUnlockDialog";
 import { usePresence } from "@/hooks/use-presence";
 import { useSmartAlertListener } from "@/hooks/use-smart-alert-listener";
 import { Suspense, lazy } from "react";
+import { HelmetProvider } from "react-helmet-async";
 import { Loader2 } from "lucide-react";
 
 // Eager-loaded routes (landing, auth - needed immediately)
