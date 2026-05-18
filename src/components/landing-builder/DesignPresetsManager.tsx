@@ -65,10 +65,20 @@ export function DesignPresetsManager({ current, onApply, onApplyToAll }: Props) 
         </DialogContent>
       </Dialog>
 
+      <DesignPresetsLibrary
+        onApply={onApply}
+        onApplyToAll={onApplyToAll}
+        trigger={
+          <Button variant="outline" size="sm" className="h-7 text-xs flex-1">
+            <Library className="h-3 w-3 mr-1" /> Browse library ({presets.length})
+          </Button>
+        }
+      />
+
       <Popover open={libOpen} onOpenChange={setLibOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="h-7 text-xs flex-1">
-            <Bookmark className="h-3 w-3 mr-1" /> My presets ({presets.length})
+          <Button variant="ghost" size="sm" className="h-7 text-xs px-2" title="Quick pick">
+            <Bookmark className="h-3 w-3" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-72 p-2" align="end">
