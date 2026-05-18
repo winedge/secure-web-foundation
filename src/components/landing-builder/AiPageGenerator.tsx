@@ -45,6 +45,10 @@ export function AiPageGenerator({ hasExisting, theme, onGenerated, variant = 'de
   const [audience, setAudience] = useState('');
   const [tone, setTone] = useState('confident, friendly');
   const [businessType, setBusinessType] = useState('service');
+  const [product, setProduct] = useState('');
+  const [benefits, setBenefits] = useState(''); // one per line
+  const [offer, setOffer] = useState('');
+  const [cta, setCta] = useState('');
 
   const [step, setStep] = useState<Step>('form');
   const [draft, setDraft] = useState<Section[] | null>(null);
@@ -71,8 +75,16 @@ export function AiPageGenerator({ hasExisting, theme, onGenerated, variant = 'de
     }
     setLoading(true);
     try {
+      const benefitsArr = benefits.split('\n').map((b) => b.trim()).filter(Boolean).slice(0, 8);
       const { data, error } = await supabase.functions.invoke('landing-theme-ai', {
-        body: { mode: 'generate', prompt, audience, tone, businessType, theme },
+        body: {
+          mode: 'generate',
+          prompt, audience, tone, businessType, theme,
+          product: product.trim() || undefined,
+          benefits: benefitsArr.length ? benefitsArr : undefined,
+          offer: offer.trim() || undefined,
+          cta: cta.trim() || undefined,
+        },
       });
       if (error) throw error;
       const sections = data?.sections;
@@ -110,7 +122,7 @@ export function AiPageGenerator({ hasExisting, theme, onGenerated, variant = 'de
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className={step === 'preview' ? 'max-w-6xl' : 'max-w-2xl'}>
+      <DialogContent className={(step === 'preview' ? 'max-w-6xl' : 'max-w-2xl') + ' max-h-[90vh] overflow-y-auto'}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
@@ -173,6 +185,53 @@ export function AiPageGenerator({ hasExisting, theme, onGenerated, variant = 'de
                     )}
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+
+            <div className="rounded-md border bg-muted/20 p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Structured details <span className="text-[10px] font-normal normal-case">(optional, dramatically improves accuracy)</span>
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Product or service</Label>
+                  <Input
+                    value={product}
+                    onChange={(e) => setProduct(e.target.value)}
+                    maxLength={140}
+                    placeholder="e.g. Invisible aligners"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Primary CTA label</Label>
+                  <Input
+                    value={cta}
+                    onChange={(e) => setCta(e.target.value)}
+                    maxLength={40}
+                    placeholder="e.g. Book free consult"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Offer / incentive</Label>
+                <Input
+                  value={offer}
+                  onChange={(e) => setOffer(e.target.value)}
+                  maxLength={160}
+                  placeholder="e.g. Free first scan + $500 off | 30-day guarantee"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Key benefits <span className="text-muted-foreground font-normal">(one per line, up to 8)</span></Label>
+                <Textarea
+                  rows={4}
+                  value={benefits}
+                  onChange={(e) => setBenefits(e.target.value)}
+                  maxLength={1000}
+                  placeholder={'Invisible | no metal brackets\nSame-day fitting in under 60 minutes\nDoctor-supervised at every step'}
+                />
               </div>
             </div>
           </div>
