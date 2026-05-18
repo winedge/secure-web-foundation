@@ -25,7 +25,7 @@ interface Props {
   customFormFields?: CustomField[];
 }
 
-export function SectionsTab({ sections, onChange, theme, themeKey }: Props) {
+export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFields = [], customFormFields = [] }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(sections[0]?.id ?? null);
   const [pickerOpen, setPickerOpen] = useState(false);
 
