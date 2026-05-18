@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, Settings2 } from 'lucide-react';
-import type { Section, SectionTheme } from '@/lib/landing-sections/types';
+import type { Section, SectionTheme, VisibilityConfig } from '@/lib/landing-sections/types';
 import { newSection, SECTION_REGISTRY } from '@/lib/landing-sections/registry';
 import { SectionList } from './SectionList';
 import { SectionPicker } from './SectionPicker';
@@ -11,12 +11,18 @@ import { Inspector } from './Inspector';
 import { AiSectionsAssistant } from './AiSectionsAssistant';
 import { SectionRenderer } from '@/components/landing-sections/SectionRenderer';
 import { starterStack } from '@/lib/landing-sections/starter-stacks';
+import { VisibilityEditor, intakeFormKeys } from './VisibilityEditor';
+import type { CustomField } from '@/hooks/use-firm-branding';
 
 interface Props {
   sections: Section[];
   onChange: (sections: Section[]) => void;
   theme: SectionTheme;
   themeKey: string | null;
+  /** Built-in form field names currently enabled in the intake form. */
+  visibleFormFields?: string[];
+  /** Custom intake fields (provides additional keys for form-response rules). */
+  customFormFields?: CustomField[];
 }
 
 export function SectionsTab({ sections, onChange, theme, themeKey }: Props) {
