@@ -363,6 +363,74 @@ export default function BrandedIntake() {
     );
   };
 
+  // Multi-section landing-page renderer | takes priority when sections are configured
+  const sections = (Array.isArray((branding as any).sections) ? (branding as any).sections : []) as Section[];
+  if (sections.length > 0) {
+    const sectionTheme: SectionTheme = {
+      primary: primaryColor,
+      background: backgroundColor,
+      accent: accentColor,
+      headingFont: (branding as any)?.typography?.heading,
+      bodyFont: (branding as any)?.typography?.body,
+      radius: (branding as any)?.layout_config?.radius ?? 'lg',
+      spacing: (branding as any)?.layout_config?.spacing ?? 'normal',
+      buttonStyle: (branding as any)?.layout_config?.buttonStyle ?? 'solid',
+      maxWidth: (branding as any)?.layout_config?.maxWidth ?? 'normal',
+    };
+    const intakeContent = chatbotEnabled && intakeMode === 'chat' ? (
+      <div>
+        <div className="flex justify-center gap-2 mb-4">
+          <Button variant="default" size="sm" onClick={() => setIntakeMode('chat')} className="gap-2"><MessageCircle className="h-4 w-4" /> Chat with AI</Button>
+          <Button variant="outline" size="sm" onClick={() => setIntakeMode('form')} className="gap-2"><ClipboardList className="h-4 w-4" /> Fill form</Button>
+        </div>
+        <ConversationalIntake
+          campaignId={campaignId}
+          branding={{ firm_name: firmName, primary_color: primaryColor, accent_color: accentColor, logo_url: logoUrl || undefined }}
+          agentName={chatbotAgentName}
+          agentAvatarUrl={chatbotAvatarUrl}
+          onComplete={() => setSubmitted(true)}
+        />
+      </div>
+    ) : (
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        {chatbotEnabled && (
+          <div className="flex justify-center gap-2 mb-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => setIntakeMode('chat')} className="gap-2"><MessageCircle className="h-4 w-4" /> Chat with AI</Button>
+            <Button type="button" variant="default" size="sm" className="gap-2" style={{ backgroundColor: primaryColor }}><ClipboardList className="h-4 w-4" /> Fill form</Button>
+          </div>
+        )}
+        {renderField('tort_type', 'Case Type', 'select', tortTypes)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {renderField('first_name', 'First Name *')}
+          {renderField('last_name', 'Last Name *')}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {renderField('email', 'Email *')}
+          {renderField('phone', 'Phone *')}
+        </div>
+        {renderField('state', 'State', 'select', statesList)}
+        {renderField('diagnosis_details', 'Tell us about your situation', 'textarea')}
+        <div className="flex items-start gap-2">
+          <Checkbox id="consent_tcpa_s" checked={watch('consent_tcpa') || false} onCheckedChange={(c) => setValue('consent_tcpa', c as boolean)} />
+          <label htmlFor="consent_tcpa_s" className="text-xs leading-relaxed">I agree to be contacted | {CONSENT_TEXT.tcpa}</label>
+        </div>
+        <div className="flex items-start gap-2">
+          <Checkbox id="consent_privacy_s" checked={watch('consent_privacy') || false} onCheckedChange={(c) => setValue('consent_privacy', c as boolean)} />
+          <label htmlFor="consent_privacy_s" className="text-xs leading-relaxed">{CONSENT_TEXT.privacy}</label>
+        </div>
+        <Button type="submit" size="lg" className="w-full text-white" style={{ backgroundColor: accentColor }} disabled={isSubmitting}>
+          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</> : <>Submit <ArrowRight className="ml-2 h-4 w-4" /></>}
+        </Button>
+      </form>
+    );
+
+    return (
+      <div style={{ background: backgroundColor }}>
+        <SectionRenderer sections={sections} theme={sectionTheme} formSlot={intakeContent} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen" style={{ backgroundColor }}>
       {/* Branded Header */}
