@@ -292,6 +292,20 @@ export default function IntakeFormBuilder() {
           />
         )}
 
+        {/* SEO Tab */}
+        {activeTab === 'seo' && (
+          <SeoSettingsPanel
+            value={seoConfig}
+            onChange={setSeoConfig}
+            context={{
+              name: seoConfig.title || firmDisplayName || firm?.name || 'Your business',
+              url: intakeUrl,
+              logo: logoUrl || undefined,
+              description: descriptionText,
+            }}
+          />
+        )}
+
         {/* Themes Tab */}
         {activeTab === 'themes' && (
           <div className="space-y-6">
