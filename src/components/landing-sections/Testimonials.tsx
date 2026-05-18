@@ -8,7 +8,7 @@ export function Testimonials({ props, theme }: { props: TestimonialsProps; theme
       <div style={{ maxWidth: maxWidthPx(theme.maxWidth), margin: '0 auto' }}>
         {props.heading && <h2 style={{ textAlign: 'center', fontFamily: fontFamily(theme, 'heading'), fontSize: 'clamp(26px,3vw,38px)', fontWeight: 700, margin: '0 0 48px', letterSpacing: '-0.01em' }}>{props.heading}</h2>}
         <div style={{ display: 'grid', gap: 24, gridTemplateColumns: `repeat(${Math.min(props.items.length || 1, 3)}, minmax(0, 1fr))` }}>
-          {props.items.map((t, i) => (
+          {(props.items ?? []).map((t, i) => (
             <figure key={i} style={{ margin: 0, padding: 28, background: theme.background, borderRadius: radiusPx(theme.radius), border: `1px solid ${theme.primary}10`, boxShadow: '0 4px 20px rgba(0,0,0,.04)' }}>
               {t.rating && (
                 <div style={{ display: 'flex', gap: 2, marginBottom: 12, color: '#fbbf24' }}>

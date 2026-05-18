@@ -7,7 +7,7 @@ export function LogoCloud({ props, theme }: { props: LogoCloudProps; theme: Sect
       <div style={{ maxWidth: maxWidthPx(theme.maxWidth), margin: '0 auto', textAlign: 'center' }}>
         {props.heading && <p style={{ fontSize: 14, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', opacity: 0.6, marginBottom: 32 }}>{props.heading}</p>}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 48, justifyContent: 'center', alignItems: 'center', opacity: 0.7 }}>
-          {props.logos.map((logo, i) => (
+          {(props.logos ?? []).map((logo, i) => (
             <img key={i} src={logo.src} alt={logo.alt || ''} style={{ height: 32, width: 'auto', objectFit: 'contain', filter: 'grayscale(1)' }} />
           ))}
         </div>

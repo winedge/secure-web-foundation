@@ -12,7 +12,7 @@ export function Steps({ props, theme }: { props: StepsProps; theme: SectionTheme
           </div>
         )}
         <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 24, gridTemplateColumns: `repeat(${Math.min(props.items.length, 4)}, minmax(0, 1fr))` }}>
-          {props.items.map((item, i) => (
+          {(props.items ?? []).map((item, i) => (
             <li key={i} style={{ position: 'relative' }}>
               <div style={{ width: 44, height: 44, borderRadius: '50%', background: theme.accent, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, marginBottom: 14, fontSize: 16 }}>
                 {i + 1}
