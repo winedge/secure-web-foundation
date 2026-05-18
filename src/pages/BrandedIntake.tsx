@@ -21,6 +21,7 @@ import { SectionRenderer } from '@/components/landing-sections/SectionRenderer';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import { LandingSeoHead } from '@/components/landing-builder/SeoSettingsPanel';
 import type { SeoConfig } from '@/lib/landing-seo';
+import { buildAudienceContext, type AudienceContext } from '@/lib/landing-sections/visibility';
 
 const tortTypes = [
   'Camp Lejeune', 'Roundup', 'Talcum Powder', 'AFFF', 'Paraquat',
