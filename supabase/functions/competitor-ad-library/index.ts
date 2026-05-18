@@ -150,28 +150,66 @@ async function firecrawlSearch(query: string, limit = 10) {
 /** Find an advertiser AR id via several strategies. Returns AR id or null. */
 async function discoverAdvertiserId(brand: string, domain: string, region: string): Promise<{ id: string | null; tried: string[] }> {
   const tried: string[] = [];
-  const candidates: string[] = [];
+  const candidates: Array<{ id: string; score: number; name?: string; region?: string; source: string }> = [];
 
-  // Strategy 1: Google search (via Firecrawl /search) for the advertiser's Transparency Center page.
+  // Strategy 1: use Google's internal Transparency Center RPC suggestions. This is the same data source the UI uses.
+  const suggestionQueries = Array.from(new Set([brand, domain].filter(Boolean).map(q => q.trim())));
+  for (const q of suggestionQueries) {
+    tried.push(`google-rpc suggestions: ${q}`);
+    const suggestions = await googleSearchSuggestions(q);
+    const normalizedQuery = normalizeSearchValue(q);
+    for (const suggestion of suggestions) {
+      const info = suggestion?.['1'];
+      if (info?.['2']) {
+        const name = String(info['1'] || '');
+        const suggestionRegion = String(info['3'] || '');
+        const normalizedName = normalizeSearchValue(name);
+        const exactBoost = normalizedName === normalizedQuery ? 100 : normalizedName.includes(normalizedQuery) || normalizedQuery.includes(normalizedName) ? 40 : 0;
+        const regionBoost = suggestionRegion.toUpperCase() === region ? 30 : 0;
+        candidates.push({ id: info['2'], score: 100 + exactBoost + regionBoost + adCountFromSuggestion(info), name, region: suggestionRegion, source: `suggestion:${q}` });
+      }
+      const suggestedDomain = suggestion?.['2']?.['1'];
+      if (suggestedDomain) {
+        tried.push(`google-rpc domain: ${suggestedDomain}`);
+        const domainMatch = await googleSearchAdvertiserByDomain(suggestedDomain);
+        if (domainMatch?.advertiser_id) {
+          candidates.push({ id: domainMatch.advertiser_id, score: 80 + domainMatch.ad_count, name: domainMatch.name, region: domainMatch.region, source: `domain:${suggestedDomain}` });
+        }
+      }
+    }
+    if (candidates.length) break;
+  }
+
+  if (!candidates.length && domain) {
+    tried.push(`google-rpc domain: ${domain}`);
+    const domainMatch = await googleSearchAdvertiserByDomain(domain);
+    if (domainMatch?.advertiser_id) {
+      candidates.push({ id: domainMatch.advertiser_id, score: 80 + domainMatch.ad_count, name: domainMatch.name, region: domainMatch.region, source: `domain:${domain}` });
+    }
+  }
+
+  // Strategy 2: Google search (via Firecrawl /search) for the advertiser's Transparency Center page.
   const queries = [
     brand && `site:adstransparency.google.com "${brand}"`,
     domain && `site:adstransparency.google.com ${domain}`,
     brand && `"${brand}" adstransparency.google.com advertiser`,
   ].filter(Boolean) as string[];
 
-  for (const q of queries) {
-    tried.push(`search: ${q}`);
-    const res = await firecrawlSearch(q, 10);
-    const arr: any[] = (res?.data?.web ?? res?.data ?? res?.web ?? []);
-    for (const item of arr) {
-      const u: string = item?.url || item?.link || '';
-      const m = u.match(/\/advertiser\/(AR[0-9A-Za-z_-]+)/);
-      if (m) candidates.push(m[1]);
+  if (!candidates.length) {
+    for (const q of queries) {
+      tried.push(`search: ${q}`);
+      const res = await firecrawlSearch(q, 10);
+      const arr: any[] = (res?.data?.web ?? res?.data ?? res?.web ?? []);
+      for (const item of arr) {
+        const u: string = item?.url || item?.link || '';
+        const m = u.match(/\/advertiser\/(AR[0-9A-Za-z_-]+)/);
+        if (m) candidates.push({ id: m[1], score: 20, source: `firecrawl:${q}` });
+      }
+      if (candidates.length) break;
     }
-    if (candidates.length) break;
   }
 
-  // Strategy 2: scrape the Transparency Center search page directly (rarely works due to JS, but worth a shot).
+  // Strategy 3: scrape the Transparency Center search page directly (rarely works due to JS, but worth a shot).
   if (!candidates.length) {
     const q = brand || domain;
     if (q) {
@@ -181,12 +219,13 @@ async function discoverAdvertiserId(brand: string, domain: string, region: strin
         const search = await firecrawlScrape(searchUrl, 6000);
         const blob = (search?.html || '') + '\n' + (search?.rawHtml || '') + '\n' + JSON.stringify(search?.links || []);
         const m = blob.match(/\/advertiser\/(AR[0-9A-Za-z_-]+)/);
-        if (m) candidates.push(m[1]);
+        if (m) candidates.push({ id: m[1], score: 10, source: `scrape:${searchUrl}` });
       } catch (_) { /* ignore */ }
     }
   }
 
-  return { id: candidates[0] ?? null, tried };
+  candidates.sort((a, b) => b.score - a.score);
+  return { id: candidates[0]?.id ?? null, tried };
 }
 
 
