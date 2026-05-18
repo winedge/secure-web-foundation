@@ -159,11 +159,9 @@ export default function IntakeFormBuilder() {
     toast.success('Logo uploaded!');
   }, [uploadLogo]);
 
-  const handleSave = async () => {
-    if (!slug || slug.length < 1) {
-      toast.error('Please enter a URL slug');
-      return;
-    }
+  const [perfGate, setPerfGate] = useState<{ open: boolean; issues: PerfIssue[]; level: 'warning' | 'critical' }>({ open: false, issues: [], level: 'warning' });
+
+  const persistBranding = async () => {
     await upsertBranding.mutateAsync({
       slug,
       firm_display_name: firmDisplayName || null,
@@ -182,6 +180,28 @@ export default function IntakeFormBuilder() {
       sections,
       seo_config: seoConfig,
     } as any);
+  };
+
+  const handleSave = async (opts?: { bypassPerf?: boolean }) => {
+    if (!slug || slug.length < 1) {
+      toast.error('Please enter a URL slug');
+      return;
+    }
+    if (!opts?.bypassPerf && sections.length > 0) {
+      const analysis = analyzeSections(sections);
+      const critical = analysis.issues.filter((i) => i.level === 'critical');
+      const warnings = analysis.issues.filter((i) => i.level === 'warning');
+      if (critical.length > 0) {
+        setPerfGate({ open: true, issues: critical, level: 'critical' });
+        toast.error('Publishing blocked: critical performance issues detected');
+        return;
+      }
+      if (warnings.length > 0) {
+        setPerfGate({ open: true, issues: [...warnings, ...analysis.issues.filter(i => i.level === 'info' && i.sectionId)], level: 'warning' });
+        return;
+      }
+    }
+    await persistBranding();
   };
 
   const applyTheme = (theme: LandingTheme) => {
