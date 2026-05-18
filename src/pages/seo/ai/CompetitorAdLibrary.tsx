@@ -151,19 +151,30 @@ export default function CompetitorAdLibrary() {
                   )}
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {creatives.map(c => {
-                      const isVideoFile = !!c.media_url && /\.(mp4|webm)(\?|$)/i.test(c.media_url);
+                      const mediaIsImage = !!c.media_url && /(simgad|tpc\.googlesyndication|\.(jpe?g|png|gif|webp))(\?|$|\/)/i.test(c.media_url);
+                      const mediaIsVideo = !!c.media_url && /\.(mp4|webm)(\?|$)/i.test(c.media_url);
+                      const hasRenderableMedia = mediaIsImage || mediaIsVideo;
                       return (
-                        <Card key={c.id} className="overflow-hidden">
-                          {c.media_url && !isVideoFile && (
-                            <img src={c.media_url} alt={c.headline ?? 'Ad creative'} className="w-full h-48 object-contain bg-muted" loading="lazy" referrerPolicy="no-referrer" />
+                        <Card key={c.id} className="overflow-hidden flex flex-col">
+                          {hasRenderableMedia && mediaIsImage && (
+                            <img src={c.media_url!} alt={c.headline ?? 'Ad creative'} className="w-full h-48 object-contain bg-muted" loading="lazy" referrerPolicy="no-referrer" />
                           )}
-                          {c.media_url && isVideoFile && (
-                            <video src={c.media_url} className="w-full h-48 object-contain bg-muted" controls muted />
+                          {hasRenderableMedia && mediaIsVideo && (
+                            <video src={c.media_url!} className="w-full h-48 object-contain bg-muted" controls muted />
                           )}
-                          {!c.media_url && c.destination_url && (
-                            <iframe src={c.destination_url} title={c.creative_id ?? 'Ad preview'} sandbox="allow-scripts allow-same-origin" className="w-full h-56 bg-muted border-0" loading="lazy" />
+                          {!hasRenderableMedia && (
+                            <div className="w-full h-48 bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center p-4">
+                              {c.headline || c.body ? (
+                                <div className="text-center space-y-2">
+                                  {c.headline && <p className="text-sm font-semibold text-foreground line-clamp-3">{c.headline}</p>}
+                                  {c.body && <p className="text-xs text-muted-foreground line-clamp-4">{c.body}</p>}
+                                </div>
+                              ) : (
+                                <p className="text-xs text-muted-foreground">Text ad | preview unavailable</p>
+                              )}
+                            </div>
                           )}
-                          <CardContent className="p-3 space-y-2">
+                          <CardContent className="p-3 space-y-2 flex-1 flex flex-col">
                             <div className="flex items-center justify-between">
                               <Badge variant="secondary" className="text-xs uppercase">{c.format ?? 'text'}</Badge>
                               {c.first_seen && (
@@ -172,11 +183,11 @@ export default function CompetitorAdLibrary() {
                                 </span>
                               )}
                             </div>
-                            {c.headline && <p className="text-sm font-medium line-clamp-2">{c.headline}</p>}
-                            {c.body && <p className="text-xs text-muted-foreground line-clamp-3">{c.body}</p>}
+                            {hasRenderableMedia && c.headline && <p className="text-sm font-medium line-clamp-2">{c.headline}</p>}
+                            {hasRenderableMedia && c.body && <p className="text-xs text-muted-foreground line-clamp-3">{c.body}</p>}
                             {c.transparency_url && (
                               <a href={c.transparency_url} target="_blank" rel="noreferrer"
-                                className="text-xs text-primary inline-flex items-center gap-1">
+                                className="text-xs text-primary inline-flex items-center gap-1 mt-auto">
                                 View on Google <ExternalLink className="h-3 w-3" />
                               </a>
                             )}
