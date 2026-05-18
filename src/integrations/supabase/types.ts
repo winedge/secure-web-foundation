@@ -1221,6 +1221,119 @@ export type Database = {
           },
         ]
       }
+      competitor_ad_creatives: {
+        Row: {
+          body: string | null
+          created_at: string
+          creative_id: string | null
+          destination_url: string | null
+          first_seen: string | null
+          format: string | null
+          headline: string | null
+          id: string
+          last_seen: string | null
+          media_url: string | null
+          raw: Json | null
+          regions: string[] | null
+          run_id: string
+          transparency_url: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          creative_id?: string | null
+          destination_url?: string | null
+          first_seen?: string | null
+          format?: string | null
+          headline?: string | null
+          id?: string
+          last_seen?: string | null
+          media_url?: string | null
+          raw?: Json | null
+          regions?: string[] | null
+          run_id: string
+          transparency_url?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          creative_id?: string | null
+          destination_url?: string | null
+          first_seen?: string | null
+          format?: string | null
+          headline?: string | null
+          id?: string
+          last_seen?: string | null
+          media_url?: string | null
+          raw?: Json | null
+          regions?: string[] | null
+          run_id?: string
+          transparency_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_ad_creatives_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "competitor_ad_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitor_ad_runs: {
+        Row: {
+          advertiser_id: string | null
+          advertiser_url: string | null
+          ai_summary: Json | null
+          brand: string | null
+          created_at: string
+          date_range: string | null
+          domain: string | null
+          error_message: string | null
+          firm_id: string
+          formats: string[] | null
+          id: string
+          region: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          advertiser_id?: string | null
+          advertiser_url?: string | null
+          ai_summary?: Json | null
+          brand?: string | null
+          created_at?: string
+          date_range?: string | null
+          domain?: string | null
+          error_message?: string | null
+          firm_id: string
+          formats?: string[] | null
+          id?: string
+          region?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          advertiser_id?: string | null
+          advertiser_url?: string | null
+          ai_summary?: Json | null
+          brand?: string | null
+          created_at?: string
+          date_range?: string | null
+          domain?: string | null
+          error_message?: string | null
+          firm_id?: string
+          formats?: string[] | null
+          id?: string
+          region?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       consent_logs: {
         Row: {
           consent_type: string
