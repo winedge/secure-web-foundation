@@ -25,6 +25,11 @@ import { LANDING_THEMES, type LandingTheme } from '@/lib/landing-themes';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import type { SeoConfig } from '@/lib/landing-seo';
 import type { LandingSnapshot } from '@/hooks/use-landing-versions';
+import { analyzeSections, type PerfIssue } from '@/lib/landing-builder/performance';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
 const DEFAULT_FIELDS = [
