@@ -23,7 +23,43 @@ export interface Section<T = Record<string, any>> {
   id: string;
   type: SectionType;
   visible: boolean;
+  /** Optional conditional visibility (audience + form responses). */
+  visibility?: VisibilityConfig;
   props: T;
+}
+
+// -- Conditional visibility -------------------------------------------------
+
+export type VisibilitySource = 'audience' | 'form';
+
+export type VisibilityOperator =
+  | 'equals'
+  | 'not_equals'
+  | 'contains'
+  | 'not_contains'
+  | 'in'
+  | 'not_in'
+  | 'is_empty'
+  | 'is_not_empty'
+  | 'truthy'
+  | 'falsy';
+
+export interface VisibilityRule {
+  source: VisibilitySource;
+  /**
+   * For `audience`: one of `device | visitor | referrer | utm_source | utm_medium |
+   *   utm_campaign | utm_content | utm_term | query:<paramName>`.
+   * For `form`: the name of a form field (built-in or custom).
+   */
+  key: string;
+  operator: VisibilityOperator;
+  /** Comma-separated for `in` / `not_in`. */
+  value?: string;
+}
+
+export interface VisibilityConfig {
+  mode: 'all' | 'any';
+  rules: VisibilityRule[];
 }
 
 export interface SectionTheme {
