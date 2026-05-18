@@ -80,6 +80,10 @@ export default function IntakeFormBuilder() {
           ? branding.custom_fields
           : []
       );
+      setThemeKey((branding as any).theme_key ?? null);
+      setTypography((branding as any).typography ?? {});
+      setLayoutConfig((branding as any).layout_config ?? {});
+      setHeroConfig((branding as any).hero_config ?? {});
     } else if (firm) {
       // Auto-generate slug from firm name
       setSlug(firm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
@@ -115,7 +119,34 @@ export default function IntakeFormBuilder() {
       description_text: descriptionText,
       visible_fields: visibleFields,
       custom_fields: customFields,
+      theme_key: themeKey,
+      typography,
+      layout_config: layoutConfig,
+      hero_config: heroConfig,
     });
+  };
+
+  const applyTheme = (theme: LandingTheme) => {
+    setThemeKey(theme.key);
+    setPrimaryColor(theme.colors.primary);
+    setBackgroundColor(theme.colors.background);
+    setAccentColor(theme.colors.accent);
+    setTypography({ heading: theme.typography.heading, body: theme.typography.body });
+    setLayoutConfig({ ...theme.layout });
+    setHeroConfig({ ...theme.hero });
+    toast.success(`Applied "${theme.name}" theme`);
+  };
+
+  const applyAiUpdates = (updates: Record<string, any>) => {
+    if (updates.primary_color) setPrimaryColor(updates.primary_color);
+    if (updates.background_color) setBackgroundColor(updates.background_color);
+    if (updates.accent_color) setAccentColor(updates.accent_color);
+    if (updates.heading_text) setHeadingText(updates.heading_text);
+    if (updates.description_text) setDescriptionText(updates.description_text);
+    if (updates.typography) setTypography((prev) => ({ ...prev, ...updates.typography }));
+    if (updates.layout_config) setLayoutConfig((prev) => ({ ...prev, ...updates.layout_config }));
+    if (updates.hero_config) setHeroConfig((prev) => ({ ...prev, ...updates.hero_config }));
+    setThemeKey(null); // mark as custom
   };
 
   const toggleField = (fieldId: string) => {
