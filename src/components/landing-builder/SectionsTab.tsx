@@ -1,17 +1,19 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Settings2 } from 'lucide-react';
-import type { Section, SectionTheme, VisibilityConfig } from '@/lib/landing-sections/types';
+import { Plus, Settings2, Undo2, Redo2 } from 'lucide-react';
+import type { Section, SectionTheme, VisibilityConfig, SectionAnimation } from '@/lib/landing-sections/types';
 import { newSection, SECTION_REGISTRY } from '@/lib/landing-sections/registry';
 import { SectionList } from './SectionList';
 import { SectionPicker } from './SectionPicker';
 import { Inspector } from './Inspector';
+import { MotionInspector } from './MotionInspector';
 import { AiSectionsAssistant } from './AiSectionsAssistant';
 import { SectionRenderer } from '@/components/landing-sections/SectionRenderer';
 import { starterStack } from '@/lib/landing-sections/starter-stacks';
 import { VisibilityEditor, intakeFormKeys } from './VisibilityEditor';
+import { useBuilderHistory } from '@/hooks/use-builder-history';
 import type { CustomField } from '@/hooks/use-firm-branding';
 
 interface Props {
@@ -31,37 +33,33 @@ export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFi
 
   const selected = useMemo(() => sections.find((s) => s.id === selectedId) ?? null, [sections, selectedId]);
 
+  // Undo/redo history; external `sections` prop changes reset the baseline.
+  const history = useBuilderHistory<Section[]>(sections, onChange);
+  useEffect(() => { history.reset(sections); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  const commit = (next: Section[]) => history.commit(next);
+
   const addSection = (type: any) => {
     const s = newSection(type);
-    onChange([...sections, s]);
+    commit([...sections, s]);
     setSelectedId(s.id);
   };
-  const updateSelected = (patch: Record<string, any>) => {
-    if (!selected) return;
-    onChange(sections.map((s) => s.id === selected.id ? { ...s, props: { ...s.props, ...patch } } : s));
-  };
-  const move = (id: string, dir: -1 | 1) => {
-    const i = sections.findIndex((s) => s.id === id);
-    const j = i + dir;
-    if (j < 0 || j >= sections.length) return;
-    const next = [...sections];
-    [next[i], next[j]] = [next[j], next[i]];
-    onChange(next);
-  };
-  const toggleVis = (id: string) => onChange(sections.map((s) => s.id === id ? { ...s, visible: !s.visible } : s));
+  const reorder = (next: Section[]) => commit(next);
+  const toggleVis = (id: string) => commit(sections.map((s) => s.id === id ? { ...s, visible: !s.visible } : s));
   const duplicate = (id: string) => {
     const idx = sections.findIndex((s) => s.id === id);
     if (idx < 0) return;
     const copy = { ...sections[idx], id: crypto.randomUUID() };
-    onChange([...sections.slice(0, idx + 1), copy, ...sections.slice(idx + 1)]);
+    commit([...sections.slice(0, idx + 1), copy, ...sections.slice(idx + 1)]);
     setSelectedId(copy.id);
   };
   const remove = (id: string) => {
-    onChange(sections.filter((s) => s.id !== id));
+    commit(sections.filter((s) => s.id !== id));
     if (selectedId === id) setSelectedId(null);
   };
   const updateVisibility = (id: string, visibility: VisibilityConfig | undefined) =>
-    onChange(sections.map((s) => s.id === id ? { ...s, visibility } : s));
+    commit(sections.map((s) => s.id === id ? { ...s, visibility } : s));
+  const updateAnimation = (id: string, animation: SectionAnimation | undefined) =>
+    commit(sections.map((s) => s.id === id ? { ...s, animation } : s));
 
   const formFieldKeys = useMemo(
     () => intakeFormKeys(visibleFormFields, customFormFields),
@@ -97,23 +95,31 @@ export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFi
     <div className="grid gap-4" style={{ gridTemplateColumns: '260px minmax(0, 1fr) 320px' }}>
       {/* Left rail */}
       <div className="space-y-3">
-        <Button className="w-full" onClick={() => setPickerOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Add section
-        </Button>
+        <div className="flex gap-2">
+          <Button className="flex-1" onClick={() => setPickerOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" /> Add section
+          </Button>
+          <Button variant="outline" size="icon" onClick={history.undo} disabled={!history.canUndo} title="Undo (⌘Z)">
+            <Undo2 className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" onClick={history.redo} disabled={!history.canRedo} title="Redo (⇧⌘Z)">
+            <Redo2 className="h-4 w-4" />
+          </Button>
+        </div>
         <Card className="p-2">
           <ScrollArea className="h-[520px] pr-1">
             <SectionList
               sections={sections}
               selectedId={selectedId}
               onSelect={setSelectedId}
-              onMove={move}
+              onReorder={reorder}
               onToggleVisibility={toggleVis}
               onDuplicate={duplicate}
               onDelete={remove}
             />
           </ScrollArea>
         </Card>
-        <AiSectionsAssistant sections={sections} onReplace={onChange} />
+        <AiSectionsAssistant sections={sections} onReplace={commit} />
       </div>
 
       {/* Live preview */}
@@ -146,10 +152,14 @@ export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFi
                 onChange={(v) => updateVisibility(selected.id, v)}
                 formFieldKeys={formFieldKeys}
               />
+              <MotionInspector
+                value={selected.animation}
+                onChange={(a) => updateAnimation(selected.id, a)}
+              />
               <Inspector
                 schema={selectedDef.schema}
                 value={selected.props}
-                onChange={(next) => onChange(sections.map((s) => s.id === selected.id ? { ...s, props: next } : s))}
+                onChange={(next) => commit(sections.map((s) => s.id === selected.id ? { ...s, props: next } : s))}
               />
             </div>
           ) : (

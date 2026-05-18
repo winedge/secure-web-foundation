@@ -6,18 +6,40 @@
 
 export type SectionType =
   | 'hero'
+  | 'video_hero'
   | 'features'
+  | 'bento'
   | 'logo_cloud'
+  | 'marquee'
   | 'stats'
   | 'testimonials'
   | 'faq'
   | 'pricing'
   | 'steps'
+  | 'timeline'
   | 'gallery'
+  | 'before_after'
+  | 'comparison'
+  | 'team'
+  | 'countdown'
+  | 'embed'
+  | 'newsletter'
   | 'cta'
   | 'content'
+  | 'divider'
   | 'form'
   | 'footer';
+
+export interface SectionAnimation {
+  entrance: 'none' | 'fade' | 'slide-up' | 'slide-left' | 'slide-right' | 'zoom' | 'blur-in' | 'mask-reveal';
+  trigger: 'on-load' | 'on-scroll' | 'on-hover';
+  duration: number;
+  delay: number;
+  stagger?: number;
+  easing: 'ease' | 'linear' | 'spring' | 'bounce';
+  parallax?: number;
+  repeat?: boolean;
+}
 
 export interface Section<T = Record<string, any>> {
   id: string;
@@ -25,6 +47,8 @@ export interface Section<T = Record<string, any>> {
   visible: boolean;
   /** Optional conditional visibility (audience + form responses). */
   visibility?: VisibilityConfig;
+  /** Optional motion config rendered through <AnimatedSection>. */
+  animation?: SectionAnimation;
   props: T;
 }
 
