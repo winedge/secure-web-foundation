@@ -5,10 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Wand2, Loader2, Sparkles } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
+import { Wand2, Loader2, Sparkles, ArrowLeft, Check, RefreshCcw, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
+import { SectionRenderer } from '@/components/landing-sections/SectionRenderer';
 
 interface Props {
   hasExisting: boolean;
@@ -23,6 +26,8 @@ const EXAMPLES = [
   'Personal injury law firm in Houston that has recovered $50M for car-accident clients. Free case review.',
 ];
 
+type Step = 'form' | 'preview';
+
 export function AiPageGenerator({ hasExisting, theme, onGenerated, variant = 'default' }: Props) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -31,12 +36,29 @@ export function AiPageGenerator({ hasExisting, theme, onGenerated, variant = 'de
   const [tone, setTone] = useState('confident, friendly');
   const [businessType, setBusinessType] = useState('service');
 
-  const submit = async () => {
+  const [step, setStep] = useState<Step>('form');
+  const [draft, setDraft] = useState<Section[] | null>(null);
+  const [summary, setSummary] = useState<string>('');
+
+  const reset = () => {
+    setStep('form');
+    setDraft(null);
+    setSummary('');
+  };
+
+  const closeAndReset = (next: boolean) => {
+    setOpen(next);
+    if (!next) {
+      reset();
+      setLoading(false);
+    }
+  };
+
+  const generate = async () => {
     if (prompt.trim().length < 10) {
       toast.error('Describe your business in a bit more detail (10+ chars).');
       return;
     }
-    if (hasExisting && !confirm('This will replace your current sections. Continue?')) return;
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('landing-theme-ai', {
@@ -48,10 +70,9 @@ export function AiPageGenerator({ hasExisting, theme, onGenerated, variant = 'de
         toast.error('AI did not return a valid page. Try a different prompt.');
         return;
       }
-      onGenerated(sections);
-      toast.success(`Generated ${sections.length} sections${data?.summary ? ` | ${data.summary}` : ''}`);
-      setOpen(false);
-      setPrompt('');
+      setDraft(sections);
+      setSummary(typeof data?.summary === 'string' ? data.summary : '');
+      setStep('preview');
     } catch (err: any) {
       toast.error('AI generation failed: ' + (err.message || 'Unknown error'));
     } finally {
@@ -59,8 +80,15 @@ export function AiPageGenerator({ hasExisting, theme, onGenerated, variant = 'de
     }
   };
 
+  const confirmReplace = () => {
+    if (!draft) return;
+    onGenerated(draft);
+    toast.success(`Applied ${draft.length} AI-generated sections`);
+    closeAndReset(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={closeAndReset}>
       <DialogTrigger asChild>
         {variant === 'compact' ? (
           <Button variant="outline" size="sm" className="gap-1.5">
@@ -72,81 +100,145 @@ export function AiPageGenerator({ hasExisting, theme, onGenerated, variant = 'de
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className={step === 'preview' ? 'max-w-6xl' : 'max-w-2xl'}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" /> AI page generator
+            <Sparkles className="h-5 w-5 text-primary" />
+            {step === 'form' ? 'AI page generator' : 'Preview AI-generated page'}
           </DialogTitle>
           <DialogDescription>
-            Describe your business in plain English. AI will write a complete landing page | sections,
-            copy, motion, and backgrounds | matched to your theme.
+            {step === 'form'
+              ? 'Describe your business in plain English. AI will draft a complete landing page | sections, copy, motion, and backgrounds.'
+              : 'Review the draft below. Nothing is applied to your live layout until you confirm.'}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label>Business brief</Label>
-            <Textarea
-              rows={5}
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="What you sell, who it's for, the main benefit, and what visitors should do next."
-            />
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {EXAMPLES.map((ex) => (
-                <button
-                  key={ex}
-                  type="button"
-                  onClick={() => setPrompt(ex)}
-                  className="text-[11px] px-2 py-1 rounded-md border bg-muted/40 hover:bg-muted text-muted-foreground text-left"
-                >
-                  {ex.slice(0, 60)}…
-                </button>
-              ))}
+        {step === 'form' && (
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Business brief</Label>
+              <Textarea
+                rows={5}
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="What you sell, who it's for, the main benefit, and what visitors should do next."
+              />
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {EXAMPLES.map((ex) => (
+                  <button
+                    key={ex}
+                    type="button"
+                    onClick={() => setPrompt(ex)}
+                    className="text-[11px] px-2 py-1 rounded-md border bg-muted/40 hover:bg-muted text-muted-foreground text-left"
+                  >
+                    {ex.slice(0, 60)}…
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Audience</Label>
+                <Input value={audience} onChange={(e) => setAudience(e.target.value)} placeholder="e.g. ops directors" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Tone</Label>
+                <Select value={tone} onValueChange={setTone}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {['confident, friendly','playful, bold','authoritative, expert','warm, empathetic','luxury, minimal','urgent, direct'].map((t) =>
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Business type</Label>
+                <Select value={businessType} onValueChange={setBusinessType}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {['service','saas','ecommerce','agency','legal','medical','real-estate','education','nonprofit','local'].map((t) =>
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
+        )}
 
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Audience</Label>
-              <Input value={audience} onChange={(e) => setAudience(e.target.value)} placeholder="e.g. ops directors" />
+        {step === 'preview' && draft && (
+          <div className="grid gap-3" style={{ gridTemplateColumns: '220px minmax(0, 1fr)' }}>
+            {/* Section list summary */}
+            <div className="space-y-2">
+              {hasExisting && (
+                <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-2 text-[11px] text-amber-700 dark:text-amber-400">
+                  <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                  Confirming will replace your current layout. Use Undo (⌘Z) to roll back.
+                </div>
+              )}
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {draft.length} sections
+              </div>
+              {summary && <p className="text-[11px] text-muted-foreground leading-snug">{summary}</p>}
+              <ScrollArea className="h-[420px] pr-2">
+                <ol className="space-y-1">
+                  {draft.map((s, i) => (
+                    <li key={s.id} className="flex items-center gap-2 text-xs p-1.5 rounded border bg-card">
+                      <span className="text-muted-foreground tabular-nums w-5">{i + 1}.</span>
+                      <span className="capitalize flex-1 truncate">{s.type.replace('_', ' ')}</span>
+                      {s.animation && s.animation.entrance !== 'none' && (
+                        <Badge variant="secondary" className="text-[9px] py-0 px-1">motion</Badge>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              </ScrollArea>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Tone</Label>
-              <Select value={tone} onValueChange={setTone}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {['confident, friendly','playful, bold','authoritative, expert','warm, empathetic','luxury, minimal','urgent, direct'].map((t) =>
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Business type</Label>
-              <Select value={businessType} onValueChange={setBusinessType}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {['service','saas','ecommerce','agency','legal','medical','real-estate','education','nonprofit','local'].map((t) =>
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
+
+            {/* Live preview */}
+            <div className="border rounded-md overflow-hidden bg-background">
+              <ScrollArea className="h-[520px]">
+                <SectionRenderer
+                  sections={draft}
+                  theme={theme ?? {}}
+                  formSlot={
+                    <div className="text-center text-xs text-muted-foreground p-4 italic">
+                      (Intake form appears here on the live page)
+                    </div>
+                  }
+                />
+              </ScrollArea>
             </div>
           </div>
-
-          {hasExisting && (
-            <p className="text-xs text-amber-600 dark:text-amber-400">
-              Heads up | this replaces your current sections. Use Undo (⌘Z) afterwards if you change your mind.
-            </p>
-          )}
-        </div>
+        )}
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)} disabled={loading}>Cancel</Button>
-          <Button onClick={submit} disabled={loading} className="gap-2">
-            {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Drafting your page…</> : <><Wand2 className="h-4 w-4" /> Generate</>}
-          </Button>
+          {step === 'form' ? (
+            <>
+              <Button variant="ghost" onClick={() => closeAndReset(false)} disabled={loading}>Cancel</Button>
+              <Button onClick={generate} disabled={loading} className="gap-2">
+                {loading
+                  ? <><Loader2 className="h-4 w-4 animate-spin" /> Drafting your page…</>
+                  : <><Wand2 className="h-4 w-4" /> Generate preview</>}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" onClick={reset} disabled={loading} className="gap-2">
+                <ArrowLeft className="h-4 w-4" /> Back to brief
+              </Button>
+              <Button variant="outline" onClick={generate} disabled={loading} className="gap-2">
+                {loading
+                  ? <><Loader2 className="h-4 w-4 animate-spin" /> Regenerating…</>
+                  : <><RefreshCcw className="h-4 w-4" /> Regenerate</>}
+              </Button>
+              <Button onClick={confirmReplace} disabled={loading} className="gap-2">
+                <Check className="h-4 w-4" /> {hasExisting ? 'Replace my layout' : 'Use this page'}
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
