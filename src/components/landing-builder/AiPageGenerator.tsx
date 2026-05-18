@@ -45,6 +45,10 @@ export function AiPageGenerator({ hasExisting, theme, onGenerated, variant = 'de
   const [audience, setAudience] = useState('');
   const [tone, setTone] = useState('confident, friendly');
   const [businessType, setBusinessType] = useState('service');
+  const [product, setProduct] = useState('');
+  const [benefits, setBenefits] = useState(''); // one per line
+  const [offer, setOffer] = useState('');
+  const [cta, setCta] = useState('');
 
   const [step, setStep] = useState<Step>('form');
   const [draft, setDraft] = useState<Section[] | null>(null);
