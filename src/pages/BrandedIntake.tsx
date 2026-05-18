@@ -253,6 +253,16 @@ export default function BrandedIntake() {
   const heading = branding?.heading_text || 'Submit Your Claim';
   const description = branding?.description_text || 'Fill out the form below to get started.';
 
+  // Per-landing-page SEO head tags
+  const seoConfig = (((branding as any)?.seo_config ?? {}) as SeoConfig);
+  const pageUrl = typeof window !== 'undefined' ? window.location.href.split('?')[0] : `https://snuggle-site-synth.lovable.app/intake/${slug}`;
+  const seoHead = branding ? (
+    <LandingSeoHead
+      seo={seoConfig}
+      context={{ name: firmName, url: pageUrl, logo: logoUrl || undefined, description }}
+    />
+  ) : null;
+
   if (brandingLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor }}>
