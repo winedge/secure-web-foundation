@@ -289,6 +289,8 @@ export default function IntakeFormBuilder() {
               buttonStyle: ((layoutConfig as any)?.buttonStyle ?? 'solid') as SectionTheme['buttonStyle'],
               maxWidth: ((layoutConfig as any)?.maxWidth ?? 'normal') as SectionTheme['maxWidth'],
             }}
+            visibleFormFields={visibleFields}
+            customFormFields={customFields}
           />
         )}
 
