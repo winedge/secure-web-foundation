@@ -87,6 +87,7 @@ export default function IntakeFormBuilder() {
       setTypography((branding as any).typography ?? {});
       setLayoutConfig((branding as any).layout_config ?? {});
       setHeroConfig((branding as any).hero_config ?? {});
+      setSections(Array.isArray((branding as any).sections) ? (branding as any).sections : []);
     } else if (firm) {
       // Auto-generate slug from firm name
       setSlug(firm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
