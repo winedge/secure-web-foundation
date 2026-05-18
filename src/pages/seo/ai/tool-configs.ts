@@ -71,7 +71,7 @@ export const AI_SEO_TOOLS: ToolConfig[] = [
     fields: [
       { key: 'topic', label: 'Topic / Brand', placeholder: 'Garba event tickets', required: true },
       { key: 'industry', label: 'Industry', placeholder: 'Event ticketing' },
-      { key: 'location', label: 'Location (optional)', placeholder: 'Ahmedabad, India' },
+      { key: 'location', label: 'Location', type: 'location', helper: 'Prompts are mined for this geo audience.' },
     ],
   },
   {
