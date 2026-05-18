@@ -99,23 +99,31 @@ export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFi
     <div className="grid gap-4" style={{ gridTemplateColumns: '260px minmax(0, 1fr) 320px' }}>
       {/* Left rail */}
       <div className="space-y-3">
-        <Button className="w-full" onClick={() => setPickerOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Add section
-        </Button>
+        <div className="flex gap-2">
+          <Button className="flex-1" onClick={() => setPickerOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" /> Add section
+          </Button>
+          <Button variant="outline" size="icon" onClick={history.undo} disabled={!history.canUndo} title="Undo (⌘Z)">
+            <Undo2 className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" onClick={history.redo} disabled={!history.canRedo} title="Redo (⇧⌘Z)">
+            <Redo2 className="h-4 w-4" />
+          </Button>
+        </div>
         <Card className="p-2">
           <ScrollArea className="h-[520px] pr-1">
             <SectionList
               sections={sections}
               selectedId={selectedId}
               onSelect={setSelectedId}
-              onMove={move}
+              onReorder={reorder}
               onToggleVisibility={toggleVis}
               onDuplicate={duplicate}
               onDelete={remove}
             />
           </ScrollArea>
         </Card>
-        <AiSectionsAssistant sections={sections} onReplace={onChange} />
+        <AiSectionsAssistant sections={sections} onReplace={commit} />
       </div>
 
       {/* Live preview */}
@@ -148,10 +156,14 @@ export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFi
                 onChange={(v) => updateVisibility(selected.id, v)}
                 formFieldKeys={formFieldKeys}
               />
+              <MotionInspector
+                value={selected.animation}
+                onChange={(a) => updateAnimation(selected.id, a)}
+              />
               <Inspector
                 schema={selectedDef.schema}
                 value={selected.props}
-                onChange={(next) => onChange(sections.map((s) => s.id === selected.id ? { ...s, props: next } : s))}
+                onChange={(next) => commit(sections.map((s) => s.id === selected.id ? { ...s, props: next } : s))}
               />
             </div>
           ) : (
