@@ -121,6 +121,7 @@ function SmartAlertTracker() {
 }
 
 const App = () => (
+  <HelmetProvider>
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <SubscriptionProvider>
