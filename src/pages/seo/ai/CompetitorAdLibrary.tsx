@@ -150,27 +150,40 @@ export default function CompetitorAdLibrary() {
                     <p className="text-sm text-muted-foreground py-8 text-center">No creatives parsed. Try pasting a direct Transparency Center URL.</p>
                   )}
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {creatives.map(c => (
-                      <Card key={c.id} className="overflow-hidden">
-                        {c.media_url && c.format !== 'video' && (
-                          <img src={c.media_url} alt="" className="w-full h-40 object-cover bg-muted" loading="lazy" />
-                        )}
-                        {c.media_url && c.format === 'video' && (
-                          <video src={c.media_url} className="w-full h-40 object-cover bg-muted" muted />
-                        )}
-                        <CardContent className="p-3 space-y-2">
-                          <Badge variant="secondary" className="text-xs uppercase">{c.format ?? 'text'}</Badge>
-                          {c.headline && <p className="text-sm font-medium line-clamp-2">{c.headline}</p>}
-                          {c.body && <p className="text-xs text-muted-foreground line-clamp-3">{c.body}</p>}
-                          {c.transparency_url && (
-                            <a href={c.transparency_url} target="_blank" rel="noreferrer"
-                              className="text-xs text-primary inline-flex items-center gap-1">
-                              View on Google <ExternalLink className="h-3 w-3" />
-                            </a>
+                    {creatives.map(c => {
+                      const isVideoFile = !!c.media_url && /\.(mp4|webm)(\?|$)/i.test(c.media_url);
+                      return (
+                        <Card key={c.id} className="overflow-hidden">
+                          {c.media_url && !isVideoFile && (
+                            <img src={c.media_url} alt={c.headline ?? 'Ad creative'} className="w-full h-48 object-contain bg-muted" loading="lazy" referrerPolicy="no-referrer" />
                           )}
-                        </CardContent>
-                      </Card>
-                    ))}
+                          {c.media_url && isVideoFile && (
+                            <video src={c.media_url} className="w-full h-48 object-contain bg-muted" controls muted />
+                          )}
+                          {!c.media_url && c.destination_url && (
+                            <iframe src={c.destination_url} title={c.creative_id ?? 'Ad preview'} sandbox="allow-scripts allow-same-origin" className="w-full h-56 bg-muted border-0" loading="lazy" />
+                          )}
+                          <CardContent className="p-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Badge variant="secondary" className="text-xs uppercase">{c.format ?? 'text'}</Badge>
+                              {c.first_seen && (
+                                <span className="text-[10px] text-muted-foreground">
+                                  {new Date(c.first_seen).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                            {c.headline && <p className="text-sm font-medium line-clamp-2">{c.headline}</p>}
+                            {c.body && <p className="text-xs text-muted-foreground line-clamp-3">{c.body}</p>}
+                            {c.transparency_url && (
+                              <a href={c.transparency_url} target="_blank" rel="noreferrer"
+                                className="text-xs text-primary inline-flex items-center gap-1">
+                                View on Google <ExternalLink className="h-3 w-3" />
+                              </a>
+                            )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 </TabsContent>
 
