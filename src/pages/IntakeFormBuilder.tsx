@@ -127,7 +127,8 @@ export default function IntakeFormBuilder() {
       typography,
       layout_config: layoutConfig,
       hero_config: heroConfig,
-    });
+      sections,
+    } as any);
   };
 
   const applyTheme = (theme: LandingTheme) => {
