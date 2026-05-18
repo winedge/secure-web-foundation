@@ -33,7 +33,7 @@ export const AI_SEO_TOOLS: ToolConfig[] = [
     fields: [
       { key: 'brand', label: 'Brand', placeholder: 'Acme Tickets', required: true },
       { key: 'industry', label: 'Industry', placeholder: 'Event ticketing' },
-      { key: 'location', label: 'Location (optional)', placeholder: 'India' },
+      { key: 'location', label: 'Location', type: 'location', helper: 'Pick a city/country or auto-detect | results are localized to this geo.' },
       { key: 'competitors', label: 'Competitors (comma separated)', placeholder: 'Eventbrite, BookMyShow' },
     ],
   },
@@ -46,6 +46,7 @@ export const AI_SEO_TOOLS: ToolConfig[] = [
     fields: [
       { key: 'url', label: 'URL', placeholder: 'https://example.com/page', type: 'url' },
       { key: 'content', label: 'Or paste content', type: 'textarea', placeholder: 'Paste page text…' },
+      { key: 'location', label: 'Target Location', type: 'location', helper: 'Optimize the rewrite for this geo audience.' },
     ],
   },
   {
