@@ -385,12 +385,254 @@ export const SECTION_REGISTRY: Record<SectionType, SectionDef> = {
       { kind: 'text', key: 'legal', label: 'Legal line' },
     ],
   },
+  video_hero: {
+    type: 'video_hero', label: 'Video hero', description: 'Full-bleed background video with overlay + CTA', icon: Film, Component: VideoHero,
+    defaultProps: {
+      videoUrl: '',
+      posterUrl: '',
+      overlayOpacity: 0.55,
+      eyebrow: 'Watch the story',
+      headline: 'Built for ambitious teams',
+      subheadline: 'Cinematic landing pages without writing a line of code.',
+      primaryCta: { label: 'Get started', href: '#lead-form' },
+      secondaryCta: { label: 'Watch demo', href: '#' },
+    },
+    schema: [
+      { kind: 'text', key: 'videoUrl', label: 'Video URL (mp4/webm)' },
+      { kind: 'image', key: 'posterUrl', label: 'Poster image' },
+      { kind: 'number', key: 'overlayOpacity', label: 'Overlay opacity (0-1)', min: 0, max: 1 },
+      { kind: 'text', key: 'eyebrow', label: 'Eyebrow' },
+      { kind: 'text', key: 'headline', label: 'Headline' },
+      { kind: 'textarea', key: 'subheadline', label: 'Sub-headline', rows: 2 },
+      { kind: 'cta', key: 'primaryCta', label: 'Primary button' },
+      { kind: 'cta', key: 'secondaryCta', label: 'Secondary button' },
+    ],
+  },
+  bento: {
+    type: 'bento', label: 'Bento grid', description: 'Apple-style mixed-size feature grid', icon: LayoutGrid, Component: Bento,
+    defaultProps: {
+      heading: 'Everything in one place',
+      intro: 'A modular toolkit that grows with your team.',
+      items: [
+        { title: 'Lightning fast', description: 'Sub-second loads worldwide.', icon: 'Zap', size: 'lg', accent: true },
+        { title: 'Smart AI', description: 'Qualifies leads automatically.', icon: 'Sparkles', size: 'md' },
+        { title: 'Secure', description: 'Bank-grade encryption.', icon: 'Shield', size: 'sm' },
+        { title: 'Analytics', description: 'Real-time dashboards.', icon: 'BarChart3', size: 'tall' },
+        { title: 'Integrations', description: '50+ apps out of the box.', icon: 'Plug', size: 'wide' },
+      ],
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Heading' },
+      { kind: 'textarea', key: 'intro', label: 'Intro', rows: 2 },
+      { kind: 'repeater', key: 'items', label: 'Cards', itemLabel: 'Card',
+        fields: [
+          { kind: 'text', key: 'title', label: 'Title' },
+          { kind: 'textarea', key: 'description', label: 'Description', rows: 2 },
+          { kind: 'text', key: 'icon', label: 'Icon (lucide name)' },
+          { kind: 'image', key: 'imageUrl', label: 'Background image' },
+          { kind: 'select', key: 'size', label: 'Size', options: [
+            { value: 'sm', label: 'Small' }, { value: 'md', label: 'Medium' },
+            { value: 'lg', label: 'Large (featured)' }, { value: 'tall', label: 'Tall' }, { value: 'wide', label: 'Wide' },
+          ] },
+          { kind: 'toggle', key: 'accent', label: 'Use accent gradient' },
+        ],
+        defaultItem: { title: 'New card', description: '', icon: 'Sparkles', size: 'md' },
+      },
+    ],
+  },
+  marquee: {
+    type: 'marquee', label: 'Marquee', description: 'Infinite scrolling band of logos or quotes', icon: Repeat, Component: Marquee,
+    defaultProps: {
+      heading: 'Trusted by teams worldwide',
+      speed: 'normal',
+      direction: 'left',
+      items: [
+        { text: '✦ Ship faster' }, { text: '✦ Convert more' }, { text: '✦ Look incredible' },
+        { text: '✦ Backed by AI' }, { text: '✦ Zero code' },
+      ],
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Heading' },
+      { kind: 'select', key: 'speed', label: 'Speed', options: [
+        { value: 'slow', label: 'Slow' }, { value: 'normal', label: 'Normal' }, { value: 'fast', label: 'Fast' },
+      ] },
+      { kind: 'select', key: 'direction', label: 'Direction', options: [
+        { value: 'left', label: 'Left' }, { value: 'right', label: 'Right' },
+      ] },
+      { kind: 'repeater', key: 'items', label: 'Items', itemLabel: 'Item',
+        fields: [
+          { kind: 'text', key: 'text', label: 'Text' },
+          { kind: 'image', key: 'imageUrl', label: 'Image (optional)' },
+        ],
+        defaultItem: { text: 'New item' },
+      },
+    ],
+  },
+  timeline: {
+    type: 'timeline', label: 'Timeline', description: 'Vertical milestone story', icon: History, Component: Timeline,
+    defaultProps: {
+      heading: 'Our journey',
+      intro: 'A few moments that shaped where we are today.',
+      items: [
+        { date: '2021', title: 'The idea', description: 'Two co-founders, one whiteboard, an espresso machine.' },
+        { date: '2022', title: 'First customer', description: 'A scrappy product-market fit moment.' },
+        { date: '2023', title: 'Series A', description: 'Backed by world-class operators.' },
+        { date: '2026', title: 'AI-native v2', description: 'A reinvention from the ground up.' },
+      ],
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Heading' },
+      { kind: 'textarea', key: 'intro', label: 'Intro', rows: 2 },
+      { kind: 'repeater', key: 'items', label: 'Milestones', itemLabel: 'Milestone',
+        fields: [
+          { kind: 'text', key: 'date', label: 'Date' },
+          { kind: 'text', key: 'title', label: 'Title' },
+          { kind: 'textarea', key: 'description', label: 'Description', rows: 2 },
+        ],
+        defaultItem: { date: '2026', title: 'New milestone', description: '' },
+      },
+    ],
+  },
+  before_after: {
+    type: 'before_after', label: 'Before / After', description: 'Drag-to-compare image slider', icon: ArrowLeftRight, Component: BeforeAfter,
+    defaultProps: {
+      heading: 'See the difference',
+      beforeUrl: '',
+      afterUrl: '',
+      beforeLabel: 'Before',
+      afterLabel: 'After',
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Heading' },
+      { kind: 'image', key: 'beforeUrl', label: 'Before image' },
+      { kind: 'image', key: 'afterUrl', label: 'After image' },
+      { kind: 'text', key: 'beforeLabel', label: 'Before label' },
+      { kind: 'text', key: 'afterLabel', label: 'After label' },
+    ],
+  },
+  comparison: {
+    type: 'comparison', label: 'Comparison table', description: '"Us vs. Them" feature checklist', icon: Columns3, Component: Comparison,
+    defaultProps: {
+      heading: 'Why choose us',
+      intro: 'See how we stack up against the alternatives.',
+      usLabel: 'Us',
+      themLabel: 'Others',
+      rows: [
+        { feature: 'AI-powered automation', us: true, them: false },
+        { feature: '24/7 support', us: true, them: false },
+        { feature: 'No setup fees', us: true, them: true },
+        { feature: 'Custom integrations', us: true, them: false },
+      ],
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Heading' },
+      { kind: 'textarea', key: 'intro', label: 'Intro', rows: 2 },
+      { kind: 'text', key: 'usLabel', label: 'Us column label' },
+      { kind: 'text', key: 'themLabel', label: 'Them column label' },
+      { kind: 'repeater', key: 'rows', label: 'Features', itemLabel: 'Row',
+        fields: [
+          { kind: 'text', key: 'feature', label: 'Feature' },
+          { kind: 'toggle', key: 'us', label: 'We have it' },
+          { kind: 'toggle', key: 'them', label: 'They have it' },
+        ],
+        defaultItem: { feature: 'New feature', us: true, them: false },
+      },
+    ],
+  },
+  team: {
+    type: 'team', label: 'Team', description: 'Member cards with bios and socials', icon: Users, Component: Team,
+    defaultProps: {
+      heading: 'Meet the team',
+      intro: 'The humans behind the product.',
+      columns: 3,
+      members: [
+        { name: 'Alex Carter', role: 'CEO', bio: 'Ex-Stripe, builds for delight.' },
+        { name: 'Priya Singh', role: 'CTO', bio: 'Distributed systems nerd.' },
+        { name: 'Marcus Lee', role: 'Head of Design', bio: 'Obsessed with pixels.' },
+      ],
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Heading' },
+      { kind: 'textarea', key: 'intro', label: 'Intro', rows: 2 },
+      { kind: 'select', key: 'columns', label: 'Columns', options: [
+        { value: '2', label: '2' }, { value: '3', label: '3' }, { value: '4', label: '4' },
+      ] },
+      { kind: 'repeater', key: 'members', label: 'Members', itemLabel: 'Member',
+        fields: [
+          { kind: 'image', key: 'photoUrl', label: 'Photo' },
+          { kind: 'text', key: 'name', label: 'Name' },
+          { kind: 'text', key: 'role', label: 'Role' },
+          { kind: 'textarea', key: 'bio', label: 'Bio', rows: 2 },
+          { kind: 'text', key: 'linkedin', label: 'LinkedIn URL' },
+          { kind: 'text', key: 'twitter', label: 'Twitter URL' },
+        ],
+        defaultItem: { name: 'New person', role: '', bio: '' },
+      },
+    ],
+  },
+  countdown: {
+    type: 'countdown', label: 'Countdown', description: 'Live timer to a launch / event date', icon: Timer, Component: Countdown,
+    defaultProps: {
+      heading: 'Launching soon',
+      subheading: 'Be among the first to try it.',
+      targetIso: new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString(),
+      cta: { label: 'Join the waitlist', href: '#lead-form' },
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Heading' },
+      { kind: 'textarea', key: 'subheading', label: 'Sub-heading', rows: 2 },
+      { kind: 'text', key: 'targetIso', label: 'Target date (ISO, e.g. 2026-06-01T12:00:00Z)' },
+      { kind: 'cta', key: 'cta', label: 'Button' },
+    ],
+  },
+  embed: {
+    type: 'embed', label: 'Video / Embed', description: 'YouTube, Vimeo, Loom or iframe URL', icon: Code2, Component: Embed,
+    defaultProps: {
+      heading: 'Watch the demo',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      aspect: '16:9',
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Heading' },
+      { kind: 'text', key: 'url', label: 'URL' },
+      { kind: 'select', key: 'aspect', label: 'Aspect ratio', options: [
+        { value: '16:9', label: '16:9' }, { value: '4:3', label: '4:3' }, { value: '1:1', label: '1:1' }, { value: '21:9', label: '21:9 (cinema)' },
+      ] },
+    ],
+  },
+  newsletter: {
+    type: 'newsletter', label: 'Newsletter', description: 'Inline email capture banner', icon: Mail, Component: Newsletter,
+    defaultProps: {
+      heading: 'Stay in the loop',
+      subheading: 'Monthly product updates. No spam. Unsubscribe anytime.',
+      placeholder: 'you@company.com',
+      ctaLabel: 'Subscribe',
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Heading' },
+      { kind: 'textarea', key: 'subheading', label: 'Sub-heading', rows: 2 },
+      { kind: 'text', key: 'placeholder', label: 'Input placeholder' },
+      { kind: 'text', key: 'ctaLabel', label: 'Button label' },
+    ],
+  },
+  divider: {
+    type: 'divider', label: 'Shape divider', description: 'Decorative SVG section break', icon: Minus, Component: Divider,
+    defaultProps: { shape: 'wave', flip: false },
+    schema: [
+      { kind: 'select', key: 'shape', label: 'Shape', options: [
+        { value: 'wave', label: 'Wave' }, { value: 'slant', label: 'Slant' },
+        { value: 'arc', label: 'Arc' }, { value: 'zigzag', label: 'Zigzag' },
+      ] },
+      { kind: 'text', key: 'color', label: 'Color (hex, optional)' },
+      { kind: 'toggle', key: 'flip', label: 'Flip vertically' },
+    ],
+  },
 };
 
 export const SECTION_ORDER: SectionType[] = [
-  'hero', 'features', 'logo_cloud', 'stats', 'steps',
-  'testimonials', 'pricing', 'gallery', 'faq', 'cta',
-  'content', 'form', 'footer',
+  'hero', 'video_hero', 'features', 'bento', 'logo_cloud', 'marquee', 'stats', 'steps', 'timeline',
+  'testimonials', 'pricing', 'comparison', 'team', 'gallery', 'before_after', 'embed',
+  'faq', 'countdown', 'newsletter', 'cta', 'content', 'divider', 'form', 'footer',
 ];
 
 export function newSection(type: SectionType) {
