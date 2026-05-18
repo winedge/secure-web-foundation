@@ -199,9 +199,9 @@ export default function IntakeFormBuilder() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Intake Form Builder</h1>
+            <h1 className="text-3xl font-bold">Landing Page Builder</h1>
             <p className="text-muted-foreground">
-              Customize your branded intake form for claimants
+              Pick a theme, customize the look, and publish a branded landing page for your business
             </p>
           </div>
           <div className="flex gap-2">
@@ -226,7 +226,7 @@ export default function IntakeFormBuilder() {
             <div className="flex items-center gap-3">
               <LinkIcon className="h-5 w-5 text-muted-foreground shrink-0" />
               <div className="flex-1 min-w-0">
-                <Label className="text-xs text-muted-foreground">Your Intake Form URL</Label>
+                <Label className="text-xs text-muted-foreground">Your Landing Page URL</Label>
                 <div className="flex items-center gap-2 mt-1">
                   <code className="text-sm bg-muted px-3 py-1.5 rounded-md truncate block flex-1">
                     {intakeUrl}
@@ -241,8 +241,9 @@ export default function IntakeFormBuilder() {
         </Card>
 
         {/* Tab buttons */}
-        <div className="flex gap-2 border-b pb-2">
+        <div className="flex gap-2 border-b pb-2 flex-wrap">
           {[
+            { id: 'themes' as const, label: 'Themes', icon: Sparkles },
             { id: 'branding' as const, label: 'Branding & Colors', icon: Palette },
             { id: 'fields' as const, label: 'Form Fields', icon: FormInput },
             { id: 'preview' as const, label: 'Preview', icon: Eye },
@@ -258,6 +259,37 @@ export default function IntakeFormBuilder() {
             </Button>
           ))}
         </div>
+
+        {/* Themes Tab */}
+        {activeTab === 'themes' && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Pick a starting theme</CardTitle>
+                <CardDescription>
+                  Choose a preset that matches your business. You can fully customize colors, fonts, and layout in the next tabs, or use the AI assistant below.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ThemeGallery selectedKey={themeKey} onSelect={applyTheme} />
+              </CardContent>
+            </Card>
+
+            <AiThemeTweaker
+              current={{
+                primary_color: primaryColor,
+                background_color: backgroundColor,
+                accent_color: accentColor,
+                heading_text: headingText,
+                description_text: descriptionText,
+                typography,
+                layout_config: layoutConfig,
+                hero_config: heroConfig,
+              }}
+              onApply={applyAiUpdates}
+            />
+          </div>
+        )}
 
         {/* Branding Tab */}
         {activeTab === 'branding' && (
