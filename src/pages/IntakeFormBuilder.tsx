@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Save, Upload, Eye, Link as LinkIcon, Palette, Type, FormInput,
-  Plus, Trash2, GripVertical, Loader2, Copy, ExternalLink, Sparkles, LayoutTemplate, Search,
+  Plus, Trash2, GripVertical, Loader2, Copy, ExternalLink, Sparkles, LayoutTemplate, Search, History,
 } from 'lucide-react';
 import { useFirmBranding, useUpsertBranding, useUploadLogo, type CustomField } from '@/hooks/use-firm-branding';
 import { useFirm } from '@/hooks/use-firm';
@@ -19,9 +19,11 @@ import { ThemeGallery } from '@/components/landing-builder/ThemeGallery';
 import { AiThemeTweaker } from '@/components/landing-builder/AiThemeTweaker';
 import { SectionsTab } from '@/components/landing-builder/SectionsTab';
 import { SeoSettingsPanel } from '@/components/landing-builder/SeoSettingsPanel';
+import { VersionsTab } from '@/components/landing-builder/VersionsTab';
 import { LANDING_THEMES, type LandingTheme } from '@/lib/landing-themes';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import type { SeoConfig } from '@/lib/landing-seo';
+import type { LandingSnapshot } from '@/hooks/use-landing-versions';
 import { toast } from 'sonner';
 
 const DEFAULT_FIELDS = [
