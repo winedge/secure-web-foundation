@@ -12,6 +12,7 @@ import { Upload, Loader2, Image as ImageIcon, Code2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { SeoConfig } from '@/lib/landing-seo';
 import { buildJsonLd, DEFAULT_SEO } from '@/lib/landing-seo';
+import { ImageCropDialog } from './ImageCropDialog';
 
 interface Props {
   value: SeoConfig;
@@ -22,22 +23,32 @@ interface Props {
 export function SeoSettingsPanel({ value, onChange, context }: Props) {
   const { data: firm } = useFirm();
   const [uploading, setUploading] = useState(false);
+  const [pending, setPending] = useState<File | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
   const seo = { ...DEFAULT_SEO, ...value };
   const set = <K extends keyof SeoConfig>(k: K, v: SeoConfig[K]) => onChange({ ...seo, [k]: v });
 
-  const upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file || !firm?.id) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5MB'); return; }
+    if (file.size > 20 * 1024 * 1024) { toast.error('Image must be under 20MB'); return; }
+    setPending(file);
+    setCropOpen(true);
+  };
+
+  const onConfirmCrop = async (out: File, meta: { originalBytes: number; finalBytes: number }) => {
+    if (!firm?.id) return;
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
+      const ext = out.name.split('.').pop() || 'webp';
       const path = `${firm.id}/og-${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from('landing-media').upload(path, file, { upsert: true });
+      const { error } = await supabase.storage.from('landing-media').upload(path, out, { upsert: true, contentType: out.type });
       if (error) throw error;
       const { data } = supabase.storage.from('landing-media').getPublicUrl(path);
       set('og_image', data.publicUrl);
-      toast.success('Image uploaded');
+      const saved = Math.max(0, Math.round((1 - meta.finalBytes / Math.max(1, meta.originalBytes)) * 100));
+      toast.success(`OG image optimized | ${saved}% smaller`);
     } catch (err: any) {
       toast.error('Upload failed: ' + err.message);
     } finally {
@@ -133,7 +144,7 @@ export function SeoSettingsPanel({ value, onChange, context }: Props) {
               <div className="flex gap-2">
                 <Input value={seo.og_image ?? ''} placeholder="https://..." onChange={(e) => set('og_image', e.target.value)} />
                 <label>
-                  <input type="file" accept="image/*" hidden onChange={upload} />
+                  <input type="file" accept="image/*" hidden onChange={onPick} />
                   <Button asChild variant="outline" disabled={uploading}>
                     <span>{uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}</span>
                   </Button>
@@ -246,6 +257,14 @@ export function SeoSettingsPanel({ value, onChange, context }: Props) {
           </CardContent>
         </Card>
       </div>
+      <ImageCropDialog
+        file={pending}
+        open={cropOpen}
+        onOpenChange={setCropOpen}
+        preset="og"
+        defaultAspect={1200 / 630}
+        onConfirm={onConfirmCrop}
+      />
     </div>
   );
 }
