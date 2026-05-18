@@ -24,73 +24,100 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
-// Lazy-loaded routes
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Onboarding = lazy(() => import("./pages/Onboarding"));
-const Intake = lazy(() => import("./pages/Intake"));
-const BrandedIntake = lazy(() => import("./pages/BrandedIntake"));
-const IntakeFormBuilder = lazy(() => import("./pages/IntakeFormBuilder"));
-const LandingPreviewByToken = lazy(() => import("./pages/LandingPreviewByToken"));
-const Marketplace = lazy(() => import("./pages/Marketplace"));
-const MyLeads = lazy(() => import("./pages/MyLeads"));
-const IntakeSubmissions = lazy(() => import("./pages/IntakeSubmissions"));
-const Wallet = lazy(() => import("./pages/Wallet"));
-const Campaigns = lazy(() => import("./pages/Campaigns"));
-const MetaAds = lazy(() => import("./pages/MetaAds"));
-const Reports = lazy(() => import("./pages/Reports"));
-const Settings = lazy(() => import("./pages/Settings"));
-const Pricing = lazy(() => import("./pages/Pricing"));
-const SocialMediaCalendar = lazy(() => import("./pages/SocialMediaCalendar"));
-const Teams = lazy(() => import("./pages/Teams"));
-const CompetitorIntelligence = lazy(() => import("./pages/CompetitorIntelligence"));
-const SmartAlerts = lazy(() => import("./pages/SmartAlerts"));
-const ReferralNetwork = lazy(() => import("./pages/ReferralNetwork"));
-const MarketPulseRadar = lazy(() => import("./pages/MarketPulseRadar"));
-const JudgeIntelligence = lazy(() => import("./pages/JudgeIntelligence"));
-const EvidenceVault = lazy(() => import("./pages/EvidenceVault"));
-const PredictiveLeads = lazy(() => import("./pages/PredictiveLeads"));
-const CrossFirmBenchmarks = lazy(() => import("./pages/CrossFirmBenchmarks"));
-const CreativeStudio = lazy(() => import("./pages/CreativeStudio"));
-const ViralContentEngine = lazy(() => import("./pages/ViralContentEngine"));
-const VideoAdGenerator = lazy(() => import("./pages/VideoAdGenerator"));
-const GoogleAds = lazy(() => import("./pages/GoogleAds"));
+type LazyImporter<T extends { default: React.ComponentType<any> }> = () => Promise<T>;
 
-const LookalikeAudience = lazy(() => import("./pages/LookalikeAudience"));
-const IntentSignalTracker = lazy(() => import("./pages/IntentSignalTracker"));
-const GeofenceCampaigns = lazy(() => import("./pages/GeofenceCampaigns"));
-const DarkFunnelIntelligence = lazy(() => import("./pages/DarkFunnelIntelligence"));
-const CrossPlatformAutopilot = lazy(() => import("./pages/CrossPlatformAutopilot"));
-const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
-const AdminFirms = lazy(() => import("./pages/admin/AdminFirms"));
-const AdminLeads = lazy(() => import("./pages/admin/AdminLeads"));
-const AdminAuditLogs = lazy(() => import("./pages/admin/AdminAuditLogs"));
-const AdminDataIngestion = lazy(() => import("./pages/admin/AdminDataIngestion"));
-const AdminReporting = lazy(() => import("./pages/admin/AdminReporting"));
-const AdminSessionLogs = lazy(() => import("./pages/admin/AdminSessionLogs"));
-const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
-const AdminUserRoles = lazy(() => import("./pages/admin/AdminUserRoles"));
-const AdminVerticalHealth = lazy(() => import("./pages/admin/AdminVerticalHealth"));
-const FraudDetection = lazy(() => import("./pages/FraudDetection"));
-const CrmIntegrations = lazy(() => import("./pages/CrmIntegrations"));
-const LandingPage = lazy(() => import("./pages/LandingPage"));
-const VerifyChain = lazy(() => import("./pages/VerifyChain"));
-const AiCaseEvaluator = lazy(() => import("./pages/AiCaseEvaluator"));
-const AiToolPage = lazy(() => import("./pages/AiToolPage"));
-const GmbDashboard = lazy(() => import("./pages/gmb/GmbDashboard"));
-const GmbReviews = lazy(() => import("./pages/gmb/GmbReviews"));
-const GmbPosts = lazy(() => import("./pages/gmb/GmbPosts"));
-const GmbSyncStatus = lazy(() => import("./pages/gmb/GmbSyncStatus"));
-const GmbReplyTemplates = lazy(() => import("./pages/gmb/GmbReplyTemplates"));
-const GmbReplyApprovals = lazy(() => import("./pages/gmb/GmbReplyApprovals"));
-const SeoHub = lazy(() => import("./pages/seo/SeoHub"));
-const SeoDeepScan = lazy(() => import("./pages/seo/SeoDeepScan"));
-const SeoDeepScanReport = lazy(() => import("./pages/seo/SeoDeepScanReport"));
-const SeoThresholdsSettings = lazy(() => import("./pages/seo/SeoThresholdsSettings"));
-const SeoKeywords = lazy(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoKeywords })));
-const SeoBacklinks = lazy(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoBacklinks })));
-const SeoCitations = lazy(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoCitations })));
-const AiSeoToolPage = lazy(() => import("./pages/seo/ai/AiSeoToolPage"));
-const CompetitorAdLibrary = lazy(() => import("./pages/seo/ai/CompetitorAdLibrary"));
+const isRecoverableLazyImportError = (error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return /importing a module script failed|failed to fetch dynamically imported module|loading chunk|chunkloaderror/i.test(message);
+};
+
+const lazyWithRetry = <T extends { default: React.ComponentType<any> }>(importer: LazyImporter<T>) =>
+  lazy(async () => {
+    try {
+      return await importer();
+    } catch (error) {
+      if (isRecoverableLazyImportError(error) && typeof window !== "undefined") {
+        const reloadKey = "leadthru:lazy-import-reload";
+        const lastReload = Number(window.sessionStorage.getItem(reloadKey) || 0);
+
+        if (Date.now() - lastReload > 30_000) {
+          window.sessionStorage.setItem(reloadKey, String(Date.now()));
+          window.location.reload();
+          return new Promise<T>(() => undefined);
+        }
+      }
+
+      throw error;
+    }
+  });
+
+// Lazy-loaded routes
+const Dashboard = lazyWithRetry(() => import("./pages/Dashboard"));
+const Onboarding = lazyWithRetry(() => import("./pages/Onboarding"));
+const Intake = lazyWithRetry(() => import("./pages/Intake"));
+const BrandedIntake = lazyWithRetry(() => import("./pages/BrandedIntake"));
+const IntakeFormBuilder = lazyWithRetry(() => import("./pages/IntakeFormBuilder"));
+const LandingPreviewByToken = lazyWithRetry(() => import("./pages/LandingPreviewByToken"));
+const Marketplace = lazyWithRetry(() => import("./pages/Marketplace"));
+const MyLeads = lazyWithRetry(() => import("./pages/MyLeads"));
+const IntakeSubmissions = lazyWithRetry(() => import("./pages/IntakeSubmissions"));
+const Wallet = lazyWithRetry(() => import("./pages/Wallet"));
+const Campaigns = lazyWithRetry(() => import("./pages/Campaigns"));
+const MetaAds = lazyWithRetry(() => import("./pages/MetaAds"));
+const Reports = lazyWithRetry(() => import("./pages/Reports"));
+const Settings = lazyWithRetry(() => import("./pages/Settings"));
+const Pricing = lazyWithRetry(() => import("./pages/Pricing"));
+const SocialMediaCalendar = lazyWithRetry(() => import("./pages/SocialMediaCalendar"));
+const Teams = lazyWithRetry(() => import("./pages/Teams"));
+const CompetitorIntelligence = lazyWithRetry(() => import("./pages/CompetitorIntelligence"));
+const SmartAlerts = lazyWithRetry(() => import("./pages/SmartAlerts"));
+const ReferralNetwork = lazyWithRetry(() => import("./pages/ReferralNetwork"));
+const MarketPulseRadar = lazyWithRetry(() => import("./pages/MarketPulseRadar"));
+const JudgeIntelligence = lazyWithRetry(() => import("./pages/JudgeIntelligence"));
+const EvidenceVault = lazyWithRetry(() => import("./pages/EvidenceVault"));
+const PredictiveLeads = lazyWithRetry(() => import("./pages/PredictiveLeads"));
+const CrossFirmBenchmarks = lazyWithRetry(() => import("./pages/CrossFirmBenchmarks"));
+const CreativeStudio = lazyWithRetry(() => import("./pages/CreativeStudio"));
+const ViralContentEngine = lazyWithRetry(() => import("./pages/ViralContentEngine"));
+const VideoAdGenerator = lazyWithRetry(() => import("./pages/VideoAdGenerator"));
+const GoogleAds = lazyWithRetry(() => import("./pages/GoogleAds"));
+
+const LookalikeAudience = lazyWithRetry(() => import("./pages/LookalikeAudience"));
+const IntentSignalTracker = lazyWithRetry(() => import("./pages/IntentSignalTracker"));
+const GeofenceCampaigns = lazyWithRetry(() => import("./pages/GeofenceCampaigns"));
+const DarkFunnelIntelligence = lazyWithRetry(() => import("./pages/DarkFunnelIntelligence"));
+const CrossPlatformAutopilot = lazyWithRetry(() => import("./pages/CrossPlatformAutopilot"));
+const AdminDashboard = lazyWithRetry(() => import("./pages/admin/AdminDashboard"));
+const AdminFirms = lazyWithRetry(() => import("./pages/admin/AdminFirms"));
+const AdminLeads = lazyWithRetry(() => import("./pages/admin/AdminLeads"));
+const AdminAuditLogs = lazyWithRetry(() => import("./pages/admin/AdminAuditLogs"));
+const AdminDataIngestion = lazyWithRetry(() => import("./pages/admin/AdminDataIngestion"));
+const AdminReporting = lazyWithRetry(() => import("./pages/admin/AdminReporting"));
+const AdminSessionLogs = lazyWithRetry(() => import("./pages/admin/AdminSessionLogs"));
+const AdminSettings = lazyWithRetry(() => import("./pages/admin/AdminSettings"));
+const AdminUserRoles = lazyWithRetry(() => import("./pages/admin/AdminUserRoles"));
+const AdminVerticalHealth = lazyWithRetry(() => import("./pages/admin/AdminVerticalHealth"));
+const FraudDetection = lazyWithRetry(() => import("./pages/FraudDetection"));
+const CrmIntegrations = lazyWithRetry(() => import("./pages/CrmIntegrations"));
+const LandingPage = lazyWithRetry(() => import("./pages/LandingPage"));
+const VerifyChain = lazyWithRetry(() => import("./pages/VerifyChain"));
+const AiCaseEvaluator = lazyWithRetry(() => import("./pages/AiCaseEvaluator"));
+const AiToolPage = lazyWithRetry(() => import("./pages/AiToolPage"));
+const GmbDashboard = lazyWithRetry(() => import("./pages/gmb/GmbDashboard"));
+const GmbReviews = lazyWithRetry(() => import("./pages/gmb/GmbReviews"));
+const GmbPosts = lazyWithRetry(() => import("./pages/gmb/GmbPosts"));
+const GmbSyncStatus = lazyWithRetry(() => import("./pages/gmb/GmbSyncStatus"));
+const GmbReplyTemplates = lazyWithRetry(() => import("./pages/gmb/GmbReplyTemplates"));
+const GmbReplyApprovals = lazyWithRetry(() => import("./pages/gmb/GmbReplyApprovals"));
+const SeoHub = lazyWithRetry(() => import("./pages/seo/SeoHub"));
+const SeoDeepScan = lazyWithRetry(() => import("./pages/seo/SeoDeepScan"));
+const SeoDeepScanReport = lazyWithRetry(() => import("./pages/seo/SeoDeepScanReport"));
+const SeoThresholdsSettings = lazyWithRetry(() => import("./pages/seo/SeoThresholdsSettings"));
+const SeoKeywords = lazyWithRetry(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoKeywords })));
+const SeoBacklinks = lazyWithRetry(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoBacklinks })));
+const SeoCitations = lazyWithRetry(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoCitations })));
+const AiSeoToolPage = lazyWithRetry(() => import("./pages/seo/ai/AiSeoToolPage"));
+const CompetitorAdLibrary = lazyWithRetry(() => import("./pages/seo/ai/CompetitorAdLibrary"));
 const queryClient = new QueryClient();
 
 function PageLoader() {
