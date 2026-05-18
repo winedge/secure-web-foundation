@@ -175,6 +175,7 @@ export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFi
               <BackgroundInspector
                 value={selected.background}
                 onChange={(b) => updateBackground(selected.id, b)}
+                onApplyToAll={(b) => commit(sections.map((s) => ({ ...s, background: JSON.parse(JSON.stringify(b)) })))}
               />
 
               <Inspector
