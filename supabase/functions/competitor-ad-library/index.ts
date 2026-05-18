@@ -391,8 +391,16 @@ async function processRun(runId: string, input: RunInput, supa: ReturnType<typeo
     }
 
 
-    const scrape = await firecrawlScrape(url);
-    const creatives = parseCreatives(scrape, url);
+    let creatives: Creative[] = [];
+    if (advertiserId) {
+      const rows = await fetchGoogleCreativeRows(advertiserId, region, 60);
+      creatives = parseGoogleCreativeRows(rows, advertiserId, url);
+    }
+
+    if (!creatives.length) {
+      const scrape = await firecrawlScrape(url);
+      creatives = parseCreatives(scrape, url);
+    }
 
     if (creatives.length > 0) {
       await supa.from('competitor_ad_creatives').insert(
