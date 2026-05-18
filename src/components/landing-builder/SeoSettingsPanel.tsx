@@ -22,22 +22,32 @@ interface Props {
 export function SeoSettingsPanel({ value, onChange, context }: Props) {
   const { data: firm } = useFirm();
   const [uploading, setUploading] = useState(false);
+  const [pending, setPending] = useState<File | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
   const seo = { ...DEFAULT_SEO, ...value };
   const set = <K extends keyof SeoConfig>(k: K, v: SeoConfig[K]) => onChange({ ...seo, [k]: v });
 
-  const upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file || !firm?.id) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5MB'); return; }
+    if (file.size > 20 * 1024 * 1024) { toast.error('Image must be under 20MB'); return; }
+    setPending(file);
+    setCropOpen(true);
+  };
+
+  const onConfirmCrop = async (out: File, meta: { originalBytes: number; finalBytes: number }) => {
+    if (!firm?.id) return;
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
+      const ext = out.name.split('.').pop() || 'webp';
       const path = `${firm.id}/og-${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from('landing-media').upload(path, file, { upsert: true });
+      const { error } = await supabase.storage.from('landing-media').upload(path, out, { upsert: true, contentType: out.type });
       if (error) throw error;
       const { data } = supabase.storage.from('landing-media').getPublicUrl(path);
       set('og_image', data.publicUrl);
-      toast.success('Image uploaded');
+      const saved = Math.max(0, Math.round((1 - meta.finalBytes / Math.max(1, meta.originalBytes)) * 100));
+      toast.success(`OG image optimized | ${saved}% smaller`);
     } catch (err: any) {
       toast.error('Upload failed: ' + err.message);
     } finally {
