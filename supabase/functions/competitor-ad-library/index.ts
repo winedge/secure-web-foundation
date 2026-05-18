@@ -320,6 +320,79 @@ function parseGoogleCreativeRows(rows: any[], advertiserId: string, transparency
   }).filter((creative) => creative.creative_id || creative.media_url || creative.destination_url).slice(0, 60);
 }
 
+function walkStringsAndUrls(node: any, strings: string[], urls: string[], depth = 0) {
+  if (node == null || depth > 12) return;
+  if (typeof node === 'string') {
+    const s = node.trim();
+    if (!s) return;
+    if (/^https?:\/\//i.test(s)) urls.push(s);
+    else if (s.length >= 3 && s.length <= 400 && !/^[A-Z]{1,3}\d{6,}$/.test(s) && !/^\d+$/.test(s)) strings.push(s);
+    return;
+  }
+  if (Array.isArray(node)) { for (const v of node) walkStringsAndUrls(v, strings, urls, depth + 1); return; }
+  if (typeof node === 'object') { for (const v of Object.values(node)) walkStringsAndUrls(v, strings, urls, depth + 1); }
+}
+
+async function fetchGoogleCreativeDetails(advertiserId: string, creativeId: string, region: string): Promise<Partial<Creative>> {
+  const regionNumber = REGION_NUMERIC_IDS[region.toUpperCase()];
+  const payload: Record<string, unknown> = { '1': creativeId, '2': advertiserId };
+  if (regionNumber) payload['5'] = regionNumber;
+  try {
+    const res = await googleRpc('/anji/_/rpc/LookupService/GetCreativeById', payload, '');
+    const strings: string[] = [];
+    const urls: string[] = [];
+    walkStringsAndUrls(res, strings, urls);
+    // Dedupe preserving order
+    const uniqStr = Array.from(new Set(strings));
+    const uniqUrls = Array.from(new Set(urls));
+    const mediaUrl = uniqUrls.find(u => /\.(mp4|webm)(\?|$)/i.test(u))
+      || uniqUrls.find(u => /(simgad|tpc\.googlesyndication|\.(jpe?g|png|gif|webp))(\?|$)/i.test(u));
+    const destUrl = uniqUrls.find(u => !/google(?:syndication|usercontent|\.com\/(?:aclk|pagead))/i.test(u) && !u.includes('adstransparency'));
+    // Find a headline (short) and body (longer)
+    const candidates = uniqStr.filter(s =>
+      !s.startsWith('AR') && !s.startsWith('CR') &&
+      !/^(text|image|video|html|en|US|IN|true|false)$/i.test(s) &&
+      !/^[a-z0-9_]+\.(googleapis|googleusercontent|gstatic)/i.test(s)
+    );
+    const headline = candidates.find(s => s.length >= 8 && s.length <= 90);
+    const body = candidates.find(s => s.length > 40 && s !== headline) || candidates.find(s => s !== headline);
+    const format = mediaUrl ? (/\.(mp4|webm)/i.test(mediaUrl) ? 'video' : 'image') : 'text';
+    return {
+      format,
+      headline,
+      body,
+      media_url: mediaUrl,
+      destination_url: destUrl,
+    };
+  } catch (_) {
+    return {};
+  }
+}
+
+async function hydrateCreatives(creatives: Creative[], advertiserId: string, region: string): Promise<Creative[]> {
+  const concurrency = 5;
+  const out: Creative[] = new Array(creatives.length);
+  let i = 0;
+  async function worker() {
+    while (i < creatives.length) {
+      const idx = i++;
+      const c = creatives[idx];
+      if (!c.creative_id) { out[idx] = c; continue; }
+      const detail = await fetchGoogleCreativeDetails(advertiserId, c.creative_id, region);
+      out[idx] = {
+        ...c,
+        format: detail.format || c.format,
+        headline: detail.headline || c.headline,
+        body: detail.body || (c.body && c.body.startsWith('Creative CR') ? undefined : c.body),
+        media_url: detail.media_url || c.media_url,
+        destination_url: detail.destination_url || c.destination_url,
+      };
+    }
+  }
+  await Promise.all(Array.from({ length: concurrency }, worker));
+  return out;
+}
+
 async function aiInsights(brand: string, creatives: Creative[]) {
   if (!LOVABLE_API_KEY) return null;
   const sample = creatives.slice(0, 25).map(c => ({
