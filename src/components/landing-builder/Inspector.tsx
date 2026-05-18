@@ -149,20 +149,30 @@ function RepeaterField({ field, value, onChange }: { field: Extract<InspectorFie
 function ImageField({ label, value, onChange }: { label: string; value: string | undefined; onChange: (v: string) => void }) {
   const { data: firm } = useFirm();
   const [uploading, setUploading] = useState(false);
+  const [pending, setPending] = useState<File | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file || !firm?.id) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5MB'); return; }
+    if (file.size > 20 * 1024 * 1024) { toast.error('Image must be under 20MB'); return; }
+    setPending(file);
+    setCropOpen(true);
+  };
+
+  const onConfirm = async (out: File, meta: { originalBytes: number; finalBytes: number }) => {
+    if (!firm?.id) return;
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
+      const ext = out.name.split('.').pop() || 'webp';
       const path = `${firm.id}/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from('landing-media').upload(path, file, { upsert: true });
+      const { error } = await supabase.storage.from('landing-media').upload(path, out, { upsert: true, contentType: out.type });
       if (error) throw error;
       const { data } = supabase.storage.from('landing-media').getPublicUrl(path);
       onChange(data.publicUrl);
-      toast.success('Image uploaded');
+      const saved = Math.max(0, Math.round((1 - meta.finalBytes / Math.max(1, meta.originalBytes)) * 100));
+      toast.success(`Image optimized | ${saved}% smaller`);
     } catch (err: any) {
       toast.error('Upload failed: ' + err.message);
     } finally {
@@ -177,12 +187,19 @@ function ImageField({ label, value, onChange }: { label: string; value: string |
       <div className="flex gap-2">
         <Input placeholder="Image URL or upload" value={value ?? ''} onChange={(e) => onChange(e.target.value)} className="flex-1" />
         <label className="inline-flex">
-          <input type="file" accept="image/*" hidden onChange={handleUpload} />
+          <input type="file" accept="image/*" hidden onChange={onPick} />
           <Button asChild size="sm" variant="outline" disabled={uploading}>
             <span>{uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}</span>
           </Button>
         </label>
       </div>
+      <ImageCropDialog
+        file={pending}
+        open={cropOpen}
+        onOpenChange={setCropOpen}
+        preset="card"
+        onConfirm={onConfirm}
+      />
     </div>
   );
 }
