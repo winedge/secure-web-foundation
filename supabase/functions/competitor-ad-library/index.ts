@@ -273,13 +273,6 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Provide brand, domain, or advertiser_url' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Rate limit: 5 runs / hour / firm
-    const sinceIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    const { count } = await supa.from('competitor_ad_runs').select('id', { count: 'exact', head: true }).eq('firm_id', body.firm_id).gte('created_at', sinceIso);
-    if ((count ?? 0) >= 5) {
-      return new Response(JSON.stringify({ error: 'Rate limit: 5 runs per hour' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
     const { data: run, error } = await supa.from('competitor_ad_runs').insert({
       firm_id: body.firm_id,
       brand: body.brand,
