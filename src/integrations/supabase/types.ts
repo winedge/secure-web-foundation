@@ -3188,6 +3188,77 @@ export type Database = {
         }
         Relationships: []
       }
+      landing_page_previews: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          firm_id: string
+          id: string
+          token: string
+          version_id: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          firm_id: string
+          id?: string
+          token: string
+          version_id: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          firm_id?: string
+          id?: string
+          token?: string
+          version_id?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "landing_page_previews_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "landing_page_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      landing_page_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          firm_id: string
+          id: string
+          label: string | null
+          note: string | null
+          snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          firm_id: string
+          id?: string
+          label?: string | null
+          note?: string | null
+          snapshot: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          firm_id?: string
+          id?: string
+          label?: string | null
+          note?: string | null
+          snapshot?: Json
+        }
+        Relationships: []
+      }
       lead_activity_logs: {
         Row: {
           activity_type: string
