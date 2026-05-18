@@ -245,8 +245,8 @@ export function autoFixSections(sections: Section[]): { sections: Section[]; sum
           heavyBgBudget--;
         } else {
           nb = { kind: 'gradient', gradient: { type: 'linear', angle: 135, stops: [
-            { color: '#0f172a', position: 0 },
-            { color: '#1e293b', position: 100 },
+            { color: '#0f172a', pos: 0 },
+            { color: '#1e293b', pos: 100 },
           ] } } as SectionBackground;
           summary.downgradedBackground++; touched = true;
         }
