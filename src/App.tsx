@@ -30,6 +30,7 @@ const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Intake = lazy(() => import("./pages/Intake"));
 const BrandedIntake = lazy(() => import("./pages/BrandedIntake"));
 const IntakeFormBuilder = lazy(() => import("./pages/IntakeFormBuilder"));
+const LandingPreviewByToken = lazy(() => import("./pages/LandingPreviewByToken"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
 const MyLeads = lazy(() => import("./pages/MyLeads"));
 const IntakeSubmissions = lazy(() => import("./pages/IntakeSubmissions"));
