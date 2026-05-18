@@ -143,7 +143,7 @@ export function SeoSettingsPanel({ value, onChange, context }: Props) {
               <div className="flex gap-2">
                 <Input value={seo.og_image ?? ''} placeholder="https://..." onChange={(e) => set('og_image', e.target.value)} />
                 <label>
-                  <input type="file" accept="image/*" hidden onChange={upload} />
+                  <input type="file" accept="image/*" hidden onChange={onPick} />
                   <Button asChild variant="outline" disabled={uploading}>
                     <span>{uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}</span>
                   </Button>
