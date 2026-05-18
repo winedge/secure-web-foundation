@@ -88,6 +88,7 @@ const SeoKeywords = lazy(() => import("./pages/seo/SeoTools").then(m => ({ defau
 const SeoBacklinks = lazy(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoBacklinks })));
 const SeoCitations = lazy(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoCitations })));
 const AiSeoToolPage = lazy(() => import("./pages/seo/ai/AiSeoToolPage"));
+const CompetitorAdLibrary = lazy(() => import("./pages/seo/ai/CompetitorAdLibrary"));
 const queryClient = new QueryClient();
 
 function PageLoader() {
@@ -195,6 +196,7 @@ const App = () => (
                 <Route path="/seo/keywords" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_keyword_research" label="Keyword Research"><SeoKeywords /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/seo/backlinks" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_backlink_audit" label="Backlink Audit"><SeoBacklinks /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/seo/citations" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_local_citations" label="Local Citations"><SeoCitations /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/seo/ai/competitor-ad-library" element={<ProtectedRoute><LazyRoute><CompetitorAdLibrary /></LazyRoute></ProtectedRoute>} />
                 <Route path="/seo/ai/:slug" element={<ProtectedRoute><LazyRoute><AiSeoToolPage /></LazyRoute></ProtectedRoute>} />
 
                 {/* Admin routes */}
