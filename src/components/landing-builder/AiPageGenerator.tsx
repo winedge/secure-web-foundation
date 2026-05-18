@@ -212,7 +212,7 @@ export function AiPageGenerator({ hasExisting, theme, onGenerated, variant = 'de
               <ScrollArea className="h-[520px]">
                 <SectionRenderer
                   sections={draft}
-                  theme={theme ?? {}}
+                  theme={theme ?? FALLBACK_THEME}
                   formSlot={
                     <div className="text-center text-xs text-muted-foreground p-4 italic">
                       (Intake form appears here on the live page)
