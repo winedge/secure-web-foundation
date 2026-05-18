@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import { SECTION_REGISTRY } from '@/lib/landing-sections/registry';
 import { isSectionVisible, type VisibilityContext } from '@/lib/landing-sections/visibility';
+import { AnimatedSection } from './AnimatedSection';
 
 interface Props {
   sections: Section[];
@@ -38,9 +39,10 @@ export function SectionRenderer({
           const Comp = def.Component;
           const isSelected = selectable && selectedId === s.id;
           const hasRules = !!(s.visibility?.rules?.length);
-          const node = s.type === 'form'
+          const inner = s.type === 'form'
             ? <Comp props={s.props} theme={theme} formSlot={formSlot} />
             : <Comp props={s.props} theme={theme} />;
+          const node = <AnimatedSection animation={s.animation}>{inner}</AnimatedSection>;
 
           if (!selectable) return <div key={s.id}>{node}</div>;
           return (
