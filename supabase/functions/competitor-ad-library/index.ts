@@ -30,7 +30,7 @@ const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
-async function firecrawlScrape(url: string) {
+async function firecrawlScrape(url: string, waitFor = 4000) {
   if (!FIRECRAWL_API_KEY) throw new Error('FIRECRAWL_API_KEY is not configured');
   const r = await fetch('https://api.firecrawl.dev/v2/scrape', {
     method: 'POST',
@@ -40,15 +40,72 @@ async function firecrawlScrape(url: string) {
     },
     body: JSON.stringify({
       url,
-      formats: ['markdown', 'html', 'links', 'screenshot'],
+      formats: ['markdown', 'html', 'rawHtml', 'links', 'screenshot'],
       onlyMainContent: false,
-      waitFor: 3000,
+      waitFor,
     }),
   });
   const data = await r.json();
   if (!r.ok) throw new Error(`Firecrawl ${r.status}: ${JSON.stringify(data).slice(0, 300)}`);
   return data?.data ?? data;
 }
+
+async function firecrawlSearch(query: string, limit = 10) {
+  if (!FIRECRAWL_API_KEY) return null;
+  const r = await fetch('https://api.firecrawl.dev/v2/search', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ query, limit }),
+  });
+  if (!r.ok) return null;
+  return await r.json();
+}
+
+/** Find an advertiser AR id via several strategies. Returns AR id or null. */
+async function discoverAdvertiserId(brand: string, domain: string, region: string): Promise<{ id: string | null; tried: string[] }> {
+  const tried: string[] = [];
+  const candidates: string[] = [];
+
+  // Strategy 1: Google search (via Firecrawl /search) for the advertiser's Transparency Center page.
+  const queries = [
+    brand && `site:adstransparency.google.com "${brand}"`,
+    domain && `site:adstransparency.google.com ${domain}`,
+    brand && `"${brand}" adstransparency.google.com advertiser`,
+  ].filter(Boolean) as string[];
+
+  for (const q of queries) {
+    tried.push(`search: ${q}`);
+    const res = await firecrawlSearch(q, 10);
+    const arr: any[] = (res?.data?.web ?? res?.data ?? res?.web ?? []);
+    for (const item of arr) {
+      const u: string = item?.url || item?.link || '';
+      const m = u.match(/\/advertiser\/(AR[0-9A-Za-z_-]+)/);
+      if (m) candidates.push(m[1]);
+    }
+    if (candidates.length) break;
+  }
+
+  // Strategy 2: scrape the Transparency Center search page directly (rarely works due to JS, but worth a shot).
+  if (!candidates.length) {
+    const q = brand || domain;
+    if (q) {
+      const searchUrl = `https://adstransparency.google.com/?region=${region}&q=${encodeURIComponent(q)}`;
+      tried.push(`scrape: ${searchUrl}`);
+      try {
+        const search = await firecrawlScrape(searchUrl, 6000);
+        const blob = (search?.html || '') + '\n' + (search?.rawHtml || '') + '\n' + JSON.stringify(search?.links || []);
+        const m = blob.match(/\/advertiser\/(AR[0-9A-Za-z_-]+)/);
+        if (m) candidates.push(m[1]);
+      } catch (_) { /* ignore */ }
+    }
+  }
+
+  return { id: candidates[0] ?? null, tried };
+}
+
 
 function parseCreatives(scrape: any, transparencyUrl: string): Creative[] {
   const creatives: Creative[] = [];
