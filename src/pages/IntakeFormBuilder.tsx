@@ -754,6 +754,42 @@ export default function IntakeFormBuilder() {
           </Card>
         )}
       </div>
+
+      <AlertDialog open={perfGate.open} onOpenChange={(o) => setPerfGate((p) => ({ ...p, open: o }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {perfGate.level === 'critical' ? 'Publishing blocked' : 'Performance warnings'}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  {perfGate.level === 'critical'
+                    ? 'Your page has critical performance issues that must be fixed before publishing. Use the Performance tab to auto-fix or adjust sections.'
+                    : 'Your page has performance warnings. You can publish anyway, but users on mid-range devices may see jank.'}
+                </p>
+                <ul className="list-disc pl-5 text-sm space-y-1 max-h-48 overflow-auto">
+                  {perfGate.issues.map((i, idx) => (
+                    <li key={idx} className={i.level === 'critical' ? 'text-destructive' : ''}>{i.message}</li>
+                  ))}
+                </ul>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            {perfGate.level === 'critical' ? (
+              <AlertDialogAction onClick={() => { setPerfGate((p) => ({ ...p, open: false })); setActiveTab('performance'); }}>
+                Open Performance tab
+              </AlertDialogAction>
+            ) : (
+              <AlertDialogAction onClick={async () => { setPerfGate((p) => ({ ...p, open: false })); await handleSave({ bypassPerf: true }); }}>
+                Publish anyway
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
