@@ -351,6 +351,11 @@ export default function IntakeFormBuilder() {
           />
         )}
 
+        {/* Versions & Sharing Tab */}
+        {activeTab === 'versions' && (
+          <VersionsTab snapshot={currentSnapshot} onRestore={restoreSnapshot} />
+        )}
+
         {/* Themes Tab */}
         {activeTab === 'themes' && (
           <div className="space-y-6">
