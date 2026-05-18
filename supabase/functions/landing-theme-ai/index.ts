@@ -40,23 +40,47 @@ Deno.serve(async (req) => {
 
     // Generate mode | build a full landing page from a single prompt
     if (body?.mode === 'generate') {
-      const { prompt, audience, tone, businessType, theme } = body as {
+      const { prompt, audience, tone, businessType, theme, product, benefits, offer, cta } = body as {
         prompt: string; audience?: string; tone?: string; businessType?: string; theme?: any;
+        product?: string; benefits?: string[] | string; offer?: string; cta?: string;
       };
       if (!prompt || prompt.trim().length < 5) {
         return new Response(JSON.stringify({ error: 'prompt is required' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      const sys = `You are a senior conversion copywriter + landing-page designer. Given a business description, generate a COMPLETE landing page as an ordered array of section blocks.
+      const benefitsList = Array.isArray(benefits)
+        ? benefits.filter(Boolean).map((b) => `- ${b}`).join('\n')
+        : (typeof benefits === 'string' && benefits.trim() ? benefits.trim() : '');
+      const sys = `You are a senior conversion copywriter + landing-page designer. Given a structured business brief, generate a COMPLETE landing page as an ordered array of section blocks.
 Allowed section types: hero, video_hero, features, bento, logo_cloud, marquee, stats, testimonials, faq, pricing, steps, timeline, gallery, before_after, comparison, team, countdown, embed, newsletter, cta, content, divider, form, footer.
 Always include a hero first, a form section near the bottom, and a footer last. Use 6-10 sections total. Vary section types so the page feels rich (mix proof, features, social proof, FAQ, CTA).
 Each section must have: id (uuid), type, visible:true, props (typed for the section), and optional animation { entrance, trigger:"on-scroll", duration:600, delay:0, easing:"ease" } and background { kind: "none"|"gradient"|"mesh"|"glass", ... }.
 - Use background.kind="gradient" or "mesh" for hero / cta / stats to add visual interest. Provide gradient {type,angle,stops:[{color,pos}]} or mesh {base,blobs:[{color,x,y,size}]}.
 - Use animation entrance from: fade, slide-up, slide-left, slide-right, zoom, blur-in, mask-reveal. Vary across sections.
-Write specific, benefit-driven copy referencing the business. No lorem ipsum. Real headlines, real stat numbers, real testimonial quotes with named personas. Keep button labels short and action-oriented.
+STRICT ADHERENCE TO BRIEF:
+- The PRODUCT/SERVICE field is the literal thing being sold | name it explicitly in the hero headline and features.
+- TARGET CUSTOMER is the only audience to address | mirror their language and pains throughout.
+- KEY BENEFITS must each appear (one per feature card / stat / FAQ where natural). Do not invent benefits that contradict them.
+- OFFER (price, trial, guarantee, bonus) must appear in hero subheadline AND the final CTA section.
+- PRIMARY CTA label must be used verbatim on the hero button, the CTA section button, and the form submit button.
+Write specific, benefit-driven copy referencing the actual product and audience. No lorem ipsum. Real headlines, real stat numbers, real testimonial quotes with named personas matching the target customer.
 Return STRICT JSON via the tool call.`;
-      const user = `BUSINESS BRIEF:\n${prompt}\n\nAUDIENCE: ${audience || 'general'}\nTONE: ${tone || 'confident, friendly'}\nBUSINESS TYPE: ${businessType || 'service business'}\n\nTHEME CONTEXT: ${JSON.stringify(theme || {})}\n\nGenerate the full landing page now.`;
+      const user = `BUSINESS BRIEF:
+${prompt}
+
+PRODUCT / SERVICE: ${product || '(not specified | infer from brief)'}
+TARGET CUSTOMER: ${audience || '(not specified | infer from brief)'}
+KEY BENEFITS:
+${benefitsList || '(not specified | infer 3-5 from brief)'}
+OFFER / INCENTIVE: ${offer || '(none specified)'}
+PRIMARY CTA LABEL: ${cta || '(choose a short action verb phrase)'}
+TONE: ${tone || 'confident, friendly'}
+BUSINESS TYPE: ${businessType || 'service business'}
+
+THEME CONTEXT: ${JSON.stringify(theme || {})}
+
+Generate the full landing page now, honoring every structured field above.`;
       const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
