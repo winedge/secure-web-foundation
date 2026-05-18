@@ -358,6 +358,11 @@ export default function IntakeFormBuilder() {
           <VersionsTab snapshot={currentSnapshot} onRestore={restoreSnapshot} />
         )}
 
+        {/* Performance Tab */}
+        {activeTab === 'performance' && (
+          <PerformancePanel sections={sections} onJumpTo={() => setActiveTab('sections')} />
+        )}
+
         {/* Themes Tab */}
         {activeTab === 'themes' && (
           <div className="space-y-6">
