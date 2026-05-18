@@ -298,20 +298,27 @@ async function fetchGoogleCreativeRows(advertiserId: string, region: string, cou
   return rows.concat(await fetchGoogleCreativeRows(advertiserId, region, count - rows.length, next)).slice(0, count);
 }
 
+const GOOGLE_FORMAT_MAP: Record<number, 'image' | 'video' | 'text'> = { 1: 'image', 2: 'video', 3: 'text' };
+
 function parseGoogleCreativeRows(rows: any[], advertiserId: string, transparencyUrl: string): Creative[] {
   return rows.map((row) => {
     const creativeId = row?.['2'];
+    const formatCode = Number(row?.['4']);
+    let format: 'image' | 'video' | 'text' = GOOGLE_FORMAT_MAP[formatCode] || 'text';
     const link = extractGoogleCreativeLink(row?.['3']);
-    const format = link?.match(/\.(mp4)(?:\?|$)/i) ? 'video'
-      : link?.match(/(?:simgad|\.jpg|\.jpeg|\.png|\.gif|\.webp)(?:\?|$)/i) ? 'image'
-        : 'text';
+    if (!format) {
+      format = link?.match(/\.(mp4)(?:\?|$)/i) ? 'video'
+        : link?.match(/(?:simgad|\.jpg|\.jpeg|\.png|\.gif|\.webp)(?:\?|$)/i) ? 'image'
+          : 'text';
+    }
+    const previewUrl = typeof row?.['3']?.['1']?.['4'] === 'string' ? row['3']['1']['4'] : undefined;
     return {
       creative_id: creativeId,
       format,
-      headline: row?.['12'] || undefined,
-      body: creativeId ? `Creative ${creativeId}` : undefined,
-      media_url: format === 'text' ? undefined : link,
-      destination_url: format === 'text' ? link : undefined,
+      headline: undefined,
+      body: undefined,
+      media_url: format !== 'text' ? link : undefined,
+      destination_url: previewUrl,
       first_seen: dateFromGoogleTimestamp(row?.['6']),
       last_seen: dateFromGoogleTimestamp(row?.['7']),
       transparency_url: creativeId ? `${GOOGLE_ADS_BASE}/advertiser/${advertiserId}/creative/${creativeId}` : transparencyUrl,
