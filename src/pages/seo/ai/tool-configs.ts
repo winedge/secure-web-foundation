@@ -3,7 +3,7 @@ import {
   Swords, ShieldCheck, Bot, LucideIcon,
 } from 'lucide-react';
 
-export type FieldType = 'text' | 'textarea' | 'url';
+export type FieldType = 'text' | 'textarea' | 'url' | 'location';
 
 export interface ToolField {
   key: string;
