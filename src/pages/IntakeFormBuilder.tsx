@@ -25,6 +25,11 @@ import { LANDING_THEMES, type LandingTheme } from '@/lib/landing-themes';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import type { SeoConfig } from '@/lib/landing-seo';
 import type { LandingSnapshot } from '@/hooks/use-landing-versions';
+import { analyzeSections, type PerfIssue } from '@/lib/landing-builder/performance';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
 const DEFAULT_FIELDS = [
@@ -154,11 +159,9 @@ export default function IntakeFormBuilder() {
     toast.success('Logo uploaded!');
   }, [uploadLogo]);
 
-  const handleSave = async () => {
-    if (!slug || slug.length < 1) {
-      toast.error('Please enter a URL slug');
-      return;
-    }
+  const [perfGate, setPerfGate] = useState<{ open: boolean; issues: PerfIssue[]; level: 'warning' | 'critical' }>({ open: false, issues: [], level: 'warning' });
+
+  const persistBranding = async () => {
     await upsertBranding.mutateAsync({
       slug,
       firm_display_name: firmDisplayName || null,
@@ -177,6 +180,28 @@ export default function IntakeFormBuilder() {
       sections,
       seo_config: seoConfig,
     } as any);
+  };
+
+  const handleSave = async (opts?: { bypassPerf?: boolean }) => {
+    if (!slug || slug.length < 1) {
+      toast.error('Please enter a URL slug');
+      return;
+    }
+    if (!opts?.bypassPerf && sections.length > 0) {
+      const analysis = analyzeSections(sections);
+      const critical = analysis.issues.filter((i) => i.level === 'critical');
+      const warnings = analysis.issues.filter((i) => i.level === 'warning');
+      if (critical.length > 0) {
+        setPerfGate({ open: true, issues: critical, level: 'critical' });
+        toast.error('Publishing blocked: critical performance issues detected');
+        return;
+      }
+      if (warnings.length > 0) {
+        setPerfGate({ open: true, issues: [...warnings, ...analysis.issues.filter(i => i.level === 'info' && i.sectionId)], level: 'warning' });
+        return;
+      }
+    }
+    await persistBranding();
   };
 
   const applyTheme = (theme: LandingTheme) => {
@@ -262,7 +287,7 @@ export default function IntakeFormBuilder() {
               <ExternalLink className="mr-2 h-4 w-4" />
               Preview Live
             </Button>
-            <Button onClick={handleSave} disabled={upsertBranding.isPending}>
+            <Button onClick={() => handleSave()} disabled={upsertBranding.isPending}>
               {upsertBranding.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
@@ -729,6 +754,42 @@ export default function IntakeFormBuilder() {
           </Card>
         )}
       </div>
+
+      <AlertDialog open={perfGate.open} onOpenChange={(o) => setPerfGate((p) => ({ ...p, open: o }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {perfGate.level === 'critical' ? 'Publishing blocked' : 'Performance warnings'}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  {perfGate.level === 'critical'
+                    ? 'Your page has critical performance issues that must be fixed before publishing. Use the Performance tab to auto-fix or adjust sections.'
+                    : 'Your page has performance warnings. You can publish anyway, but users on mid-range devices may see jank.'}
+                </p>
+                <ul className="list-disc pl-5 text-sm space-y-1 max-h-48 overflow-auto">
+                  {perfGate.issues.map((i, idx) => (
+                    <li key={idx} className={i.level === 'critical' ? 'text-destructive' : ''}>{i.message}</li>
+                  ))}
+                </ul>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            {perfGate.level === 'critical' ? (
+              <AlertDialogAction onClick={() => { setPerfGate((p) => ({ ...p, open: false })); setActiveTab('performance'); }}>
+                Open Performance tab
+              </AlertDialogAction>
+            ) : (
+              <AlertDialogAction onClick={async () => { setPerfGate((p) => ({ ...p, open: false })); await handleSave({ bypassPerf: true }); }}>
+                Publish anyway
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
