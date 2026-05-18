@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Save, Upload, Eye, Link as LinkIcon, Palette, Type, FormInput,
-  Plus, Trash2, GripVertical, Loader2, Copy, ExternalLink, Sparkles, LayoutTemplate, Search,
+  Plus, Trash2, GripVertical, Loader2, Copy, ExternalLink, Sparkles, LayoutTemplate, Search, History,
 } from 'lucide-react';
 import { useFirmBranding, useUpsertBranding, useUploadLogo, type CustomField } from '@/hooks/use-firm-branding';
 import { useFirm } from '@/hooks/use-firm';
@@ -19,9 +19,11 @@ import { ThemeGallery } from '@/components/landing-builder/ThemeGallery';
 import { AiThemeTweaker } from '@/components/landing-builder/AiThemeTweaker';
 import { SectionsTab } from '@/components/landing-builder/SectionsTab';
 import { SeoSettingsPanel } from '@/components/landing-builder/SeoSettingsPanel';
+import { VersionsTab } from '@/components/landing-builder/VersionsTab';
 import { LANDING_THEMES, type LandingTheme } from '@/lib/landing-themes';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import type { SeoConfig } from '@/lib/landing-seo';
+import type { LandingSnapshot } from '@/hooks/use-landing-versions';
 import { toast } from 'sonner';
 
 const DEFAULT_FIELDS = [
@@ -63,7 +65,47 @@ export default function IntakeFormBuilder() {
   const [heroConfig, setHeroConfig] = useState<Record<string, any>>({});
   const [sections, setSections] = useState<Section[]>([]);
   const [seoConfig, setSeoConfig] = useState<SeoConfig>({});
-  const [activeTab, setActiveTab] = useState<'sections' | 'themes' | 'branding' | 'fields' | 'seo' | 'preview'>('sections');
+  const [activeTab, setActiveTab] = useState<'sections' | 'themes' | 'branding' | 'fields' | 'seo' | 'versions' | 'preview'>('sections');
+
+  // Current editor state captured as a snapshot for version history.
+  const currentSnapshot: LandingSnapshot = {
+    slug,
+    firm_display_name: firmDisplayName || null,
+    logo_url: logoUrl,
+    primary_color: primaryColor,
+    background_color: backgroundColor,
+    accent_color: accentColor,
+    heading_text: headingText,
+    description_text: descriptionText,
+    visible_fields: visibleFields,
+    custom_fields: customFields,
+    theme_key: themeKey,
+    typography,
+    layout_config: layoutConfig,
+    hero_config: heroConfig,
+    sections,
+    seo_config: seoConfig as any,
+  };
+
+  const restoreSnapshot = (s: LandingSnapshot) => {
+    if (s.slug) setSlug(s.slug);
+    setFirmDisplayName(s.firm_display_name ?? '');
+    setLogoUrl(s.logo_url ?? null);
+    setPrimaryColor(s.primary_color);
+    setBackgroundColor(s.background_color);
+    setAccentColor(s.accent_color);
+    setHeadingText(s.heading_text);
+    setDescriptionText(s.description_text);
+    setVisibleFields(Array.isArray(s.visible_fields) ? s.visible_fields : []);
+    setCustomFields(Array.isArray(s.custom_fields) ? s.custom_fields : []);
+    setThemeKey(s.theme_key ?? null);
+    setTypography(s.typography ?? {});
+    setLayoutConfig(s.layout_config ?? {});
+    setHeroConfig(s.hero_config ?? {});
+    setSections(Array.isArray(s.sections) ? s.sections : []);
+    setSeoConfig((s.seo_config ?? {}) as SeoConfig);
+    setActiveTab('sections');
+  };
 
   // Populate from existing branding
   useEffect(() => {
@@ -258,6 +300,7 @@ export default function IntakeFormBuilder() {
             { id: 'branding' as const, label: 'Branding & Colors', icon: Palette },
             { id: 'fields' as const, label: 'Form Fields', icon: FormInput },
             { id: 'seo' as const, label: 'SEO', icon: Search },
+            { id: 'versions' as const, label: 'Versions & Sharing', icon: History },
             { id: 'preview' as const, label: 'Preview', icon: Eye },
           ].map(tab => (
             <Button
@@ -306,6 +349,11 @@ export default function IntakeFormBuilder() {
               description: descriptionText,
             }}
           />
+        )}
+
+        {/* Versions & Sharing Tab */}
+        {activeTab === 'versions' && (
+          <VersionsTab snapshot={currentSnapshot} onRestore={restoreSnapshot} />
         )}
 
         {/* Themes Tab */}

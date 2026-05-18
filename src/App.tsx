@@ -30,6 +30,7 @@ const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Intake = lazy(() => import("./pages/Intake"));
 const BrandedIntake = lazy(() => import("./pages/BrandedIntake"));
 const IntakeFormBuilder = lazy(() => import("./pages/IntakeFormBuilder"));
+const LandingPreviewByToken = lazy(() => import("./pages/LandingPreviewByToken"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
 const MyLeads = lazy(() => import("./pages/MyLeads"));
 const IntakeSubmissions = lazy(() => import("./pages/IntakeSubmissions"));
@@ -140,6 +141,7 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/intake" element={<LazyRoute><Intake /></LazyRoute>} />
                 <Route path="/intake/:slug" element={<LazyRoute><BrandedIntake /></LazyRoute>} />
+                <Route path="/preview/landing/:token" element={<LazyRoute><LandingPreviewByToken /></LazyRoute>} />
                 <Route path="/lp/:slug" element={<LazyRoute><LandingPage /></LazyRoute>} />
                 <Route path="/verify" element={<LazyRoute><VerifyChain /></LazyRoute>} />
                 <Route path="/verify/:leadId" element={<LazyRoute><VerifyChain /></LazyRoute>} />
