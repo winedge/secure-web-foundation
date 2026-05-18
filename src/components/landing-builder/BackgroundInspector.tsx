@@ -60,6 +60,10 @@ export function BackgroundInspector({ value, onChange, onApplyToAll }: Props) {
         </div>
       </div>
 
+      <div className="pt-1 border-t">
+        <DesignPresetsManager current={v} onApply={(bg) => onChange(bg)} onApplyToAll={onApplyToAll} />
+      </div>
+
       {v.kind === 'solid' && (
         <ColorRow label="Color" value={v.color ?? '#ffffff'} onChange={(c) => set({ color: c })} />
       )}
