@@ -142,3 +142,137 @@ export const PERF_BUDGETS = {
   videoCount: 1,
   bytes: 250_000,
 };
+
+// ---------------- Auto-fix --------------------------------------------------
+
+export interface AutoFixSummary {
+  changedSections: number;
+  removedParallax: number;
+  reducedBlur: number;
+  disabledRepeat: number;
+  downgradedEntrance: number;
+  downgradedBackground: number;
+  mutedVideos: number;
+}
+
+/**
+ * Returns a patched copy of `sections` where the heaviest motion / rendering
+ * effects are softened on sections exceeding budget. Pure | does not mutate.
+ *
+ *  - Parallax removed on sections with score >= 40
+ *  - Glass blur capped at 12px, mesh blob count capped at 3, grain removed
+ *  - Repeating animations disabled
+ *  - blur-in / mask-reveal entrances downgraded to "fade"
+ *  - Extra mesh/glass backgrounds beyond budget downgraded to gradient
+ *  - Extra video heros beyond the first are muted (autoplay off)
+ */
+export function autoFixSections(sections: Section[]): { sections: Section[]; summary: AutoFixSummary } {
+  const summary: AutoFixSummary = {
+    changedSections: 0,
+    removedParallax: 0,
+    reducedBlur: 0,
+    disabledRepeat: 0,
+    downgradedEntrance: 0,
+    downgradedBackground: 0,
+    mutedVideos: 0,
+  };
+
+  let heavyBgBudget = PERF_BUDGETS.heavyBackgrounds;
+  let videoBudget = PERF_BUDGETS.videoCount;
+  const changed = new Set<string>();
+
+  const next = sections.map((s) => {
+    if (s.visible === false) return s;
+    const score = scoreSection(s);
+    const heavy = score >= 40;
+    let patched: Section = s;
+
+    // --- Animation softening ---------------------------------------------
+    const a = patched.animation;
+    if (a) {
+      const na: SectionAnimation = { ...a };
+      let touched = false;
+
+      if (heavy && (na.parallax ?? 0) > 0) {
+        na.parallax = 0;
+        summary.removedParallax++; touched = true;
+      }
+      if (heavy && na.repeat) {
+        na.repeat = false;
+        summary.disabledRepeat++; touched = true;
+      }
+      if (heavy && (na.entrance === 'blur-in' || na.entrance === 'mask-reveal')) {
+        na.entrance = 'fade';
+        summary.downgradedEntrance++; touched = true;
+      }
+      if (touched) {
+        patched = { ...patched, animation: na };
+        changed.add(s.id);
+      }
+    }
+
+    // --- Background softening --------------------------------------------
+    const bg = patched.background;
+    if (bg && bg.kind !== 'none') {
+      let nb: SectionBackground = bg;
+      let touched = false;
+
+      if (bg.kind === 'glass' && bg.glass) {
+        const blur = bg.glass.blur ?? 0;
+        if (blur > 12) {
+          nb = { ...bg, glass: { ...bg.glass, blur: 12 } };
+          summary.reducedBlur++; touched = true;
+        }
+      }
+      if (bg.kind === 'mesh' && bg.mesh) {
+        const blobs = bg.mesh.blobs ?? [];
+        if (blobs.length > 3 || bg.mesh.grain) {
+          nb = {
+            ...bg,
+            mesh: {
+              ...bg.mesh,
+              blobs: blobs.slice(0, 3),
+              grain: false,
+            },
+          };
+          summary.reducedBlur++; touched = true;
+        }
+      }
+
+      // Demote extras beyond the heavy-background budget
+      if ((bg.kind === 'mesh' || bg.kind === 'glass')) {
+        if (heavyBgBudget > 0) {
+          heavyBgBudget--;
+        } else {
+          nb = { kind: 'gradient', gradient: { type: 'linear', angle: 135, stops: [
+            { color: '#0f172a', position: 0 },
+            { color: '#1e293b', position: 100 },
+          ] } } as SectionBackground;
+          summary.downgradedBackground++; touched = true;
+        }
+      }
+
+      if (touched) {
+        patched = { ...patched, background: nb };
+        changed.add(s.id);
+      }
+    }
+
+    // --- Video hero throttling -------------------------------------------
+    if (patched.type === 'video_hero') {
+      if (videoBudget > 0) {
+        videoBudget--;
+      } else {
+        const props = { ...(patched.props ?? {}), autoplay: false, muted: true };
+        patched = { ...patched, props };
+        summary.mutedVideos++;
+        changed.add(s.id);
+      }
+    }
+
+    return patched;
+  });
+
+  summary.changedSections = changed.size;
+  return { sections: next, summary };
+}
