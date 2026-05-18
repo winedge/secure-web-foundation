@@ -11,6 +11,7 @@ import { Loader2, Sparkles, ArrowLeft, ShieldCheck, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getToolBySlug } from './tool-configs';
+import { LocationField } from '@/components/seo/LocationField';
 
 function ResultViewer({ data }: { data: any }) {
   if (!data) return null;
@@ -187,6 +188,11 @@ export default function AiSeoToolPage() {
                     placeholder={f.placeholder}
                     value={form[f.key] ?? ''}
                     onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                  />
+                ) : f.type === 'location' ? (
+                  <LocationField
+                    value={form[f.key] ?? ''}
+                    onChange={(v) => setForm({ ...form, [f.key]: v })}
                   />
                 ) : (
                   <Input
