@@ -438,6 +438,7 @@ export default function BrandedIntake() {
 
     return (
       <div style={{ background: backgroundColor }}>
+        {seoHead}
         <SectionRenderer sections={sections} theme={sectionTheme} formSlot={intakeContent} />
       </div>
     );
@@ -445,6 +446,7 @@ export default function BrandedIntake() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor }}>
+      {seoHead}
       {/* Branded Header */}
       <header className="sticky top-0 z-50 border-b" style={{ backgroundColor: primaryColor }}>
         <div className="container mx-auto px-4 sm:px-6 py-4 flex items-center gap-3">
