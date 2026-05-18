@@ -1,79 +1,62 @@
-## Goal
-Extend the existing SEO Suite (`/seo/*`) with **9 new AI-powered tools** focused on AI search visibility (GEO/AEO), built using the same patterns as the current `SeoKeywords` / `SeoBacklinks` / `SeoCitations` pages: one React page per tool + one Supabase Edge Function per tool, all calling the Lovable AI Gateway (`google/gemini-2.5-flash` for analysis, `gemini-2.5-pro` for deep simulation).
+## Competitor Ad Library (Google Ads Transparency)
 
-## Tools to add
+Add a new tool that lets users look up the live & historical ads a competitor is running on Google — pulling from Google's Ads Transparency Center, plus AI analysis of creatives and messaging angles.
 
-| # | Tool | Route | Edge Function |
-|---|------|-------|---------------|
-| 1 | AI Search Visibility Tracker | `/seo/ai-visibility` | `ai-visibility-tracker` |
-| 2 | GEO Optimizer | `/seo/geo-optimizer` | `geo-optimizer` |
-| 3 | Entity Authority Engine | `/seo/entity-authority` | `entity-authority` |
-| 4 | AI Prompt Mining Engine | `/seo/prompt-mining` | `prompt-mining` |
-| 5 | AI Internal Linking Engine | `/seo/internal-linking` | `internal-linking-ai` |
-| 6 | AI Content Decay Detector | `/seo/content-decay` | `content-decay-detector` |
-| 7 | Competitor AI Intelligence | `/seo/competitor-ai` | `competitor-ai-intel` |
-| 8 | AI Brand Reputation Monitor | `/seo/brand-reputation` | `brand-reputation-ai` |
-| 9 | Autonomous SEO Agent | `/seo/seo-agent` | `autonomous-seo-agent` |
+### What the user gets
 
-## Architecture (uniform across all 9 tools)
+A new page under **SEO → AI Search & GEO Tools** called **"Competitor Ad Library"**:
 
-**Frontend page** (under `src/pages/seo/ai/`):
-- Input form (brand, domain, competitors, topic, etc. | tool-specific)
-- "Run Analysis" button → `supabase.functions.invoke(<fn>)`
-- Result rendered as score cards + tables + AI-generated recommendations
-- Loading state, error toast, history list of past runs for that firm
-- Reuses existing UI primitives (Card, Table, Badge, Progress, Tabs)
-- Compliance badge "ABA 512 / GDPR / EU AI Act" (per core memory)
+- Input: competitor brand/domain, region (default India), date range, ad format filter (Text / Image / Video / Shopping).
+- Output:
+  - List of active and recently-run ads with advertiser name, format, regions, first/last seen dates, and a link to the original Transparency Center entry.
+  - Creative preview (image/video thumbnail or text headline+description).
+  - AI breakdown: dominant offers, emotional angles, CTAs, keywords/themes, audience targeting hints, ad cadence over time.
+  - "Counter-ad ideas" — AI-generated headline/description variants the user can run against the competitor.
+  - Export to CSV.
 
-**Edge function** (`supabase/functions/<name>/index.ts`):
-- CORS + JWT validation (same pattern as `seo-keyword-research`)
-- Zod validation of body
-- Calls Lovable AI Gateway with `response_format: json_object` and a tool-specific structured-output prompt
-- For Tools 1, 7, 8: also calls **Firecrawl search** (already configured) to fetch real AI Overview / competitor SERP data when needed
-- For Tools 2, 6: scrapes target URL via Firecrawl `scrape` before sending to AI
-- Inserts a row into `ai_seo_runs` table for history + audit
-- Returns structured JSON
+### Data sources (in order of preference)
 
-## Database
+1. **Google Ads Transparency Center scrape via Firecrawl** — `https://adstransparency.google.com/advertiser/<id>?region=IN`. Firecrawl is already wired in. We resolve domain → advertiser ID via Transparency search, then scrape the advertiser page (`formats: ['html','rawHtml','screenshot','links']`), parse out creatives. Falls back to a `/search?...` scrape when no direct ID is found.
+2. **SerpApi-style fallback (optional)** — if scraping is blocked, surface a friendly empty state telling the user to paste a Transparency Center URL directly; we then scrape that URL.
+3. **AI enrichment** via Lovable AI Gateway (`google/gemini-2.5-flash`) on the parsed creatives to produce the breakdown + counter-ad ideas.
 
-One new table `ai_seo_runs`:
-- `tool` text (one of the 9 keys)
-- `firm_id` uuid
-- `user_id` uuid
-- `input` jsonb
-- `output` jsonb
-- `model` text
-- `created_at` timestamptz
-- RLS: firm members can read their firm's runs; admins read all; insert via service role from edge functions
+No paid third-party SDK is required. The Google Ads Library itself is Meta — Google's equivalent is the Ads Transparency Center, which is what we'll use.
 
-This gives every tool free history, exportability, and compliance logging without per-tool tables.
+### Backend
 
-## Hub & navigation updates
+- New edge function `competitor-ad-library/index.ts`:
+  - Input: `{ brand, domain, region, dateRange, formats[], firmId, advertiserUrl? }`.
+  - Step 1: if `advertiserUrl` given, use it; else Firecrawl `scrape` on `https://adstransparency.google.com/?region=...` search for the domain, extract advertiser id.
+  - Step 2: Firecrawl `scrape` advertiser page → parse creative cards (HTML selectors + regex on JSON blobs Google embeds).
+  - Step 3: normalize into `{ creativeId, format, headline, body, mediaUrl, firstSeen, lastSeen, regions, transparencyUrl }[]`.
+  - Step 4: send a compact summary to Lovable AI → returns `{ themes, offers, ctas, audienceHints, cadenceNotes, counterAdIdeas[] }`.
+  - Persist run + results in two new tables; return `{ runId }`.
+- Wrap the long work in `EdgeRuntime.waitUntil()` so the client gets `runId` immediately (same pattern as `seo-deep-scan`).
 
-- `src/pages/seo/SeoHub.tsx`: add a second section **"AI Search & GEO Tools"** that lists the 9 new tools as cards (icon + name + 1-line description + "NEW" badge).
-- `src/App.tsx`: register 9 new routes (lazy-loaded), protected by `ProtectedRoute`.
-- `src/components/layout/sidebar-nav-data.ts`: add an "AI SEO" sub-group under the existing SEO section linking to each tool.
+### Database (one migration)
 
-## Per-tool specifics (summary)
+- `competitor_ad_runs` — `firm_id`, `brand`, `domain`, `region`, `date_range`, `formats`, `status` (`pending|complete|error`), `advertiser_id`, `advertiser_url`, `ai_summary jsonb`, `error_message`, timestamps.
+- `competitor_ad_creatives` — `run_id` FK, `creative_id`, `format`, `headline`, `body`, `media_url`, `first_seen`, `last_seen`, `regions text[]`, `transparency_url`, `raw jsonb`.
+- RLS: firm members can read/write rows where `firm_id` matches the user's firm (reuse the existing `has_role` / firm membership helpers).
 
-1. **AI Visibility Tracker** | inputs: brand, industry, location, competitors. Generates 15-25 prompt variations via AI, optionally executes a subset via Firecrawl search against `chatgpt.com/share`, `perplexity.ai`, `google.com/search?udm=50` to capture real mentions; computes Share of Voice, mention frequency, citation domains, sentiment. Dashboard with charts (Recharts) + per-engine breakdown.
-2. **GEO Optimizer** | inputs: URL or pasted content. Scrapes via Firecrawl, scores AI-readability/semantic chunking/citation friendliness/answer extraction/entity clarity/factual density (0-100 each, plus per-engine scores for ChatGPT / Perplexity / Google AIO). "Rewrite" button regenerates content optimized for AI extraction. Citation simulation returns confidence + missing trust signals.
-3. **Entity Authority Engine** | inputs: URL or topic. Extracts entities (brands/services/products/people/locations/topics), renders relationship map (simple force-graph using `react-force-graph-2d` already viable, otherwise SVG cluster). Schema generator outputs JSON-LD for Organization/FAQ/Article/Event/Product/LocalBusiness with copy-to-clipboard. Gap detector compares against competitor URL.
-4. **Prompt Mining Engine** | inputs: brand/topic/industry. AI generates 50+ conversational prompts, clusters by intent (informational/transactional/local/comparison/purchase), scores each for AI visibility opportunity, competition, buyer intent, conversion probability. Sortable table + cluster view.
-5. **AI Internal Linking Engine** | inputs: domain. Uses Firecrawl `map` to enumerate URLs, then AI groups pages into topic silos, identifies orphans, suggests contextual links with anchor text. Crawl-flow visualization (simple tree).
-6. **Content Decay Detector** | inputs: URL. Scrapes content + metadata, AI estimates freshness decay, ranking-risk score, outdated entities, declining authority signals; generates refresh recommendations (new sections, FAQs, entity expansion, schema improvements).
-7. **Competitor AI Intelligence** | inputs: your domain + 1-3 competitor domains. Scrapes top pages of each, AI compares entity coverage / topical clusters / content depth / schema usage / semantic structure; outputs competitor weakness analysis, attack strategies, missing topic opportunities, AI visibility gaps.
-8. **AI Brand Reputation Monitor** | inputs: brand name. Generates "describe X", "is X trustworthy", "X reviews", "X vs competitors" prompts and runs them via Firecrawl search across AI engines; captures AI-generated descriptions, sentiment, detected misinformation / hallucinations / outdated info; returns reputation-repair suggestions (PR opportunities, trust pages, review improvements).
-9. **Autonomous SEO Agent** | inputs: domain. Runs an orchestrated multi-step audit (uses existing `seo-deep-scan` + new GEO Optimizer + Entity Authority + Internal Linking under the hood), then emits a prioritized recommendations feed (content opportunities, entity opportunities, technical fixes, GEO improvements). Each recommendation has impact / effort / category + "Apply" stub (creates a task in `ai_seo_runs` with `tool='agent_recommendation'`).
+### Frontend
 
-## Out of scope (this pass)
-- Real-time scheduled scans / cron jobs (can be added later via `pg_cron`)
-- Direct API integration with ChatGPT/Perplexity/Claude APIs for live mentions (we use Firecrawl-based scraping as a proxy; can swap later when official APIs are available)
-- Paid third-party SEO data providers (Semrush/Ahrefs) | all metrics are AI-estimated and clearly labelled "AI-estimated"
+- New page `src/pages/seo/ai/CompetitorAdLibrary.tsx` (not the generic `AiSeoToolPage` — this one has a custom layout):
+  - Top: input form (brand, domain, region select, date range, format chips, optional advertiser URL).
+  - Polling on `runId` until status = `complete`.
+  - Tabs: **Creatives grid** (cards with thumbnail/headline, format badge, date range, "View on Google" link), **AI Insights** (themes, offers, CTAs, cadence chart), **Counter-Ad Ideas** (copy-to-clipboard cards), **Raw data / CSV export**.
+- Hook `src/hooks/use-competitor-ads.ts` — start run, poll status, fetch creatives, list past runs.
+- Register route `/seo/ai/competitor-ad-library` in `src/App.tsx`.
+- Add a card on `SeoHub.tsx` under "AI Search & GEO Tools" with the `Megaphone` icon.
 
-## Deliverables
-- 1 migration (table + RLS)
-- 9 edge functions
-- 9 new React pages under `src/pages/seo/ai/`
-- Updated `SeoHub.tsx`, `App.tsx`, sidebar nav
-- All tools functional with mock-free real AI output via Lovable AI Gateway
+### Compliance & limits
+
+- Show "Source: Google Ads Transparency Center" attribution on every result, with link back to the original entry (required by Google's ToS for derived data).
+- Log every AI call to `ai_transparency_logs` (existing pattern from memory).
+- Rate-limit: max 5 runs per firm per hour, enforced in the edge function via a `select count(*) … where created_at > now() - interval '1 hour'` check.
+
+### Out of scope (call out, don't build)
+
+- Real-time ad spend estimates (Google doesn't expose this).
+- Meta / TikTok / LinkedIn ad libraries — separate tools, can be follow-ups.
+- Auto-launching counter ads into Google Ads — manual copy/paste for now.
