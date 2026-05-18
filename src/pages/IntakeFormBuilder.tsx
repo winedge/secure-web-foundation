@@ -66,7 +66,7 @@ export default function IntakeFormBuilder() {
   const [heroConfig, setHeroConfig] = useState<Record<string, any>>({});
   const [sections, setSections] = useState<Section[]>([]);
   const [seoConfig, setSeoConfig] = useState<SeoConfig>({});
-  const [activeTab, setActiveTab] = useState<'sections' | 'themes' | 'branding' | 'fields' | 'seo' | 'versions' | 'preview'>('sections');
+  const [activeTab, setActiveTab] = useState<'sections' | 'themes' | 'branding' | 'fields' | 'seo' | 'versions' | 'performance' | 'preview'>('sections');
 
   // Current editor state captured as a snapshot for version history.
   const currentSnapshot: LandingSnapshot = {
