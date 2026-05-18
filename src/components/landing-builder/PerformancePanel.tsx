@@ -185,3 +185,16 @@ function BudgetBar({ icon, label, value, budget }: { icon: React.ReactNode; labe
     </div>
   );
 }
+
+function VitalTile({ k, label, icon, v }: { k: keyof WebVitals; label: string; icon: React.ReactNode; v: WebVitalValue }) {
+  return (
+    <div className="rounded-md border border-border bg-muted/30 p-2.5">
+      <div className="flex items-center justify-between text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
+        <span className="flex items-center gap-1">{icon} {k}</span>
+        <span className={cn('font-medium', ratingTone(v.rating))}>{ratingLabel(v.rating)}</span>
+      </div>
+      <div className={cn('text-xl font-bold tabular-nums', ratingTone(v.rating))}>{formatVital(k, v)}</div>
+      <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{label}</div>
+    </div>
+  );
+}
