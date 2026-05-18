@@ -5,10 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Activity, AlertTriangle, Gauge, ImageIcon, Layers, Sparkles, Zap, Info } from 'lucide-react';
+import { Activity, AlertTriangle, Gauge, ImageIcon, Layers, Sparkles, Zap, Info, MousePointerClick, Move, Timer } from 'lucide-react';
 import type { Section } from '@/lib/landing-sections/types';
 import { analyzeSections, PERF_BUDGETS } from '@/lib/landing-builder/performance';
 import { useFpsMonitor } from '@/hooks/use-fps-monitor';
+import { useWebVitals, formatVital, ratingTone, ratingLabel, type WebVitals, type WebVitalValue } from '@/hooks/use-web-vitals';
 import { cn } from '@/lib/utils';
 
 interface Props {
