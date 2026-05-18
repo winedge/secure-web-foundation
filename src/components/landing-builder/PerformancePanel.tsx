@@ -5,23 +5,47 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Activity, AlertTriangle, Gauge, ImageIcon, Layers, Sparkles, Zap, Info, MousePointerClick, Move, Timer } from 'lucide-react';
+import { Activity, AlertTriangle, Gauge, ImageIcon, Layers, Sparkles, Zap, Info, MousePointerClick, Move, Timer, Wand2 } from 'lucide-react';
 import type { Section } from '@/lib/landing-sections/types';
-import { analyzeSections, PERF_BUDGETS } from '@/lib/landing-builder/performance';
+import { analyzeSections, autoFixSections, PERF_BUDGETS, type AutoFixSummary } from '@/lib/landing-builder/performance';
 import { useFpsMonitor } from '@/hooks/use-fps-monitor';
 import { useWebVitals, formatVital, ratingTone, ratingLabel, type WebVitals, type WebVitalValue } from '@/hooks/use-web-vitals';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface Props {
   sections: Section[];
   onJumpTo?: (sectionId: string) => void;
+  onChange?: (next: Section[]) => void;
 }
 
-export function PerformancePanel({ sections, onJumpTo }: Props) {
+export function PerformancePanel({ sections, onJumpTo, onChange }: Props) {
   const [liveFps, setLiveFps] = useState(true);
   const fps = useFpsMonitor(liveFps);
   const vitals = useWebVitals(true);
   const analysis = useMemo(() => analyzeSections(sections), [sections]);
+  const preview = useMemo(() => autoFixSections(sections).summary, [sections]);
+  const canAutoFix = !!onChange && (
+    preview.removedParallax + preview.reducedBlur + preview.disabledRepeat +
+    preview.downgradedEntrance + preview.downgradedBackground + preview.mutedVideos
+  ) > 0;
+
+  const runAutoFix = () => {
+    if (!onChange) return;
+    const { sections: next, summary } = autoFixSections(sections);
+    onChange(next);
+    const parts: string[] = [];
+    if (summary.removedParallax) parts.push(`parallax off (${summary.removedParallax})`);
+    if (summary.reducedBlur) parts.push(`blur/mesh reduced (${summary.reducedBlur})`);
+    if (summary.disabledRepeat) parts.push(`repeat off (${summary.disabledRepeat})`);
+    if (summary.downgradedEntrance) parts.push(`entrance softened (${summary.downgradedEntrance})`);
+    if (summary.downgradedBackground) parts.push(`backgrounds simplified (${summary.downgradedBackground})`);
+    if (summary.mutedVideos) parts.push(`extra videos muted (${summary.mutedVideos})`);
+    toast.success(`Auto-fixed ${summary.changedSections} section${summary.changedSections === 1 ? '' : 's'}`, {
+      description: parts.length ? parts.join(' | ') : 'No changes needed.',
+    });
+  };
+
 
   const grade =
     analysis.totalScore < 30 ? { label: 'Excellent', tone: 'bg-emerald-500' } :
@@ -35,6 +59,26 @@ export function PerformancePanel({ sections, onJumpTo }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* Auto-fix bar */}
+      {onChange && (
+        <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/30 p-3">
+          <div className="flex items-start gap-2 text-xs">
+            <Wand2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+            <div>
+              <div className="font-semibold">Auto-fix performance</div>
+              <div className="text-muted-foreground">
+                {canAutoFix
+                  ? 'Disables parallax/repeat, caps blur, and softens entrances on sections over budget.'
+                  : 'Nothing to fix | all sections are within the motion & rendering budget.'}
+              </div>
+            </div>
+          </div>
+          <Button size="sm" onClick={runAutoFix} disabled={!canAutoFix} className="shrink-0">
+            <Wand2 className="h-3.5 w-3.5 mr-1.5" /> Auto-fix
+          </Button>
+        </div>
+      )}
+
       {/* Top: live FPS + total score */}
       <div className="grid gap-3 md:grid-cols-3">
         <Card className="p-4">
