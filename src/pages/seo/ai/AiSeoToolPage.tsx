@@ -189,6 +189,11 @@ export default function AiSeoToolPage() {
                     value={form[f.key] ?? ''}
                     onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
                   />
+                ) : f.type === 'location' ? (
+                  <LocationField
+                    value={form[f.key] ?? ''}
+                    onChange={(v) => setForm({ ...form, [f.key]: v })}
+                  />
                 ) : (
                   <Input
                     type={f.type === 'url' ? 'url' : 'text'}
