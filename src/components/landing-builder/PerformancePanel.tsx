@@ -59,6 +59,26 @@ export function PerformancePanel({ sections, onJumpTo, onChange }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* Auto-fix bar */}
+      {onChange && (
+        <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/30 p-3">
+          <div className="flex items-start gap-2 text-xs">
+            <Wand2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+            <div>
+              <div className="font-semibold">Auto-fix performance</div>
+              <div className="text-muted-foreground">
+                {canAutoFix
+                  ? 'Disables parallax/repeat, caps blur, and softens entrances on sections over budget.'
+                  : 'Nothing to fix | all sections are within the motion & rendering budget.'}
+              </div>
+            </div>
+          </div>
+          <Button size="sm" onClick={runAutoFix} disabled={!canAutoFix} className="shrink-0">
+            <Wand2 className="h-3.5 w-3.5 mr-1.5" /> Auto-fix
+          </Button>
+        </div>
+      )}
+
       {/* Top: live FPS + total score */}
       <div className="grid gap-3 md:grid-cols-3">
         <Card className="p-4">
