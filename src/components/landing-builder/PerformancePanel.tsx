@@ -1,0 +1,168 @@
+import { useMemo, useState } from 'react';
+import { Card } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Activity, AlertTriangle, Gauge, ImageIcon, Layers, Sparkles, Zap, Info } from 'lucide-react';
+import type { Section } from '@/lib/landing-sections/types';
+import { analyzeSections, PERF_BUDGETS } from '@/lib/landing-builder/performance';
+import { useFpsMonitor } from '@/hooks/use-fps-monitor';
+import { cn } from '@/lib/utils';
+
+interface Props {
+  sections: Section[];
+  onJumpTo?: (sectionId: string) => void;
+}
+
+export function PerformancePanel({ sections, onJumpTo }: Props) {
+  const [liveFps, setLiveFps] = useState(true);
+  const fps = useFpsMonitor(liveFps);
+  const analysis = useMemo(() => analyzeSections(sections), [sections]);
+
+  const grade =
+    analysis.totalScore < 30 ? { label: 'Excellent', tone: 'bg-emerald-500' } :
+    analysis.totalScore < 55 ? { label: 'Good', tone: 'bg-primary' } :
+    analysis.totalScore < 75 ? { label: 'Needs care', tone: 'bg-amber-500' } :
+                               { label: 'Heavy', tone: 'bg-destructive' };
+
+  const fpsTone =
+    fps.fps >= 55 ? 'text-emerald-500' :
+    fps.fps >= 40 ? 'text-amber-500' : 'text-destructive';
+
+  return (
+    <div className="space-y-4">
+      {/* Top: live FPS + total score */}
+      <div className="grid gap-3 md:grid-cols-3">
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <Activity className="h-3.5 w-3.5 text-primary" /> Live FPS
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Switch id="live-fps" checked={liveFps} onCheckedChange={setLiveFps} />
+              <Label htmlFor="live-fps" className="text-[10px] text-muted-foreground">Sampling</Label>
+            </div>
+          </div>
+          <div className={cn('text-3xl font-bold tabular-nums', fpsTone)}>{liveFps ? fps.fps : '—'}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">
+            Min {fps.minFps} | dropped {fps.droppedFrames} | long tasks {fps.longTasks}
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+            <Gauge className="h-3.5 w-3.5 text-primary" /> Cost score
+          </div>
+          <div className="flex items-baseline gap-2">
+            <div className="text-3xl font-bold">{analysis.totalScore}</div>
+            <Badge className={cn('text-white', grade.tone)}>{grade.label}</Badge>
+          </div>
+          <Progress value={analysis.totalScore} className="mt-2 h-2" />
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+            <ImageIcon className="h-3.5 w-3.5 text-primary" /> Page payload
+          </div>
+          <div className="text-3xl font-bold tabular-nums">
+            {(analysis.estimatedBytes / 1024).toFixed(1)}<span className="text-base text-muted-foreground"> KB</span>
+          </div>
+          <div className="text-[11px] text-muted-foreground mt-1">
+            Budget {(PERF_BUDGETS.bytes / 1024).toFixed(0)} KB | excludes uploaded media
+          </div>
+        </Card>
+      </div>
+
+      {/* Budgets */}
+      <Card className="p-4">
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          Motion & rendering budget
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <BudgetBar icon={<Sparkles className="h-3.5 w-3.5" />} label="Animated sections" value={analysis.motionLoad} budget={PERF_BUDGETS.motionLoad} />
+          <BudgetBar icon={<Layers className="h-3.5 w-3.5" />} label="Mesh / glass backgrounds" value={analysis.heavyBackgrounds} budget={PERF_BUDGETS.heavyBackgrounds} />
+          <BudgetBar icon={<Zap className="h-3.5 w-3.5" />} label="Parallax sections" value={analysis.parallaxCount} budget={PERF_BUDGETS.parallaxCount} />
+          <BudgetBar icon={<Activity className="h-3.5 w-3.5" />} label="Auto-playing videos" value={analysis.videoCount} budget={PERF_BUDGETS.videoCount} />
+        </div>
+      </Card>
+
+      {/* Issues */}
+      <Card className="p-4">
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          Findings
+        </div>
+        <div className="space-y-2">
+          {analysis.issues.map((issue, i) => {
+            const Icon = issue.level === 'critical' ? AlertTriangle : issue.level === 'warning' ? AlertTriangle : Info;
+            const tone =
+              issue.level === 'critical' ? 'text-destructive border-destructive/30 bg-destructive/5' :
+              issue.level === 'warning' ? 'text-amber-600 border-amber-500/30 bg-amber-500/5' :
+                                          'text-muted-foreground border-border bg-muted/30';
+            return (
+              <div key={i} className={cn('flex items-start gap-2 rounded-md border p-2 text-xs', tone)}>
+                <Icon className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <div className="flex-1">{issue.message}</div>
+                {issue.sectionId && onJumpTo && (
+                  <Button variant="ghost" size="sm" className="h-6 text-[10px]" onClick={() => onJumpTo(issue.sectionId!)}>
+                    Open
+                  </Button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* Per-section scores */}
+      <Card className="p-4">
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          Per-section cost
+        </div>
+        <div className="space-y-1.5">
+          {analysis.sectionScores.length === 0 && (
+            <p className="text-xs text-muted-foreground italic">No visible sections to analyze.</p>
+          )}
+          {analysis.sectionScores.map((s) => {
+            const tone =
+              s.score >= 60 ? 'bg-destructive' :
+              s.score >= 40 ? 'bg-amber-500' :
+              s.score >= 20 ? 'bg-primary' : 'bg-emerald-500';
+            return (
+              <button
+                key={s.id}
+                onClick={() => onJumpTo?.(s.id)}
+                className="w-full flex items-center gap-3 text-xs px-2 py-1.5 rounded hover:bg-muted/50 text-left"
+              >
+                <div className="w-28 truncate capitalize">{s.type.replace('_', ' ')}</div>
+                <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div className={cn('h-full transition-all', tone)} style={{ width: `${s.score}%` }} />
+                </div>
+                <div className="w-10 text-right tabular-nums text-muted-foreground">{s.score}</div>
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function BudgetBar({ icon, label, value, budget }: { icon: React.ReactNode; label: string; value: number; budget: number }) {
+  const pct = Math.min(100, (value / Math.max(1, budget)) * 100);
+  const over = value > budget;
+  return (
+    <div>
+      <div className="flex items-center justify-between text-[11px] mb-1">
+        <span className="flex items-center gap-1 text-muted-foreground">{icon} {label}</span>
+        <span className={cn('tabular-nums font-medium', over && 'text-destructive')}>
+          {value} / {budget}
+        </span>
+      </div>
+      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+        <div className={cn('h-full transition-all', over ? 'bg-destructive' : 'bg-primary')} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
