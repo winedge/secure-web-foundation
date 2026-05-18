@@ -14,7 +14,7 @@ import { ChatWidget } from "@/components/chat/ChatWidget";
 import { ZKUnlockDialog } from "@/components/auth/ZKUnlockDialog";
 import { usePresence } from "@/hooks/use-presence";
 import { useSmartAlertListener } from "@/hooks/use-smart-alert-listener";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, type ComponentType, type ReactNode } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import { Loader2 } from "lucide-react";
 
@@ -24,14 +24,14 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
-type LazyImporter<T extends { default: React.ComponentType<any> }> = () => Promise<T>;
+type LazyImporter<T extends { default: ComponentType<any> }> = () => Promise<T>;
 
 const isRecoverableLazyImportError = (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error ?? "");
   return /importing a module script failed|failed to fetch dynamically imported module|loading chunk|chunkloaderror/i.test(message);
 };
 
-const lazyWithRetry = <T extends { default: React.ComponentType<any> }>(importer: LazyImporter<T>) =>
+const lazyWithRetry = <T extends { default: ComponentType<any> }>(importer: LazyImporter<T>) =>
   lazy(async () => {
     try {
       return await importer();
@@ -128,7 +128,7 @@ function PageLoader() {
   );
 }
 
-function LazyRoute({ children }: { children: React.ReactNode }) {
+function LazyRoute({ children }: { children: ReactNode }) {
   return (
     <RouteErrorBoundary>
       <Suspense fallback={<PageLoader />}>
