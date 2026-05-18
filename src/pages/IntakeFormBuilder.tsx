@@ -20,6 +20,7 @@ import { AiThemeTweaker } from '@/components/landing-builder/AiThemeTweaker';
 import { SectionsTab } from '@/components/landing-builder/SectionsTab';
 import { SeoSettingsPanel } from '@/components/landing-builder/SeoSettingsPanel';
 import { VersionsTab } from '@/components/landing-builder/VersionsTab';
+import { PerformancePanel } from '@/components/landing-builder/PerformancePanel';
 import { LANDING_THEMES, type LandingTheme } from '@/lib/landing-themes';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import type { SeoConfig } from '@/lib/landing-seo';
