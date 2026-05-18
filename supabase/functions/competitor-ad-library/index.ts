@@ -475,7 +475,7 @@ async function processRun(runId: string, input: RunInput, supa: ReturnType<typeo
     if (advertiserId) {
       const rows = await fetchGoogleCreativeRows(advertiserId, region, 60);
       creatives = parseGoogleCreativeRows(rows, advertiserId, url);
-      if (creatives.length) creatives = await hydrateCreatives(creatives, advertiserId, region);
+      
     }
 
     if (!creatives.length) {
