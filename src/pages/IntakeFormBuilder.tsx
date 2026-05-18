@@ -360,7 +360,7 @@ export default function IntakeFormBuilder() {
 
         {/* Performance Tab */}
         {activeTab === 'performance' && (
-          <PerformancePanel sections={sections} onJumpTo={() => setActiveTab('sections')} />
+          <PerformancePanel sections={sections} onChange={setSections} onJumpTo={() => setActiveTab('sections')} />
         )}
 
         {/* Themes Tab */}
