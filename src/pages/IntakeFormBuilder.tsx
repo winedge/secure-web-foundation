@@ -11,15 +11,17 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Save, Upload, Eye, Link as LinkIcon, Palette, Type, FormInput,
-  Plus, Trash2, GripVertical, Loader2, Copy, ExternalLink, Sparkles, LayoutTemplate,
+  Plus, Trash2, GripVertical, Loader2, Copy, ExternalLink, Sparkles, LayoutTemplate, Search,
 } from 'lucide-react';
 import { useFirmBranding, useUpsertBranding, useUploadLogo, type CustomField } from '@/hooks/use-firm-branding';
 import { useFirm } from '@/hooks/use-firm';
 import { ThemeGallery } from '@/components/landing-builder/ThemeGallery';
 import { AiThemeTweaker } from '@/components/landing-builder/AiThemeTweaker';
 import { SectionsTab } from '@/components/landing-builder/SectionsTab';
+import { SeoSettingsPanel } from '@/components/landing-builder/SeoSettingsPanel';
 import { LANDING_THEMES, type LandingTheme } from '@/lib/landing-themes';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
+import type { SeoConfig } from '@/lib/landing-seo';
 import { toast } from 'sonner';
 
 const DEFAULT_FIELDS = [
@@ -60,7 +62,8 @@ export default function IntakeFormBuilder() {
   const [layoutConfig, setLayoutConfig] = useState<Record<string, any>>({});
   const [heroConfig, setHeroConfig] = useState<Record<string, any>>({});
   const [sections, setSections] = useState<Section[]>([]);
-  const [activeTab, setActiveTab] = useState<'sections' | 'themes' | 'branding' | 'fields' | 'preview'>('sections');
+  const [seoConfig, setSeoConfig] = useState<SeoConfig>({});
+  const [activeTab, setActiveTab] = useState<'sections' | 'themes' | 'branding' | 'fields' | 'seo' | 'preview'>('sections');
 
   // Populate from existing branding
   useEffect(() => {
@@ -88,6 +91,7 @@ export default function IntakeFormBuilder() {
       setLayoutConfig((branding as any).layout_config ?? {});
       setHeroConfig((branding as any).hero_config ?? {});
       setSections(Array.isArray((branding as any).sections) ? (branding as any).sections : []);
+      setSeoConfig(((branding as any).seo_config ?? {}) as SeoConfig);
     } else if (firm) {
       // Auto-generate slug from firm name
       setSlug(firm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
@@ -128,6 +132,7 @@ export default function IntakeFormBuilder() {
       layout_config: layoutConfig,
       hero_config: heroConfig,
       sections,
+      seo_config: seoConfig,
     } as any);
   };
 
@@ -252,6 +257,7 @@ export default function IntakeFormBuilder() {
             { id: 'themes' as const, label: 'Themes', icon: Sparkles },
             { id: 'branding' as const, label: 'Branding & Colors', icon: Palette },
             { id: 'fields' as const, label: 'Form Fields', icon: FormInput },
+            { id: 'seo' as const, label: 'SEO', icon: Search },
             { id: 'preview' as const, label: 'Preview', icon: Eye },
           ].map(tab => (
             <Button
@@ -282,6 +288,20 @@ export default function IntakeFormBuilder() {
               spacing: ((layoutConfig as any)?.spacing ?? 'normal') as SectionTheme['spacing'],
               buttonStyle: ((layoutConfig as any)?.buttonStyle ?? 'solid') as SectionTheme['buttonStyle'],
               maxWidth: ((layoutConfig as any)?.maxWidth ?? 'normal') as SectionTheme['maxWidth'],
+            }}
+          />
+        )}
+
+        {/* SEO Tab */}
+        {activeTab === 'seo' && (
+          <SeoSettingsPanel
+            value={seoConfig}
+            onChange={setSeoConfig}
+            context={{
+              name: seoConfig.title || firmDisplayName || firm?.name || 'Your business',
+              url: intakeUrl,
+              logo: logoUrl || undefined,
+              description: descriptionText,
             }}
           />
         )}

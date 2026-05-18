@@ -19,6 +19,8 @@ import { useSessionRecording } from '@/hooks/use-session-recording';
 import { useBrandingBySlug, type CustomField } from '@/hooks/use-firm-branding';
 import { SectionRenderer } from '@/components/landing-sections/SectionRenderer';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
+import { LandingSeoHead } from '@/components/landing-builder/SeoSettingsPanel';
+import type { SeoConfig } from '@/lib/landing-seo';
 
 const tortTypes = [
   'Camp Lejeune', 'Roundup', 'Talcum Powder', 'AFFF', 'Paraquat',
@@ -251,6 +253,16 @@ export default function BrandedIntake() {
   const heading = branding?.heading_text || 'Submit Your Claim';
   const description = branding?.description_text || 'Fill out the form below to get started.';
 
+  // Per-landing-page SEO head tags
+  const seoConfig = (((branding as any)?.seo_config ?? {}) as SeoConfig);
+  const pageUrl = typeof window !== 'undefined' ? window.location.href.split('?')[0] : `https://snuggle-site-synth.lovable.app/intake/${slug}`;
+  const seoHead = branding ? (
+    <LandingSeoHead
+      seo={seoConfig}
+      context={{ name: firmName, url: pageUrl, logo: logoUrl || undefined, description }}
+    />
+  ) : null;
+
   if (brandingLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor }}>
@@ -426,6 +438,7 @@ export default function BrandedIntake() {
 
     return (
       <div style={{ background: backgroundColor }}>
+        {seoHead}
         <SectionRenderer sections={sections} theme={sectionTheme} formSlot={intakeContent} />
       </div>
     );
@@ -433,6 +446,7 @@ export default function BrandedIntake() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor }}>
+      {seoHead}
       {/* Branded Header */}
       <header className="sticky top-0 z-50 border-b" style={{ backgroundColor: primaryColor }}>
         <div className="container mx-auto px-4 sm:px-6 py-4 flex items-center gap-3">
