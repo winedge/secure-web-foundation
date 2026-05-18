@@ -198,16 +198,12 @@ async function processRun(runId: string, input: RunInput, supa: ReturnType<typeo
     let url = input.advertiser_url;
     let advertiserId: string | null = null;
 
+    let discoveryTried: string[] = [];
     if (!url) {
-      // Search Transparency Center for the advertiser
-      const query = input.brand || input.domain || '';
-      const searchUrl = `https://adstransparency.google.com/?region=${region}&preset-date=Last+30+days&q=${encodeURIComponent(query)}`;
-      const search = await firecrawlScrape(searchUrl);
-      const html: string = search?.html || search?.rawHtml || '';
-      const linksBlob = JSON.stringify(search?.links || []);
-      const match = (html + linksBlob).match(/\/advertiser\/(AR[0-9A-Za-z_-]+)/);
-      if (match) {
-        advertiserId = match[1];
+      const { id, tried } = await discoverAdvertiserId(input.brand || '', input.domain || '', region);
+      discoveryTried = tried;
+      if (id) {
+        advertiserId = id;
         url = `https://adstransparency.google.com/advertiser/${advertiserId}?region=${region}`;
       }
     } else {
@@ -218,10 +214,16 @@ async function processRun(runId: string, input: RunInput, supa: ReturnType<typeo
     if (!url) {
       await supa.from('competitor_ad_runs').update({
         status: 'error',
-        error_message: 'No advertiser found in Google Ads Transparency Center. Try pasting a direct Transparency Center URL.',
+        error_message:
+          `No advertiser found for "${input.brand || input.domain}" in Google Ads Transparency Center (region ${region}). ` +
+          `This can happen when the brand advertises under a different verified name, runs ads via an agency MCC, or is verified in another region. ` +
+          `Try: (1) opening https://adstransparency.google.com and searching the brand, then paste the /advertiser/AR... URL above; ` +
+          `(2) switching the region; or (3) using a parent-company / legal entity name. ` +
+          `Lookups tried: ${discoveryTried.join(' | ') || 'none'}.`,
       }).eq('id', runId);
       return;
     }
+
 
     const scrape = await firecrawlScrape(url);
     const creatives = parseCreatives(scrape, url);
