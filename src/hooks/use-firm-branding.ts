@@ -23,6 +23,7 @@ export interface FirmBranding {
   trust_signals?: any[];
   testimonials?: any[];
   seo_config?: Record<string, any>;
+  sections?: any[];
   created_at: string;
   updated_at: string;
 }
@@ -53,6 +54,7 @@ export interface UpsertBrandingInput {
   trust_signals?: any[];
   testimonials?: any[];
   seo_config?: Record<string, any>;
+  sections?: any[];
 }
 
 export function useFirmBranding() {
