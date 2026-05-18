@@ -7,15 +7,18 @@ import { Switch } from '@/components/ui/switch';
 import { Palette, Plus, Trash2 } from 'lucide-react';
 import type { SectionBackground as BG } from '@/lib/landing-sections/types';
 import { BACKGROUND_PRESETS } from '@/components/landing-sections/SectionBackground';
+import { DesignPresetsManager } from './DesignPresetsManager';
 
 interface Props {
   value: BG | undefined;
   onChange: (next: BG | undefined) => void;
+  /** When provided, exposes "Apply to all sections" for saved/current backgrounds. */
+  onApplyToAll?: (next: BG) => void;
 }
 
 const DEFAULT: BG = { kind: 'none' };
 
-export function BackgroundInspector({ value, onChange }: Props) {
+export function BackgroundInspector({ value, onChange, onApplyToAll }: Props) {
   const v: BG = value ?? DEFAULT;
   const set = (patch: Partial<BG>) => onChange({ ...v, ...patch });
 
