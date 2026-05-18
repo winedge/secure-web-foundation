@@ -300,6 +300,7 @@ export default function IntakeFormBuilder() {
             { id: 'branding' as const, label: 'Branding & Colors', icon: Palette },
             { id: 'fields' as const, label: 'Form Fields', icon: FormInput },
             { id: 'seo' as const, label: 'SEO', icon: Search },
+            { id: 'versions' as const, label: 'Versions & Sharing', icon: History },
             { id: 'preview' as const, label: 'Preview', icon: Eye },
           ].map(tab => (
             <Button
