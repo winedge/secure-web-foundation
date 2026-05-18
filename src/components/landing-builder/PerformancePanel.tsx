@@ -20,6 +20,7 @@ interface Props {
 export function PerformancePanel({ sections, onJumpTo }: Props) {
   const [liveFps, setLiveFps] = useState(true);
   const fps = useFpsMonitor(liveFps);
+  const vitals = useWebVitals(true);
   const analysis = useMemo(() => analyzeSections(sections), [sections]);
 
   const grade =
