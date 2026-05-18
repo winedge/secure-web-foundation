@@ -302,6 +302,7 @@ export default function IntakeFormBuilder() {
             { id: 'fields' as const, label: 'Form Fields', icon: FormInput },
             { id: 'seo' as const, label: 'SEO', icon: Search },
             { id: 'versions' as const, label: 'Versions & Sharing', icon: History },
+            { id: 'performance' as const, label: 'Performance', icon: Activity },
             { id: 'preview' as const, label: 'Preview', icon: Eye },
           ].map(tab => (
             <Button
