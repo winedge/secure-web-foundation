@@ -7,7 +7,7 @@ export function Gallery({ props, theme }: { props: GalleryProps; theme: SectionT
       <div style={{ maxWidth: maxWidthPx(theme.maxWidth), margin: '0 auto' }}>
         {props.heading && <h2 style={{ textAlign: 'center', fontFamily: fontFamily(theme, 'heading'), fontSize: 'clamp(26px,3vw,38px)', fontWeight: 700, margin: '0 0 36px', letterSpacing: '-0.01em' }}>{props.heading}</h2>}
         <div style={props.layout === 'masonry' ? { columnCount: 3, columnGap: 16 } : { display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
-          {props.images.map((img, i) => (
+          {(props.images ?? []).map((img, i) => (
             <figure key={i} style={{ margin: props.layout === 'masonry' ? '0 0 16px' : 0, breakInside: 'avoid' }}>
               <img src={img.url} alt={img.caption || ''} style={{ width: '100%', display: 'block', borderRadius: radiusPx(theme.radius), objectFit: 'cover' }} />
               {img.caption && <figcaption style={{ fontSize: 13, opacity: 0.7, marginTop: 6 }}>{img.caption}</figcaption>}

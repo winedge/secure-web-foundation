@@ -10,7 +10,7 @@ export function Faq({ props, theme }: { props: FaqProps; theme: SectionTheme }) 
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
         {props.heading && <h2 style={{ textAlign: 'center', fontFamily: fontFamily(theme, 'heading'), fontSize: 'clamp(26px,3vw,38px)', fontWeight: 700, margin: '0 0 36px', letterSpacing: '-0.01em' }}>{props.heading}</h2>}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {props.items.map((item, i) => {
+          {(props.items ?? []).map((item, i) => {
             const isOpen = open === i;
             return (
               <div key={i} style={{ border: `1px solid ${theme.primary}18`, borderRadius: radiusPx(theme.radius), overflow: 'hidden', background: theme.background }}>

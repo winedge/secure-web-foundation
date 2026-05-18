@@ -13,7 +13,7 @@ export function Features({ props, theme }: { props: FeaturesProps; theme: Sectio
           </div>
         )}
         <div style={{ display: 'grid', gap: 24, gridTemplateColumns: `repeat(${props.columns}, minmax(0, 1fr))` }}>
-          {props.items.map((item, i) => {
+          {(props.items ?? []).map((item, i) => {
             const Icon = (LucideIcons as any)[item.icon || 'Sparkles'] || LucideIcons.Sparkles;
             return (
               <div key={i} style={{ padding: 24, borderRadius: radiusPx(theme.radius), background: theme.accent + '08', border: `1px solid ${theme.accent}1a` }}>
