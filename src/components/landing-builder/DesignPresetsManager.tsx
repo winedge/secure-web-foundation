@@ -7,10 +7,11 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bookmark, BookmarkPlus, Layers, Trash2, Sparkles } from 'lucide-react';
+import { Bookmark, BookmarkPlus, Layers, Trash2, Sparkles, Library } from 'lucide-react';
 import { useDesignPresets, type DesignPreset } from '@/hooks/use-design-presets';
 import type { SectionBackground as BG } from '@/lib/landing-sections/types';
 import { toast } from 'sonner';
+import { DesignPresetsLibrary } from './DesignPresetsLibrary';
 
 interface Props {
   current: BG | undefined;
