@@ -140,11 +140,18 @@ export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFi
         </div>
         <ScrollArea className="h-[600px] pr-2">
           {selected && selectedDef ? (
-            <Inspector
-              schema={selectedDef.schema}
-              value={selected.props}
-              onChange={(next) => onChange(sections.map((s) => s.id === selected.id ? { ...s, props: next } : s))}
-            />
+            <div className="space-y-4">
+              <VisibilityEditor
+                section={selected}
+                onChange={(v) => updateVisibility(selected.id, v)}
+                formFieldKeys={formFieldKeys}
+              />
+              <Inspector
+                schema={selectedDef.schema}
+                value={selected.props}
+                onChange={(next) => onChange(sections.map((s) => s.id === selected.id ? { ...s, props: next } : s))}
+              />
+            </div>
           ) : (
             <p className="text-sm text-muted-foreground italic">Click a section in the list or preview to edit it here.</p>
           )}
