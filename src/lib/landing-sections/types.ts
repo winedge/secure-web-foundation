@@ -154,7 +154,16 @@ export interface HeroProps {
   primaryCta?: { label: string; href?: string };
   secondaryCta?: { label: string; href?: string };
   imageUrl?: string;
-  layout: 'centered' | 'split-left' | 'split-right' | 'image-bg' | 'split-form-right' | 'split-form-left';
+  layout:
+    | 'centered'
+    | 'split-left'
+    | 'split-right'
+    | 'image-bg'
+    | 'split-form-right'
+    | 'split-form-left'
+    | 'editorial-centered'  // huge serif headline, thin rule lines, asymmetric meta row
+    | 'noir-photo'          // full-bleed photo, dark scrim, gold/cream type
+    | 'magazine-split';     // 60/40 split, oversized number, tag chips
   align?: 'left' | 'center';
   // form-split extras
   formCardTitle?: string;
