@@ -178,6 +178,11 @@ export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFi
                 onChange={(b) => updateBackground(selected.id, b)}
                 onApplyToAll={(b) => commit(sections.map((s) => ({ ...s, background: JSON.parse(JSON.stringify(b)) })))}
               />
+              <AiCopywriter
+                section={selected}
+                theme={theme}
+                onChange={(next) => commit(sections.map((s) => s.id === selected.id ? { ...s, props: next } : s))}
+              />
 
               <Inspector
                 schema={selectedDef.schema}
