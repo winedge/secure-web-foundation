@@ -24,6 +24,7 @@ import { PerformancePanel } from '@/components/landing-builder/PerformancePanel'
 import { BrandIdentityTab } from '@/components/landing-builder/BrandIdentityTab';
 import { TemplatesTab } from '@/components/landing-builder/TemplatesTab';
 import { DomainsPanel } from '@/components/landing-builder/DomainsPanel';
+import { useLandingDomains } from '@/hooks/use-landing-domains';
 import { LANDING_THEMES, type LandingTheme } from '@/lib/landing-themes';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import type { SeoConfig } from '@/lib/landing-seo';
@@ -262,7 +263,11 @@ export default function IntakeFormBuilder() {
     setCustomFields(prev => prev.filter((_, i) => i !== index));
   };
 
-  const intakeUrl = `${window.location.origin}/intake/${slug}`;
+  const { data: domains } = useLandingDomains();
+  const primaryDomain = domains?.find(d => d.is_primary && d.status === 'verified')
+    ?? domains?.find(d => d.status === 'verified');
+  const publicBase = primaryDomain ? `https://${primaryDomain.hostname}` : window.location.origin;
+  const intakeUrl = primaryDomain ? `${publicBase}/${slug}` : `${publicBase}/intake/${slug}`;
 
   const copyUrl = () => {
     navigator.clipboard.writeText(intakeUrl);
@@ -290,7 +295,7 @@ export default function IntakeFormBuilder() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => window.open(`/intake/${slug}`, '_blank')} disabled={!slug}>
+            <Button variant="outline" onClick={() => window.open(intakeUrl, '_blank')} disabled={!slug}>
               <ExternalLink className="mr-2 h-4 w-4" />
               Preview Live
             </Button>

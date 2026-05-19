@@ -115,7 +115,7 @@ export function DomainsPanel({ isPublished, onPublishedChange, slug }: Props) {
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>How DNS routing works</AlertTitle>
             <AlertDescription className="text-xs space-y-1 mt-1">
-              <p>1. Add an <strong>A record</strong> for your hostname pointing to <code>{LOVABLE_TARGET_A}</code> (or a CNAME to <code>snuggle-site-synth.lovable.app</code>).</p>
+              <p>1. Add an <strong>A record</strong> for your hostname pointing to <code>{LOVABLE_TARGET_A}</code> (or a CNAME to <code>{typeof window !== 'undefined' ? window.location.hostname : 'your-app-host'}</code>).</p>
               <p>2. Add a <strong>TXT record</strong> at <code>_landing-verify.&lt;your-domain&gt;</code> with the token shown for each domain below.</p>
               <p>3. Click <strong>Verify</strong>. DNS can take a few minutes to a few hours to propagate.</p>
             </AlertDescription>
