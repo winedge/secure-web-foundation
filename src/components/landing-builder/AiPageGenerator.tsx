@@ -86,15 +86,26 @@ export function AiPageGenerator({ hasExisting, theme, onGenerated, variant = 'de
           cta: cta.trim() || undefined,
         },
       });
-      if (error) throw error;
+      if (error) {
+        // Surface backend message (e.g. 422 incomplete page) clearly
+        const ctx: any = (error as any).context;
+        let msg = error.message || 'AI generation failed';
+        try {
+          const body = ctx?.body ? (typeof ctx.body === 'string' ? JSON.parse(ctx.body) : ctx.body) : null;
+          if (body?.error) msg = body.error;
+        } catch { /* ignore */ }
+        toast.error(msg);
+        return;
+      }
       const sections = data?.sections;
       if (!Array.isArray(sections) || sections.length === 0) {
-        toast.error('AI did not return a valid page. Try a different prompt.');
+        toast.error(data?.error || 'AI did not return a valid page. Add more detail and try again.');
         return;
       }
       setDraft(sections);
       setSummary(typeof data?.summary === 'string' ? data.summary : '');
       setStep('preview');
+
     } catch (err: any) {
       toast.error('AI generation failed: ' + (err.message || 'Unknown error'));
     } finally {

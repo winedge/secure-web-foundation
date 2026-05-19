@@ -52,73 +52,114 @@ Deno.serve(async (req) => {
       const benefitsList = Array.isArray(benefits)
         ? benefits.filter(Boolean).map((b) => `- ${b}`).join('\n')
         : (typeof benefits === 'string' && benefits.trim() ? benefits.trim() : '');
-      const sys = `You are a senior conversion copywriter + landing-page designer. Given a structured business brief, generate a COMPLETE landing page as an ordered array of section blocks.
-Allowed section types: hero, video_hero, features, bento, logo_cloud, marquee, stats, testimonials, faq, pricing, steps, timeline, gallery, before_after, comparison, team, countdown, embed, newsletter, cta, content, divider, form, footer.
-Always include a hero first, a form section near the bottom, and a footer last. Use 6-10 sections total. Vary section types so the page feels rich (mix proof, features, social proof, FAQ, CTA).
-Each section must have: id (uuid), type, visible:true, props (typed for the section), and optional animation { entrance, trigger:"on-scroll", duration:600, delay:0, easing:"ease" } and background { kind: "none"|"gradient"|"mesh"|"glass", ... }.
-- Use background.kind="gradient" or "mesh" for hero / cta / stats to add visual interest. Provide gradient {type,angle,stops:[{color,pos}]} or mesh {base,blobs:[{color,x,y,size}]}.
-- Use animation entrance from: fade, slide-up, slide-left, slide-right, zoom, blur-in, mask-reveal. Vary across sections.
-STRICT ADHERENCE TO BRIEF:
-- The PRODUCT/SERVICE field is the literal thing being sold | name it explicitly in the hero headline and features.
-- TARGET CUSTOMER is the only audience to address | mirror their language and pains throughout.
-- KEY BENEFITS must each appear (one per feature card / stat / FAQ where natural). Do not invent benefits that contradict them.
-- OFFER (price, trial, guarantee, bonus) must appear in hero subheadline AND the final CTA section.
-- PRIMARY CTA label must be used verbatim on the hero button, the CTA section button, and the form submit button.
-Write specific, benefit-driven copy referencing the actual product and audience. No lorem ipsum. Real headlines, real stat numbers, real testimonial quotes with named personas matching the target customer.
-Return STRICT JSON via the tool call.`;
+      const sys = `You are a senior conversion copywriter + landing-page designer. You MUST generate a COMPLETE, ready-to-publish landing page by calling the generate_page function. Refusing or returning empty props is NOT allowed | if information is missing, you confidently invent plausible, on-brand content based on the business type and audience.
+
+OUTPUT CONTRACT (call generate_page exactly once):
+- sections: 6 to 9 Section objects in order. First MUST be a hero. Last MUST be a footer. Include a form section near the end.
+- Each section: { id (uuid), type, visible:true, props (FULLY POPULATED per the schema below), animation (optional), background (optional) }.
+- Vary section types to make the page rich: typically hero -> logo_cloud OR trust_badges -> features OR bento -> stats -> testimonials OR reviews_wall -> faq -> cta -> form -> footer.
+
+PROPS SCHEMAS (always fill every listed field with real, specific copy | never leave arrays empty):
+- hero: { eyebrow, headline (8-14 words, names the product), subheadline (1-2 sentences, includes offer), primaryCta:{label,href:"#contact"}, secondaryCta:{label,href:"#features"}, layout:"split-form-right"|"centered"|"split-left", align:"left"|"center", rating:{stars:5,count:200,label:"on Google"}, badges:[{label}], imageUrl, mediaShape:"rounded" }
+- features: { heading, intro, columns:3, items: 6 objects [{icon:"sparkles"|"shield"|"zap"|"check"|"star"|"heart",title,description}] }
+- bento: { heading, items: 4-6 objects [{title,description,size:"sm"|"md"|"lg"}] }
+- logo_cloud: { heading:"Trusted by", logos:[6 objects {src:"https://logo.clearbit.com/{realbrand}.com",alt}] }
+- trust_badges: { heading, layout:"row", items:[4-6 {label,icon}] }
+- stats: { heading, items:[4 {value:"98%"|"$50M"|"10k+",label,suffix?}] }
+- testimonials: { heading, layout:"grid", items:[3 {quote (2 sentences, specific outcome),author,role,rating:5,avatar:"https://i.pravatar.cc/120?img={1-70}"}] }
+- reviews_wall: { heading, intro, minRating:4, showSourceBadges:true, items:[6 {source:"google"|"trustpilot",author,rating:5,quote,date:"2025-..."}] }
+- faq: { heading, items:[5-7 {q,a}] }
+- pricing: { heading, plans:[3 {name,price,period:"/mo",features:[5 strings],cta:{label,href},highlighted?}] }
+- steps: { heading, items:[3-4 {title,description,icon?}] }
+- timeline: { heading, items:[4 {year:"2021",title,description}] }
+- gallery: { heading, images:[6 {src,alt}] }
+- cta: { heading (urgency + product), subheading (offer), primaryCta:{label,href:"#contact"}, secondaryCta?:{label,href} }
+- newsletter: { heading, subheading, placeholder:"you@work.com", cta:"Subscribe" }
+- form: { heading, subheading, fields:[{name,label,type:"text"|"email"|"tel"|"textarea",required:true} for name,email,phone,message], submitLabel (use PRIMARY CTA LABEL verbatim) }
+- footer: { logoText, tagline, columns:[3 {title,links:[4 {label,href:"#"}]}], copyright, socials:[{platform:"twitter"|"linkedin"|"instagram",href}] }
+- content: { heading, body (1-2 paragraphs of real copy) }
+- divider: { kind:"wave"|"angle"|"curve" }
+
+ANIMATIONS (add to most non-footer sections, vary across the page):
+{ entrance:"slide-up"|"fade"|"zoom"|"blur-in", trigger:"on-scroll", duration:600, delay:0, easing:"ease" }
+
+BACKGROUNDS (use for hero, stats, cta to add visual interest):
+- gradient: { kind:"gradient", gradient:{ type:"linear", angle:135, stops:[{color:"#0F172A",pos:0},{color:"#1E40AF",pos:100}] } }
+- mesh: { kind:"mesh", mesh:{ base:"#0F172A", blobs:[{color:"#10B981",x:20,y:30,size:60},{color:"#3B82F6",x:75,y:65,size:55}], grain:true } }
+
+HARD ADHERENCE TO BRIEF:
+- PRODUCT/SERVICE is the literal thing being sold | name it explicitly in the hero headline and at least 3 feature titles.
+- TARGET CUSTOMER is the only audience to address | mirror their language and pain points.
+- KEY BENEFITS must each appear as a feature card or stat. Do not contradict them.
+- OFFER must appear in hero subheadline AND the cta section.
+- PRIMARY CTA LABEL must be used verbatim on every primary CTA and form submit.
+
+Write specific, benefit-driven, conversion-grade copy. No lorem ipsum. No apologies. No empty arrays. No placeholder text like "Your headline here". Call generate_page now.`;
       const user = `BUSINESS BRIEF:
 ${prompt}
 
-PRODUCT / SERVICE: ${product || '(not specified | infer from brief)'}
-TARGET CUSTOMER: ${audience || '(not specified | infer from brief)'}
+PRODUCT / SERVICE: ${product || '(infer from brief, then name it explicitly)'}
+TARGET CUSTOMER: ${audience || '(infer from brief)'}
 KEY BENEFITS:
-${benefitsList || '(not specified | infer 3-5 from brief)'}
-OFFER / INCENTIVE: ${offer || '(none specified)'}
-PRIMARY CTA LABEL: ${cta || '(choose a short action verb phrase)'}
+${benefitsList || '(infer 3-5 strong benefits from brief)'}
+OFFER / INCENTIVE: ${offer || '(invent a compelling first-action offer e.g. free consult, 14-day trial, money-back guarantee)'}
+PRIMARY CTA LABEL: ${cta || '(choose a short action verb phrase, max 3 words)'}
 TONE: ${tone || 'confident, friendly'}
 BUSINESS TYPE: ${businessType || 'service business'}
 
 THEME CONTEXT: ${JSON.stringify(theme || {})}
 
-Generate the full landing page now, honoring every structured field above.`;
-      const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
-          messages: [{ role: 'system', content: sys }, { role: 'user', content: user }],
-          tools: [{
-            type: 'function',
-            function: {
-              name: 'generate_page',
-              description: 'Return the generated full landing page sections',
-              parameters: {
-                type: 'object',
-                properties: {
-                  sections: {
-                    type: 'array',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        id: { type: 'string' },
-                        type: { type: 'string' },
-                        visible: { type: 'boolean' },
-                        props: { type: 'object', additionalProperties: true },
-                        animation: { type: 'object', additionalProperties: true },
-                        background: { type: 'object', additionalProperties: true },
+Generate the full landing page now. Every section MUST have fully populated props per the schema. Do not refuse.`;
+
+      const callModel = async (model: string) => {
+        const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model,
+            messages: [{ role: 'system', content: sys }, { role: 'user', content: user }],
+            tools: [{
+              type: 'function',
+              function: {
+                name: 'generate_page',
+                description: 'Return the generated full landing page sections with fully populated props.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    sections: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'string' },
+                          type: { type: 'string' },
+                          visible: { type: 'boolean' },
+                          props: { type: 'object', additionalProperties: true },
+                          animation: { type: 'object', additionalProperties: true },
+                          background: { type: 'object', additionalProperties: true },
+                        },
+                        required: ['id', 'type', 'visible', 'props'],
                       },
-                      required: ['id', 'type', 'visible', 'props'],
                     },
+                    summary: { type: 'string' },
                   },
-                  summary: { type: 'string' },
+                  required: ['sections'],
                 },
-                required: ['sections'],
               },
-            },
-          }],
-          tool_choice: { type: 'function', function: { name: 'generate_page' } },
-        }),
-      });
+            }],
+            tool_choice: { type: 'function', function: { name: 'generate_page' } },
+          }),
+        });
+        return r;
+      };
+
+      const isPopulated = (s: any) => s && s.props && typeof s.props === 'object' && Object.keys(s.props).length >= 1;
+      const pageOk = (sections: any[]) => Array.isArray(sections) && sections.length >= 4 && sections.filter(isPopulated).length / sections.length >= 0.7;
+
+      let resp = await callModel('google/gemini-2.5-pro');
+      if (!resp.ok && (resp.status === 429 || resp.status === 503)) {
+        resp = await callModel('google/gemini-2.5-flash');
+      }
       if (!resp.ok) {
         const text = await resp.text();
         return new Response(JSON.stringify({ error: 'AI gateway error', detail: text }), {
@@ -128,20 +169,39 @@ Generate the full landing page now, honoring every structured field above.`;
       }
       const data = await resp.json();
       const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-      const args = toolCall?.function?.arguments ? JSON.parse(toolCall.function.arguments) : {};
-      // Ensure every section has an id
-      if (Array.isArray(args?.sections)) {
-        args.sections = args.sections.map((s: any) => ({
-          ...s,
-          id: s.id || crypto.randomUUID(),
-          visible: s.visible !== false,
-          props: s.props || {},
-        }));
+      let args: any = {};
+      try { args = toolCall?.function?.arguments ? JSON.parse(toolCall.function.arguments) : {}; } catch { args = {}; }
+
+      // Retry once with stricter model if the model returned empty/garbage props
+      if (!pageOk(args?.sections)) {
+        const retry = await callModel('openai/gpt-5-mini');
+        if (retry.ok) {
+          const d2 = await retry.json();
+          const tc2 = d2.choices?.[0]?.message?.tool_calls?.[0];
+          try {
+            const a2 = tc2?.function?.arguments ? JSON.parse(tc2.function.arguments) : {};
+            if (pageOk(a2?.sections)) args = a2;
+          } catch { /* keep first */ }
+        }
       }
+
+      if (!pageOk(args?.sections)) {
+        return new Response(JSON.stringify({
+          error: 'AI returned an incomplete page. Add more detail to the brief and try again.',
+        }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      args.sections = args.sections.map((s: any) => ({
+        ...s,
+        id: s.id || crypto.randomUUID(),
+        visible: s.visible !== false,
+        props: s.props || {},
+      }));
       return new Response(JSON.stringify(args), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
 
     // Sections mode | rewrite/reorder landing-page section blocks
 
