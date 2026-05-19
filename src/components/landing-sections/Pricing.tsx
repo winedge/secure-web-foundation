@@ -12,7 +12,7 @@ export function Pricing({ props, theme }: { props: PricingProps; theme: SectionT
             {props.intro && <p style={{ fontSize: 17, opacity: 0.75, marginTop: 12 }}>{props.intro}</p>}
           </div>
         )}
-        <div style={{ display: 'grid', gap: 20, gridTemplateColumns: `repeat(${Math.min(props.plans.length || 1, 3)}, minmax(0, 1fr))` }}>
+        <div style={{ display: 'grid', gap: 20, gridTemplateColumns: `repeat(${Math.min((props.plans?.length) || 1, 3)}, minmax(0, 1fr))` }}>
           {(props.plans ?? []).map((p, i) => {
             const isHi = p.highlighted;
             return (
