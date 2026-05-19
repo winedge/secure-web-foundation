@@ -321,7 +321,12 @@ OUTPUT CONTRACT (call generate_page exactly once):
 `;
       const sys = `${dnaBlock}
 PROPS SCHEMAS (always fill every listed field with real, specific copy | never leave arrays empty):
-- hero: { eyebrow, headline (8-14 words, names the product), subheadline (1-2 sentences, includes offer), primaryCta:{label,href:"#lead-form"}, secondaryCta:{label,href:"#features"}, layout:"${dna.archetype.heroLayout}", align:"${dna.archetype.heroLayout === 'centered' ? 'center' : 'left'}", rating:{stars:5,count:200,label:"on Google"}, badges:[{label}], imageUrl, mediaShape:"rounded", formCardTitle, formCardSubtitle, formCardStyle:"card" }
+- hero: { eyebrow, headline (8-14 words, names the product), subheadline (1-2 sentences, includes offer), primaryCta:{label,href:"#lead-form"}, secondaryCta:{label,href:"#features"}, layout:"${dna.archetype.heroLayout}" (ALLOWED values: "centered" | "split-left" | "split-right" | "image-bg" | "split-form-right" | "split-form-left" | "editorial-centered" | "noir-photo" | "magazine-split"; you MUST keep the DNA value unless it makes no sense for the brief), align:"${dna.archetype.heroLayout === 'centered' || dna.archetype.heroLayout === 'editorial-centered' ? 'center' : 'left'}", rating:{stars:5,count:200,label:"on Google"}, badges:[{label}], imageUrl (REQUIRED for noir-photo and image-bg | use a real Unsplash URL https://images.unsplash.com/photo-... that matches the business), mediaShape:"rounded", formCardTitle, formCardSubtitle, formCardStyle:"card" }
+  HERO LAYOUT GUIDE:
+    * "editorial-centered" = huge serif headline centered, thin rule lines, minimal CTAs | pair with Editorial/Swiss/Paper palettes.
+    * "noir-photo"         = full-bleed photo hero with dark scrim and gold/cream accents | pair with Noir/Charcoal/Forest palettes and ALWAYS set imageUrl.
+    * "magazine-split"     = 60/40 split, oversized "№01" numeral on the right, tag chips | pair with Magazine/Editorial/Brutalist palettes.
+    * "split-form-right"   = SaaS-style lead form on the right | use formCardTitle + formCardStyle:"glass" when palette.dark.
 - features: { heading, intro, columns:3, items: 6 objects [{icon:"Sparkles"|"Shield"|"Zap"|"Check"|"Star"|"Heart",title,description}] }
 - bento: { heading, items: 4-6 objects [{title,description,size:"sm"|"md"|"lg"}] }
 - logo_cloud: { heading:"Trusted by", logos:[6 objects {src:"https://logo.clearbit.com/{realbrand}.com",alt}] }
