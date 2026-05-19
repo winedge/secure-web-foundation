@@ -273,6 +273,8 @@ export interface CtaProps {
   primaryCta?: { label: string; href?: string };
   secondaryCta?: { label: string; href?: string };
   style: 'soft' | 'bold' | 'gradient';
+  layout?: 'centered' | 'split-image' | 'banner-strip' | 'card-floating' | 'full-bleed-photo';
+  imageUrl?: string;
 }
 
 export interface StickyCtaBarProps {
