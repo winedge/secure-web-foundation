@@ -24,6 +24,8 @@ export interface FirmBranding {
   testimonials?: any[];
   seo_config?: Record<string, any>;
   sections?: any[];
+  is_published?: boolean;
+  published_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -55,6 +57,7 @@ export interface UpsertBrandingInput {
   testimonials?: any[];
   seo_config?: Record<string, any>;
   sections?: any[];
+  is_published?: boolean;
 }
 
 export function useFirmBranding() {
