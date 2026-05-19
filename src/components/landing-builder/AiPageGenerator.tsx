@@ -120,7 +120,10 @@ export function AiPageGenerator({ hasExisting, theme, onGenerated, variant = 'de
         return;
       }
       setDraft(sections);
-      setSummary(typeof data?.summary === 'string' ? data.summary : '');
+      const dnaLabel = data?.designDna
+        ? `Design: ${data.designDna.archetype} | ${data.designDna.palette} | ${data.designDna.recipe}. `
+        : '';
+      setSummary(dnaLabel + (typeof data?.summary === 'string' ? data.summary : ''));
       setStep('preview');
       if (data?.source === 'fallback') {
         toast.warning('AI was slow, so a polished starter page was generated instantly. You can regenerate anytime.');
