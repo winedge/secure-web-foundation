@@ -297,6 +297,21 @@ export default function BrandedIntake() {
     );
   }
 
+  if ((branding as any).is_published === false) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="max-w-md w-full text-center">
+          <CardContent className="pt-8 pb-8">
+            <h2 className="text-xl font-bold mb-2">Page not published</h2>
+            <p className="text-muted-foreground">
+              This landing page is currently in draft mode. Please check back soon.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (submitted) {
     return (
       <div className="min-h-screen flex flex-col" style={{ backgroundColor }}>
