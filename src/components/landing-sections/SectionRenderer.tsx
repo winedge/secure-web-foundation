@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import { SECTION_REGISTRY } from '@/lib/landing-sections/registry';
 import { isSectionVisible, type VisibilityContext } from '@/lib/landing-sections/visibility';
+import { resolveSectionTheme } from '@/lib/landing-sections/theme-resolution';
 import { AnimatedSection } from './AnimatedSection';
 import { SectionBackground } from './SectionBackground';
 
@@ -41,9 +42,11 @@ export function SectionRenderer({
           const Comp = def.Component;
           const isSelected = selectable && selectedId === s.id;
           const hasRules = !!(s.visibility?.rules?.length);
+          // Per-section theme swap: dark sections auto-pick the brand's dark tokens.
+          const effectiveTheme = resolveSectionTheme(theme, s.background);
           const inner = (s.type === 'form' || s.type === 'hero')
-            ? <Comp props={s.props} theme={theme} formSlot={formSlot} />
-            : <Comp props={s.props} theme={theme} />;
+            ? <Comp props={s.props} theme={effectiveTheme} formSlot={formSlot} />
+            : <Comp props={s.props} theme={effectiveTheme} />;
           const node = (
             <SectionBackground bg={s.background}>
               <AnimatedSection animation={s.animation}>{inner}</AnimatedSection>
