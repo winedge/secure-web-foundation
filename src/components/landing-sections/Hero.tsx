@@ -208,7 +208,7 @@ function EditorialCenteredHero({ props, theme }: { props: HeroProps; theme: Sect
   return (
     <section
       style={{
-        padding: '120px 16px 96px',
+        padding: 'var(--section-pad-y, 120px) var(--section-pad-x, 16px)',
         background: theme.background,
         color: theme.primary,
         fontFamily: fontFamily(theme, 'body'),
@@ -235,7 +235,7 @@ function EditorialCenteredHero({ props, theme }: { props: HeroProps; theme: Sect
         <h1
           style={{
             fontFamily: fontFamily(theme, 'heading'),
-            fontSize: 'clamp(44px, 8vw, 104px)',
+            fontSize: 'var(--headline-scale, clamp(44px, 8vw, 104px))',
             fontWeight: 500,
             lineHeight: 0.98,
             letterSpacing: '-0.035em',
@@ -299,7 +299,7 @@ function NoirPhotoHero({ props, theme }: { props: HeroProps; theme: SectionTheme
         fontFamily: fontFamily(theme, 'body'),
         display: 'flex',
         alignItems: 'flex-end',
-        padding: '64px 6vw 80px',
+        padding: 'var(--section-pad-y, 80px) var(--section-pad-x, 6vw)',
       }}
     >
       <div style={{ maxWidth: 760 }}>
@@ -325,7 +325,7 @@ function NoirPhotoHero({ props, theme }: { props: HeroProps; theme: SectionTheme
         <h1
           style={{
             fontFamily: fontFamily(theme, 'heading'),
-            fontSize: 'clamp(40px, 6.5vw, 80px)',
+            fontSize: 'var(--headline-scale, clamp(40px, 6.5vw, 80px))',
             fontWeight: 400,
             lineHeight: 1.02,
             letterSpacing: '-0.02em',
@@ -378,7 +378,7 @@ function MagazineSplitHero({ props, theme }: { props: HeroProps; theme: SectionT
   return (
     <section
       style={{
-        padding: '88px 6vw',
+        padding: 'var(--section-pad-y, 88px) var(--section-pad-x, 6vw)',
         background: theme.background,
         color: theme.primary,
         fontFamily: fontFamily(theme, 'body'),
@@ -414,7 +414,7 @@ function MagazineSplitHero({ props, theme }: { props: HeroProps; theme: SectionT
           <h1
             style={{
               fontFamily: fontFamily(theme, 'heading'),
-              fontSize: 'clamp(40px, 6vw, 88px)',
+              fontSize: 'var(--headline-scale, clamp(40px, 6vw, 88px))',
               fontWeight: 500,
               lineHeight: 1.0,
               letterSpacing: '-0.025em',

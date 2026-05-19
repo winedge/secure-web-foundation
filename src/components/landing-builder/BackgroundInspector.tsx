@@ -38,6 +38,7 @@ export function BackgroundInspector({ value, onChange, onApplyToAll }: Props) {
             <SelectItem value="gradient">Gradient</SelectItem>
             <SelectItem value="mesh">Mesh blobs</SelectItem>
             <SelectItem value="glass">Glassmorphism</SelectItem>
+            <SelectItem value="preset">Curated preset</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -80,6 +81,10 @@ export function BackgroundInspector({ value, onChange, onApplyToAll }: Props) {
         <GlassEditor value={v} onChange={onChange} />
       )}
 
+      {v.kind === 'preset' && (
+        <PresetEditor value={v} onChange={onChange} />
+      )}
+
       {v.kind !== 'none' && (
         <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground w-full" onClick={() => onChange({ kind: 'none' })}>
           <Trash2 className="h-3 w-3 mr-1" /> Clear background
@@ -102,7 +107,60 @@ function previewStyle(bg: BG): React.CSSProperties {
   }
   if (bg.kind === 'glass') return { background: 'linear-gradient(135deg,#6366f1,#ec4899)' };
   if (bg.kind === 'solid') return { background: bg.color ?? '#fff' };
+  if (bg.kind === 'preset') {
+    const p = bg.preset;
+    if (p === 'paper-texture' || p === 'editorial-white') return { background: '#fafaf7', color: '#222' };
+    if (p === 'cream-paper') return { background: '#f5efe4', color: '#222' };
+    if (p === 'aurora-mesh') return { background: 'radial-gradient(circle at 20% 30%,#7c3aed,transparent 50%),radial-gradient(circle at 80% 30%,#06b6d4,transparent 50%),radial-gradient(circle at 60% 80%,#ec4899,transparent 55%),#0a0b1e' };
+    if (p === 'dark-grain') return { background: '#0d0d10' };
+    if (p === 'gold-on-black') return { background: 'radial-gradient(ellipse at 70% 20%, #3a2c0a 0%, #0a0a0a 60%)' };
+    if (p === 'noir') return { background: '#0a0a0a' };
+    if (p === 'full-bleed-photo') return { background: bg.imageUrl ? `url(${bg.imageUrl}) center/cover` : 'linear-gradient(135deg,#222,#000)' };
+    return { background: '#222' };
+  }
   return { background: 'repeating-linear-gradient(45deg,#eee 0 6px,#fff 6px 12px)', color: '#666' };
+}
+
+const PRESET_OPTIONS: { value: NonNullable<BG['preset']>; label: string }[] = [
+  { value: 'paper-texture', label: 'Paper texture' },
+  { value: 'cream-paper', label: 'Cream paper (editorial)' },
+  { value: 'editorial-white', label: 'Editorial white' },
+  { value: 'aurora-mesh', label: 'Aurora mesh' },
+  { value: 'dark-grain', label: 'Dark grain (studio)' },
+  { value: 'gold-on-black', label: 'Gold on black' },
+  { value: 'noir', label: 'Noir' },
+  { value: 'full-bleed-photo', label: 'Full-bleed photo' },
+];
+
+function PresetEditor({ value, onChange }: { value: BG; onChange: (v: BG) => void }) {
+  const p = value.preset ?? 'paper-texture';
+  return (
+    <div className="space-y-2">
+      <div className="space-y-1.5">
+        <Label className="text-xs">Preset</Label>
+        <Select value={p} onValueChange={(next) => onChange({ ...value, kind: 'preset', preset: next as any })}>
+          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {PRESET_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      {p === 'full-bleed-photo' && (
+        <>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Photo URL</Label>
+            <Input value={value.imageUrl ?? ''} placeholder="https://..." onChange={(e) => onChange({ ...value, imageUrl: e.target.value })} className="h-8 text-xs" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Scrim opacity {Math.round((value.scrim ?? 0.55) * 100)}%</Label>
+            <Slider value={[(value.scrim ?? 0.55) * 100]} min={0} max={100} step={5} onValueChange={([s]) => onChange({ ...value, scrim: s / 100 })} />
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 function ColorRow({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
