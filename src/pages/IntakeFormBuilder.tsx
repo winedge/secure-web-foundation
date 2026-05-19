@@ -335,6 +335,7 @@ export default function IntakeFormBuilder() {
             { id: 'fields' as const, label: 'Form Fields', icon: FormInput },
             { id: 'seo' as const, label: 'SEO', icon: Search },
             { id: 'versions' as const, label: 'Versions & Sharing', icon: History },
+            { id: 'domains' as const, label: 'Publish & Domains', icon: Globe },
             { id: 'performance' as const, label: 'Performance', icon: Activity },
             { id: 'preview' as const, label: 'Preview', icon: Eye },
           ].map(tab => (
@@ -394,6 +395,11 @@ export default function IntakeFormBuilder() {
         {/* Versions & Sharing Tab */}
         {activeTab === 'versions' && (
           <VersionsTab snapshot={currentSnapshot} onRestore={restoreSnapshot} />
+        )}
+
+        {/* Publish & Domains Tab */}
+        {activeTab === 'domains' && (
+          <DomainsPanel isPublished={isPublished} onPublishedChange={setIsPublished} slug={slug} />
         )}
 
         {/* Performance Tab */}
