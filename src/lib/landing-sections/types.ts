@@ -166,16 +166,30 @@ export interface HeroProps {
   mediaShape?: 'rounded' | 'browser-frame' | 'phone-frame' | 'tilted';
 }
 
-export interface FeatureItem { icon?: string; title: string; description?: string; }
-export interface FeaturesProps { heading?: string; intro?: string; columns: 2 | 3 | 4; items: FeatureItem[]; }
+export interface FeatureItem { icon?: string; title: string; description?: string; imageUrl?: string; }
+export interface FeaturesProps {
+  heading?: string; intro?: string; columns: 2 | 3 | 4; items: FeatureItem[];
+  layout?: 'grid' | 'zigzag' | 'accordion-list' | 'icon-row' | 'two-col-large';
+}
 
-export interface LogoCloudProps { heading?: string; logos: { src: string; alt?: string }[]; }
+export interface LogoCloudProps {
+  heading?: string; logos: { src: string; alt?: string }[];
+  layout?: 'static-grid' | 'marquee' | 'dual-row' | 'with-quote';
+  quote?: string; quoteAuthor?: string;
+}
 
 export interface StatItem { value: string; label: string; suffix?: string; }
-export interface StatsProps { heading?: string; items: StatItem[]; }
+export interface StatsProps {
+  heading?: string; items: StatItem[];
+  layout?: 'row' | 'cards-large' | 'inline-strip';
+}
 
 export interface TestimonialItem { quote: string; author: string; role?: string; avatar?: string; rating?: number; }
-export interface TestimonialsProps { heading?: string; layout: 'grid' | 'carousel'; items: TestimonialItem[]; }
+export interface TestimonialsProps {
+  heading?: string;
+  layout: 'grid' | 'carousel' | 'marquee-row' | 'big-quote' | 'masonry' | 'sidebar-photo';
+  items: TestimonialItem[];
+}
 
 export interface ReviewItem { source: 'google' | 'trustpilot' | 'facebook' | 'manual'; author: string; rating: number; quote: string; date?: string; }
 export interface ReviewsWallProps { heading?: string; intro?: string; minRating: number; items: ReviewItem[]; showSourceBadges: boolean; }
@@ -194,12 +208,15 @@ export interface CaseStudyProps {
 
 export interface TrustBadgesProps {
   heading?: string;
-  layout: 'row' | 'grid';
+  layout: 'row' | 'grid' | 'pill-cloud' | 'stat-strip';
   items: { label: string; icon?: string; imageUrl?: string }[];
 }
 
 export interface FaqItem { question: string; answer: string; }
-export interface FaqProps { heading?: string; items: FaqItem[]; }
+export interface FaqProps {
+  heading?: string; items: FaqItem[];
+  layout?: 'accordion-single' | 'two-col' | 'card-grid';
+}
 
 export interface AccordionProps { heading?: string; intro?: string; allowMultiple: boolean; items: { title: string; body: string }[]; }
 
@@ -256,6 +273,8 @@ export interface CtaProps {
   primaryCta?: { label: string; href?: string };
   secondaryCta?: { label: string; href?: string };
   style: 'soft' | 'bold' | 'gradient';
+  layout?: 'centered' | 'split-image' | 'banner-strip' | 'card-floating' | 'full-bleed-photo';
+  imageUrl?: string;
 }
 
 export interface StickyCtaBarProps {
