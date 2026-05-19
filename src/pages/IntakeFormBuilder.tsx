@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Save, Upload, Eye, Link as LinkIcon, Palette, Type, FormInput,
-  Plus, Trash2, GripVertical, Loader2, Copy, ExternalLink, Sparkles, LayoutTemplate, Search, History, Activity, Library,
+  Plus, Trash2, GripVertical, Loader2, Copy, ExternalLink, Sparkles, LayoutTemplate, Search, History, Activity, Library, Globe,
 } from 'lucide-react';
 import { useFirmBranding, useUpsertBranding, useUploadLogo, type CustomField } from '@/hooks/use-firm-branding';
 import { useFirm } from '@/hooks/use-firm';
@@ -23,6 +23,7 @@ import { VersionsTab } from '@/components/landing-builder/VersionsTab';
 import { PerformancePanel } from '@/components/landing-builder/PerformancePanel';
 import { BrandIdentityTab } from '@/components/landing-builder/BrandIdentityTab';
 import { TemplatesTab } from '@/components/landing-builder/TemplatesTab';
+import { DomainsPanel } from '@/components/landing-builder/DomainsPanel';
 import { LANDING_THEMES, type LandingTheme } from '@/lib/landing-themes';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import type { SeoConfig } from '@/lib/landing-seo';
@@ -73,7 +74,8 @@ export default function IntakeFormBuilder() {
   const [heroConfig, setHeroConfig] = useState<Record<string, any>>({});
   const [sections, setSections] = useState<Section[]>([]);
   const [seoConfig, setSeoConfig] = useState<SeoConfig>({});
-  const [activeTab, setActiveTab] = useState<'sections' | 'themes' | 'templates' | 'branding' | 'fields' | 'seo' | 'versions' | 'performance' | 'preview'>('sections');
+  const [isPublished, setIsPublished] = useState<boolean>(true);
+  const [activeTab, setActiveTab] = useState<'sections' | 'themes' | 'templates' | 'branding' | 'fields' | 'seo' | 'versions' | 'domains' | 'performance' | 'preview'>('sections');
 
   // Current editor state captured as a snapshot for version history.
   const currentSnapshot: LandingSnapshot = {
@@ -142,6 +144,7 @@ export default function IntakeFormBuilder() {
       setHeroConfig((branding as any).hero_config ?? {});
       setSections(Array.isArray((branding as any).sections) ? (branding as any).sections : []);
       setSeoConfig(((branding as any).seo_config ?? {}) as SeoConfig);
+      setIsPublished((branding as any).is_published ?? true);
     } else if (firm) {
       // Auto-generate slug from firm name
       setSlug(firm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
@@ -181,6 +184,8 @@ export default function IntakeFormBuilder() {
       hero_config: heroConfig,
       sections,
       seo_config: seoConfig,
+      is_published: isPublished,
+      published_at: isPublished ? new Date().toISOString() : null,
     } as any);
   };
 
@@ -330,6 +335,7 @@ export default function IntakeFormBuilder() {
             { id: 'fields' as const, label: 'Form Fields', icon: FormInput },
             { id: 'seo' as const, label: 'SEO', icon: Search },
             { id: 'versions' as const, label: 'Versions & Sharing', icon: History },
+            { id: 'domains' as const, label: 'Publish & Domains', icon: Globe },
             { id: 'performance' as const, label: 'Performance', icon: Activity },
             { id: 'preview' as const, label: 'Preview', icon: Eye },
           ].map(tab => (
@@ -389,6 +395,11 @@ export default function IntakeFormBuilder() {
         {/* Versions & Sharing Tab */}
         {activeTab === 'versions' && (
           <VersionsTab snapshot={currentSnapshot} onRestore={restoreSnapshot} />
+        )}
+
+        {/* Publish & Domains Tab */}
+        {activeTab === 'domains' && (
+          <DomainsPanel isPublished={isPublished} onPublishedChange={setIsPublished} slug={slug} />
         )}
 
         {/* Performance Tab */}

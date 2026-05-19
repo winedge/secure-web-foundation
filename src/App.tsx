@@ -20,6 +20,7 @@ import { Loader2 } from "lucide-react";
 
 // Eager-loaded routes (landing, auth - needed immediately)
 import Index from "./pages/Index";
+import { CustomDomainRoot } from "./components/CustomDomainRoot";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -162,7 +163,7 @@ const App = () => (
               <PostHogPageView />
               <Routes>
                 {/* Public routes */}
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={<CustomDomainRoot fallback={<Index />} />} />
                 <Route path="/index" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
