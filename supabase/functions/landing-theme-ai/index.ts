@@ -471,6 +471,16 @@ Generate the full landing page now using the DESIGN DNA and SECTION RECIPE above
         visible: s.visible !== false,
         props: s.props || {},
       }));
+      args.designDna = {
+        palette: dna.palette.name,
+        typography: dna.typography.pair,
+        archetype: dna.archetype.name,
+        recipe: dna.recipe.name,
+        density: dna.density,
+      };
+      if (!args.summary) {
+        args.summary = `${dna.archetype.name} layout with the ${dna.palette.name} palette and ${dna.recipe.name} section flow.`;
+      }
       return new Response(JSON.stringify(args), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
