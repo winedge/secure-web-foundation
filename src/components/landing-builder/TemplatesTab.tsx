@@ -281,17 +281,26 @@ function TemplateCard({
   const sectionTypes = (template.snapshot?.sections ?? []).map((s: any) => s.type).slice(0, 4);
 
   return (
-    <Card className="overflow-hidden hover:border-primary/40 transition-colors">
+    <Card className="overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all group">
       <div
-        className="h-32 border-b flex items-center justify-center text-xs text-muted-foreground"
-        style={{
-          background: template.thumbnail_url
-            ? `url(${template.thumbnail_url}) center/cover`
-            : `linear-gradient(135deg, ${template.snapshot?.primary_color ?? '#0f172a'}, ${template.snapshot?.accent_color ?? '#10b981'})`,
-          color: '#fff',
-        }}
+        className="aspect-[16/9] border-b flex items-center justify-center text-xs text-muted-foreground overflow-hidden bg-muted"
+        style={
+          template.thumbnail_url
+            ? undefined
+            : {
+                background: `linear-gradient(135deg, ${template.snapshot?.primary_color ?? '#0f172a'}, ${template.snapshot?.accent_color ?? '#10b981'})`,
+                color: '#fff',
+              }
+        }
       >
-        {!template.thumbnail_url && (
+        {template.thumbnail_url ? (
+          <img
+            src={template.thumbnail_url}
+            alt={`${template.name} preview`}
+            loading="lazy"
+            className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+          />
+        ) : (
           <div className="font-semibold text-center px-3 truncate">{template.snapshot?.heading_text ?? template.name}</div>
         )}
       </div>
