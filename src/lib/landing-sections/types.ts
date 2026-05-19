@@ -98,6 +98,12 @@ export interface Section<T = Record<string, any>> {
   visibility?: VisibilityConfig;
   animation?: SectionAnimation;
   background?: SectionBackground;
+  /** Vertical rhythm scale applied to this section's padding and max-width. */
+  density?: SectionDensity;
+  /** Headline display-size token for sections that read it (Hero, CTA, Stats). */
+  headlineScale?: HeadlineScale;
+  /** Per-section typography override (otherwise inherits global theme). */
+  typography?: { heading?: string; body?: string };
   props: T;
 }
 
