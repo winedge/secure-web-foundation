@@ -263,7 +263,11 @@ export default function IntakeFormBuilder() {
     setCustomFields(prev => prev.filter((_, i) => i !== index));
   };
 
-  const intakeUrl = `${window.location.origin}/intake/${slug}`;
+  const { data: domains } = useLandingDomains();
+  const primaryDomain = domains?.find(d => d.is_primary && d.status === 'verified')
+    ?? domains?.find(d => d.status === 'verified');
+  const publicBase = primaryDomain ? `https://${primaryDomain.hostname}` : window.location.origin;
+  const intakeUrl = primaryDomain ? `${publicBase}/${slug}` : `${publicBase}/intake/${slug}`;
 
   const copyUrl = () => {
     navigator.clipboard.writeText(intakeUrl);
