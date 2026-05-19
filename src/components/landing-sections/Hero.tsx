@@ -208,7 +208,7 @@ function EditorialCenteredHero({ props, theme }: { props: HeroProps; theme: Sect
   return (
     <section
       style={{
-        padding: '120px 16px 96px',
+        padding: 'var(--section-pad-y, 120px) var(--section-pad-x, 16px)',
         background: theme.background,
         color: theme.primary,
         fontFamily: fontFamily(theme, 'body'),
@@ -299,7 +299,7 @@ function NoirPhotoHero({ props, theme }: { props: HeroProps; theme: SectionTheme
         fontFamily: fontFamily(theme, 'body'),
         display: 'flex',
         alignItems: 'flex-end',
-        padding: '64px 6vw 80px',
+        padding: 'var(--section-pad-y, 80px) var(--section-pad-x, 6vw)',
       }}
     >
       <div style={{ maxWidth: 760 }}>
@@ -378,7 +378,7 @@ function MagazineSplitHero({ props, theme }: { props: HeroProps; theme: SectionT
   return (
     <section
       style={{
-        padding: '88px 6vw',
+        padding: 'var(--section-pad-y, 88px) var(--section-pad-x, 6vw)',
         background: theme.background,
         color: theme.primary,
         fontFamily: fontFamily(theme, 'body'),
