@@ -2243,9 +2243,11 @@ export type Database = {
           heading_text: string | null
           hero_config: Json
           id: string
+          is_published: boolean
           layout_config: Json
           logo_url: string | null
           primary_color: string | null
+          published_at: string | null
           sections: Json
           seo_config: Json
           slug: string
@@ -2270,9 +2272,11 @@ export type Database = {
           heading_text?: string | null
           hero_config?: Json
           id?: string
+          is_published?: boolean
           layout_config?: Json
           logo_url?: string | null
           primary_color?: string | null
+          published_at?: string | null
           sections?: Json
           seo_config?: Json
           slug: string
@@ -2297,9 +2301,11 @@ export type Database = {
           heading_text?: string | null
           hero_config?: Json
           id?: string
+          is_published?: boolean
           layout_config?: Json
           logo_url?: string | null
           primary_color?: string | null
+          published_at?: string | null
           sections?: Json
           seo_config?: Json
           slug?: string
@@ -3215,6 +3221,51 @@ export type Database = {
           name?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      landing_page_domains: {
+        Row: {
+          created_at: string
+          firm_id: string
+          hostname: string
+          id: string
+          is_primary: boolean
+          last_checked_at: string | null
+          notes: string | null
+          ssl_status: string
+          status: string
+          updated_at: string
+          verification_token: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          firm_id: string
+          hostname: string
+          id?: string
+          is_primary?: boolean
+          last_checked_at?: string | null
+          notes?: string | null
+          ssl_status?: string
+          status?: string
+          updated_at?: string
+          verification_token?: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          firm_id?: string
+          hostname?: string
+          id?: string
+          is_primary?: boolean
+          last_checked_at?: string | null
+          notes?: string | null
+          ssl_status?: string
+          status?: string
+          updated_at?: string
+          verification_token?: string
+          verified_at?: string | null
         }
         Relationships: []
       }
