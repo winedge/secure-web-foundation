@@ -77,6 +77,10 @@ export default function IntakeFormBuilder() {
   const [sections, setSections] = useState<Section[]>([]);
   const [seoConfig, setSeoConfig] = useState<SeoConfig>({});
   const [isPublished, setIsPublished] = useState<boolean>(true);
+  // Globally load whatever heading/body fonts the snapshot or AI selected so
+  // the live preview always renders with the right typography (not only when
+  // the Brand tab is mounted).
+  useGoogleFonts((typography as any)?.heading, (typography as any)?.body);
   const [activeTab, setActiveTab] = useState<'sections' | 'themes' | 'templates' | 'branding' | 'fields' | 'seo' | 'versions' | 'domains' | 'performance' | 'preview'>('sections');
 
   // Current editor state captured as a snapshot for version history.

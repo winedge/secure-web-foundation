@@ -20,6 +20,7 @@ import { useBrandingBySlug, type CustomField } from '@/hooks/use-firm-branding';
 import { SectionRenderer } from '@/components/landing-sections/SectionRenderer';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import { LandingSeoHead } from '@/components/landing-builder/SeoSettingsPanel';
+import { useGoogleFonts } from '@/hooks/useGoogleFonts';
 import type { SeoConfig } from '@/lib/landing-seo';
 import { buildAudienceContext, type AudienceContext } from '@/lib/landing-sections/visibility';
 
