@@ -34,17 +34,131 @@ const titleFromPrompt = (prompt: string, product?: string) => {
   return (match?.[1] || product || prompt.split(/[.!?]/)[0] || 'Your Business').trim().slice(0, 80);
 };
 
+// ============================================================================
+// DESIGN DNA | randomized per request so every generated page looks different
+// ============================================================================
+
+type Palette = { name: string; mood: string; colors: [string, string, string, string]; dark: boolean };
+
+const PALETTES: Palette[] = [
+  { name: 'Midnight Indigo', mood: 'tech sophisticated', colors: ['#0a0a1a', '#141432', '#1e1e5a', '#4f46e5'], dark: true },
+  { name: 'Charcoal Ember', mood: 'premium bold', colors: ['#1a1a1a', '#2d2d2d', '#4a4a4a', '#e85d3a'], dark: true },
+  { name: 'Noir Gold', mood: 'luxury editorial', colors: ['#0d0d0d', '#1a1a1a', '#c9a84c', '#f0d78c'], dark: true },
+  { name: 'Cloud White', mood: 'airy saas', colors: ['#fafbfc', '#e8ecf1', '#94a3b8', '#3b82f6'], dark: false },
+  { name: 'Warm Sand', mood: 'welcoming approachable', colors: ['#faf8f5', '#f0ebe3', '#c9b99a', '#8b7355'], dark: false },
+  { name: 'Paper Ink', mood: 'swiss editorial', colors: ['#f5f3ee', '#e8e4dd', '#2d2d2d', '#0d0d0d'], dark: false },
+  { name: 'Terracotta Sage', mood: 'natural grounded', colors: ['#c4654a', '#e8a87c', '#87a878', '#4a6741'], dark: false },
+  { name: 'Ocean Deep', mood: 'calm professional', colors: ['#0c2340', '#1a4a6e', '#2d8a9e', '#5cbdb9'], dark: true },
+  { name: 'Electric Coral', mood: 'energetic vibrant', colors: ['#ff6b6b', '#ee5a70', '#c44569', '#574b90'], dark: false },
+  { name: 'Neon Mint', mood: 'fresh startup', colors: ['#0d1b2a', '#1b4332', '#2dd4a8', '#73ffb8'], dark: true },
+  { name: 'Sunset Blaze', mood: 'warm dynamic', colors: ['#ff6b35', '#f7931e', '#e84393', '#6c5ce7'], dark: false },
+  { name: 'Blush Lavender', mood: 'romantic elegant', colors: ['#f8e8ee', '#e8c5d0', '#c9a0dc', '#9b72cf'], dark: false },
+  { name: 'Sage Cream', mood: 'wellness serene', colors: ['#f5f0e8', '#dce5d4', '#a8c0a0', '#7d9b76'], dark: false },
+  { name: 'Forest Moss', mood: 'organic grounded', colors: ['#1a3c2a', '#2d5a3d', '#5a8a5c', '#a0c49d'], dark: true },
+  { name: 'Autumn Harvest', mood: 'rich seasonal', colors: ['#5c2018', '#9b4423', '#d4842a', '#e8b84a'], dark: true },
+  { name: 'Brutalist Pop', mood: 'high contrast pop', colors: ['#ffffff', '#0a0a0a', '#ff5722', '#ffeb3b'], dark: false },
+  { name: 'Glass Aurora', mood: 'glassmorphism futuristic', colors: ['#1a1a2e', '#16213e', '#4ade80', '#a78bfa'], dark: true },
+  { name: 'Navy Trust', mood: 'finance legal trust', colors: ['#0f1b3d', '#1e3a5f', '#3b6fa0', '#e8edf3'], dark: true },
+  { name: 'Emerald Prestige', mood: 'luxury authority', colors: ['#064e3b', '#0d7a5f', '#c9a84c', '#f5f0e0'], dark: true },
+];
+
+const TYPOGRAPHY = [
+  { pair: 'space-grotesk-dm-sans', heading: 'Space Grotesk', body: 'DM Sans', vibe: 'modern tech' },
+  { pair: 'instrument-serif-work-sans', heading: 'Instrument Serif', body: 'Work Sans', vibe: 'editorial magazine' },
+  { pair: 'cormorant-karla', heading: 'Cormorant Garamond', body: 'Karla', vibe: 'luxury fashion' },
+  { pair: 'libre-baskerville-ibm-plex', heading: 'Libre Baskerville', body: 'IBM Plex Sans', vibe: 'law finance' },
+  { pair: 'bebas-neue-barlow', heading: 'Bebas Neue', body: 'Barlow', vibe: 'sports events bold' },
+  { pair: 'archivo-black-hind', heading: 'Archivo Black', body: 'Hind', vibe: 'news activism' },
+  { pair: 'abril-fatface-cabin', heading: 'Abril Fatface', body: 'Cabin', vibe: 'creative portfolio' },
+  { pair: 'dm-serif-display-fira-sans', heading: 'DM Serif Display', body: 'Fira Sans', vibe: 'brand storytelling' },
+  { pair: 'urbanist-epilogue', heading: 'Urbanist', body: 'Epilogue', vibe: 'architecture real estate' },
+  { pair: 'sora-manrope', heading: 'Sora', body: 'Manrope', vibe: 'digital tools' },
+  { pair: 'jetbrains-mono-work-sans', heading: 'JetBrains Mono', body: 'Work Sans', vibe: 'developer docs' },
+  { pair: 'space-mono-rubik', heading: 'Space Mono', body: 'Rubik', vibe: 'indie gaming' },
+];
+
+const ARCHETYPES = [
+  { name: 'Editorial Serif', radius: 'sm', buttonStyle: 'outline', spacing: 'airy', heroLayout: 'centered', anim: 'fade' },
+  { name: 'Brutalist Mono', radius: 'sm', buttonStyle: 'solid', spacing: 'compact', heroLayout: 'split-left', anim: 'slide-up' },
+  { name: 'Glassy Aurora', radius: '2xl', buttonStyle: 'gradient', spacing: 'normal', heroLayout: 'split-form-right', anim: 'blur-in' },
+  { name: 'Swiss Minimal', radius: 'sm', buttonStyle: 'solid', spacing: 'airy', heroLayout: 'centered', anim: 'fade' },
+  { name: 'Warm Organic', radius: 'xl', buttonStyle: 'pill', spacing: 'normal', heroLayout: 'split-form-right', anim: 'slide-up' },
+  { name: 'Neo-Noir Luxury', radius: 'md', buttonStyle: 'outline', spacing: 'airy', heroLayout: 'centered', anim: 'fade' },
+  { name: 'Vibrant Gradient', radius: 'xl', buttonStyle: 'gradient', spacing: 'normal', heroLayout: 'split-form-right', anim: 'zoom' },
+  { name: 'Corporate Trust', radius: 'md', buttonStyle: 'solid', spacing: 'normal', heroLayout: 'split-form-right', anim: 'slide-up' },
+  { name: 'Playful Pastel', radius: '2xl', buttonStyle: 'pill', spacing: 'normal', heroLayout: 'split-left', anim: 'zoom' },
+  { name: 'Tech Dark-Mode', radius: 'lg', buttonStyle: 'gradient', spacing: 'normal', heroLayout: 'split-form-right', anim: 'blur-in' },
+  { name: 'Magazine Editorial', radius: 'sm', buttonStyle: 'outline', spacing: 'airy', heroLayout: 'split-left', anim: 'fade' },
+  { name: 'Soft Neumorphic', radius: '2xl', buttonStyle: 'solid', spacing: 'normal', heroLayout: 'centered', anim: 'slide-up' },
+];
+
+const RECIPES: { name: string; sections: string[] }[] = [
+  { name: 'Classic SaaS', sections: ['hero', 'logo_cloud', 'features', 'stats', 'testimonials', 'faq', 'cta', 'form', 'footer'] },
+  { name: 'Magazine Story', sections: ['hero', 'content', 'gallery', 'testimonials', 'stats', 'cta', 'form', 'footer'] },
+  { name: 'Bento Showcase', sections: ['hero', 'bento', 'logo_cloud', 'reviews_wall', 'pricing', 'faq', 'cta', 'form', 'footer'] },
+  { name: 'Minimalist Service', sections: ['hero', 'features', 'testimonials', 'cta', 'form', 'footer'] },
+  { name: 'Process-Led', sections: ['hero', 'trust_badges', 'steps', 'features', 'testimonials', 'faq', 'cta', 'form', 'footer'] },
+  { name: 'Conversion Sprint', sections: ['hero', 'stats', 'features', 'reviews_wall', 'cta', 'form', 'footer'] },
+  { name: 'Heritage Brand', sections: ['hero', 'content', 'timeline', 'gallery', 'testimonials', 'cta', 'form', 'footer'] },
+  { name: 'Product Launch', sections: ['hero', 'logo_cloud', 'bento', 'features', 'pricing', 'faq', 'cta', 'form', 'footer'] },
+  { name: 'Comparison Pitch', sections: ['hero', 'features', 'comparison', 'testimonials', 'pricing', 'cta', 'form', 'footer'] },
+  { name: 'Local Service', sections: ['hero', 'trust_badges', 'gallery', 'features', 'reviews_wall', 'faq', 'cta', 'form', 'footer'] },
+];
+
+const pickRand = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+const biasPalette = (businessType?: string, tone?: string): Palette => {
+  const t = `${businessType || ''} ${tone || ''}`.toLowerCase();
+  let pool = PALETTES;
+  if (/legal|law|finance|bank|insur/.test(t)) pool = PALETTES.filter((p) => /Navy|Noir|Paper|Emerald|Ocean/.test(p.name));
+  else if (/medical|health|wellness|clinic|dental/.test(t)) pool = PALETTES.filter((p) => /Sage|Cloud|Ocean|Blush|Sand/.test(p.name));
+  else if (/saas|tech|software|developer/.test(t)) pool = PALETTES.filter((p) => /Midnight|Aurora|Neon|Glass/.test(p.name) || p.dark);
+  else if (/luxury|premium|boutique|fashion/.test(t)) pool = PALETTES.filter((p) => /Noir|Emerald|Charcoal|Blush/.test(p.name));
+  else if (/creative|art|design|agency/.test(t)) pool = PALETTES.filter((p) => /Coral|Sunset|Aurora|Brutalist|Lavender/.test(p.name));
+  else if (/education|nonprofit|community/.test(t)) pool = PALETTES.filter((p) => /Sand|Sage|Cream|Cloud|Terracotta/.test(p.name));
+  else if (/real.?estate|property/.test(t)) pool = PALETTES.filter((p) => /Sand|Navy|Sage|Cloud|Paper/.test(p.name));
+  else if (/restaurant|food|hospitality/.test(t)) pool = PALETTES.filter((p) => /Terracotta|Sunset|Autumn|Sand|Coral/.test(p.name));
+  return pickRand(pool.length ? pool : PALETTES);
+};
+
+const biasTypography = (businessType?: string) => {
+  const t = (businessType || '').toLowerCase();
+  let pool = TYPOGRAPHY;
+  if (/legal|finance|law|bank/.test(t)) pool = TYPOGRAPHY.filter((x) => /baskerville|cormorant|instrument|urbanist/.test(x.pair));
+  else if (/saas|tech|developer/.test(t)) pool = TYPOGRAPHY.filter((x) => /space-grotesk|sora|jetbrains|urbanist/.test(x.pair));
+  else if (/luxury|fashion|boutique/.test(t)) pool = TYPOGRAPHY.filter((x) => /cormorant|instrument|abril|dm-serif/.test(x.pair));
+  else if (/creative|agency|portfolio/.test(t)) pool = TYPOGRAPHY.filter((x) => /abril|bebas|archivo|space-mono/.test(x.pair));
+  else if (/medical|wellness|nonprofit/.test(t)) pool = TYPOGRAPHY.filter((x) => /urbanist|sora|dm-serif|instrument/.test(x.pair));
+  return pickRand(pool.length ? pool : TYPOGRAPHY);
+};
+
+const recentDna: string[] = [];
+const buildDna = (businessType?: string, tone?: string) => {
+  let chosen: any = null;
+  for (let i = 0; i < 4; i++) {
+    const palette = biasPalette(businessType, tone);
+    const typography = biasTypography(businessType);
+    const archetype = pickRand(ARCHETYPES);
+    const recipe = pickRand(RECIPES);
+    const density = pickRand(['compact-editorial', 'airy-luxury', 'dense-marketing', 'balanced']);
+    const sig = `${palette.name}|${typography.pair}|${archetype.name}|${recipe.name}|${density}`;
+    chosen = { palette, typography, archetype, recipe, density, seed: crypto.randomUUID(), sig };
+    if (!recentDna.includes(sig)) break;
+  }
+  recentDna.push(chosen.sig);
+  if (recentDna.length > 24) recentDna.shift();
+  return chosen;
+};
+
 const buildFallbackPage = ({ prompt, audience, tone, businessType, product, benefits, offer, cta }: {
   prompt: string; audience?: string; tone?: string; businessType?: string; product?: string; benefits?: string[] | string; offer?: string; cta?: string;
 }) => {
   const benefitList = (Array.isArray(benefits) ? benefits : String(benefits || '').split('\n'))
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .slice(0, 6);
+    .map((item) => item.trim()).filter(Boolean).slice(0, 6);
   const productName = asText(product, titleFromPrompt(prompt));
   const brandName = titleFromPrompt(prompt, productName);
   const ctaLabel = asText(cta, businessType === 'education' ? 'Book a Visit' : 'Get Started');
-  const target = asText(audience, businessType === 'education' ? 'families ready to take the next step' : 'customers ready to take the next step');
+  const target = asText(audience, 'customers ready to take the next step');
   const incentive = asText(offer, 'Book a free consultation today');
   const benefitsToUse = benefitList.length ? benefitList : [
     `Personalized ${productName.toLowerCase()} guidance`,
@@ -52,85 +166,99 @@ const buildFallbackPage = ({ prompt, audience, tone, businessType, product, bene
     'Fast response after every inquiry',
     'Simple online booking and follow-up',
   ];
+  const dna = buildDna(businessType, tone);
+  const [c1, c2, c3, c4] = dna.palette.colors;
+
   const section = (type: string, props: Record<string, unknown>, background?: Record<string, unknown>) => ({
-    id: crypto.randomUUID(),
-    type,
-    visible: true,
-    props,
-    background,
-    animation: { entrance: 'slide-up', trigger: 'on-scroll', duration: 600, delay: 0, easing: 'ease' },
+    id: crypto.randomUUID(), type, visible: true, props, background,
+    animation: { entrance: dna.archetype.anim, trigger: 'on-scroll', duration: 600, delay: 0, easing: 'ease' },
+  });
+
+  const bgGradient = { kind: 'gradient', gradient: { type: 'linear', angle: 135, stops: [{ color: c1, pos: 0 }, { color: c4, pos: 100 }] } };
+  const bgMesh = { kind: 'mesh', mesh: { base: c1, grain: true, blobs: [{ color: c3, x: 18, y: 25, size: 52 }, { color: c4, x: 82, y: 65, size: 50 }] } };
+  const bgSolid = (c: string) => ({ kind: 'solid', color: c });
+
+  const baseSections = dna.recipe.sections.map((kind: string, idx: number) => {
+    switch (kind) {
+      case 'hero': return section('hero', {
+        eyebrow: incentive, headline: `${productName} designed for ${target}`,
+        subheadline: `${brandName} turns interest into action with warm guidance, clear benefits, and a simple path to ${ctaLabel.toLowerCase()}.`,
+        primaryCta: { label: ctaLabel, href: '#lead-form' }, secondaryCta: { label: 'Explore benefits', href: '#features' },
+        layout: dna.archetype.heroLayout, align: dna.archetype.heroLayout === 'centered' ? 'center' : 'left',
+        formCardTitle: ctaLabel, formCardSubtitle: 'Share your details and the team will follow up shortly.', formCardStyle: 'card',
+        rating: { stars: 5, count: 200, label: 'happy customers' },
+        badges: [{ label: 'Personal attention' }, { label: 'Trusted team' }, { label: 'Easy inquiry' }], mediaShape: 'rounded',
+      }, bgMesh);
+      case 'trust_badges': return section('trust_badges', { heading: 'Why people choose us', layout: 'row',
+        items: [{ label: 'Experienced team', icon: 'Award' }, { label: 'Safe process', icon: 'ShieldCheck' }, { label: 'Responsive support', icon: 'MessageSquare' }, { label: 'Easy scheduling', icon: 'Calendar' }] });
+      case 'features': return section('features', { heading: `A better way to choose ${productName}`,
+        intro: `Built around ${target}, with a ${asText(tone, 'clear, confident')} experience from first click to follow-up.`,
+        columns: 3, items: benefitsToUse.map((benefit, i) => ({ icon: ['Sparkles', 'Shield', 'Heart', 'Check', 'Star', 'Zap'][i] || 'Check', title: benefit, description: `A practical advantage that helps visitors feel confident about ${brandName}.` })) });
+      case 'bento': return section('bento', { heading: `Inside ${productName}`,
+        items: benefitsToUse.slice(0, 5).map((b, i) => ({ title: b, description: 'A reason to choose us.', size: i === 0 ? 'lg' : i % 2 === 0 ? 'md' : 'sm' })) });
+      case 'logo_cloud': return section('logo_cloud', { heading: 'Trusted by teams like yours',
+        logos: ['google', 'shopify', 'stripe', 'notion', 'figma', 'linear'].map((b) => ({ src: `https://logo.clearbit.com/${b}.com`, alt: b })) });
+      case 'stats': return section('stats', { heading: 'Confidence at a glance',
+        items: [{ value: '24', suffix: 'hr', label: 'Average response time' }, { value: '5', suffix: '/5', label: 'Care-focused experience' }, { value: '100', suffix: '%', label: 'Simple online inquiry' }, { value: '1', suffix: ':1', label: 'Personalized guidance' }] }, bgSolid(c1));
+      case 'testimonials': return section('testimonials', { heading: 'What people say', layout: 'grid',
+        items: [
+          { quote: `The process felt clear and reassuring. ${brandName} made the next step easy.`, author: 'Priya S.', role: 'Client', rating: 5 },
+          { quote: 'Responsive team, helpful answers, and confidence to move forward.', author: 'Rahul M.', role: 'Customer', rating: 5 },
+          { quote: 'We appreciated the warm follow-up after submitting the form.', author: 'Anika R.', role: 'Customer', rating: 5 },
+        ] });
+      case 'reviews_wall': return section('reviews_wall', { heading: 'Recent reviews', minRating: 4, showSourceBadges: true,
+        items: Array.from({ length: 6 }).map((_, i) => ({ source: i % 2 ? 'google' : 'trustpilot', author: ['Ava', 'Liam', 'Noa', 'Eli', 'Mia', 'Zoe'][i] + ' R.', rating: 5, quote: 'Exceptional service from start to finish.', date: '2025-09-01' })) });
+      case 'faq': return section('faq', { heading: 'Frequently asked questions',
+        items: [
+          { question: `How do I ${ctaLabel.toLowerCase()}?`, answer: 'Use the form on this page and the team will contact you.' },
+          { question: 'What happens after I submit?', answer: 'Your inquiry is reviewed and someone follows up with details and next steps.' },
+          { question: 'Is there any obligation?', answer: 'No. The first step is a simple conversation so you can decide with confidence.' },
+          { question: 'Who is this best for?', answer: `${target} looking for a clear, trustworthy path forward.` },
+        ] });
+      case 'pricing': return section('pricing', { heading: 'Simple, transparent pricing', plans: [
+        { name: 'Starter', price: '$0', period: '/mo', features: ['Free consult', 'Email support', 'No commitment', 'Cancel anytime', 'Get started today'], cta: { label: ctaLabel, href: '#lead-form' } },
+        { name: 'Pro', price: '$49', period: '/mo', features: ['Everything in Starter', 'Priority response', 'Dedicated specialist', 'Advanced tooling', 'Monthly review'], cta: { label: 'Start Pro', href: '#lead-form' }, highlighted: true },
+        { name: 'Scale', price: 'Custom', period: '', features: ['All Pro features', 'Custom SLA', 'Account team', 'Quarterly strategy', 'Volume pricing'], cta: { label: 'Talk to sales', href: '#lead-form' } },
+      ] });
+      case 'steps': return section('steps', { heading: 'How it works', items: [
+        { title: 'Tell us about you', description: 'Share a few details so we can prepare.', icon: 'MessageSquare' },
+        { title: 'Get a clear plan', description: 'We outline next steps and answer questions.', icon: 'ClipboardList' },
+        { title: 'Move forward together', description: 'Start with confidence and full support.', icon: 'Rocket' },
+      ] });
+      case 'timeline': return section('timeline', { heading: 'Our story', items: [
+        { year: '2019', title: 'Founded', description: 'Started with a simple goal: help people choose with clarity.' },
+        { year: '2021', title: 'Team grew', description: 'Specialists joined to deepen the experience.' },
+        { year: '2023', title: 'Recognized', description: 'Voted a top local choice by clients we serve.' },
+        { year: '2025', title: 'Today', description: `Helping ${target} every week.` },
+      ] });
+      case 'gallery': return section('gallery', { heading: 'See the work', layout: 'grid',
+        images: Array.from({ length: 6 }).map((_, i) => ({ url: `https://picsum.photos/seed/${dna.seed}-${i}/600/400`, caption: '' })) });
+      case 'comparison': return section('comparison', { heading: `Why ${brandName}`, items: [
+        { label: 'Response time', us: 'Within 24 hours', them: 'Days, sometimes a week' },
+        { label: 'Personal attention', us: 'Dedicated specialist', them: 'Rotating agents' },
+        { label: 'Pricing', us: 'Clear, upfront', them: 'Surprise fees' },
+      ] });
+      case 'content': return section('content', { heading: `About ${brandName}`,
+        body: `${brandName} exists to make ${productName.toLowerCase()} feel less intimidating and more human. We listen first, then guide. Every conversation starts with your goals and ends with a clear plan you can act on.` });
+      case 'cta': return section('cta', { heading: incentive,
+        subheading: `Take the next step with ${brandName}. Submit your details and get a prompt, helpful response.`,
+        primaryCta: { label: ctaLabel, href: '#lead-form' }, secondaryCta: { label: 'View FAQs', href: '#' }, style: 'bold',
+      }, bgGradient);
+      case 'form': return section('form', { heading: ctaLabel, description: 'Tell us how to reach you and what you need help with.', sticky: false });
+      case 'footer': return section('footer', { layout: 'columns', firmName: brandName,
+        tagline: `${productName} with a clear, caring, and conversion-focused experience.`,
+        links: [{ label: 'Benefits', href: '#features' }, { label: 'Contact', href: '#lead-form' }],
+        columns: [{ heading: 'Explore', links: [{ label: 'Benefits', href: '#features' }, { label: 'FAQs', href: '#' }, { label: 'Contact', href: '#lead-form' }] }],
+        social: [], legal: `© ${new Date().getFullYear()} ${brandName}. All rights reserved.` });
+      default: return section('content', { heading: brandName, body: prompt });
+    }
   });
 
   return {
     source: 'fallback',
-    summary: 'Generated from a resilient starter template because the AI service was slow to respond.',
-    sections: [
-      section('hero', {
-        eyebrow: incentive,
-        headline: `${productName} designed for ${target}`,
-        subheadline: `${brandName} turns interest into action with warm guidance, clear benefits, and a simple path to ${ctaLabel.toLowerCase()}. ${prompt.split(/[.!?]/)[0]}.`,
-        primaryCta: { label: ctaLabel, href: '#lead-form' },
-        secondaryCta: { label: 'Explore benefits', href: '#features' },
-        layout: 'split-form-right',
-        align: 'left',
-        formCardTitle: ctaLabel,
-        formCardSubtitle: 'Share your details and the team will follow up shortly.',
-        formCardStyle: 'card',
-        rating: { stars: 5, count: 200, label: 'trusted by local families' },
-        badges: [{ label: 'Personal attention' }, { label: 'Trusted team' }, { label: 'Easy online inquiry' }],
-        mediaShape: 'rounded',
-      }, { kind: 'mesh', mesh: { base: '#0F172A', grain: true, blobs: [{ color: '#10B981', x: 18, y: 25, size: 52 }, { color: '#3B82F6', x: 82, y: 65, size: 50 }] } }),
-      section('trust_badges', {
-        heading: 'Why people choose us',
-        layout: 'row',
-        items: [{ label: 'Experienced team', icon: 'Award' }, { label: 'Safe process', icon: 'ShieldCheck' }, { label: 'Responsive support', icon: 'MessageSquare' }, { label: 'Easy scheduling', icon: 'Calendar' }],
-      }),
-      section('features', {
-        heading: `A better way to choose ${productName}`,
-        intro: `Every detail is built around ${target}, with a ${asText(tone, 'clear, confident')} experience from first click to follow-up.`,
-        columns: 3,
-        items: benefitsToUse.map((benefit, index) => ({ icon: ['Sparkles', 'Shield', 'Heart', 'Check', 'Star', 'Zap'][index] || 'Check', title: benefit, description: `A practical advantage that helps visitors feel confident about choosing ${brandName}.` })),
-      }),
-      section('stats', {
-        heading: 'Confidence at a glance',
-        items: [{ value: '24', suffix: 'hr', label: 'Average response time' }, { value: '5', suffix: '/5', label: 'Care-focused experience' }, { value: '100', suffix: '%', label: 'Simple online inquiry' }, { value: '1', suffix: ':1', label: 'Personalized guidance' }],
-      }, { kind: 'solid', color: '#0F172A' }),
-      section('testimonials', {
-        heading: 'What visitors want to hear',
-        layout: 'grid',
-        items: [
-          { quote: `The process felt clear and reassuring from the first inquiry. ${brandName} made the next step easy.`, author: 'Priya S.', role: 'Local parent', rating: 5 },
-          { quote: 'The team responded quickly, answered every question, and helped us feel confident about moving forward.', author: 'Rahul M.', role: 'New client', rating: 5 },
-          { quote: 'We appreciated the attention to detail and the warm follow-up after submitting the form.', author: 'Anika R.', role: 'Customer', rating: 5 },
-        ],
-      }),
-      section('faq', {
-        heading: 'Frequently asked questions',
-        items: [
-          { question: `How do I ${ctaLabel.toLowerCase()}?`, answer: 'Use the form on this page and the team will contact you with the next available options.' },
-          { question: 'What happens after I submit the form?', answer: 'Your inquiry is reviewed and someone follows up with the details, availability, and recommended next steps.' },
-          { question: 'Is there any obligation?', answer: 'No. The first step is simply a conversation so you can decide with confidence.' },
-          { question: 'Who is this best for?', answer: `This page is designed for ${target} looking for a clear, trustworthy path forward.` },
-        ],
-      }),
-      section('cta', {
-        heading: `${incentive}`,
-        subheading: `Take the next step with ${brandName}. Submit your details and get a prompt, helpful response.`,
-        primaryCta: { label: ctaLabel, href: '#lead-form' },
-        secondaryCta: { label: 'View FAQs', href: '#' },
-        style: 'bold',
-      }, { kind: 'gradient', gradient: { type: 'linear', angle: 135, stops: [{ color: '#0F172A', pos: 0 }, { color: '#047857', pos: 100 }] } }),
-      section('form', { heading: ctaLabel, description: 'Tell us how to reach you and what you need help with.', sticky: false }),
-      section('footer', {
-        layout: 'columns',
-        firmName: brandName,
-        tagline: `${productName} with a clear, caring, and conversion-focused experience.`,
-        links: [{ label: 'Benefits', href: '#features' }, { label: 'Contact', href: '#lead-form' }],
-        columns: [{ heading: 'Explore', links: [{ label: 'Benefits', href: '#features' }, { label: 'FAQs', href: '#' }, { label: 'Contact', href: '#lead-form' }] }],
-        social: [],
-        legal: `© ${new Date().getFullYear()} ${brandName}. All rights reserved.`,
-      }),
-    ],
+    designDna: { palette: dna.palette.name, typography: dna.typography.pair, archetype: dna.archetype.name, recipe: dna.recipe.name },
+    summary: `Generated a ${dna.archetype.name} layout with the ${dna.palette.name} palette and ${dna.recipe.name} section flow.`,
+    sections: baseSections,
   };
 };
 
