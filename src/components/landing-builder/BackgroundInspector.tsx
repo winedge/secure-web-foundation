@@ -38,6 +38,7 @@ export function BackgroundInspector({ value, onChange, onApplyToAll }: Props) {
             <SelectItem value="gradient">Gradient</SelectItem>
             <SelectItem value="mesh">Mesh blobs</SelectItem>
             <SelectItem value="glass">Glassmorphism</SelectItem>
+            <SelectItem value="preset">Curated preset</SelectItem>
           </SelectContent>
         </Select>
       </div>
