@@ -10,6 +10,7 @@ import { SectionPicker } from './SectionPicker';
 import { Inspector } from './Inspector';
 import { MotionInspector } from './MotionInspector';
 import { BackgroundInspector } from './BackgroundInspector';
+import { LayoutDensityInspector } from './LayoutDensityInspector';
 import { AiCopywriter } from './AiCopywriter';
 
 import { AiSectionsAssistant } from './AiSectionsAssistant';
