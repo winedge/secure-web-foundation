@@ -205,6 +205,119 @@ Generate the full landing page now, honoring every structured field above.`;
       });
     }
 
+    // Copy mode | rewrite headline/subheading/description/CTA for a single section.
+    // Accepts: { mode:'copy', section:{type, props}, action:'generate'|'refine', tone?, length?, goal?, brand?, instruction? }
+    // Returns: { props: <patched props> }
+    if (body?.mode === 'copy') {
+      const { section, action, tone, length, goal, brand, instruction } = body as {
+        section: { type: string; props: Record<string, any> };
+        action?: 'generate' | 'refine';
+        tone?: string; length?: 'short' | 'medium' | 'long'; goal?: string;
+        brand?: { name?: string; description?: string; primary_color?: string; accent_color?: string };
+        instruction?: string;
+      };
+      if (!section || !section.type) {
+        return new Response(JSON.stringify({ error: 'section is required' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const copyKeys = [
+        'eyebrow', 'headline', 'heading', 'subheading', 'subheadline', 'description', 'body',
+        'announcement', 'message', 'label', 'cta', 'ctaLabel', 'secondaryCta', 'secondaryCtaLabel',
+      ];
+      const presentCopy: Record<string, any> = {};
+      for (const k of copyKeys) if (k in (section.props || {})) presentCopy[k] = section.props[k];
+      // also detect cta object {label, href}
+      const ctaObj = section.props?.cta && typeof section.props.cta === 'object' && 'label' in section.props.cta
+        ? section.props.cta : null;
+      if (ctaObj) presentCopy['cta.label'] = ctaObj.label;
+
+      const lengthHint = length === 'short' ? '<= 6 words headlines, 1 sentence descriptions'
+        : length === 'long' ? 'punchy headline + 2-3 sentence description'
+        : 'concise headline + 1-2 sentence description';
+
+      const sys = `You are a senior conversion copywriter for landing pages. ${action === 'refine' ? 'Refine' : 'Generate'} copy for a single "${section.type}" section. Match the brand voice, drive the goal, and stay on-message.
+Rules:
+- Headlines: benefit-led, specific, no fluff, sentence case.
+- Subheadings: one short value-prop sentence.
+- Descriptions: ${lengthHint}. Plain language, customer-centric.
+- CTA labels: 2-4 words, action verb first (e.g., "Get free quote", "Start trial").
+- Keep formatting plain text. No markdown, no emoji unless brand voice demands it.
+- Only output keys that already exist in the current props (do not invent new fields).`;
+
+      const user = `BRAND:\n${JSON.stringify(brand || {}, null, 2)}
+SECTION TYPE: ${section.type}
+TONE: ${tone || 'confident, trustworthy'}
+GOAL: ${goal || 'maximize conversions'}
+${instruction ? `EXTRA INSTRUCTION: ${instruction}\n` : ''}
+CURRENT COPY (only rewrite these keys):
+${JSON.stringify(presentCopy, null, 2)}
+
+Return the updated copy as a flat JSON object using the SAME keys. For "cta.label", return it as { "cta": { "label": "..." } }.`;
+
+      const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [{ role: 'system', content: sys }, { role: 'user', content: user }],
+          tools: [{
+            type: 'function',
+            function: {
+              name: 'apply_copy',
+              description: 'Return the rewritten copy fields for this section.',
+              parameters: {
+                type: 'object',
+                additionalProperties: true,
+                properties: {
+                  eyebrow: { type: 'string' },
+                  headline: { type: 'string' },
+                  heading: { type: 'string' },
+                  subheading: { type: 'string' },
+                  subheadline: { type: 'string' },
+                  description: { type: 'string' },
+                  body: { type: 'string' },
+                  announcement: { type: 'string' },
+                  message: { type: 'string' },
+                  label: { type: 'string' },
+                  ctaLabel: { type: 'string' },
+                  secondaryCta: { type: 'string' },
+                  secondaryCtaLabel: { type: 'string' },
+                  cta: {
+                    type: 'object',
+                    properties: { label: { type: 'string' }, href: { type: 'string' } },
+                  },
+                },
+              },
+            },
+          }],
+          tool_choice: { type: 'function', function: { name: 'apply_copy' } },
+        }),
+      });
+      if (!resp.ok) {
+        const text = await resp.text();
+        return new Response(JSON.stringify({ error: 'AI gateway error', detail: text }), {
+          status: resp.status === 429 ? 429 : resp.status === 402 ? 402 : 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const data = await resp.json();
+      const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+      const args = toolCall?.function?.arguments ? JSON.parse(toolCall.function.arguments) : {};
+      // Merge only into keys that already existed (or cta object)
+      const nextProps: Record<string, any> = { ...(section.props || {}) };
+      for (const k of Object.keys(args)) {
+        if (k === 'cta' && ctaObj) {
+          nextProps.cta = { ...ctaObj, ...args.cta };
+        } else if (k in nextProps) {
+          nextProps[k] = args[k];
+        }
+      }
+      return new Response(JSON.stringify({ props: nextProps, raw: args }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { instruction, current } = body as { instruction: string; current: ThemeInput };
 
     if (!instruction || instruction.trim().length < 3) {
