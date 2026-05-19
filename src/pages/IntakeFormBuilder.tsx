@@ -420,153 +420,30 @@ export default function IntakeFormBuilder() {
           </div>
         )}
 
-        {/* Branding Tab */}
+        {/* Brand & Identity Tab | global site-wide brand controls */}
         {activeTab === 'branding' && (
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Identity</CardTitle>
-                <CardDescription>Your firm's branding on the intake form</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>URL Slug</Label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">/intake/</span>
-                    <Input
-                      value={slug}
-                      onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                      placeholder="my-firm"
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Firm Display Name</Label>
-                  <Input
-                    value={firmDisplayName}
-                    onChange={(e) => setFirmDisplayName(e.target.value)}
-                    placeholder="Smith & Associates"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Logo</Label>
-                  <div className="flex items-center gap-4">
-                    {logoUrl ? (
-                      <img src={logoUrl} alt="Logo" className="h-12 w-12 object-contain rounded-lg border" />
-                    ) : (
-                      <div className="h-12 w-12 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center">
-                        <Upload className="h-5 w-5 text-muted-foreground/50" />
-                      </div>
-                    )}
-                    <div>
-                      <Input
-                        type="file"
-                        accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                        onChange={handleLogoUpload}
-                        className="max-w-[200px]"
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">PNG, JPG, SVG, WebP. Max 2MB.</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Colors</CardTitle>
-                <CardDescription>Customize the form's color scheme</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Primary</Label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="color"
-                        value={primaryColor}
-                        onChange={(e) => setPrimaryColor(e.target.value)}
-                        className="w-10 h-10 rounded border cursor-pointer"
-                      />
-                      <Input
-                        value={primaryColor}
-                        onChange={(e) => setPrimaryColor(e.target.value)}
-                        className="font-mono text-xs"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Background</Label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="color"
-                        value={backgroundColor}
-                        onChange={(e) => setBackgroundColor(e.target.value)}
-                        className="w-10 h-10 rounded border cursor-pointer"
-                      />
-                      <Input
-                        value={backgroundColor}
-                        onChange={(e) => setBackgroundColor(e.target.value)}
-                        className="font-mono text-xs"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Accent</Label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="color"
-                        value={accentColor}
-                        onChange={(e) => setAccentColor(e.target.value)}
-                        className="w-10 h-10 rounded border cursor-pointer"
-                      />
-                      <Input
-                        value={accentColor}
-                        onChange={(e) => setAccentColor(e.target.value)}
-                        className="font-mono text-xs"
-                      />
-                    </div>
-                  </div>
-                </div>
-                {/* Color preview strip */}
-                <div className="flex rounded-lg overflow-hidden h-8 border">
-                  <div className="flex-1" style={{ backgroundColor: primaryColor }} />
-                  <div className="flex-1" style={{ backgroundColor: accentColor }} />
-                  <div className="flex-1" style={{ backgroundColor }} />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Type className="h-5 w-5" />
-                  Intro Text
-                </CardTitle>
-                <CardDescription>The heading and description shown above the form</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Heading</Label>
-                  <Input
-                    value={headingText}
-                    onChange={(e) => setHeadingText(e.target.value)}
-                    placeholder="Submit Your Claim"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Textarea
-                    value={descriptionText}
-                    onChange={(e) => setDescriptionText(e.target.value)}
-                    placeholder="Fill out the form below..."
-                    rows={3}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <BrandIdentityTab
+            slug={slug}
+            firmDisplayName={firmDisplayName}
+            logoUrl={logoUrl}
+            primaryColor={primaryColor}
+            backgroundColor={backgroundColor}
+            accentColor={accentColor}
+            headingText={headingText}
+            descriptionText={descriptionText}
+            typography={typography}
+            layoutConfig={layoutConfig}
+            onSlug={setSlug}
+            onFirmDisplayName={setFirmDisplayName}
+            onPrimaryColor={setPrimaryColor}
+            onBackgroundColor={setBackgroundColor}
+            onAccentColor={setAccentColor}
+            onHeadingText={setHeadingText}
+            onDescriptionText={setDescriptionText}
+            onTypography={setTypography}
+            onLayoutConfig={setLayoutConfig}
+            onLogoUpload={handleLogoUpload}
+          />
         )}
 
         {/* Fields Tab */}
