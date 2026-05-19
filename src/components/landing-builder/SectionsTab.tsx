@@ -178,6 +178,10 @@ export function SectionsTab({ sections, onChange, theme, themeKey, visibleFormFi
                 onChange={(b) => updateBackground(selected.id, b)}
                 onApplyToAll={(b) => commit(sections.map((s) => ({ ...s, background: JSON.parse(JSON.stringify(b)) })))}
               />
+              <LayoutDensityInspector
+                section={selected}
+                onChange={(patch) => commit(sections.map((s) => s.id === selected.id ? { ...s, ...patch } : s))}
+              />
               <AiCopywriter
                 section={selected}
                 theme={theme}
