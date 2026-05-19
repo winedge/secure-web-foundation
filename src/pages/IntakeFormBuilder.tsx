@@ -295,7 +295,7 @@ export default function IntakeFormBuilder() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => window.open(`/intake/${slug}`, '_blank')} disabled={!slug}>
+            <Button variant="outline" onClick={() => window.open(intakeUrl, '_blank')} disabled={!slug}>
               <ExternalLink className="mr-2 h-4 w-4" />
               Preview Live
             </Button>
