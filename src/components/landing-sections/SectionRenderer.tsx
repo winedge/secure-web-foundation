@@ -44,12 +44,23 @@ export function SectionRenderer({
           const hasRules = !!(s.visibility?.rules?.length);
           // Per-section theme swap: dark sections auto-pick the brand's dark tokens.
           const effectiveTheme = resolveSectionTheme(theme, s.background);
+          // Per-section typography override (falls back to global theme).
+          const themeWithTypo: SectionTheme = {
+            ...effectiveTheme,
+            headingFont: s.typography?.heading ?? effectiveTheme.headingFont,
+            bodyFont: s.typography?.body ?? effectiveTheme.bodyFont,
+          };
           const inner = (s.type === 'form' || s.type === 'hero')
-            ? <Comp props={s.props} theme={effectiveTheme} formSlot={formSlot} />
-            : <Comp props={s.props} theme={effectiveTheme} />;
+            ? <Comp props={s.props} theme={themeWithTypo} formSlot={formSlot} />
+            : <Comp props={s.props} theme={themeWithTypo} />;
+          // Density + headline-scale tokens exposed as CSS vars so any section can opt in.
+          const densityVars = densityToVars(s.density);
+          const headlineVar = headlineScaleToVar(s.headlineScale);
           const node = (
             <SectionBackground bg={s.background}>
-              <AnimatedSection animation={s.animation}>{inner}</AnimatedSection>
+              <div style={{ ...densityVars, ...headlineVar } as React.CSSProperties}>
+                <AnimatedSection animation={s.animation}>{inner}</AnimatedSection>
+              </div>
             </SectionBackground>
           );
 
