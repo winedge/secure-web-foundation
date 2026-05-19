@@ -52,9 +52,24 @@ export interface SectionAnimation {
   repeat?: boolean;
 }
 
+export type SectionBackgroundPreset =
+  | 'paper-texture'
+  | 'cream-paper'
+  | 'aurora-mesh'
+  | 'dark-grain'
+  | 'gold-on-black'
+  | 'full-bleed-photo'
+  | 'editorial-white'
+  | 'noir';
+
 export interface SectionBackground {
-  kind: 'none' | 'gradient' | 'mesh' | 'glass' | 'solid';
+  kind: 'none' | 'gradient' | 'mesh' | 'glass' | 'solid' | 'preset';
   color?: string;
+  preset?: SectionBackgroundPreset;
+  /** Image URL used by preset 'full-bleed-photo' and as fallback for glass/mesh overlays. */
+  imageUrl?: string;
+  /** Optional scrim opacity (0..1) layered over preset photo backdrops. */
+  scrim?: number;
   gradient?: {
     type: 'linear' | 'radial' | 'conic';
     angle?: number;
@@ -72,6 +87,9 @@ export interface SectionBackground {
     imageUrl?: string;
   };
 }
+
+export type SectionDensity = 'tight' | 'default' | 'roomy' | 'editorial';
+export type HeadlineScale = 'sm' | 'md' | 'lg' | 'hero' | 'oversized';
 
 export interface Section<T = Record<string, any>> {
   id: string;
