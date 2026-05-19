@@ -107,6 +107,66 @@ export function SectionBackground({ bg, children }: Props) {
     );
   }
 
+  if (bg.kind === 'preset' && bg.preset) {
+    const preset = bg.preset;
+    const grainSvg =
+      'url("data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%222%22/></filter><rect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/></svg>")';
+
+    if (preset === 'paper-texture' || preset === 'editorial-white') {
+      wrapperStyle.background = '#fafaf7';
+      backdrop = (
+        <div style={{ ...layerStyle, opacity: preset === 'paper-texture' ? 0.18 : 0.08, mixBlendMode: 'multiply', backgroundImage: grainSvg }} aria-hidden />
+      );
+    } else if (preset === 'cream-paper') {
+      wrapperStyle.background = '#f5efe4';
+      backdrop = (
+        <div style={{ ...layerStyle, opacity: 0.22, mixBlendMode: 'multiply', backgroundImage: grainSvg }} aria-hidden />
+      );
+    } else if (preset === 'aurora-mesh') {
+      wrapperStyle.background = '#0a0b1e';
+      backdrop = (
+        <div style={layerStyle} aria-hidden>
+          {[
+            { color: '#7c3aed', x: 12, y: 18, size: 65 },
+            { color: '#06b6d4', x: 82, y: 28, size: 58 },
+            { color: '#ec4899', x: 60, y: 82, size: 72 },
+            { color: '#22d3ee', x: 30, y: 70, size: 50, opacity: 0.6 },
+          ].map((b, i) => (
+            <div key={i} style={{
+              position: 'absolute', left: `${b.x}%`, top: `${b.y}%`,
+              width: `${b.size}%`, aspectRatio: '1 / 1',
+              transform: 'translate(-50%, -50%)',
+              background: `radial-gradient(circle, ${b.color} 0%, transparent 65%)`,
+              opacity: (b as any).opacity ?? 0.75, filter: 'blur(60px)', mixBlendMode: 'screen',
+            }} />
+          ))}
+          <div style={{ ...layerStyle, opacity: 0.12, mixBlendMode: 'overlay', backgroundImage: grainSvg }} />
+        </div>
+      );
+    } else if (preset === 'dark-grain') {
+      wrapperStyle.background = '#0d0d10';
+      backdrop = (
+        <div style={{ ...layerStyle, opacity: 0.28, mixBlendMode: 'overlay', backgroundImage: grainSvg }} aria-hidden />
+      );
+    } else if (preset === 'gold-on-black') {
+      wrapperStyle.background = 'radial-gradient(ellipse at 70% 20%, #3a2c0a 0%, #0a0a0a 55%)';
+      backdrop = (
+        <div style={{ ...layerStyle, opacity: 0.2, mixBlendMode: 'overlay', backgroundImage: grainSvg }} aria-hidden />
+      );
+    } else if (preset === 'noir') {
+      wrapperStyle.background = '#0a0a0a';
+      backdrop = (
+        <div style={{ ...layerStyle, background: 'radial-gradient(circle at 30% 40%, rgba(255,255,255,0.06), transparent 60%)' }} aria-hidden />
+      );
+    } else if (preset === 'full-bleed-photo') {
+      wrapperStyle.background = bg.imageUrl ? `url(${bg.imageUrl}) center/cover no-repeat` : '#111';
+      const scrim = bg.scrim ?? 0.55;
+      overlay = (
+        <div style={{ ...layerStyle, background: `linear-gradient(180deg, rgba(0,0,0,${scrim * 0.6}) 0%, rgba(0,0,0,${scrim}) 100%)` }} aria-hidden />
+      );
+    }
+  }
+
   return (
     <div style={wrapperStyle}>
       {backdrop}
