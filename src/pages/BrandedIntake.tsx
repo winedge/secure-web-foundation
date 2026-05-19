@@ -95,6 +95,9 @@ export default function BrandedIntake() {
   const [searchParams] = useSearchParams();
   const campaignId = searchParams.get('campaign');
   const { data: branding, isLoading: brandingLoading } = useBrandingBySlug(slug);
+  // Load whatever Google Font pair the firm/AI selected so the public page
+  // renders with the correct typography.
+  useGoogleFonts((branding as any)?.typography?.heading, (branding as any)?.typography?.body);
 
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
