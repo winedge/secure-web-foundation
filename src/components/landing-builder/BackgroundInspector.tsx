@@ -81,6 +81,10 @@ export function BackgroundInspector({ value, onChange, onApplyToAll }: Props) {
         <GlassEditor value={v} onChange={onChange} />
       )}
 
+      {v.kind === 'preset' && (
+        <PresetEditor value={v} onChange={onChange} />
+      )}
+
       {v.kind !== 'none' && (
         <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground w-full" onClick={() => onChange({ kind: 'none' })}>
           <Trash2 className="h-3 w-3 mr-1" /> Clear background
