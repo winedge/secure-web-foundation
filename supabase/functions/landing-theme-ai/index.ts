@@ -77,19 +77,22 @@ const TYPOGRAPHY = [
   { pair: 'space-mono-rubik', heading: 'Space Mono', body: 'Rubik', vibe: 'indie gaming' },
 ];
 
+// heroLayout values must match HeroProps.layout in src/lib/landing-sections/types.ts
 const ARCHETYPES = [
-  { name: 'Editorial Serif', radius: 'sm', buttonStyle: 'outline', spacing: 'airy', heroLayout: 'centered', anim: 'fade' },
-  { name: 'Brutalist Mono', radius: 'sm', buttonStyle: 'solid', spacing: 'compact', heroLayout: 'split-left', anim: 'slide-up' },
-  { name: 'Glassy Aurora', radius: '2xl', buttonStyle: 'gradient', spacing: 'normal', heroLayout: 'split-form-right', anim: 'blur-in' },
-  { name: 'Swiss Minimal', radius: 'sm', buttonStyle: 'solid', spacing: 'airy', heroLayout: 'centered', anim: 'fade' },
-  { name: 'Warm Organic', radius: 'xl', buttonStyle: 'pill', spacing: 'normal', heroLayout: 'split-form-right', anim: 'slide-up' },
-  { name: 'Neo-Noir Luxury', radius: 'md', buttonStyle: 'outline', spacing: 'airy', heroLayout: 'centered', anim: 'fade' },
-  { name: 'Vibrant Gradient', radius: 'xl', buttonStyle: 'gradient', spacing: 'normal', heroLayout: 'split-form-right', anim: 'zoom' },
-  { name: 'Corporate Trust', radius: 'md', buttonStyle: 'solid', spacing: 'normal', heroLayout: 'split-form-right', anim: 'slide-up' },
-  { name: 'Playful Pastel', radius: '2xl', buttonStyle: 'pill', spacing: 'normal', heroLayout: 'split-left', anim: 'zoom' },
-  { name: 'Tech Dark-Mode', radius: 'lg', buttonStyle: 'gradient', spacing: 'normal', heroLayout: 'split-form-right', anim: 'blur-in' },
-  { name: 'Magazine Editorial', radius: 'sm', buttonStyle: 'outline', spacing: 'airy', heroLayout: 'split-left', anim: 'fade' },
-  { name: 'Soft Neumorphic', radius: '2xl', buttonStyle: 'solid', spacing: 'normal', heroLayout: 'centered', anim: 'slide-up' },
+  { name: 'Editorial Serif',     radius: 'sm',  buttonStyle: 'outline',  spacing: 'airy',    heroLayout: 'editorial-centered', anim: 'fade' },
+  { name: 'Brutalist Mono',      radius: 'sm',  buttonStyle: 'solid',    spacing: 'compact', heroLayout: 'split-left',         anim: 'slide-up' },
+  { name: 'Glassy Aurora',       radius: '2xl', buttonStyle: 'gradient', spacing: 'normal',  heroLayout: 'split-form-right',   anim: 'blur-in' },
+  { name: 'Swiss Minimal',       radius: 'sm',  buttonStyle: 'solid',    spacing: 'airy',    heroLayout: 'editorial-centered', anim: 'fade' },
+  { name: 'Warm Organic',        radius: 'xl',  buttonStyle: 'pill',     spacing: 'normal',  heroLayout: 'split-form-right',   anim: 'slide-up' },
+  { name: 'Neo-Noir Luxury',     radius: 'md',  buttonStyle: 'outline',  spacing: 'airy',    heroLayout: 'noir-photo',         anim: 'fade' },
+  { name: 'Vibrant Gradient',    radius: 'xl',  buttonStyle: 'gradient', spacing: 'normal',  heroLayout: 'split-form-right',   anim: 'zoom' },
+  { name: 'Corporate Trust',     radius: 'md',  buttonStyle: 'solid',    spacing: 'normal',  heroLayout: 'split-form-right',   anim: 'slide-up' },
+  { name: 'Playful Pastel',      radius: '2xl', buttonStyle: 'pill',     spacing: 'normal',  heroLayout: 'split-left',         anim: 'zoom' },
+  { name: 'Tech Dark-Mode',      radius: 'lg',  buttonStyle: 'gradient', spacing: 'normal',  heroLayout: 'split-form-right',   anim: 'blur-in' },
+  { name: 'Magazine Editorial',  radius: 'sm',  buttonStyle: 'outline',  spacing: 'airy',    heroLayout: 'magazine-split',     anim: 'fade' },
+  { name: 'Soft Neumorphic',     radius: '2xl', buttonStyle: 'solid',    spacing: 'normal',  heroLayout: 'centered',           anim: 'slide-up' },
+  { name: 'High-End Boutique',   radius: 'sm',  buttonStyle: 'outline',  spacing: 'airy',    heroLayout: 'noir-photo',         anim: 'fade' },
+  { name: 'Broadsheet Daily',    radius: 'sm',  buttonStyle: 'solid',    spacing: 'airy',    heroLayout: 'magazine-split',     anim: 'fade' },
 ];
 
 const RECIPES: { name: string; sections: string[] }[] = [
