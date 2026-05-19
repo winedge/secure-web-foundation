@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
@@ -10,7 +11,7 @@ const KNOWN_HOSTS = ['lovable.app', 'lovableproject.com', 'localhost', '127.0.0.
 
 /**
  * If the visitor reached the site via a verified custom domain mapped to a firm,
- * render that firm's landing page. Otherwise render the provided fallback (the regular Index).
+ * redirect to that firm's landing page. Otherwise render the provided fallback.
  */
 export function CustomDomainRoot({ fallback }: Props) {
   const [resolvedSlug, setResolvedSlug] = useState<string | null | undefined>(undefined);
@@ -32,10 +33,8 @@ export function CustomDomainRoot({ fallback }: Props) {
           .eq('status', 'verified')
           .maybeSingle();
 
-        if (!domain) {
-          setResolvedSlug(null);
-          return;
-        }
+        if (!domain) return setResolvedSlug(null);
+
         const { data: branding } = await supabase
           .from('firm_branding')
           .select('slug, is_published')
@@ -62,11 +61,7 @@ export function CustomDomainRoot({ fallback }: Props) {
   }
 
   if (resolvedSlug) {
-    // Lazy import to avoid circular issues
-    const LandingPage = require('@/pages/LandingPage').default;
-    // Re-route to the rendered landing page using slug
-    window.history.replaceState(null, '', `/lp/${resolvedSlug}${window.location.search}${window.location.hash}`);
-    return <LandingPage />;
+    return <Navigate to={`/lp/${resolvedSlug}${window.location.search}${window.location.hash}`} replace />;
   }
 
   return <>{fallback}</>;
