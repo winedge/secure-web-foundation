@@ -266,7 +266,7 @@ export default function BrandedIntake() {
 
   // Per-landing-page SEO head tags
   const seoConfig = (((branding as any)?.seo_config ?? {}) as SeoConfig);
-  const pageUrl = typeof window !== 'undefined' ? window.location.href.split('?')[0] : `https://snuggle-site-synth.lovable.app/intake/${slug}`;
+  const pageUrl = typeof window !== 'undefined' ? window.location.href.split('?')[0] : `/intake/${slug}`;
   const seoHead = branding ? (
     <LandingSeoHead
       seo={seoConfig}
