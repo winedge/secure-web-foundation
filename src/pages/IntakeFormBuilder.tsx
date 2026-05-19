@@ -73,7 +73,8 @@ export default function IntakeFormBuilder() {
   const [heroConfig, setHeroConfig] = useState<Record<string, any>>({});
   const [sections, setSections] = useState<Section[]>([]);
   const [seoConfig, setSeoConfig] = useState<SeoConfig>({});
-  const [activeTab, setActiveTab] = useState<'sections' | 'themes' | 'templates' | 'branding' | 'fields' | 'seo' | 'versions' | 'performance' | 'preview'>('sections');
+  const [isPublished, setIsPublished] = useState<boolean>(true);
+  const [activeTab, setActiveTab] = useState<'sections' | 'themes' | 'templates' | 'branding' | 'fields' | 'seo' | 'versions' | 'domains' | 'performance' | 'preview'>('sections');
 
   // Current editor state captured as a snapshot for version history.
   const currentSnapshot: LandingSnapshot = {
@@ -142,6 +143,7 @@ export default function IntakeFormBuilder() {
       setHeroConfig((branding as any).hero_config ?? {});
       setSections(Array.isArray((branding as any).sections) ? (branding as any).sections : []);
       setSeoConfig(((branding as any).seo_config ?? {}) as SeoConfig);
+      setIsPublished((branding as any).is_published ?? true);
     } else if (firm) {
       // Auto-generate slug from firm name
       setSlug(firm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
@@ -181,6 +183,8 @@ export default function IntakeFormBuilder() {
       hero_config: heroConfig,
       sections,
       seo_config: seoConfig,
+      is_published: isPublished,
+      published_at: isPublished ? new Date().toISOString() : null,
     } as any);
   };
 
