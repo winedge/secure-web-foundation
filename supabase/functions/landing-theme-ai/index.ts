@@ -289,16 +289,37 @@ Deno.serve(async (req) => {
       const benefitsList = Array.isArray(benefits)
         ? benefits.filter(Boolean).map((b) => `- ${b}`).join('\n')
         : (typeof benefits === 'string' && benefits.trim() ? benefits.trim() : '');
-      const sys = `You are a senior conversion copywriter + landing-page designer. You MUST generate a COMPLETE, ready-to-publish landing page by calling the generate_page function. Refusing or returning empty props is NOT allowed | if information is missing, you confidently invent plausible, on-brand content based on the business type and audience.
+
+      // === Generate a UNIQUE Design DNA for THIS request ===
+      const dna = buildDna(businessType, tone);
+      const [c1, c2, c3, c4] = dna.palette.colors;
+      const dnaBlock = `DESIGN DNA (you MUST honor every value below | do NOT default to dark navy + emerald unless the palette explicitly says so):
+- STYLE ARCHETYPE: ${dna.archetype.name} | radius=${dna.archetype.radius}, buttonStyle=${dna.archetype.buttonStyle}, spacing=${dna.archetype.spacing}, density=${dna.density}
+- PALETTE: ${dna.palette.name} (${dna.palette.mood}) | use ONLY these hex values for backgrounds, gradients, accents, and CTA fills:
+    bg1=${c1}  bg2=${c2}  accent=${c3}  primary=${c4}  (palette mode: ${dna.palette.dark ? 'dark' : 'light'})
+- TYPOGRAPHY: ${dna.typography.heading} headings + ${dna.typography.body} body | vibe="${dna.typography.vibe}"
+- HERO LAYOUT: ${dna.archetype.heroLayout}
+- ENTRANCE ANIMATION (default): ${dna.archetype.anim}
+- SEED: ${dna.seed} (use this to ensure uniqueness | do NOT reuse copy from previous generations)
+
+SECTION RECIPE (use EXACTLY this section flow in this order | do NOT substitute or skip):
+${dna.recipe.sections.map((s: string, i: number) => `  ${i + 1}. ${s}`).join('\n')}
+
+VARIETY RULES:
+- Use at least 3 different background kinds across the page (mix solid / gradient / mesh / image-overlay).
+- No two adjacent sections may share the same background kind.
+- Every hero/cta/stats section MUST have a non-trivial background using the palette hex values above.
+- Generate hero, cta, stats backgrounds first using palette colors; intermediate sections may use solid bg2 or undefined.
+
+You are a senior conversion copywriter + landing-page designer. You MUST generate a COMPLETE, ready-to-publish landing page by calling the generate_page function. Refusing or returning empty props is NOT allowed | if information is missing, you confidently invent plausible, on-brand content based on the business type and audience.
 
 OUTPUT CONTRACT (call generate_page exactly once):
-- sections: 6 to 9 Section objects in order. First MUST be a hero. Last MUST be a footer. Include a form section near the end.
-- Each section: { id (uuid), type, visible:true, props (FULLY POPULATED per the schema below), animation (optional), background (optional) }.
-- Vary section types to make the page rich: typically hero -> logo_cloud OR trust_badges -> features OR bento -> stats -> testimonials OR reviews_wall -> faq -> cta -> form -> footer.
-
+- sections: follow the SECTION RECIPE above exactly. Each section: { id (uuid), type, visible:true, props (FULLY POPULATED per the schema below), animation (optional), background (optional) }.
+`;
+      const sys = `${dnaBlock}
 PROPS SCHEMAS (always fill every listed field with real, specific copy | never leave arrays empty):
-- hero: { eyebrow, headline (8-14 words, names the product), subheadline (1-2 sentences, includes offer), primaryCta:{label,href:"#lead-form"}, secondaryCta:{label,href:"#features"}, layout:"split-form-right"|"centered"|"split-left", align:"left"|"center", rating:{stars:5,count:200,label:"on Google"}, badges:[{label}], imageUrl, mediaShape:"rounded" }
-- features: { heading, intro, columns:3, items: 6 objects [{icon:"sparkles"|"shield"|"zap"|"check"|"star"|"heart",title,description}] }
+- hero: { eyebrow, headline (8-14 words, names the product), subheadline (1-2 sentences, includes offer), primaryCta:{label,href:"#lead-form"}, secondaryCta:{label,href:"#features"}, layout:"${dna.archetype.heroLayout}", align:"${dna.archetype.heroLayout === 'centered' ? 'center' : 'left'}", rating:{stars:5,count:200,label:"on Google"}, badges:[{label}], imageUrl, mediaShape:"rounded", formCardTitle, formCardSubtitle, formCardStyle:"card" }
+- features: { heading, intro, columns:3, items: 6 objects [{icon:"Sparkles"|"Shield"|"Zap"|"Check"|"Star"|"Heart",title,description}] }
 - bento: { heading, items: 4-6 objects [{title,description,size:"sm"|"md"|"lg"}] }
 - logo_cloud: { heading:"Trusted by", logos:[6 objects {src:"https://logo.clearbit.com/{realbrand}.com",alt}] }
 - trust_badges: { heading, layout:"row", items:[4-6 {label,icon}] }
@@ -310,19 +331,21 @@ PROPS SCHEMAS (always fill every listed field with real, specific copy | never l
 - steps: { heading, items:[3-4 {title,description,icon?}] }
 - timeline: { heading, items:[4 {year:"2021",title,description}] }
 - gallery: { heading, layout:"grid", images:[6 {url,caption}] }
+- comparison: { heading, items:[3-5 {label,us,them}] }
 - cta: { heading (urgency + product), subheading (offer), primaryCta:{label,href:"#lead-form"}, secondaryCta?:{label,href}, style:"bold" }
 - newsletter: { heading, subheading, placeholder:"you@work.com", cta:"Subscribe" }
-        - form: { heading, description, sticky:false }
-        - footer: { layout:"columns", firmName, tagline, links:[{label,href:"#"}], columns:[{heading,links:[{label,href:"#"}]}], social:[], legal }
+- form: { heading, description, sticky:false }
+- footer: { layout:"columns", firmName, tagline, links:[{label,href:"#"}], columns:[{heading,links:[{label,href:"#"}]}], social:[], legal }
 - content: { heading, body (1-2 paragraphs of real copy) }
 - divider: { kind:"wave"|"angle"|"curve" }
 
-ANIMATIONS (add to most non-footer sections, vary across the page):
+ANIMATIONS (use the DNA default entrance "${dna.archetype.anim}" for most sections, vary delay between 0-200):
 { entrance:"slide-up"|"fade"|"zoom"|"blur-in", trigger:"on-scroll", duration:600, delay:0, easing:"ease" }
 
-BACKGROUNDS (use for hero, stats, cta to add visual interest):
-- gradient: { kind:"gradient", gradient:{ type:"linear", angle:135, stops:[{color:"#0F172A",pos:0},{color:"#1E40AF",pos:100}] } }
-- mesh: { kind:"mesh", mesh:{ base:"#0F172A", blobs:[{color:"#10B981",x:20,y:30,size:60},{color:"#3B82F6",x:75,y:65,size:55}], grain:true } }
+BACKGROUNDS (use the PALETTE hex values ${c1}, ${c2}, ${c3}, ${c4} | NEVER use #0F172A/#10B981/#3B82F6 unless they are in this palette):
+- gradient: { kind:"gradient", gradient:{ type:"linear", angle:135, stops:[{color:"${c1}",pos:0},{color:"${c4}",pos:100}] } }
+- mesh: { kind:"mesh", mesh:{ base:"${c1}", blobs:[{color:"${c3}",x:20,y:30,size:60},{color:"${c4}",x:75,y:65,size:55}], grain:true } }
+- solid: { kind:"solid", color:"${c2}" }
 
 HARD ADHERENCE TO BRIEF:
 - PRODUCT/SERVICE is the literal thing being sold | name it explicitly in the hero headline and at least 3 feature titles.
@@ -331,7 +354,7 @@ HARD ADHERENCE TO BRIEF:
 - OFFER must appear in hero subheadline AND the cta section.
 - PRIMARY CTA LABEL must be used verbatim on every primary CTA and form submit.
 
-Write specific, benefit-driven, conversion-grade copy. No lorem ipsum. No apologies. No empty arrays. No placeholder text like "Your headline here". Call generate_page now.`;
+Write specific, benefit-driven, conversion-grade copy. No lorem ipsum. No apologies. No empty arrays. No placeholder text. Call generate_page now.`;
       const user = `BUSINESS BRIEF:
 ${prompt}
 
@@ -344,9 +367,9 @@ PRIMARY CTA LABEL: ${cta || '(choose a short action verb phrase, max 3 words)'}
 TONE: ${tone || 'confident, friendly'}
 BUSINESS TYPE: ${businessType || 'service business'}
 
-THEME CONTEXT: ${JSON.stringify(theme || {})}
+THEME CONTEXT (informational only | DESIGN DNA above overrides): ${JSON.stringify(theme || {})}
 
-Generate the full landing page now. Every section MUST have fully populated props per the schema. Do not refuse.`;
+Generate the full landing page now using the DESIGN DNA and SECTION RECIPE above. Every section MUST have fully populated props per the schema. Do not refuse.`;
 
       const callModel = async (model: string, timeoutMs = AI_GENERATE_TIMEOUT_MS) => {
         const controller = new AbortController();
