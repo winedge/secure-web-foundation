@@ -20,6 +20,7 @@ import { useBrandingBySlug, type CustomField } from '@/hooks/use-firm-branding';
 import { SectionRenderer } from '@/components/landing-sections/SectionRenderer';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import { LandingSeoHead } from '@/components/landing-builder/SeoSettingsPanel';
+import { useGoogleFonts } from '@/hooks/useGoogleFonts';
 import type { SeoConfig } from '@/lib/landing-seo';
 import { buildAudienceContext, type AudienceContext } from '@/lib/landing-sections/visibility';
 
@@ -94,6 +95,9 @@ export default function BrandedIntake() {
   const [searchParams] = useSearchParams();
   const campaignId = searchParams.get('campaign');
   const { data: branding, isLoading: brandingLoading } = useBrandingBySlug(slug);
+  // Load whatever Google Font pair the firm/AI selected so the public page
+  // renders with the correct typography.
+  useGoogleFonts((branding as any)?.typography?.heading, (branding as any)?.typography?.body);
 
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
