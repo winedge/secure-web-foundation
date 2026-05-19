@@ -3259,6 +3259,51 @@ export type Database = {
           },
         ]
       }
+      landing_page_templates: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          firm_id: string | null
+          id: string
+          is_public: boolean
+          name: string
+          snapshot: Json
+          tags: string[] | null
+          thumbnail_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          firm_id?: string | null
+          id?: string
+          is_public?: boolean
+          name: string
+          snapshot: Json
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          firm_id?: string | null
+          id?: string
+          is_public?: boolean
+          name?: string
+          snapshot?: Json
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       landing_page_versions: {
         Row: {
           created_at: string
