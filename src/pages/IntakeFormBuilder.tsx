@@ -24,6 +24,7 @@ import { PerformancePanel } from '@/components/landing-builder/PerformancePanel'
 import { BrandIdentityTab } from '@/components/landing-builder/BrandIdentityTab';
 import { TemplatesTab } from '@/components/landing-builder/TemplatesTab';
 import { DomainsPanel } from '@/components/landing-builder/DomainsPanel';
+import { useLandingDomains } from '@/hooks/use-landing-domains';
 import { LANDING_THEMES, type LandingTheme } from '@/lib/landing-themes';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import type { SeoConfig } from '@/lib/landing-seo';
