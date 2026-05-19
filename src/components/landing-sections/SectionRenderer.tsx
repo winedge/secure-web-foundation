@@ -1,10 +1,40 @@
-import type { ReactNode } from 'react';
-import type { Section, SectionTheme } from '@/lib/landing-sections/types';
+import type { CSSProperties, ReactNode } from 'react';
+import type { Section, SectionTheme, SectionDensity, HeadlineScale } from '@/lib/landing-sections/types';
 import { SECTION_REGISTRY } from '@/lib/landing-sections/registry';
 import { isSectionVisible, type VisibilityContext } from '@/lib/landing-sections/visibility';
 import { resolveSectionTheme } from '@/lib/landing-sections/theme-resolution';
 import { AnimatedSection } from './AnimatedSection';
 import { SectionBackground } from './SectionBackground';
+
+/** Convert per-section density to CSS variables consumed by section components. */
+function densityToVars(d?: SectionDensity): CSSProperties {
+  const map: Record<SectionDensity, { padY: string; padX: string; maxW: string; gap: string }> = {
+    tight:     { padY: '2.5rem',  padX: '1.25rem', maxW: '1080px', gap: '1rem' },
+    default:   { padY: '4rem',    padX: '1.5rem',  maxW: '1200px', gap: '1.5rem' },
+    roomy:     { padY: '6rem',    padX: '2rem',    maxW: '1280px', gap: '2rem' },
+    editorial: { padY: '9rem',    padX: '2.5rem',  maxW: '960px',  gap: '2.5rem' },
+  };
+  const v = map[d ?? 'default'];
+  return {
+    ['--section-pad-y' as any]: v.padY,
+    ['--section-pad-x' as any]: v.padX,
+    ['--section-max-w' as any]: v.maxW,
+    ['--section-gap' as any]: v.gap,
+  };
+}
+
+/** Convert per-section headline scale to a CSS clamp value usable by display headlines. */
+function headlineScaleToVar(h?: HeadlineScale): CSSProperties {
+  const map: Record<HeadlineScale, string> = {
+    sm:        'clamp(1.5rem, 2.2vw, 2rem)',
+    md:        'clamp(2rem, 3vw, 2.75rem)',
+    lg:        'clamp(2.5rem, 4vw, 3.75rem)',
+    hero:      'clamp(3rem, 6vw, 5.5rem)',
+    oversized: 'clamp(4rem, 10vw, 8.5rem)',
+  };
+  return { ['--headline-scale' as any]: map[h ?? 'lg'] };
+}
+
 
 
 interface Props {
