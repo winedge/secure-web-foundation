@@ -2,8 +2,23 @@ import {
   LayoutTemplate, Sparkles, Image as ImageIcon, BarChart3, Quote, HelpCircle,
   Tag, ListOrdered, GalleryHorizontal, Megaphone, FileText, ClipboardList, PanelBottom,
   Film, LayoutGrid, Repeat, History, ArrowLeftRight, Columns3, Users, Timer, Code2, Mail, Minus,
+  Navigation, Bell, ToggleLeft, ShieldCheck, Award, MessageSquare, Calendar, PlayCircle,
+  Images, ListChecks, AlignJustify, Star as StarIcon, ArrowUpToLine,
 } from 'lucide-react';
 import type { SectionType, InspectorField } from '@/lib/landing-sections/types';
+import { Header } from '@/components/landing-sections/Header';
+import { AnnouncementBar } from '@/components/landing-sections/AnnouncementBar';
+import { Tabs as TabsBlock } from '@/components/landing-sections/Tabs';
+import { Accordion as AccordionBlock } from '@/components/landing-sections/Accordion';
+import { PricingToggle } from '@/components/landing-sections/PricingToggle';
+import { TrustBadges } from '@/components/landing-sections/TrustBadges';
+import { StickyCtaBar } from '@/components/landing-sections/StickyCtaBar';
+import { ReviewsWall } from '@/components/landing-sections/ReviewsWall';
+import { CaseStudy } from '@/components/landing-sections/CaseStudy';
+import { Booking } from '@/components/landing-sections/Booking';
+import { ImageSlider } from '@/components/landing-sections/ImageSlider';
+import { VideoGallery } from '@/components/landing-sections/VideoGallery';
+import { MultiStepForm } from '@/components/landing-sections/MultiStepForm';
 
 import { Hero } from '@/components/landing-sections/Hero';
 import { VideoHero } from '@/components/landing-sections/VideoHero';
@@ -66,10 +81,29 @@ export const SECTION_REGISTRY: Record<SectionType, SectionDef> = {
         { value: 'split-left', label: 'Image right' },
         { value: 'split-right', label: 'Image left' },
         { value: 'image-bg', label: 'Image background' },
+        { value: 'split-form-right', label: 'Copy left + Form right' },
+        { value: 'split-form-left', label: 'Form left + Copy right' },
       ] },
       { kind: 'image', key: 'imageUrl', label: 'Hero image' },
+      { kind: 'select', key: 'mediaShape', label: 'Image style', options: [
+        { value: 'rounded', label: 'Rounded' },
+        { value: 'browser-frame', label: 'Browser frame' },
+        { value: 'phone-frame', label: 'Phone frame' },
+        { value: 'tilted', label: '3D tilted' },
+      ] },
       { kind: 'cta', key: 'primaryCta', label: 'Primary button' },
       { kind: 'cta', key: 'secondaryCta', label: 'Secondary button' },
+      { kind: 'text', key: 'formCardTitle', label: 'Form card title (split-form layouts)' },
+      { kind: 'text', key: 'formCardSubtitle', label: 'Form card subtitle' },
+      { kind: 'select', key: 'formCardStyle', label: 'Form card style', options: [
+        { value: 'card', label: 'Card (shadow)' },
+        { value: 'glass', label: 'Glass' },
+        { value: 'minimal', label: 'Minimal' },
+      ] },
+      { kind: 'repeater', key: 'badges', label: 'Trust badges', itemLabel: 'Badge',
+        fields: [{ kind: 'text', key: 'label', label: 'Label' }],
+        defaultItem: { label: 'New badge' },
+      },
     ],
   },
   features: {
@@ -627,12 +661,365 @@ export const SECTION_REGISTRY: Record<SectionType, SectionDef> = {
       { kind: 'toggle', key: 'flip', label: 'Flip vertically' },
     ],
   },
+  header: {
+    type: 'header', label: 'Header / Navbar', description: 'Logo, navigation links, and a primary CTA at the top of the page', icon: Navigation, Component: Header,
+    defaultProps: {
+      logoText: 'Brand', logoUrl: '',
+      links: [
+        { label: 'Features', href: '#features' },
+        { label: 'Pricing', href: '#pricing' },
+        { label: 'About', href: '#about' },
+        { label: 'Contact', href: '#contact' },
+      ],
+      primaryCta: { label: 'Get started', href: '#lead-form' },
+      secondaryCta: { label: 'Sign in', href: '#' },
+      layout: 'logo-left-cta-right', style: 'solid', sticky: true, shrinkOnScroll: true,
+    },
+    schema: [
+      { kind: 'image', key: 'logoUrl', label: 'Logo image' },
+      { kind: 'text', key: 'logoText', label: 'Logo text (fallback)' },
+      { kind: 'select', key: 'layout', label: 'Layout', options: [
+        { value: 'left-nav', label: 'Logo + nav left' },
+        { value: 'centered-logo', label: 'Centered logo' },
+        { value: 'split', label: 'Split' },
+        { value: 'logo-left-cta-right', label: 'Logo left, CTA right' },
+        { value: 'minimal', label: 'Minimal (logo + CTA only)' },
+      ] },
+      { kind: 'select', key: 'style', label: 'Style', options: [
+        { value: 'solid', label: 'Solid' },
+        { value: 'transparent', label: 'Transparent' },
+        { value: 'glass', label: 'Glass (frosted)' },
+        { value: 'bordered-bottom', label: 'Bordered bottom' },
+        { value: 'floating-pill', label: 'Floating pill' },
+      ] },
+      { kind: 'toggle', key: 'sticky', label: 'Sticky on scroll' },
+      { kind: 'toggle', key: 'shrinkOnScroll', label: 'Shrink on scroll' },
+      { kind: 'repeater', key: 'links', label: 'Navigation links', itemLabel: 'Link',
+        fields: [{ kind: 'text', key: 'label', label: 'Label' }, { kind: 'text', key: 'href', label: 'URL' }],
+        defaultItem: { label: 'Link', href: '#' },
+      },
+      { kind: 'cta', key: 'primaryCta', label: 'Primary CTA' },
+      { kind: 'cta', key: 'secondaryCta', label: 'Secondary CTA' },
+    ],
+  },
+  announcement_bar: {
+    type: 'announcement_bar', label: 'Announcement bar', description: 'Slim bar at the very top for promos or news', icon: Bell, Component: AnnouncementBar,
+    defaultProps: {
+      text: '🎉 Limited time | 20% off all annual plans',
+      link: { label: 'Claim now', href: '#pricing' },
+      background: '#0f172a', textColor: '#ffffff',
+      dismissible: true, countdownIso: '',
+    },
+    schema: [
+      { kind: 'text', key: 'text', label: 'Message' },
+      { kind: 'cta', key: 'link', label: 'Link' },
+      { kind: 'color', key: 'background', label: 'Background color' },
+      { kind: 'color', key: 'textColor', label: 'Text color' },
+      { kind: 'toggle', key: 'dismissible', label: 'User can dismiss' },
+      { kind: 'text', key: 'countdownIso', label: 'Countdown target (ISO date, optional)' },
+    ],
+  },
+  tabs: {
+    type: 'tabs', label: 'Tabs', description: 'Switch between titled panels of content', icon: AlignJustify, Component: TabsBlock,
+    defaultProps: {
+      heading: 'Built for every team',
+      intro: 'Explore the features that matter to you.',
+      tabs: [
+        { label: 'For Marketers', heading: 'Launch campaigns fast', body: 'Drag and drop pages, A/B test, and ship in hours, not weeks.', imageUrl: '' },
+        { label: 'For Sales', heading: 'Convert more leads', body: 'Embedded forms route directly into your CRM with full attribution.', imageUrl: '' },
+        { label: 'For Founders', heading: 'Own your funnel', body: 'No more stitching tools together. One platform, one source of truth.', imageUrl: '' },
+      ],
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Heading' },
+      { kind: 'textarea', key: 'intro', label: 'Intro', rows: 2 },
+      { kind: 'repeater', key: 'tabs', label: 'Tabs', itemLabel: 'Tab',
+        fields: [
+          { kind: 'text', key: 'label', label: 'Tab label' },
+          { kind: 'text', key: 'heading', label: 'Panel heading' },
+          { kind: 'textarea', key: 'body', label: 'Body', rows: 4 },
+          { kind: 'image', key: 'imageUrl', label: 'Image (optional)' },
+        ],
+        defaultItem: { label: 'New tab', body: '' },
+      },
+    ],
+  },
+  accordion: {
+    type: 'accordion', label: 'Accordion', description: 'Expandable sections for rich content', icon: ListChecks, Component: AccordionBlock,
+    defaultProps: {
+      heading: 'Everything you should know',
+      intro: '',
+      allowMultiple: false,
+      items: [
+        { title: 'Why choose us?', body: 'We combine the speed of a startup with the polish of a Fortune 500.' },
+        { title: 'How does pricing work?', body: 'Flat monthly pricing with no per-seat fees. Cancel anytime.' },
+        { title: 'Is my data secure?', body: 'AES-256-GCM encryption, SOC 2 controls, and zero-knowledge architecture.' },
+      ],
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Heading' },
+      { kind: 'textarea', key: 'intro', label: 'Intro', rows: 2 },
+      { kind: 'toggle', key: 'allowMultiple', label: 'Allow multiple open' },
+      { kind: 'repeater', key: 'items', label: 'Items', itemLabel: 'Item',
+        fields: [{ kind: 'text', key: 'title', label: 'Title' }, { kind: 'textarea', key: 'body', label: 'Body', rows: 3 }],
+        defaultItem: { title: 'New item', body: '' },
+      },
+    ],
+  },
+  pricing_toggle: {
+    type: 'pricing_toggle', label: 'Pricing (monthly/yearly)', description: 'Pricing tiers with a monthly / yearly billing switch', icon: ToggleLeft, Component: PricingToggle,
+    defaultProps: {
+      heading: 'Simple, scalable pricing',
+      intro: 'Save 20% with annual billing.',
+      monthlyLabel: 'Monthly', yearlyLabel: 'Yearly', yearlyDiscountLabel: 'Save 20%',
+      plans: [
+        { name: 'Starter', monthlyPrice: '$29', yearlyPrice: '$279', description: 'For solo creators', features: ['1 landing page', 'Basic intake form', 'Email support'], cta: { label: 'Start free', href: '#lead-form' } },
+        { name: 'Pro', monthlyPrice: '$99', yearlyPrice: '$949', description: 'Most popular', features: ['Unlimited pages', 'AI assistant', 'Priority support', 'Custom branding'], cta: { label: 'Start free trial', href: '#lead-form' }, highlighted: true },
+        { name: 'Enterprise', monthlyPrice: 'Custom', yearlyPrice: 'Custom', description: 'For large teams', features: ['Everything in Pro', 'Dedicated CSM', 'SLA & compliance'], cta: { label: 'Contact sales', href: '#contact' } },
+      ],
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Heading' },
+      { kind: 'textarea', key: 'intro', label: 'Intro', rows: 2 },
+      { kind: 'text', key: 'monthlyLabel', label: 'Monthly label' },
+      { kind: 'text', key: 'yearlyLabel', label: 'Yearly label' },
+      { kind: 'text', key: 'yearlyDiscountLabel', label: 'Yearly discount badge' },
+      { kind: 'repeater', key: 'plans', label: 'Plans', itemLabel: 'Plan',
+        fields: [
+          { kind: 'text', key: 'name', label: 'Name' },
+          { kind: 'text', key: 'monthlyPrice', label: 'Monthly price' },
+          { kind: 'text', key: 'yearlyPrice', label: 'Yearly price' },
+          { kind: 'textarea', key: 'description', label: 'Description', rows: 2 },
+          { kind: 'textarea', key: 'features', label: 'Features (one per line)', rows: 4 },
+          { kind: 'cta', key: 'cta', label: 'Button' },
+          { kind: 'toggle', key: 'highlighted', label: 'Highlight as most popular' },
+        ],
+        defaultItem: { name: 'New plan', monthlyPrice: '$0', yearlyPrice: '$0', features: [], cta: { label: 'Choose', href: '#' } },
+      },
+    ],
+  },
+  trust_badges: {
+    type: 'trust_badges', label: 'Trust badges', description: 'Compliance, security, and recognition badges', icon: ShieldCheck, Component: TrustBadges,
+    defaultProps: {
+      heading: 'Trusted & secure',
+      layout: 'row',
+      items: [
+        { label: 'SOC 2 Type II', icon: 'Shield' },
+        { label: 'GDPR compliant', icon: 'Lock' },
+        { label: 'ISO 27001', icon: 'BadgeCheck' },
+        { label: '4.9 / 5 rating', icon: 'Star' },
+      ],
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Heading' },
+      { kind: 'select', key: 'layout', label: 'Layout', options: [{ value: 'row', label: 'Row' }, { value: 'grid', label: 'Grid' }] },
+      { kind: 'repeater', key: 'items', label: 'Badges', itemLabel: 'Badge',
+        fields: [
+          { kind: 'text', key: 'label', label: 'Label' },
+          { kind: 'text', key: 'icon', label: 'Lucide icon (Shield, Lock, Award, BadgeCheck, Star)' },
+          { kind: 'image', key: 'imageUrl', label: 'Image (overrides icon)' },
+        ],
+        defaultItem: { label: 'New badge', icon: 'BadgeCheck' },
+      },
+    ],
+  },
+  reviews_wall: {
+    type: 'reviews_wall', label: 'Reviews wall', description: 'Aggregated reviews from Google, Trustpilot, and more', icon: StarIcon, Component: ReviewsWall,
+    defaultProps: {
+      heading: 'What our customers say',
+      intro: '',
+      minRating: 4,
+      showSourceBadges: true,
+      items: [
+        { source: 'google', author: 'Priya S.', rating: 5, quote: 'Best decision we made this quarter.', date: 'Aug 2025' },
+        { source: 'trustpilot', author: 'James R.', rating: 5, quote: 'Setup in minutes, leads within hours.', date: 'Sep 2025' },
+        { source: 'google', author: 'Maya K.', rating: 5, quote: 'Doubled our conversions in one month.', date: 'Oct 2025' },
+        { source: 'manual', author: 'David T.', rating: 5, quote: 'Their support team is unreal.', date: 'Nov 2025' },
+      ],
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Heading' },
+      { kind: 'textarea', key: 'intro', label: 'Intro', rows: 2 },
+      { kind: 'number', key: 'minRating', label: 'Minimum rating to show', min: 1, max: 5 },
+      { kind: 'toggle', key: 'showSourceBadges', label: 'Show source badges' },
+      { kind: 'repeater', key: 'items', label: 'Reviews', itemLabel: 'Review',
+        fields: [
+          { kind: 'select', key: 'source', label: 'Source', options: [
+            { value: 'google', label: 'Google' }, { value: 'trustpilot', label: 'Trustpilot' },
+            { value: 'facebook', label: 'Facebook' }, { value: 'manual', label: 'Manual' },
+          ] },
+          { kind: 'text', key: 'author', label: 'Author' },
+          { kind: 'number', key: 'rating', label: 'Rating (1-5)', min: 1, max: 5 },
+          { kind: 'textarea', key: 'quote', label: 'Quote', rows: 2 },
+          { kind: 'text', key: 'date', label: 'Date' },
+        ],
+        defaultItem: { source: 'google', author: '', rating: 5, quote: '' },
+      },
+    ],
+  },
+  case_study: {
+    type: 'case_study', label: 'Case study spotlight', description: 'Big result number + customer quote', icon: Award, Component: CaseStudy,
+    defaultProps: {
+      heading: 'Customer story',
+      customerName: 'Acme Co.',
+      customerLogo: '',
+      imageUrl: '',
+      resultValue: '3.2x',
+      resultLabel: 'increase in qualified leads in 60 days',
+      quote: 'It paid for itself in the first week. We have not looked back.',
+      quoteAuthor: 'Jamie Chen, Head of Growth',
+      cta: { label: 'Read full case study', href: '#' },
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Eyebrow' },
+      { kind: 'text', key: 'customerName', label: 'Customer name' },
+      { kind: 'image', key: 'customerLogo', label: 'Customer logo' },
+      { kind: 'image', key: 'imageUrl', label: 'Side image' },
+      { kind: 'text', key: 'resultValue', label: 'Result value (e.g. 3.2x)' },
+      { kind: 'text', key: 'resultLabel', label: 'Result label' },
+      { kind: 'textarea', key: 'quote', label: 'Quote', rows: 3 },
+      { kind: 'text', key: 'quoteAuthor', label: 'Quote author' },
+      { kind: 'cta', key: 'cta', label: 'Button' },
+    ],
+  },
+  booking: {
+    type: 'booking', label: 'Booking / Calendar', description: 'Embed a Calendly, Cal.com or Google Calendar booking widget', icon: Calendar, Component: Booking,
+    defaultProps: {
+      heading: 'Book a free consultation',
+      intro: 'Pick a time that works for you.',
+      provider: 'calendly', url: '', height: 720,
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Heading' },
+      { kind: 'textarea', key: 'intro', label: 'Intro', rows: 2 },
+      { kind: 'select', key: 'provider', label: 'Provider', options: [
+        { value: 'calendly', label: 'Calendly' }, { value: 'cal', label: 'Cal.com' },
+        { value: 'google', label: 'Google Calendar' }, { value: 'custom', label: 'Custom URL' },
+      ] },
+      { kind: 'text', key: 'url', label: 'Booking URL' },
+      { kind: 'number', key: 'height', label: 'Height (px)', min: 400, max: 1400 },
+    ],
+  },
+  image_slider: {
+    type: 'image_slider', label: 'Image slider', description: 'Carousel of images with autoplay, dots, and arrows', icon: Images, Component: ImageSlider,
+    defaultProps: {
+      heading: '',
+      autoplay: true, intervalMs: 4500, showDots: true, showArrows: true,
+      images: [{ url: '', caption: 'Slide 1' }, { url: '', caption: 'Slide 2' }],
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Heading' },
+      { kind: 'toggle', key: 'autoplay', label: 'Autoplay' },
+      { kind: 'number', key: 'intervalMs', label: 'Interval (ms)', min: 1500, max: 12000 },
+      { kind: 'toggle', key: 'showDots', label: 'Show dots' },
+      { kind: 'toggle', key: 'showArrows', label: 'Show arrows' },
+      { kind: 'repeater', key: 'images', label: 'Slides', itemLabel: 'Slide',
+        fields: [
+          { kind: 'image', key: 'url', label: 'Image' },
+          { kind: 'text', key: 'caption', label: 'Caption' },
+          { kind: 'cta', key: 'cta', label: 'Optional button' },
+        ],
+        defaultItem: { url: '', caption: '' },
+      },
+    ],
+  },
+  video_gallery: {
+    type: 'video_gallery', label: 'Video gallery', description: 'Grid of video thumbnails that open in a lightbox', icon: PlayCircle, Component: VideoGallery,
+    defaultProps: {
+      heading: 'Watch the product in action',
+      intro: '',
+      videos: [
+        { title: 'Product tour', duration: '2:14', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', thumbnailUrl: '' },
+        { title: 'Customer story', duration: '3:42', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', thumbnailUrl: '' },
+      ],
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Heading' },
+      { kind: 'textarea', key: 'intro', label: 'Intro', rows: 2 },
+      { kind: 'repeater', key: 'videos', label: 'Videos', itemLabel: 'Video',
+        fields: [
+          { kind: 'text', key: 'title', label: 'Title' },
+          { kind: 'text', key: 'duration', label: 'Duration (e.g. 2:14)' },
+          { kind: 'text', key: 'url', label: 'YouTube / Vimeo / MP4 URL' },
+          { kind: 'image', key: 'thumbnailUrl', label: 'Thumbnail' },
+        ],
+        defaultItem: { url: '', title: '' },
+      },
+    ],
+  },
+  multi_step_form: {
+    type: 'multi_step_form', label: 'Multi-step form', description: 'Higher-converting multi-step lead capture form', icon: ClipboardList, Component: MultiStepForm,
+    defaultProps: {
+      heading: 'Get your free estimate',
+      description: 'Just a couple of questions | takes under 60 seconds.',
+      successMessage: 'Thanks! Our team will be in touch shortly.',
+      steps: [
+        { title: 'Tell us about your project', fields: [
+          { id: 'project_type', label: 'Project type', type: 'select', required: true, options: 'New build, Renovation, Repair, Consultation' },
+          { id: 'budget', label: 'Budget range', type: 'select', required: false, options: 'Under $5k, $5k-$25k, $25k-$100k, $100k+' },
+        ]},
+        { title: 'How can we reach you?', fields: [
+          { id: 'name', label: 'Full name', type: 'text', required: true },
+          { id: 'email', label: 'Email', type: 'email', required: true },
+          { id: 'phone', label: 'Phone', type: 'tel', required: false },
+        ]},
+      ],
+    },
+    schema: [
+      { kind: 'text', key: 'heading', label: 'Heading' },
+      { kind: 'textarea', key: 'description', label: 'Description', rows: 2 },
+      { kind: 'textarea', key: 'successMessage', label: 'Success message', rows: 2 },
+      { kind: 'repeater', key: 'steps', label: 'Steps', itemLabel: 'Step',
+        fields: [
+          { kind: 'text', key: 'title', label: 'Step title' },
+          { kind: 'repeater', key: 'fields', label: 'Fields', itemLabel: 'Field',
+            fields: [
+              { kind: 'text', key: 'id', label: 'Field id' },
+              { kind: 'text', key: 'label', label: 'Field label' },
+              { kind: 'select', key: 'type', label: 'Type', options: [
+                { value: 'text', label: 'Text' }, { value: 'email', label: 'Email' },
+                { value: 'tel', label: 'Phone' }, { value: 'textarea', label: 'Long text' },
+                { value: 'select', label: 'Dropdown' },
+              ] },
+              { kind: 'toggle', key: 'required', label: 'Required' },
+              { kind: 'text', key: 'options', label: 'Options (comma-separated, for Dropdown)' },
+            ],
+            defaultItem: { id: 'field_' + Date.now(), label: 'New field', type: 'text' },
+          },
+        ],
+        defaultItem: { title: 'New step', fields: [] },
+      },
+    ],
+  },
+  sticky_cta_bar: {
+    type: 'sticky_cta_bar', label: 'Sticky CTA bar', description: 'Floating bar that appears as visitors scroll', icon: ArrowUpToLine, Component: StickyCtaBar,
+    defaultProps: {
+      text: 'Ready to get started?',
+      cta: { label: 'Claim your free trial', href: '#lead-form' },
+      position: 'bottom', background: '#0f172a', textColor: '#ffffff',
+    },
+    schema: [
+      { kind: 'text', key: 'text', label: 'Message' },
+      { kind: 'cta', key: 'cta', label: 'Button' },
+      { kind: 'select', key: 'position', label: 'Position', options: [{ value: 'top', label: 'Top' }, { value: 'bottom', label: 'Bottom' }] },
+      { kind: 'color', key: 'background', label: 'Background color' },
+      { kind: 'color', key: 'textColor', label: 'Text color' },
+    ],
+  },
 };
 
 export const SECTION_ORDER: SectionType[] = [
-  'hero', 'video_hero', 'features', 'bento', 'logo_cloud', 'marquee', 'stats', 'steps', 'timeline',
-  'testimonials', 'pricing', 'comparison', 'team', 'gallery', 'before_after', 'embed',
-  'faq', 'countdown', 'newsletter', 'cta', 'content', 'divider', 'form', 'footer',
+  'header', 'announcement_bar',
+  'hero', 'video_hero',
+  'features', 'bento', 'tabs',
+  'logo_cloud', 'trust_badges', 'marquee',
+  'stats', 'case_study', 'steps', 'timeline',
+  'testimonials', 'reviews_wall',
+  'pricing', 'pricing_toggle', 'comparison',
+  'team', 'gallery', 'image_slider', 'video_gallery', 'before_after', 'embed',
+  'faq', 'accordion', 'countdown', 'booking',
+  'newsletter', 'cta', 'content', 'divider',
+  'form', 'multi_step_form', 'sticky_cta_bar', 'footer',
 ];
 
 export function newSection(type: SectionType) {

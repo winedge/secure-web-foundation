@@ -1,10 +1,10 @@
 /**
  * Section types for the multi-section landing page builder.
- * A `Section` is a typed block with editable `props`. The user can stack
- * many of them inside `firm_branding.sections` to compose a full landing page.
  */
 
 export type SectionType =
+  | 'header'
+  | 'announcement_bar'
   | 'hero'
   | 'video_hero'
   | 'features'
@@ -13,18 +13,29 @@ export type SectionType =
   | 'marquee'
   | 'stats'
   | 'testimonials'
+  | 'reviews_wall'
+  | 'case_study'
+  | 'trust_badges'
   | 'faq'
+  | 'accordion'
+  | 'tabs'
   | 'pricing'
+  | 'pricing_toggle'
   | 'steps'
   | 'timeline'
   | 'gallery'
+  | 'image_slider'
+  | 'video_gallery'
   | 'before_after'
   | 'comparison'
   | 'team'
   | 'countdown'
   | 'embed'
+  | 'booking'
   | 'newsletter'
+  | 'multi_step_form'
   | 'cta'
+  | 'sticky_cta_bar'
   | 'content'
   | 'divider'
   | 'form'
@@ -43,26 +54,22 @@ export interface SectionAnimation {
 
 export interface SectionBackground {
   kind: 'none' | 'gradient' | 'mesh' | 'glass' | 'solid';
-  /** Solid color or glass tint base */
   color?: string;
-  /** Gradient config */
   gradient?: {
     type: 'linear' | 'radial' | 'conic';
-    angle?: number; // for linear
-    stops: { color: string; pos: number }[]; // pos 0-100
+    angle?: number;
+    stops: { color: string; pos: number }[];
   };
-  /** Mesh: 2-5 colored blobs blended over the base */
   mesh?: {
     base?: string;
     blobs: { color: string; x: number; y: number; size: number; opacity?: number }[];
     grain?: boolean;
   };
-  /** Glassmorphism: blur + translucent tint over what's underneath/an image */
   glass?: {
-    blur: number; // px
-    opacity: number; // 0-1 tint strength
+    blur: number;
+    opacity: number;
     border?: boolean;
-    imageUrl?: string; // optional backdrop image
+    imageUrl?: string;
   };
 }
 
@@ -70,42 +77,23 @@ export interface Section<T = Record<string, any>> {
   id: string;
   type: SectionType;
   visible: boolean;
-  /** Optional conditional visibility (audience + form responses). */
   visibility?: VisibilityConfig;
-  /** Optional motion config rendered through <AnimatedSection>. */
   animation?: SectionAnimation;
-  /** Optional decorative background (gradient / mesh / glass). */
   background?: SectionBackground;
   props: T;
 }
 
-
 // -- Conditional visibility -------------------------------------------------
 
 export type VisibilitySource = 'audience' | 'form';
-
 export type VisibilityOperator =
-  | 'equals'
-  | 'not_equals'
-  | 'contains'
-  | 'not_contains'
-  | 'in'
-  | 'not_in'
-  | 'is_empty'
-  | 'is_not_empty'
-  | 'truthy'
-  | 'falsy';
+  | 'equals' | 'not_equals' | 'contains' | 'not_contains'
+  | 'in' | 'not_in' | 'is_empty' | 'is_not_empty' | 'truthy' | 'falsy';
 
 export interface VisibilityRule {
   source: VisibilitySource;
-  /**
-   * For `audience`: one of `device | visitor | referrer | utm_source | utm_medium |
-   *   utm_campaign | utm_content | utm_term | query:<paramName>`.
-   * For `form`: the name of a form field (built-in or custom).
-   */
   key: string;
   operator: VisibilityOperator;
-  /** Comma-separated for `in` / `not_in`. */
   value?: string;
 }
 
@@ -128,6 +116,27 @@ export interface SectionTheme {
 
 // -- Per-type prop shapes ---------------------------------------------------
 
+export interface HeaderProps {
+  logoUrl?: string;
+  logoText?: string;
+  links: { label: string; href: string }[];
+  primaryCta?: { label: string; href?: string };
+  secondaryCta?: { label: string; href?: string };
+  layout: 'left-nav' | 'centered-logo' | 'split' | 'logo-left-cta-right' | 'minimal';
+  style: 'solid' | 'transparent' | 'glass' | 'bordered-bottom' | 'floating-pill';
+  sticky: boolean;
+  shrinkOnScroll?: boolean;
+}
+
+export interface AnnouncementBarProps {
+  text: string;
+  link?: { label: string; href: string };
+  background: string;
+  textColor: string;
+  dismissible: boolean;
+  countdownIso?: string;
+}
+
 export interface HeroProps {
   eyebrow?: string;
   headline: string;
@@ -135,92 +144,100 @@ export interface HeroProps {
   primaryCta?: { label: string; href?: string };
   secondaryCta?: { label: string; href?: string };
   imageUrl?: string;
-  layout: 'centered' | 'split-left' | 'split-right' | 'image-bg';
+  layout: 'centered' | 'split-left' | 'split-right' | 'image-bg' | 'split-form-right' | 'split-form-left';
   align?: 'left' | 'center';
+  // form-split extras
+  formCardTitle?: string;
+  formCardSubtitle?: string;
+  formCardStyle?: 'card' | 'glass' | 'minimal';
+  // social proof in hero
+  rating?: { stars: number; count?: number; label?: string };
+  badges?: { label: string; icon?: string }[];
+  mediaShape?: 'rounded' | 'browser-frame' | 'phone-frame' | 'tilted';
 }
 
-export interface FeatureItem {
-  icon?: string; // lucide icon name
-  title: string;
-  description?: string;
-}
-export interface FeaturesProps {
+export interface FeatureItem { icon?: string; title: string; description?: string; }
+export interface FeaturesProps { heading?: string; intro?: string; columns: 2 | 3 | 4; items: FeatureItem[]; }
+
+export interface LogoCloudProps { heading?: string; logos: { src: string; alt?: string }[]; }
+
+export interface StatItem { value: string; label: string; suffix?: string; }
+export interface StatsProps { heading?: string; items: StatItem[]; }
+
+export interface TestimonialItem { quote: string; author: string; role?: string; avatar?: string; rating?: number; }
+export interface TestimonialsProps { heading?: string; layout: 'grid' | 'carousel'; items: TestimonialItem[]; }
+
+export interface ReviewItem { source: 'google' | 'trustpilot' | 'facebook' | 'manual'; author: string; rating: number; quote: string; date?: string; }
+export interface ReviewsWallProps { heading?: string; intro?: string; minRating: number; items: ReviewItem[]; showSourceBadges: boolean; }
+
+export interface CaseStudyProps {
   heading?: string;
-  intro?: string;
-  columns: 2 | 3 | 4;
-  items: FeatureItem[];
+  customerName: string;
+  customerLogo?: string;
+  imageUrl?: string;
+  resultValue: string;
+  resultLabel: string;
+  quote?: string;
+  quoteAuthor?: string;
+  cta?: { label: string; href?: string };
 }
 
-export interface LogoCloudProps {
+export interface TrustBadgesProps {
   heading?: string;
-  logos: { src: string; alt?: string }[];
+  layout: 'row' | 'grid';
+  items: { label: string; icon?: string; imageUrl?: string }[];
 }
 
-export interface StatItem {
-  value: string;
-  label: string;
-  suffix?: string;
-}
-export interface StatsProps {
-  heading?: string;
-  items: StatItem[];
-}
+export interface FaqItem { question: string; answer: string; }
+export interface FaqProps { heading?: string; items: FaqItem[]; }
 
-export interface TestimonialItem {
-  quote: string;
-  author: string;
-  role?: string;
-  avatar?: string;
-  rating?: number;
-}
-export interface TestimonialsProps {
-  heading?: string;
-  layout: 'grid' | 'carousel';
-  items: TestimonialItem[];
-}
+export interface AccordionProps { heading?: string; intro?: string; allowMultiple: boolean; items: { title: string; body: string }[]; }
 
-export interface FaqItem {
-  question: string;
-  answer: string;
-}
-export interface FaqProps {
-  heading?: string;
-  items: FaqItem[];
-}
+export interface TabsProps { heading?: string; intro?: string; tabs: { label: string; heading?: string; body: string; imageUrl?: string }[]; }
 
 export interface PricingPlan {
+  name: string; price: string; period?: string; description?: string;
+  features: string[]; cta?: { label: string; href?: string }; highlighted?: boolean;
+}
+export interface PricingProps { heading?: string; intro?: string; plans: PricingPlan[]; }
+
+export interface PricingTogglePlan {
   name: string;
-  price: string;
-  period?: string;
+  monthlyPrice: string;
+  yearlyPrice: string;
   description?: string;
   features: string[];
   cta?: { label: string; href?: string };
   highlighted?: boolean;
 }
-export interface PricingProps {
+export interface PricingToggleProps {
   heading?: string;
   intro?: string;
-  plans: PricingPlan[];
+  monthlyLabel: string;
+  yearlyLabel: string;
+  yearlyDiscountLabel?: string;
+  plans: PricingTogglePlan[];
 }
 
-export interface StepItem {
-  title: string;
-  description?: string;
+export interface StepItem { title: string; description?: string; }
+export interface StepsProps { heading?: string; intro?: string; items: StepItem[]; }
+
+export interface GalleryImage { url: string; caption?: string; }
+export interface GalleryProps { heading?: string; layout: 'grid' | 'masonry'; images: GalleryImage[]; }
+
+export interface ImageSliderProps {
+  heading?: string;
+  autoplay: boolean;
+  intervalMs: number;
+  showDots: boolean;
+  showArrows: boolean;
+  images: { url: string; caption?: string; cta?: { label: string; href?: string } }[];
 }
-export interface StepsProps {
+
+export interface VideoGalleryProps {
   heading?: string;
   intro?: string;
-  items: StepItem[];
-}
-
-export interface GalleryImage {
-  url: string;
-  caption?: string;
-}
-export interface GalleryProps {
-  heading?: string;
-  layout: 'grid' | 'masonry';
-  images: GalleryImage[];
+  videos: { thumbnailUrl?: string; title?: string; url: string; duration?: string }[];
 }
 
 export interface CtaProps {
@@ -231,24 +248,48 @@ export interface CtaProps {
   style: 'soft' | 'bold' | 'gradient';
 }
 
-export interface ContentProps {
-  heading?: string;
-  body: string; // plain text or simple markdown
-  align: 'left' | 'center';
+export interface StickyCtaBarProps {
+  text: string;
+  cta: { label: string; href?: string };
+  position: 'top' | 'bottom';
+  background: string;
+  textColor: string;
 }
 
-export interface FormProps {
+export interface BookingProps {
+  heading?: string;
+  intro?: string;
+  provider: 'calendly' | 'cal' | 'google' | 'custom';
+  url: string;
+  height: number;
+}
+
+export interface MultiStepFormProps {
   heading?: string;
   description?: string;
-  sticky: boolean;
+  successMessage: string;
+  steps: {
+    title: string;
+    fields: { id: string; label: string; type: 'text' | 'email' | 'tel' | 'textarea' | 'select'; required?: boolean; options?: string }[];
+  }[];
 }
 
+export interface ContentProps { heading?: string; body: string; align: 'left' | 'center'; }
+
+export interface FormProps { heading?: string; description?: string; sticky: boolean; }
+
+export interface FooterColumn { heading: string; links: { label: string; href: string }[]; }
 export interface FooterProps {
+  layout?: 'simple' | 'columns' | 'newsletter-inline' | 'centered';
+  logoUrl?: string;
   firmName?: string;
   tagline?: string;
+  columns?: FooterColumn[];
   links: { label: string; href: string }[];
   social: { type: 'twitter' | 'linkedin' | 'facebook' | 'instagram' | 'youtube'; href: string }[];
+  newsletter?: { heading?: string; placeholder?: string; ctaLabel?: string };
   legal?: string;
+  bottomLinks?: { label: string; href: string }[];
 }
 
 // -- Inspector field schema -------------------------------------------------
@@ -261,6 +302,8 @@ export type InspectorField =
   | { kind: 'number'; key: string; label: string; min?: number; max?: number }
   | { kind: 'toggle'; key: string; label: string }
   | { kind: 'cta'; key: string; label: string }
+  | { kind: 'color'; key: string; label: string }
+  | { kind: 'slider'; key: string; label: string; min: number; max: number; step?: number; unit?: string }
   | {
       kind: 'repeater';
       key: string;

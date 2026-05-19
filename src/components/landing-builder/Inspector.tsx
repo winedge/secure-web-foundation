@@ -85,6 +85,28 @@ function FieldRenderer({ field, value, onChange }: { field: InspectorField; valu
       );
     case 'image':
       return <ImageField label={field.label} value={value} onChange={onChange} />;
+    case 'color':
+      return (
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium">{field.label}</Label>
+          <div className="flex gap-2">
+            <input type="color" value={value || '#000000'} onChange={(e) => onChange(e.target.value)}
+              className="h-9 w-12 rounded border bg-transparent cursor-pointer" />
+            <Input value={value ?? ''} placeholder="#000000" onChange={(e) => onChange(e.target.value)} className="flex-1 font-mono text-xs" />
+          </div>
+        </div>
+      );
+    case 'slider':
+      return (
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-medium">{field.label}</Label>
+            <span className="text-xs text-muted-foreground tabular-nums">{value ?? field.min}{field.unit || ''}</span>
+          </div>
+          <input type="range" min={field.min} max={field.max} step={field.step || 1} value={value ?? field.min}
+            onChange={(e) => onChange(Number(e.target.value))} className="w-full accent-primary" />
+        </div>
+      );
     case 'cta': {
       const cta = value ?? { label: '', href: '' };
       return (

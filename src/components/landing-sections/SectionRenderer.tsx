@@ -41,7 +41,7 @@ export function SectionRenderer({
           const Comp = def.Component;
           const isSelected = selectable && selectedId === s.id;
           const hasRules = !!(s.visibility?.rules?.length);
-          const inner = s.type === 'form'
+          const inner = (s.type === 'form' || s.type === 'hero')
             ? <Comp props={s.props} theme={theme} formSlot={formSlot} />
             : <Comp props={s.props} theme={theme} />;
           const node = (
