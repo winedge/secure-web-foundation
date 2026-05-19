@@ -65,28 +65,7 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
   );
 }
 
-/**
- * Inject a Google Fonts <link> for the chosen heading/body font pair. Idempotent;
- * the tag is replaced whenever the selection changes so we never accumulate.
- */
-function useGoogleFonts(heading?: string, body?: string) {
-  useEffect(() => {
-    const families = Array.from(new Set([heading, body].filter(Boolean))) as string[];
-    if (!families.length) return;
-    const href = `https://fonts.googleapis.com/css2?${families
-      .map((f) => `family=${encodeURIComponent(f)}:wght@400;500;600;700;800`)
-      .join('&')}&display=swap`;
-    const id = 'brand-google-fonts';
-    let link = document.getElementById(id) as HTMLLinkElement | null;
-    if (!link) {
-      link = document.createElement('link');
-      link.id = id;
-      link.rel = 'stylesheet';
-      document.head.appendChild(link);
-    }
-    if (link.href !== href) link.href = href;
-  }, [heading, body]);
-}
+import { useGoogleFonts } from '@/hooks/useGoogleFonts';
 
 const COLOR_PRESETS: Array<{ name: string; primary: string; background: string; accent: string }> = [
   { name: 'Navy Trust',     primary: '#0f1b3d', background: '#ffffff', accent: '#3b6fa0' },
