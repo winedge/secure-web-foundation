@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { Upload, Palette, Type as TypeIcon, Layout as LayoutIcon, Sparkles } from 'lucide-react';
+import { Upload, Palette, Type as TypeIcon, Layout as LayoutIcon, Sparkles, Moon, Sun } from 'lucide-react';
 
 /**
  * Google Fonts curated for brand typography. Loaded on demand via a single
@@ -402,7 +402,200 @@ export function BrandIdentityTab(p: BrandIdentityTabProps) {
             </div>
           </CardContent>
         </Card>
+
+        {/* Dark-mode brand tokens */}
+        <DarkBrandCard
+          layoutConfig={p.layoutConfig}
+          onLayoutConfig={p.onLayoutConfig}
+          primaryColor={p.primaryColor}
+          backgroundColor={p.backgroundColor}
+          accentColor={p.accentColor}
+          logoUrl={p.logoUrl}
+        />
       </div>
     </div>
+  );
+}
+
+/**
+ * Dark-mode brand variant editor. Values are persisted under
+ * `layout_config.dark = { primaryColor, backgroundColor, accentColor, logoUrl }`
+ * so no schema migration is required. The renderer reads these and swaps the
+ * active theme on any section whose background is detected as dark.
+ */
+function DarkBrandCard({
+  layoutConfig,
+  onLayoutConfig,
+  primaryColor,
+  backgroundColor,
+  accentColor,
+  logoUrl,
+}: {
+  layoutConfig: Record<string, any>;
+  onLayoutConfig: (v: Record<string, any>) => void;
+  primaryColor: string;
+  backgroundColor: string;
+  accentColor: string;
+  logoUrl: string | null;
+}) {
+  const dark = (layoutConfig?.dark ?? {}) as {
+    enabled?: boolean;
+    primaryColor?: string;
+    backgroundColor?: string;
+    accentColor?: string;
+    logoUrl?: string;
+  };
+  const enabled = dark.enabled ?? false;
+
+  const set = (patch: Partial<typeof dark>) =>
+    onLayoutConfig({ ...layoutConfig, dark: { ...dark, ...patch } });
+
+  // Sensible high-contrast defaults derived from the light palette.
+  const enableDark = () =>
+    set({
+      enabled: true,
+      primaryColor: dark.primaryColor ?? '#f8fafc',
+      backgroundColor: dark.backgroundColor ?? '#0b1220',
+      accentColor: dark.accentColor ?? accentColor,
+      logoUrl: dark.logoUrl ?? logoUrl ?? undefined,
+    });
+
+  return (
+    <Card className="lg:col-span-2">
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Moon className="h-5 w-5" /> Dark-mode brand tokens
+        </CardTitle>
+        <CardDescription>
+          Auto-adapt logo, colors, and typography on dark section backgrounds (gradients, mesh, glass, dark solids).
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        {!enabled ? (
+          <div className="rounded-lg border border-dashed p-6 text-center space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Dark-mode tokens are off. Enable to override brand colors and logo
+              automatically when a section uses a dark background.
+            </p>
+            <Button type="button" onClick={enableDark} className="gap-2">
+              <Moon className="h-4 w-4" /> Enable dark tokens
+            </Button>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Moon className="h-4 w-4" /> Dark variant active
+              </div>
+              <Button type="button" variant="ghost" size="sm" onClick={() => set({ enabled: false })}>
+                Disable
+              </Button>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {/* Side-by-side comparison */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Sun className="h-3 w-3" /> Light (default)
+                </Label>
+                <div className="rounded-lg border p-4" style={{ background: backgroundColor, color: primaryColor }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    {logoUrl ? (
+                      <img src={logoUrl} alt="" className="h-6 w-auto" />
+                    ) : (
+                      <div className="h-6 w-6 rounded bg-muted" />
+                    )}
+                    <div className="font-semibold text-sm">Brand</div>
+                  </div>
+                  <div className="text-xs opacity-80">Body copy preview.</div>
+                  <button
+                    className="mt-3 rounded px-3 py-1 text-xs font-medium"
+                    style={{ background: accentColor, color: '#fff' }}
+                  >
+                    Action
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Moon className="h-3 w-3" /> Dark
+                </Label>
+                <div
+                  className="rounded-lg border p-4"
+                  style={{ background: dark.backgroundColor, color: dark.primaryColor }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    {dark.logoUrl ? (
+                      <img src={dark.logoUrl} alt="" className="h-6 w-auto" />
+                    ) : logoUrl ? (
+                      <img src={logoUrl} alt="" className="h-6 w-auto opacity-90" />
+                    ) : (
+                      <div className="h-6 w-6 rounded bg-white/20" />
+                    )}
+                    <div className="font-semibold text-sm">Brand</div>
+                  </div>
+                  <div className="text-xs opacity-80">Body copy preview.</div>
+                  <button
+                    className="mt-3 rounded px-3 py-1 text-xs font-medium"
+                    style={{ background: dark.accentColor, color: '#fff' }}
+                  >
+                    Action
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <ColorField
+                label="Dark Primary (text)"
+                value={dark.primaryColor ?? '#f8fafc'}
+                onChange={(v) => set({ primaryColor: v })}
+              />
+              <ColorField
+                label="Dark Background"
+                value={dark.backgroundColor ?? '#0b1220'}
+                onChange={(v) => set({ backgroundColor: v })}
+              />
+              <ColorField
+                label="Dark Accent"
+                value={dark.accentColor ?? accentColor}
+                onChange={(v) => set({ accentColor: v })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Dark-mode logo (optional)</Label>
+              <div className="flex items-center gap-4">
+                {dark.logoUrl ? (
+                  <img
+                    src={dark.logoUrl}
+                    alt="Dark logo"
+                    className="h-14 w-14 object-contain rounded-lg border bg-slate-900"
+                  />
+                ) : (
+                  <div className="h-14 w-14 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center bg-slate-900/80">
+                    <Upload className="h-5 w-5 text-white/50" />
+                  </div>
+                )}
+                <div className="flex-1 space-y-2">
+                  <Input
+                    placeholder="https://… (paste a dark-friendly logo URL)"
+                    value={dark.logoUrl ?? ''}
+                    onChange={(e) => set({ logoUrl: e.target.value || undefined })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Use a logo with light strokes or transparent background. Falls back to the main logo if blank.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Detection is automatic | any section whose background luminance reads as dark (solid, gradient, mesh, or glass) will switch to these tokens.
+            </p>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }
