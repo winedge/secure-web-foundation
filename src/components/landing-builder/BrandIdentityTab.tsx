@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useGoogleFonts } from '@/hooks/useGoogleFonts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -65,7 +66,6 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
   );
 }
 
-import { useGoogleFonts } from '@/hooks/useGoogleFonts';
 
 const COLOR_PRESETS: Array<{ name: string; primary: string; background: string; accent: string }> = [
   { name: 'Navy Trust',     primary: '#0f1b3d', background: '#ffffff', accent: '#3b6fa0' },
