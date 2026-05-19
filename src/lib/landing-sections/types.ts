@@ -112,6 +112,16 @@ export interface SectionTheme {
   spacing: 'compact' | 'normal' | 'airy';
   buttonStyle: 'solid' | 'outline' | 'gradient' | 'pill';
   maxWidth: 'narrow' | 'normal' | 'wide';
+  /** Optional brand logo URL — used by section components that fall back to the brand mark. */
+  logoUrl?: string;
+  /** Optional dark-mode logo, swapped automatically over dark section backgrounds. */
+  logoUrlDark?: string;
+  /** Dark-mode brand token overrides applied automatically on dark sections. */
+  dark?: {
+    primary?: string;
+    background?: string;
+    accent?: string;
+  };
 }
 
 // -- Per-type prop shapes ---------------------------------------------------

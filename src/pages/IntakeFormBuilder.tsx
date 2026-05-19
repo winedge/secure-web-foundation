@@ -367,6 +367,15 @@ export default function IntakeFormBuilder() {
               spacing: ((layoutConfig as any)?.spacing ?? 'normal') as SectionTheme['spacing'],
               buttonStyle: ((layoutConfig as any)?.buttonStyle ?? 'solid') as SectionTheme['buttonStyle'],
               maxWidth: ((layoutConfig as any)?.maxWidth ?? 'normal') as SectionTheme['maxWidth'],
+              logoUrl: logoUrl ?? undefined,
+              logoUrlDark: (layoutConfig as any)?.dark?.logoUrl ?? undefined,
+              dark: (layoutConfig as any)?.dark
+                ? {
+                    primary: (layoutConfig as any).dark.primaryColor,
+                    background: (layoutConfig as any).dark.backgroundColor,
+                    accent: (layoutConfig as any).dark.accentColor,
+                  }
+                : undefined,
             }}
             visibleFormFields={visibleFields}
             customFormFields={customFields}

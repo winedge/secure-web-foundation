@@ -404,6 +404,7 @@ export default function BrandedIntake() {
   // Multi-section landing-page renderer | takes priority when sections are configured
   const sections = (Array.isArray((branding as any).sections) ? (branding as any).sections : []) as Section[];
   if (sections.length > 0) {
+    const darkCfg = (branding as any)?.layout_config?.dark;
     const sectionTheme: SectionTheme = {
       primary: primaryColor,
       background: backgroundColor,
@@ -414,6 +415,11 @@ export default function BrandedIntake() {
       spacing: (branding as any)?.layout_config?.spacing ?? 'normal',
       buttonStyle: (branding as any)?.layout_config?.buttonStyle ?? 'solid',
       maxWidth: (branding as any)?.layout_config?.maxWidth ?? 'normal',
+      logoUrl: logoUrl ?? undefined,
+      logoUrlDark: darkCfg?.logoUrl ?? undefined,
+      dark: darkCfg
+        ? { primary: darkCfg.primaryColor, background: darkCfg.backgroundColor, accent: darkCfg.accentColor }
+        : undefined,
     };
     const intakeContent = chatbotEnabled && intakeMode === 'chat' ? (
       <div>
