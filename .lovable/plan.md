@@ -1,152 +1,248 @@
-## Landing Builder | Modern Upgrade
 
-Goal: turn the current section builder into a "game-changer" page builder with cinematic animations, modern section types, richer theming, and pro authoring tools | while staying compatible with existing saved pages (`firm_branding.sections`).
+## Vision
 
----
-
-### 1. Animation System (new)
-
-Add a per-section `animation` config + a shared `AnimatedSection` wrapper in `src/components/landing-sections/`.
-
-```ts
-// types.ts (additive)
-animation?: {
-  entrance: 'none'|'fade'|'slide-up'|'slide-left'|'slide-right'|'zoom'|'blur-in'|'mask-reveal';
-  trigger: 'on-load'|'on-scroll'|'on-hover';
-  duration: number;       // ms
-  delay: number;          // ms
-  stagger?: number;       // children stagger ms
-  easing: 'ease'|'spring'|'bounce'|'linear';
-  parallax?: number;      // 0-1 scroll parallax intensity
-  repeat?: boolean;
-}
-```
-
-- Powered by `framer-motion` (already React-friendly) + IntersectionObserver.
-- New global "Motion preset" picker in theme: `subtle | balanced | cinematic | none` (respects `prefers-reduced-motion`).
-- Add hover micro-interactions: button magnetic hover, card tilt (3D), image zoom-on-hover, gradient sweep.
-- Scroll effects: parallax backgrounds, sticky reveal, scroll-progress bar, section pinning for "scrollytelling".
-
-Inspector gets a new "Motion" tab per section (collapsed by default so existing UX stays simple).
+Turn the landing builder into a true **one-stop page platform** so a company never reaches for Webflow, Unbounce, or Framer alongside us. Three pillars: **richer building blocks**, **deeper customization**, **growth & conversion tooling baked in**.
 
 ---
 
-### 2. New Section Types
+## 1. New sections (block library)
 
-Add to `SectionType` and registry:
+### Site chrome
+- **Header / Navbar** | logo, nav links, CTA, 6 layout presets (left-nav, centered-logo, split, glass, floating-pill, transparent overlay), sticky, shrink-on-scroll, mobile drawer, optional **announcement bar** with countdown + dismissible.
+- **Mega-menu** (nested links + featured card per column).
+- **Footer pro** | columns repeater, newsletter-inline, social-icon styles, multi-logo, bottom legal bar, language switcher slot.
 
-- `video_hero` | full-bleed background video / mux URL with overlay + CTA.
-- `bento` | Apple/Linear-style bento grid (mixed card sizes, icons, mini-charts).
-- `comparison` | "Us vs. Them" table.
-- `marquee` | infinite scrolling logos / quotes / images.
-- `timeline` | vertical / horizontal milestone story.
-- `team` | member cards with social links.
-- `countdown` | event/launch timer.
-- `before_after` | drag slider image compare.
-- `embed` | YouTube / Loom / Calendly / Typeform / custom iframe.
-- `code` | syntax-highlighted snippet (developer landings).
-- `map` | static map + address (Leaflet or static image).
-- `social_proof_bar` | small ticker "12 firms signed up today".
-- `interactive_demo` | tabbed product screenshots with hotspots.
-- `newsletter` | inline email capture mini-form.
-- `divider` | shaped section breaks (wave / slant / arc / blob SVG).
+### Hero variants
+- **Hero + Form split** (form card on left or right, glass/card/minimal style).
+- **Hero with device mockup** (browser frame / phone frame / tilted screenshot).
+- **Hero with stats strip** below CTAs.
+- **Hero carousel** (rotating headlines + bg images).
+- **Hero with floating reviews badge** (Google rating, Trustpilot).
+- New **media types**: image, video, Lottie JSON, Spline 3D embed.
 
-Each ships with default content, inspector schema, and is added to `SECTION_ORDER` + `SectionPicker`.
+### Conversion & social proof
+- **Lead magnet block** (ebook/PDF download with mini form).
+- **Booking / Calendar embed** (Calendly, Cal.com, Google Calendar).
+- **Reviews wall** (Google, Trustpilot, manual) with rating filter.
+- **Trust badges row** (SSL, BBB, payment logos, compliance).
+- **Case study spotlight** (logo + result number + quote + read link).
+- **Press / "As seen in" logos** with link-out.
+- **Awards & certifications**.
 
----
+### Content & engagement
+- **Tabs** (titled tab panels with rich content).
+- **Accordion** (more flexible than FAQ | nested blocks).
+- **Two-column rich text + media**.
+- **Interactive comparison table** (us vs them, ✓/✗).
+- **Pricing toggle** (monthly/yearly with discount label).
+- **ROI / savings calculator** (sliders → live number).
+- **Quiz / multi-step recommender** (routes user to a CTA based on answers).
+- **Live chat / WhatsApp button** floating bubble.
+- **Sticky bottom CTA bar**.
+- **Exit-intent modal** (offer or form).
+- **Popup builder** (timed, scroll-percent, exit-intent triggers).
 
-### 3. Theming v2
+### Media
+- **Video gallery** (YouTube/Vimeo/MP4 thumbnails → modal).
+- **Image slider / carousel** with autoplay & dots.
+- **Before / after slider** (already exists | add labels).
+- **Lottie animation block**.
+- **3D model viewer** (`<model-viewer>`).
+- **Map block** (Google / OSM with multi-pin support, store locator mode).
+- **Instagram / TikTok feed embed**.
 
-Extend `SectionTheme`:
+### Forms & data capture
+- **Multi-step form** (progress bar, conditional steps).
+- **Inline newsletter**.
+- **Survey block** with branching.
+- **File upload field** (already partial | expose as standalone section).
+- **Appointment slot picker**.
+- **Phone-only opt-in** (SMS).
 
-- `mode: 'light' | 'dark' | 'auto'` (per section override).
-- `gradients`: named gradient presets + custom angle/stops.
-- `noiseTexture`, `grainOverlay`, `meshGradient` toggles.
-- `glassmorphism` (backdrop-blur cards).
-- `shadowStyle`: `none | soft | hard | glow | neon`.
-- `cursor`: `default | dot | spotlight` (custom cursor overlay).
-- Per-section `backgroundType`: solid | gradient | image | video | mesh | pattern | particles.
-- Live theme tweaker upgrade: AI suggests palette from uploaded logo (already partially in `AiThemeTweaker`).
+### Local & SEO
+- **NAP block** (auto-synced with GMB).
+- **Service area block** (cities served with internal links).
+- **Opening hours block**.
+- **Driving directions / contact info card**.
 
----
-
-### 4. Authoring Experience
-
-In `src/pages/IntakeFormBuilder.tsx` + `landing-builder/`:
-
-- **Drag-and-drop reorder** with `@dnd-kit` (smooth, with drop indicator).
-- **Inline editing** in preview: click headline → edit in place (contentEditable bridge to props).
-- **Undo / redo stack** (cmd-Z) with bounded history.
-- **Section duplicate / lock / hide** quick actions on hover.
-- **Multi-device preview toggle** (desktop / tablet / mobile breakpoint switcher with width slider).
-- **Template gallery v2**: pre-built page templates (SaaS, agency, law firm, ebook, webinar, event, coming-soon).
-- **AI Page Generator**: prompt → full multi-section page (extends `AiSectionsAssistant`).
-- **AI Copy Rewriter**: rewrite any text block in tone presets (bold, friendly, formal, punchy).
-- **AI Image Generator**: inline "generate image" for hero/gallery via Lovable AI (`google/gemini-3-pro-image-preview`).
-- **Asset library** drawer: previously uploaded images, Unsplash search, brand kit.
-- **Brand Kit**: store logo, colors, fonts firm-wide; one-click apply.
-- **Section variants**: each section type ships 3-5 layout variants picker (cards in inspector).
-- **Keyboard shortcuts**: D duplicate, ⌫ delete, ⌘S save, ⌘Z undo.
-- **Comments / collaboration markers** (per-section comment thread, stored on `landing_versions`).
-
----
-
-### 5. Performance & SEO
-
-- Lazy-load section images with blur-up placeholders.
-- Auto-generate Open Graph image from hero (server-side render via edge function).
-- Schema.org JSON-LD per section (FAQ, Product, Organization, Review).
-- Built-in A/B test: two variants of any section, randomized + tracked.
-- Conversion analytics per section (scroll-depth + CTA clicks → `lead_activity_logs`).
+### eCommerce-lite
+- **Product card grid**.
+- **Single product showcase** (gallery + variants + CTA).
+- **Promo strip with coupon code** (copy-to-clipboard).
 
 ---
 
-### 6. Backward Compatibility
+## 2. Global site identity ("Brand" tab)
 
-- All new fields are optional; old sections render unchanged.
-- Migration in `SectionRenderer.tsx`: defaults `animation.entrance = 'fade'` for new sections only.
-- Bump version in `firm_branding.builder_version` to 2 for new pages.
-
----
-
-### Phased Rollout
-
-```text
-Phase 1 (foundation)
-  | Add framer-motion + AnimatedSection wrapper
-  | Animation inspector tab + theme motion preset
-  | Drag-and-drop reorder, undo/redo, inline editing
-
-Phase 2 (sections)
-  | bento, marquee, video_hero, timeline, comparison,
-    before_after, embed, divider, team, countdown
-
-Phase 3 (theming v2)
-  | gradients, glassmorphism, noise, shadows, custom cursor,
-    mesh / particle backgrounds, section variants picker
-
-Phase 4 (AI + assets)
-  | AI page generator, copy rewriter, image generator
-  | Asset library + brand kit
-  | Template gallery v2
-
-Phase 5 (perf / growth)
-  | Lazy images + blur-up, OG image gen, JSON-LD,
-    A/B testing, per-section conversion analytics
-```
+A new top-level tab on the builder:
+- Logo (light + dark variants) + auto-favicon generation.
+- Brand name, tagline, brand colors with **AI palette generator**.
+- Typography (heading + body fonts) with **Google Fonts picker** and live preview.
+- Default header & footer (applied to all pages by default; per-page override).
+- Custom CSS / custom `<head>` snippets.
+- 404 page template.
 
 ---
 
-### Files Touched (preview)
+## 3. Deeper section customization
 
-- New: `src/components/landing-sections/AnimatedSection.tsx`, `Bento.tsx`, `Marquee.tsx`, `VideoHero.tsx`, `Timeline.tsx`, `Comparison.tsx`, `BeforeAfter.tsx`, `Embed.tsx`, `Divider.tsx`, `Team.tsx`, `Countdown.tsx`, `Newsletter.tsx`, `InteractiveDemo.tsx`, `Map.tsx`, `SocialProofBar.tsx`, `Code.tsx`
-- New: `src/components/landing-builder/MotionInspector.tsx`, `VariantPicker.tsx`, `AssetLibrary.tsx`, `BrandKitPanel.tsx`, `TemplateGalleryV2.tsx`, `HistoryProvider.tsx`, `InlineEditableText.tsx`
-- New hook: `src/hooks/use-builder-history.ts`, `use-brand-kit.ts`
-- Edited: `src/lib/landing-sections/types.ts`, `registry.ts`, `starter-stacks.ts`, `Inspector.tsx`, `SectionList.tsx`, `SectionsTab.tsx`, `SectionRenderer.tsx`, `_shared.ts`
-- Edge functions: `generate-og-image`, `ai-page-generator` (extend existing AI assistant)
+Per-section inspector additions:
+- **Width override** (narrow / normal / wide / full-bleed).
+- **Padding sliders** (top/bottom).
+- **Border, shadow, rounded corners** controls.
+- **Section dividers** between blocks: wave / tilt / curve / arrow / zigzag / dots.
+- **Decorative shapes** (blobs, grids, noise) overlay toggle.
+- **Custom anchor ID** for in-page nav.
+- **Per-section CSS class hook**.
+- **Per-section visibility windows** (date-range "show until Dec 31", time-of-day).
+- **Per-device hide** (hide on mobile/desktop/tablet).
+- **Lazy-load toggle**.
+
+New inspector field kinds: `color`, `slider`, `icon-picker` (Lucide visual grid), `link-group`, `font-picker`, `gradient-picker`, `shadow-picker`.
 
 ---
 
-### Open Question
+## 4. AI superpowers
 
-This is a large surface area. Want me to start with **Phase 1 only** (animations + DnD + inline editing + undo/redo) and ship that end-to-end before moving on, or kick off Phases 1+2 together (animations + ~10 new sections)?
+- **AI Copywriter per block** (rewrite this headline, shorten, change tone: confident / friendly / luxury / urgent).
+- **AI Image generation** inline (replace any image via prompt).
+- **AI Translate page** to N languages (creates language variants).
+- **AI Brand kit extractor** (paste a URL → auto-fill colors, fonts, logo).
+- **AI Layout suggestions** ("this page is missing social proof | add it here").
+- **AI SEO writer** (auto title/meta/OG from page content).
+- **AI Form optimizer** (suggest fewer fields based on conversion data).
+
+---
+
+## 5. Conversion & growth tooling
+
+- **A/B testing** at section or page level (variants + traffic split + winner).
+- **Conversion goals** (form submit, click, scroll depth) tied to analytics.
+- **Heatmap-lite** (track clicks per section via existing rrweb pipeline).
+- **UTM / referrer rules** for swapping headlines (personalization).
+- **Geo-personalization** (different hero by country/state, using existing ip-api).
+- **Dynamic text replacement** from query params (`?city=Mumbai`).
+- **Scheduled publish & expiry** per page.
+- **Scarcity widgets** (stock left, recent purchases ticker).
+
+---
+
+## 6. Templates & onboarding
+
+- **Template marketplace** (industry packs: dental, legal, fitness, SaaS, real estate, restaurant, ecommerce) | each is a section stack + theme.
+- **Block library** with previews and "Insert below" / "Replace section".
+- **Starter wizard** ("Describe your business → AI builds a draft page").
+
+---
+
+## 7. Publishing & integrations
+
+- **Custom domain mapping** (CNAME instructions + auto-SSL note).
+- **Page-level redirect rules**.
+- **Pixel manager** (Meta, Google, TikTok, LinkedIn, GA4) drop-in.
+- **CRM webhook** on form submit (Zapier/Make-compatible).
+- **PWA toggle** (installable landing page).
+- **Embed mode** (publish a section as `<script>` for partner sites).
+
+---
+
+## 8. Collaboration & workflow
+
+- **Comments on sections** (Figma-style pins for teammates).
+- **Roles**: editor vs viewer per page (reuses existing RBAC).
+- **Approval workflow** (draft → review → publish).
+- **Versions diff viewer** (already have versions | add side-by-side diff).
+- **Lock section** (prevent edits).
+
+---
+
+## 9. Files to add (initial wave | rest follow same registry pattern)
+
+Components:
+- `src/components/landing-sections/Header.tsx`
+- `src/components/landing-sections/AnnouncementBar.tsx`
+- `src/components/landing-sections/MegaMenu.tsx`
+- `src/components/landing-sections/HeroFormSplit.tsx` (variant of Hero)
+- `src/components/landing-sections/Tabs.tsx`
+- `src/components/landing-sections/Accordion.tsx`
+- `src/components/landing-sections/Calculator.tsx`
+- `src/components/landing-sections/Quiz.tsx`
+- `src/components/landing-sections/Booking.tsx`
+- `src/components/landing-sections/ReviewsWall.tsx`
+- `src/components/landing-sections/TrustBadges.tsx`
+- `src/components/landing-sections/CaseStudy.tsx`
+- `src/components/landing-sections/MultiStepForm.tsx`
+- `src/components/landing-sections/MapBlock.tsx`
+- `src/components/landing-sections/OpeningHours.tsx`
+- `src/components/landing-sections/Lottie.tsx`
+- `src/components/landing-sections/VideoGallery.tsx`
+- `src/components/landing-sections/ImageSlider.tsx`
+- `src/components/landing-sections/StickyCtaBar.tsx`
+- `src/components/landing-sections/ExitIntentModal.tsx`
+- `src/components/landing-sections/FloatingChatButton.tsx`
+- `src/components/landing-sections/PricingToggle.tsx`
+- `src/components/landing-sections/ProductGrid.tsx`
+
+Builder UI:
+- `src/components/landing-builder/BrandTab.tsx`
+- `src/components/landing-builder/TemplateMarketplace.tsx`
+- `src/components/landing-builder/BlockLibraryDrawer.tsx`
+- `src/components/landing-builder/AbTestPanel.tsx`
+- `src/components/landing-builder/PixelManager.tsx`
+- `src/components/landing-builder/CommentsLayer.tsx`
+- `src/components/landing-builder/AiCopywriterPopover.tsx`
+- `src/components/landing-builder/AiBrandExtractor.tsx`
+- `src/components/landing-builder/inspector-fields/{Color,Slider,IconPicker,FontPicker,GradientPicker,LinkGroup}.tsx`
+- `src/components/landing-builder/SectionDividerInspector.tsx`
+- `src/components/landing-builder/DeviceVisibilityInspector.tsx`
+
+Logic & libs:
+- `src/lib/landing-sections/types.ts` (extend with all new section types + props + new field kinds + site identity).
+- `src/lib/landing-sections/registry.ts` (register every new block).
+- `src/lib/landing-builder/ab-testing.ts`
+- `src/lib/landing-builder/personalization.ts` (UTM / geo / query rewrites).
+- `src/lib/landing-builder/pixel-injector.ts`
+- `src/lib/landing-sections/templates/` (industry templates JSON).
+
+Edge functions:
+- `supabase/functions/landing-ai-copy/` (rewrite single block copy).
+- `supabase/functions/landing-ai-translate/` (multi-language variant).
+- `supabase/functions/landing-brand-extract/` (Firecrawl a URL → colors/fonts/logo).
+- `supabase/functions/landing-publish-domain/` (custom domain validation).
+- extend `landing-theme-ai` with `seo`, `optimize-form`, `suggest-missing-sections` modes.
+
+---
+
+## 10. Database additions
+
+- `landing_templates` (industry, name, sections JSON, preview image, public).
+- `landing_ab_tests` (page_id, section_id, variants, traffic_split, winner, started_at).
+- `landing_comments` (page_id, section_id, x/y, author, body, resolved).
+- `landing_translations` (page_id, locale, sections JSON).
+- `landing_pixels` (page_id, provider, pixel_id).
+- `landing_custom_domains` (page_id, host, status, ssl_status).
+- Extend `firm_branding.site` JSON with `logo{light,dark}`, `favicon`, `fonts`, `customHead`, `customCss`, `defaultHeader`, `defaultFooter`.
+
+All tables get RLS by `firm_id` ownership, mirroring existing landing_* tables.
+
+---
+
+## 11. Implementation order
+
+1. **Foundations** | types + registry + new inspector field kinds + Brand tab + global site identity.
+2. **Site chrome wave** | Header, AnnouncementBar, Footer-pro, MegaMenu, Hero+Form split.
+3. **Conversion wave** | StickyCtaBar, ExitIntent, MultiStepForm, Calculator, Quiz, Booking, ReviewsWall, TrustBadges.
+4. **Media & content wave** | Tabs, Accordion, ImageSlider, VideoGallery, Map, Lottie, PricingToggle, Product blocks.
+5. **AI wave** | per-block copywriter popover, brand extractor, translate, SEO writer.
+6. **Growth wave** | A/B testing, pixel manager, personalization rules, scheduled publish.
+7. **Collaboration & ops** | comments, approval workflow, custom domains, template marketplace.
+
+Each wave ships independently and adds value standalone, so we never block on the next.
+
+---
+
+## Out of scope (for now)
+
+- Full CMS-style collections (blog/posts) | requires separate model.
+- Real-time multiplayer editing (Y.js-grade) | comments cover the 80%.
+- Full payment checkout flow | product blocks link to Stripe Checkout instead.
