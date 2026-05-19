@@ -2,8 +2,23 @@ import {
   LayoutTemplate, Sparkles, Image as ImageIcon, BarChart3, Quote, HelpCircle,
   Tag, ListOrdered, GalleryHorizontal, Megaphone, FileText, ClipboardList, PanelBottom,
   Film, LayoutGrid, Repeat, History, ArrowLeftRight, Columns3, Users, Timer, Code2, Mail, Minus,
+  Navigation, Bell, ToggleLeft, ShieldCheck, Award, MessageSquare, Calendar, PlayCircle,
+  Images, ListChecks, AlignJustify, Star as StarIcon, ArrowUpToLine,
 } from 'lucide-react';
 import type { SectionType, InspectorField } from '@/lib/landing-sections/types';
+import { Header } from '@/components/landing-sections/Header';
+import { AnnouncementBar } from '@/components/landing-sections/AnnouncementBar';
+import { Tabs as TabsBlock } from '@/components/landing-sections/Tabs';
+import { Accordion as AccordionBlock } from '@/components/landing-sections/Accordion';
+import { PricingToggle } from '@/components/landing-sections/PricingToggle';
+import { TrustBadges } from '@/components/landing-sections/TrustBadges';
+import { StickyCtaBar } from '@/components/landing-sections/StickyCtaBar';
+import { ReviewsWall } from '@/components/landing-sections/ReviewsWall';
+import { CaseStudy } from '@/components/landing-sections/CaseStudy';
+import { Booking } from '@/components/landing-sections/Booking';
+import { ImageSlider } from '@/components/landing-sections/ImageSlider';
+import { VideoGallery } from '@/components/landing-sections/VideoGallery';
+import { MultiStepForm } from '@/components/landing-sections/MultiStepForm';
 
 import { Hero } from '@/components/landing-sections/Hero';
 import { VideoHero } from '@/components/landing-sections/VideoHero';
