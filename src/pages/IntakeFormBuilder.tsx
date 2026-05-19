@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Save, Upload, Eye, Link as LinkIcon, Palette, Type, FormInput,
-  Plus, Trash2, GripVertical, Loader2, Copy, ExternalLink, Sparkles, LayoutTemplate, Search, History, Activity,
+  Plus, Trash2, GripVertical, Loader2, Copy, ExternalLink, Sparkles, LayoutTemplate, Search, History, Activity, Library,
 } from 'lucide-react';
 import { useFirmBranding, useUpsertBranding, useUploadLogo, type CustomField } from '@/hooks/use-firm-branding';
 import { useFirm } from '@/hooks/use-firm';
@@ -22,6 +22,7 @@ import { SeoSettingsPanel } from '@/components/landing-builder/SeoSettingsPanel'
 import { VersionsTab } from '@/components/landing-builder/VersionsTab';
 import { PerformancePanel } from '@/components/landing-builder/PerformancePanel';
 import { BrandIdentityTab } from '@/components/landing-builder/BrandIdentityTab';
+import { TemplatesTab } from '@/components/landing-builder/TemplatesTab';
 import { LANDING_THEMES, type LandingTheme } from '@/lib/landing-themes';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import type { SeoConfig } from '@/lib/landing-seo';
@@ -72,7 +73,7 @@ export default function IntakeFormBuilder() {
   const [heroConfig, setHeroConfig] = useState<Record<string, any>>({});
   const [sections, setSections] = useState<Section[]>([]);
   const [seoConfig, setSeoConfig] = useState<SeoConfig>({});
-  const [activeTab, setActiveTab] = useState<'sections' | 'themes' | 'branding' | 'fields' | 'seo' | 'versions' | 'performance' | 'preview'>('sections');
+  const [activeTab, setActiveTab] = useState<'sections' | 'themes' | 'templates' | 'branding' | 'fields' | 'seo' | 'versions' | 'performance' | 'preview'>('sections');
 
   // Current editor state captured as a snapshot for version history.
   const currentSnapshot: LandingSnapshot = {
@@ -323,6 +324,7 @@ export default function IntakeFormBuilder() {
         <div className="flex gap-2 border-b pb-2 flex-wrap">
           {[
             { id: 'sections' as const, label: 'Sections', icon: LayoutTemplate },
+            { id: 'templates' as const, label: 'Templates', icon: Library },
             { id: 'themes' as const, label: 'Themes', icon: Sparkles },
             { id: 'branding' as const, label: 'Brand & Identity', icon: Palette },
             { id: 'fields' as const, label: 'Form Fields', icon: FormInput },
@@ -377,6 +379,11 @@ export default function IntakeFormBuilder() {
               description: descriptionText,
             }}
           />
+        )}
+
+        {/* Templates Tab */}
+        {activeTab === 'templates' && (
+          <TemplatesTab snapshot={currentSnapshot} onApply={restoreSnapshot} />
         )}
 
         {/* Versions & Sharing Tab */}
