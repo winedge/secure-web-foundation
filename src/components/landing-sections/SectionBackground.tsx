@@ -243,4 +243,12 @@ export const BACKGROUND_PRESETS: { label: string; value: BG }[] = [
       glass: { blur: 28, opacity: 1, border: true },
     },
   },
+  { label: 'Paper texture', value: { kind: 'preset', preset: 'paper-texture' } },
+  { label: 'Cream paper (editorial)', value: { kind: 'preset', preset: 'cream-paper' } },
+  { label: 'Editorial white', value: { kind: 'preset', preset: 'editorial-white' } },
+  { label: 'Aurora mesh (preset)', value: { kind: 'preset', preset: 'aurora-mesh' } },
+  { label: 'Dark grain (studio)', value: { kind: 'preset', preset: 'dark-grain' } },
+  { label: 'Gold on black', value: { kind: 'preset', preset: 'gold-on-black' } },
+  { label: 'Noir', value: { kind: 'preset', preset: 'noir' } },
+  { label: 'Full-bleed photo', value: { kind: 'preset', preset: 'full-bleed-photo', scrim: 0.55 } },
 ];
