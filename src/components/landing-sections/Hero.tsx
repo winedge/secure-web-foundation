@@ -4,6 +4,11 @@ import type { SectionTheme, HeroProps } from '@/lib/landing-sections/types';
 import { buttonStyles, fontFamily, maxWidthPx, radiusPx, sectionPadding } from './_shared';
 
 export function Hero({ props, theme, formSlot }: { props: HeroProps; theme: SectionTheme; formSlot?: ReactNode }) {
+  // Dispatch high-fidelity variants before the generic renderer.
+  if (props.layout === 'editorial-centered') return <EditorialCenteredHero props={props} theme={theme} />;
+  if (props.layout === 'noir-photo') return <NoirPhotoHero props={props} theme={theme} />;
+  if (props.layout === 'magazine-split') return <MagazineSplitHero props={props} theme={theme} />;
+
   const isFormSplit = props.layout === 'split-form-right' || props.layout === 'split-form-left';
   const align = props.align ?? (props.layout === 'centered' ? 'center' : 'left');
 
