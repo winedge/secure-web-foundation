@@ -3,6 +3,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const AI_GENERATE_TIMEOUT_MS = 22_000;
 
 interface ThemeInput {
   theme_key?: string | null;
@@ -24,6 +25,114 @@ interface ThemeInput {
     secondaryCta?: string;
   };
 }
+
+const asText = (value: unknown, fallback = '') =>
+  typeof value === 'string' && value.trim() ? value.trim() : fallback;
+
+const titleFromPrompt = (prompt: string, product?: string) => {
+  const match = prompt.trim().match(/^(.{3,80}?)\s+(?:is|offers|provides|helps|serves)\b/i);
+  return (match?.[1] || product || prompt.split(/[.!?]/)[0] || 'Your Business').trim().slice(0, 80);
+};
+
+const buildFallbackPage = ({ prompt, audience, tone, businessType, product, benefits, offer, cta }: {
+  prompt: string; audience?: string; tone?: string; businessType?: string; product?: string; benefits?: string[] | string; offer?: string; cta?: string;
+}) => {
+  const benefitList = (Array.isArray(benefits) ? benefits : String(benefits || '').split('\n'))
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 6);
+  const productName = asText(product, titleFromPrompt(prompt));
+  const brandName = titleFromPrompt(prompt, productName);
+  const ctaLabel = asText(cta, businessType === 'education' ? 'Book a Visit' : 'Get Started');
+  const target = asText(audience, businessType === 'education' ? 'families ready to take the next step' : 'customers ready to take the next step');
+  const incentive = asText(offer, 'Book a free consultation today');
+  const benefitsToUse = benefitList.length ? benefitList : [
+    `Personalized ${productName.toLowerCase()} guidance`,
+    'Clear next steps from a trusted team',
+    'Fast response after every inquiry',
+    'Simple online booking and follow-up',
+  ];
+  const section = (type: string, props: Record<string, unknown>, background?: Record<string, unknown>) => ({
+    id: crypto.randomUUID(),
+    type,
+    visible: true,
+    props,
+    background,
+    animation: { entrance: 'slide-up', trigger: 'on-scroll', duration: 600, delay: 0, easing: 'ease' },
+  });
+
+  return {
+    source: 'fallback',
+    summary: 'Generated from a resilient starter template because the AI service was slow to respond.',
+    sections: [
+      section('hero', {
+        eyebrow: incentive,
+        headline: `${productName} designed for ${target}`,
+        subheadline: `${brandName} turns interest into action with warm guidance, clear benefits, and a simple path to ${ctaLabel.toLowerCase()}. ${prompt.split(/[.!?]/)[0]}.`,
+        primaryCta: { label: ctaLabel, href: '#lead-form' },
+        secondaryCta: { label: 'Explore benefits', href: '#features' },
+        layout: 'split-form-right',
+        align: 'left',
+        formCardTitle: ctaLabel,
+        formCardSubtitle: 'Share your details and the team will follow up shortly.',
+        formCardStyle: 'card',
+        rating: { stars: 5, count: 200, label: 'trusted by local families' },
+        badges: [{ label: 'Personal attention' }, { label: 'Trusted team' }, { label: 'Easy online inquiry' }],
+        mediaShape: 'rounded',
+      }, { kind: 'mesh', mesh: { base: '#0F172A', grain: true, blobs: [{ color: '#10B981', x: 18, y: 25, size: 52 }, { color: '#3B82F6', x: 82, y: 65, size: 50 }] } }),
+      section('trust_badges', {
+        heading: 'Why people choose us',
+        layout: 'row',
+        items: [{ label: 'Experienced team', icon: 'Award' }, { label: 'Safe process', icon: 'ShieldCheck' }, { label: 'Responsive support', icon: 'MessageSquare' }, { label: 'Easy scheduling', icon: 'Calendar' }],
+      }),
+      section('features', {
+        heading: `A better way to choose ${productName}`,
+        intro: `Every detail is built around ${target}, with a ${asText(tone, 'clear, confident')} experience from first click to follow-up.`,
+        columns: 3,
+        items: benefitsToUse.map((benefit, index) => ({ icon: ['Sparkles', 'Shield', 'Heart', 'Check', 'Star', 'Zap'][index] || 'Check', title: benefit, description: `A practical advantage that helps visitors feel confident about choosing ${brandName}.` })),
+      }),
+      section('stats', {
+        heading: 'Confidence at a glance',
+        items: [{ value: '24', suffix: 'hr', label: 'Average response time' }, { value: '5', suffix: '/5', label: 'Care-focused experience' }, { value: '100', suffix: '%', label: 'Simple online inquiry' }, { value: '1', suffix: ':1', label: 'Personalized guidance' }],
+      }, { kind: 'solid', color: '#0F172A' }),
+      section('testimonials', {
+        heading: 'What visitors want to hear',
+        layout: 'grid',
+        items: [
+          { quote: `The process felt clear and reassuring from the first inquiry. ${brandName} made the next step easy.`, author: 'Priya S.', role: 'Local parent', rating: 5 },
+          { quote: 'The team responded quickly, answered every question, and helped us feel confident about moving forward.', author: 'Rahul M.', role: 'New client', rating: 5 },
+          { quote: 'We appreciated the attention to detail and the warm follow-up after submitting the form.', author: 'Anika R.', role: 'Customer', rating: 5 },
+        ],
+      }),
+      section('faq', {
+        heading: 'Frequently asked questions',
+        items: [
+          { question: `How do I ${ctaLabel.toLowerCase()}?`, answer: 'Use the form on this page and the team will contact you with the next available options.' },
+          { question: 'What happens after I submit the form?', answer: 'Your inquiry is reviewed and someone follows up with the details, availability, and recommended next steps.' },
+          { question: 'Is there any obligation?', answer: 'No. The first step is simply a conversation so you can decide with confidence.' },
+          { question: 'Who is this best for?', answer: `This page is designed for ${target} looking for a clear, trustworthy path forward.` },
+        ],
+      }),
+      section('cta', {
+        heading: `${incentive}`,
+        subheading: `Take the next step with ${brandName}. Submit your details and get a prompt, helpful response.`,
+        primaryCta: { label: ctaLabel, href: '#lead-form' },
+        secondaryCta: { label: 'View FAQs', href: '#' },
+        style: 'bold',
+      }, { kind: 'gradient', gradient: { type: 'linear', angle: 135, stops: [{ color: '#0F172A', pos: 0 }, { color: '#047857', pos: 100 }] } }),
+      section('form', { heading: ctaLabel, description: 'Tell us how to reach you and what you need help with.', sticky: false }),
+      section('footer', {
+        layout: 'columns',
+        firmName: brandName,
+        tagline: `${productName} with a clear, caring, and conversion-focused experience.`,
+        links: [{ label: 'Benefits', href: '#features' }, { label: 'Contact', href: '#lead-form' }],
+        columns: [{ heading: 'Explore', links: [{ label: 'Benefits', href: '#features' }, { label: 'FAQs', href: '#' }, { label: 'Contact', href: '#lead-form' }] }],
+        social: [],
+        legal: `© ${new Date().getFullYear()} ${brandName}. All rights reserved.`,
+      }),
+    ],
+  };
+};
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
