@@ -324,7 +324,7 @@ export default function IntakeFormBuilder() {
           {[
             { id: 'sections' as const, label: 'Sections', icon: LayoutTemplate },
             { id: 'themes' as const, label: 'Themes', icon: Sparkles },
-            { id: 'branding' as const, label: 'Branding & Colors', icon: Palette },
+            { id: 'branding' as const, label: 'Brand & Identity', icon: Palette },
             { id: 'fields' as const, label: 'Form Fields', icon: FormInput },
             { id: 'seo' as const, label: 'SEO', icon: Search },
             { id: 'versions' as const, label: 'Versions & Sharing', icon: History },
