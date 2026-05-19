@@ -235,7 +235,7 @@ function EditorialCenteredHero({ props, theme }: { props: HeroProps; theme: Sect
         <h1
           style={{
             fontFamily: fontFamily(theme, 'heading'),
-            fontSize: 'clamp(44px, 8vw, 104px)',
+            fontSize: 'var(--headline-scale, clamp(44px, 8vw, 104px))',
             fontWeight: 500,
             lineHeight: 0.98,
             letterSpacing: '-0.035em',
@@ -325,7 +325,7 @@ function NoirPhotoHero({ props, theme }: { props: HeroProps; theme: SectionTheme
         <h1
           style={{
             fontFamily: fontFamily(theme, 'heading'),
-            fontSize: 'clamp(40px, 6.5vw, 80px)',
+            fontSize: 'var(--headline-scale, clamp(40px, 6.5vw, 80px))',
             fontWeight: 400,
             lineHeight: 1.02,
             letterSpacing: '-0.02em',
@@ -414,7 +414,7 @@ function MagazineSplitHero({ props, theme }: { props: HeroProps; theme: SectionT
           <h1
             style={{
               fontFamily: fontFamily(theme, 'heading'),
-              fontSize: 'clamp(40px, 6vw, 88px)',
+              fontSize: 'var(--headline-scale, clamp(40px, 6vw, 88px))',
               fontWeight: 500,
               lineHeight: 1.0,
               letterSpacing: '-0.025em',
