@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Save, Upload, Eye, Link as LinkIcon, Palette, Type, FormInput,
-  Plus, Trash2, GripVertical, Loader2, Copy, ExternalLink, Sparkles, LayoutTemplate, Search, History, Activity, Library,
+  Plus, Trash2, GripVertical, Loader2, Copy, ExternalLink, Sparkles, LayoutTemplate, Search, History, Activity, Library, Globe,
 } from 'lucide-react';
 import { useFirmBranding, useUpsertBranding, useUploadLogo, type CustomField } from '@/hooks/use-firm-branding';
 import { useFirm } from '@/hooks/use-firm';
@@ -23,6 +23,7 @@ import { VersionsTab } from '@/components/landing-builder/VersionsTab';
 import { PerformancePanel } from '@/components/landing-builder/PerformancePanel';
 import { BrandIdentityTab } from '@/components/landing-builder/BrandIdentityTab';
 import { TemplatesTab } from '@/components/landing-builder/TemplatesTab';
+import { DomainsPanel } from '@/components/landing-builder/DomainsPanel';
 import { LANDING_THEMES, type LandingTheme } from '@/lib/landing-themes';
 import type { Section, SectionTheme } from '@/lib/landing-sections/types';
 import type { SeoConfig } from '@/lib/landing-seo';
