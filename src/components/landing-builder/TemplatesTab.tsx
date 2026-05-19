@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Save, Download, Upload, Trash2, Search, Loader2, LayoutTemplate, Globe, Lock, Copy } from 'lucide-react';
+import { Save, Download, Upload, Trash2, Search, Loader2, LayoutTemplate, Globe, Lock, Copy, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   useLandingTemplates,
@@ -303,7 +303,11 @@ function TemplateCard({
               <div className="text-xs text-muted-foreground line-clamp-2">{template.description}</div>
             )}
           </div>
-          {template.is_public ? (
+          {template.is_starter ? (
+            <Badge className="shrink-0 bg-emerald-600 hover:bg-emerald-600 text-white">
+              <Sparkles className="h-3 w-3 mr-1" /> Starter
+            </Badge>
+          ) : template.is_public ? (
             <Badge variant="secondary" className="shrink-0"><Globe className="h-3 w-3 mr-1" /> Public</Badge>
           ) : (
             <Badge variant="outline" className="shrink-0"><Lock className="h-3 w-3 mr-1" /> Private</Badge>
@@ -325,25 +329,36 @@ function TemplateCard({
           <Button size="sm" variant="outline" onClick={onExport}>
             <Download className="h-4 w-4" />
           </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button size="sm" variant="outline">
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete this template?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  "{template.name}" will be permanently removed. This cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={onDelete}>Delete</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {template.is_starter ? (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled
+              title="Built-in starter template | cannot be deleted"
+            >
+              <Trash2 className="h-4 w-4 opacity-40" />
+            </Button>
+          ) : (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button size="sm" variant="outline">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete this template?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    "{template.name}" will be permanently removed. This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={onDelete}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
       </CardContent>
     </Card>
