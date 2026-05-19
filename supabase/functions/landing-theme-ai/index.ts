@@ -169,7 +169,7 @@ OUTPUT CONTRACT (call generate_page exactly once):
 - Vary section types to make the page rich: typically hero -> logo_cloud OR trust_badges -> features OR bento -> stats -> testimonials OR reviews_wall -> faq -> cta -> form -> footer.
 
 PROPS SCHEMAS (always fill every listed field with real, specific copy | never leave arrays empty):
-- hero: { eyebrow, headline (8-14 words, names the product), subheadline (1-2 sentences, includes offer), primaryCta:{label,href:"#contact"}, secondaryCta:{label,href:"#features"}, layout:"split-form-right"|"centered"|"split-left", align:"left"|"center", rating:{stars:5,count:200,label:"on Google"}, badges:[{label}], imageUrl, mediaShape:"rounded" }
+- hero: { eyebrow, headline (8-14 words, names the product), subheadline (1-2 sentences, includes offer), primaryCta:{label,href:"#lead-form"}, secondaryCta:{label,href:"#features"}, layout:"split-form-right"|"centered"|"split-left", align:"left"|"center", rating:{stars:5,count:200,label:"on Google"}, badges:[{label}], imageUrl, mediaShape:"rounded" }
 - features: { heading, intro, columns:3, items: 6 objects [{icon:"sparkles"|"shield"|"zap"|"check"|"star"|"heart",title,description}] }
 - bento: { heading, items: 4-6 objects [{title,description,size:"sm"|"md"|"lg"}] }
 - logo_cloud: { heading:"Trusted by", logos:[6 objects {src:"https://logo.clearbit.com/{realbrand}.com",alt}] }
@@ -177,12 +177,12 @@ PROPS SCHEMAS (always fill every listed field with real, specific copy | never l
 - stats: { heading, items:[4 {value:"98%"|"$50M"|"10k+",label,suffix?}] }
 - testimonials: { heading, layout:"grid", items:[3 {quote (2 sentences, specific outcome),author,role,rating:5,avatar:"https://i.pravatar.cc/120?img={1-70}"}] }
 - reviews_wall: { heading, intro, minRating:4, showSourceBadges:true, items:[6 {source:"google"|"trustpilot",author,rating:5,quote,date:"2025-..."}] }
-- faq: { heading, items:[5-7 {q,a}] }
+- faq: { heading, items:[5-7 {question,answer}] }
 - pricing: { heading, plans:[3 {name,price,period:"/mo",features:[5 strings],cta:{label,href},highlighted?}] }
 - steps: { heading, items:[3-4 {title,description,icon?}] }
 - timeline: { heading, items:[4 {year:"2021",title,description}] }
-- gallery: { heading, images:[6 {src,alt}] }
-- cta: { heading (urgency + product), subheading (offer), primaryCta:{label,href:"#contact"}, secondaryCta?:{label,href} }
+- gallery: { heading, layout:"grid", images:[6 {url,caption}] }
+- cta: { heading (urgency + product), subheading (offer), primaryCta:{label,href:"#lead-form"}, secondaryCta?:{label,href}, style:"bold" }
 - newsletter: { heading, subheading, placeholder:"you@work.com", cta:"Subscribe" }
         - form: { heading, description, sticky:false }
         - footer: { layout:"columns", firmName, tagline, links:[{label,href:"#"}], columns:[{heading,links:[{label,href:"#"}]}], social:[], legal }
