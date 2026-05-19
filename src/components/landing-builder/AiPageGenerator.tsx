@@ -23,6 +23,20 @@ const FALLBACK_THEME: SectionTheme = {
   maxWidth: 'normal',
 };
 
+const GENERATION_TIMEOUT_MS = 45_000;
+
+const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error('AI page generation timed out. Please try again.')), timeoutMs);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
+
 interface Props {
   hasExisting: boolean;
   theme?: SectionTheme;
@@ -76,16 +90,19 @@ export function AiPageGenerator({ hasExisting, theme, onGenerated, variant = 'de
     setLoading(true);
     try {
       const benefitsArr = benefits.split('\n').map((b) => b.trim()).filter(Boolean).slice(0, 8);
-      const { data, error } = await supabase.functions.invoke('landing-theme-ai', {
-        body: {
-          mode: 'generate',
-          prompt, audience, tone, businessType, theme,
-          product: product.trim() || undefined,
-          benefits: benefitsArr.length ? benefitsArr : undefined,
-          offer: offer.trim() || undefined,
-          cta: cta.trim() || undefined,
-        },
-      });
+      const { data, error } = await withTimeout(
+        supabase.functions.invoke('landing-theme-ai', {
+          body: {
+            mode: 'generate',
+            prompt, audience, tone, businessType, theme,
+            product: product.trim() || undefined,
+            benefits: benefitsArr.length ? benefitsArr : undefined,
+            offer: offer.trim() || undefined,
+            cta: cta.trim() || undefined,
+          },
+        }),
+        GENERATION_TIMEOUT_MS,
+      );
       if (error) {
         // Surface backend message (e.g. 422 incomplete page) clearly
         const ctx: any = (error as any).context;
@@ -105,6 +122,9 @@ export function AiPageGenerator({ hasExisting, theme, onGenerated, variant = 'de
       setDraft(sections);
       setSummary(typeof data?.summary === 'string' ? data.summary : '');
       setStep('preview');
+      if (data?.source === 'fallback') {
+        toast.warning('AI was slow, so a polished starter page was generated instantly. You can regenerate anytime.');
+      }
 
     } catch (err: any) {
       toast.error('AI generation failed: ' + (err.message || 'Unknown error'));

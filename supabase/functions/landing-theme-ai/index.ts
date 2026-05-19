@@ -3,6 +3,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const AI_GENERATE_TIMEOUT_MS = 22_000;
 
 interface ThemeInput {
   theme_key?: string | null;
@@ -24,6 +25,114 @@ interface ThemeInput {
     secondaryCta?: string;
   };
 }
+
+const asText = (value: unknown, fallback = '') =>
+  typeof value === 'string' && value.trim() ? value.trim() : fallback;
+
+const titleFromPrompt = (prompt: string, product?: string) => {
+  const match = prompt.trim().match(/^(.{3,80}?)\s+(?:is|offers|provides|helps|serves)\b/i);
+  return (match?.[1] || product || prompt.split(/[.!?]/)[0] || 'Your Business').trim().slice(0, 80);
+};
+
+const buildFallbackPage = ({ prompt, audience, tone, businessType, product, benefits, offer, cta }: {
+  prompt: string; audience?: string; tone?: string; businessType?: string; product?: string; benefits?: string[] | string; offer?: string; cta?: string;
+}) => {
+  const benefitList = (Array.isArray(benefits) ? benefits : String(benefits || '').split('\n'))
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 6);
+  const productName = asText(product, titleFromPrompt(prompt));
+  const brandName = titleFromPrompt(prompt, productName);
+  const ctaLabel = asText(cta, businessType === 'education' ? 'Book a Visit' : 'Get Started');
+  const target = asText(audience, businessType === 'education' ? 'families ready to take the next step' : 'customers ready to take the next step');
+  const incentive = asText(offer, 'Book a free consultation today');
+  const benefitsToUse = benefitList.length ? benefitList : [
+    `Personalized ${productName.toLowerCase()} guidance`,
+    'Clear next steps from a trusted team',
+    'Fast response after every inquiry',
+    'Simple online booking and follow-up',
+  ];
+  const section = (type: string, props: Record<string, unknown>, background?: Record<string, unknown>) => ({
+    id: crypto.randomUUID(),
+    type,
+    visible: true,
+    props,
+    background,
+    animation: { entrance: 'slide-up', trigger: 'on-scroll', duration: 600, delay: 0, easing: 'ease' },
+  });
+
+  return {
+    source: 'fallback',
+    summary: 'Generated from a resilient starter template because the AI service was slow to respond.',
+    sections: [
+      section('hero', {
+        eyebrow: incentive,
+        headline: `${productName} designed for ${target}`,
+        subheadline: `${brandName} turns interest into action with warm guidance, clear benefits, and a simple path to ${ctaLabel.toLowerCase()}. ${prompt.split(/[.!?]/)[0]}.`,
+        primaryCta: { label: ctaLabel, href: '#lead-form' },
+        secondaryCta: { label: 'Explore benefits', href: '#features' },
+        layout: 'split-form-right',
+        align: 'left',
+        formCardTitle: ctaLabel,
+        formCardSubtitle: 'Share your details and the team will follow up shortly.',
+        formCardStyle: 'card',
+        rating: { stars: 5, count: 200, label: 'trusted by local families' },
+        badges: [{ label: 'Personal attention' }, { label: 'Trusted team' }, { label: 'Easy online inquiry' }],
+        mediaShape: 'rounded',
+      }, { kind: 'mesh', mesh: { base: '#0F172A', grain: true, blobs: [{ color: '#10B981', x: 18, y: 25, size: 52 }, { color: '#3B82F6', x: 82, y: 65, size: 50 }] } }),
+      section('trust_badges', {
+        heading: 'Why people choose us',
+        layout: 'row',
+        items: [{ label: 'Experienced team', icon: 'Award' }, { label: 'Safe process', icon: 'ShieldCheck' }, { label: 'Responsive support', icon: 'MessageSquare' }, { label: 'Easy scheduling', icon: 'Calendar' }],
+      }),
+      section('features', {
+        heading: `A better way to choose ${productName}`,
+        intro: `Every detail is built around ${target}, with a ${asText(tone, 'clear, confident')} experience from first click to follow-up.`,
+        columns: 3,
+        items: benefitsToUse.map((benefit, index) => ({ icon: ['Sparkles', 'Shield', 'Heart', 'Check', 'Star', 'Zap'][index] || 'Check', title: benefit, description: `A practical advantage that helps visitors feel confident about choosing ${brandName}.` })),
+      }),
+      section('stats', {
+        heading: 'Confidence at a glance',
+        items: [{ value: '24', suffix: 'hr', label: 'Average response time' }, { value: '5', suffix: '/5', label: 'Care-focused experience' }, { value: '100', suffix: '%', label: 'Simple online inquiry' }, { value: '1', suffix: ':1', label: 'Personalized guidance' }],
+      }, { kind: 'solid', color: '#0F172A' }),
+      section('testimonials', {
+        heading: 'What visitors want to hear',
+        layout: 'grid',
+        items: [
+          { quote: `The process felt clear and reassuring from the first inquiry. ${brandName} made the next step easy.`, author: 'Priya S.', role: 'Local parent', rating: 5 },
+          { quote: 'The team responded quickly, answered every question, and helped us feel confident about moving forward.', author: 'Rahul M.', role: 'New client', rating: 5 },
+          { quote: 'We appreciated the attention to detail and the warm follow-up after submitting the form.', author: 'Anika R.', role: 'Customer', rating: 5 },
+        ],
+      }),
+      section('faq', {
+        heading: 'Frequently asked questions',
+        items: [
+          { question: `How do I ${ctaLabel.toLowerCase()}?`, answer: 'Use the form on this page and the team will contact you with the next available options.' },
+          { question: 'What happens after I submit the form?', answer: 'Your inquiry is reviewed and someone follows up with the details, availability, and recommended next steps.' },
+          { question: 'Is there any obligation?', answer: 'No. The first step is simply a conversation so you can decide with confidence.' },
+          { question: 'Who is this best for?', answer: `This page is designed for ${target} looking for a clear, trustworthy path forward.` },
+        ],
+      }),
+      section('cta', {
+        heading: `${incentive}`,
+        subheading: `Take the next step with ${brandName}. Submit your details and get a prompt, helpful response.`,
+        primaryCta: { label: ctaLabel, href: '#lead-form' },
+        secondaryCta: { label: 'View FAQs', href: '#' },
+        style: 'bold',
+      }, { kind: 'gradient', gradient: { type: 'linear', angle: 135, stops: [{ color: '#0F172A', pos: 0 }, { color: '#047857', pos: 100 }] } }),
+      section('form', { heading: ctaLabel, description: 'Tell us how to reach you and what you need help with.', sticky: false }),
+      section('footer', {
+        layout: 'columns',
+        firmName: brandName,
+        tagline: `${productName} with a clear, caring, and conversion-focused experience.`,
+        links: [{ label: 'Benefits', href: '#features' }, { label: 'Contact', href: '#lead-form' }],
+        columns: [{ heading: 'Explore', links: [{ label: 'Benefits', href: '#features' }, { label: 'FAQs', href: '#' }, { label: 'Contact', href: '#lead-form' }] }],
+        social: [],
+        legal: `© ${new Date().getFullYear()} ${brandName}. All rights reserved.`,
+      }),
+    ],
+  };
+};
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -60,7 +169,7 @@ OUTPUT CONTRACT (call generate_page exactly once):
 - Vary section types to make the page rich: typically hero -> logo_cloud OR trust_badges -> features OR bento -> stats -> testimonials OR reviews_wall -> faq -> cta -> form -> footer.
 
 PROPS SCHEMAS (always fill every listed field with real, specific copy | never leave arrays empty):
-- hero: { eyebrow, headline (8-14 words, names the product), subheadline (1-2 sentences, includes offer), primaryCta:{label,href:"#contact"}, secondaryCta:{label,href:"#features"}, layout:"split-form-right"|"centered"|"split-left", align:"left"|"center", rating:{stars:5,count:200,label:"on Google"}, badges:[{label}], imageUrl, mediaShape:"rounded" }
+- hero: { eyebrow, headline (8-14 words, names the product), subheadline (1-2 sentences, includes offer), primaryCta:{label,href:"#lead-form"}, secondaryCta:{label,href:"#features"}, layout:"split-form-right"|"centered"|"split-left", align:"left"|"center", rating:{stars:5,count:200,label:"on Google"}, badges:[{label}], imageUrl, mediaShape:"rounded" }
 - features: { heading, intro, columns:3, items: 6 objects [{icon:"sparkles"|"shield"|"zap"|"check"|"star"|"heart",title,description}] }
 - bento: { heading, items: 4-6 objects [{title,description,size:"sm"|"md"|"lg"}] }
 - logo_cloud: { heading:"Trusted by", logos:[6 objects {src:"https://logo.clearbit.com/{realbrand}.com",alt}] }
@@ -68,15 +177,15 @@ PROPS SCHEMAS (always fill every listed field with real, specific copy | never l
 - stats: { heading, items:[4 {value:"98%"|"$50M"|"10k+",label,suffix?}] }
 - testimonials: { heading, layout:"grid", items:[3 {quote (2 sentences, specific outcome),author,role,rating:5,avatar:"https://i.pravatar.cc/120?img={1-70}"}] }
 - reviews_wall: { heading, intro, minRating:4, showSourceBadges:true, items:[6 {source:"google"|"trustpilot",author,rating:5,quote,date:"2025-..."}] }
-- faq: { heading, items:[5-7 {q,a}] }
+- faq: { heading, items:[5-7 {question,answer}] }
 - pricing: { heading, plans:[3 {name,price,period:"/mo",features:[5 strings],cta:{label,href},highlighted?}] }
 - steps: { heading, items:[3-4 {title,description,icon?}] }
 - timeline: { heading, items:[4 {year:"2021",title,description}] }
-- gallery: { heading, images:[6 {src,alt}] }
-- cta: { heading (urgency + product), subheading (offer), primaryCta:{label,href:"#contact"}, secondaryCta?:{label,href} }
+- gallery: { heading, layout:"grid", images:[6 {url,caption}] }
+- cta: { heading (urgency + product), subheading (offer), primaryCta:{label,href:"#lead-form"}, secondaryCta?:{label,href}, style:"bold" }
 - newsletter: { heading, subheading, placeholder:"you@work.com", cta:"Subscribe" }
-- form: { heading, subheading, fields:[{name,label,type:"text"|"email"|"tel"|"textarea",required:true} for name,email,phone,message], submitLabel (use PRIMARY CTA LABEL verbatim) }
-- footer: { logoText, tagline, columns:[3 {title,links:[4 {label,href:"#"}]}], copyright, socials:[{platform:"twitter"|"linkedin"|"instagram",href}] }
+        - form: { heading, description, sticky:false }
+        - footer: { layout:"columns", firmName, tagline, links:[{label,href:"#"}], columns:[{heading,links:[{label,href:"#"}]}], social:[], legal }
 - content: { heading, body (1-2 paragraphs of real copy) }
 - divider: { kind:"wave"|"angle"|"curve" }
 
@@ -111,14 +220,19 @@ THEME CONTEXT: ${JSON.stringify(theme || {})}
 
 Generate the full landing page now. Every section MUST have fully populated props per the schema. Do not refuse.`;
 
-      const callModel = async (model: string) => {
-        const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model,
-            messages: [{ role: 'system', content: sys }, { role: 'user', content: user }],
-            tools: [{
+      const callModel = async (model: string, timeoutMs = AI_GENERATE_TIMEOUT_MS) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          return await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+            signal: controller.signal,
+            body: JSON.stringify({
+              model,
+              max_tokens: 6000,
+              messages: [{ role: 'system', content: sys }, { role: 'user', content: user }],
+              tools: [{
               type: 'function',
               function: {
                 name: 'generate_page',
@@ -147,23 +261,32 @@ Generate the full landing page now. Every section MUST have fully populated prop
                 },
               },
             }],
-            tool_choice: { type: 'function', function: { name: 'generate_page' } },
-          }),
-        });
-        return r;
+              tool_choice: { type: 'function', function: { name: 'generate_page' } },
+            }),
+          });
+        } finally {
+          clearTimeout(timeoutId);
+        }
       };
 
       const isPopulated = (s: any) => s && s.props && typeof s.props === 'object' && Object.keys(s.props).length >= 1;
       const pageOk = (sections: any[]) => Array.isArray(sections) && sections.length >= 4 && sections.filter(isPopulated).length / sections.length >= 0.7;
 
-      let resp = await callModel('google/gemini-2.5-pro');
-      if (!resp.ok && (resp.status === 429 || resp.status === 503)) {
-        resp = await callModel('google/gemini-2.5-flash');
+      let resp: Response;
+      try {
+        resp = await callModel('google/gemini-3-flash-preview');
+        if (!resp.ok && (resp.status === 429 || resp.status === 503 || resp.status === 504)) {
+          resp = await callModel('google/gemini-2.5-flash', 12_000);
+        }
+      } catch (e) {
+        console.warn('landing-theme-ai generate timeout, using fallback page:', e);
+        return new Response(JSON.stringify(buildFallbackPage({ prompt, audience, tone, businessType, product, benefits, offer, cta })), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
       if (!resp.ok) {
-        const text = await resp.text();
-        return new Response(JSON.stringify({ error: 'AI gateway error', detail: text }), {
-          status: resp.status === 429 ? 429 : resp.status === 402 ? 402 : 500,
+        console.warn('landing-theme-ai gateway returned non-ok, using fallback page:', resp.status, await resp.text());
+        return new Response(JSON.stringify(buildFallbackPage({ prompt, audience, tone, businessType, product, benefits, offer, cta })), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
@@ -186,9 +309,9 @@ Generate the full landing page now. Every section MUST have fully populated prop
       }
 
       if (!pageOk(args?.sections)) {
-        return new Response(JSON.stringify({
-          error: 'AI returned an incomplete page. Add more detail to the brief and try again.',
-        }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return new Response(JSON.stringify(buildFallbackPage({ prompt, audience, tone, businessType, product, benefits, offer, cta })), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
       args.sections = args.sections.map((s: any) => ({
