@@ -184,8 +184,8 @@ PROPS SCHEMAS (always fill every listed field with real, specific copy | never l
 - gallery: { heading, images:[6 {src,alt}] }
 - cta: { heading (urgency + product), subheading (offer), primaryCta:{label,href:"#contact"}, secondaryCta?:{label,href} }
 - newsletter: { heading, subheading, placeholder:"you@work.com", cta:"Subscribe" }
-- form: { heading, subheading, fields:[{name,label,type:"text"|"email"|"tel"|"textarea",required:true} for name,email,phone,message], submitLabel (use PRIMARY CTA LABEL verbatim) }
-- footer: { logoText, tagline, columns:[3 {title,links:[4 {label,href:"#"}]}], copyright, socials:[{platform:"twitter"|"linkedin"|"instagram",href}] }
+        - form: { heading, description, sticky:false }
+        - footer: { layout:"columns", firmName, tagline, links:[{label,href:"#"}], columns:[{heading,links:[{label,href:"#"}]}], social:[], legal }
 - content: { heading, body (1-2 paragraphs of real copy) }
 - divider: { kind:"wave"|"angle"|"curve" }
 
@@ -220,14 +220,19 @@ THEME CONTEXT: ${JSON.stringify(theme || {})}
 
 Generate the full landing page now. Every section MUST have fully populated props per the schema. Do not refuse.`;
 
-      const callModel = async (model: string) => {
-        const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model,
-            messages: [{ role: 'system', content: sys }, { role: 'user', content: user }],
-            tools: [{
+      const callModel = async (model: string, timeoutMs = AI_GENERATE_TIMEOUT_MS) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          return await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+            signal: controller.signal,
+            body: JSON.stringify({
+              model,
+              max_tokens: 6000,
+              messages: [{ role: 'system', content: sys }, { role: 'user', content: user }],
+              tools: [{
               type: 'function',
               function: {
                 name: 'generate_page',
@@ -256,23 +261,32 @@ Generate the full landing page now. Every section MUST have fully populated prop
                 },
               },
             }],
-            tool_choice: { type: 'function', function: { name: 'generate_page' } },
-          }),
-        });
-        return r;
+              tool_choice: { type: 'function', function: { name: 'generate_page' } },
+            }),
+          });
+        } finally {
+          clearTimeout(timeoutId);
+        }
       };
 
       const isPopulated = (s: any) => s && s.props && typeof s.props === 'object' && Object.keys(s.props).length >= 1;
       const pageOk = (sections: any[]) => Array.isArray(sections) && sections.length >= 4 && sections.filter(isPopulated).length / sections.length >= 0.7;
 
-      let resp = await callModel('google/gemini-2.5-pro');
-      if (!resp.ok && (resp.status === 429 || resp.status === 503)) {
-        resp = await callModel('google/gemini-2.5-flash');
+      let resp: Response;
+      try {
+        resp = await callModel('google/gemini-3-flash-preview');
+        if (!resp.ok && (resp.status === 429 || resp.status === 503 || resp.status === 504)) {
+          resp = await callModel('google/gemini-2.5-flash', 12_000);
+        }
+      } catch (e) {
+        console.warn('landing-theme-ai generate timeout, using fallback page:', e);
+        return new Response(JSON.stringify(buildFallbackPage({ prompt, audience, tone, businessType, product, benefits, offer, cta })), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
       if (!resp.ok) {
-        const text = await resp.text();
-        return new Response(JSON.stringify({ error: 'AI gateway error', detail: text }), {
-          status: resp.status === 429 ? 429 : resp.status === 402 ? 402 : 500,
+        console.warn('landing-theme-ai gateway returned non-ok, using fallback page:', resp.status, await resp.text());
+        return new Response(JSON.stringify(buildFallbackPage({ prompt, audience, tone, businessType, product, benefits, offer, cta })), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
@@ -295,9 +309,9 @@ Generate the full landing page now. Every section MUST have fully populated prop
       }
 
       if (!pageOk(args?.sections)) {
-        return new Response(JSON.stringify({
-          error: 'AI returned an incomplete page. Add more detail to the brief and try again.',
-        }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return new Response(JSON.stringify(buildFallbackPage({ prompt, audience, tone, businessType, product, benefits, offer, cta })), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
       args.sections = args.sections.map((s: any) => ({
