@@ -226,14 +226,10 @@ export default function WebsiteDoctorProject() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="activity" className="space-y-2">
-            {activity.map((a) => (
-              <Card key={a.id} className="p-2 text-sm">
-                <Badge variant="outline">{a.agent}</Badge> {a.action}
-                <span className="text-xs text-muted-foreground ml-2">{new Date(a.created_at).toLocaleString()}</span>
-              </Card>
-            ))}
+          <TabsContent value="activity">
+            <AiActivityFeed events={activity} />
           </TabsContent>
+
 
           <TabsContent value="stack">
             <Card className="p-4"><pre className="text-xs overflow-auto">{JSON.stringify(project.detected_stack, null, 2)}</pre></Card>
