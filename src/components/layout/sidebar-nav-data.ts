@@ -50,6 +50,7 @@ import {
   Activity,
   MessageSquare,
   CheckCircle2,
+  Stethoscope,
 } from 'lucide-react';
 import type { ModuleKey } from '@/lib/verticals/types';
 import { AI_TOOLS } from '@/lib/ai-tools/registry';
@@ -148,6 +149,7 @@ export const navGroups: NavGroup[] = [
       { name: 'Smart Alerts', href: '/smart-alerts', icon: Bell },
       { name: 'Referral Network', href: '/referral-network', icon: Handshake },
       { name: 'Fraud Detection', href: '/fraud-detection', icon: ShieldAlert, module: 'fraud_detection' },
+      { name: 'Website Doctor', href: '/website-doctor', icon: Stethoscope, module: 'website_doctor' },
       { name: 'CRM Integrations', href: '/crm-integrations', icon: Plug },
     ],
   },
