@@ -156,7 +156,7 @@ export default function WebsiteDoctorProject() {
                   {p.file_path && <code className="text-xs">{p.file_path}</code>}
                 </div>
                 <p className="text-sm mb-2">{p.explanation}</p>
-                <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-64">{p.diff}</pre>
+                <DiffViewer diff={p.diff} />
               </Card>
             ))}
           </TabsContent>
