@@ -9,6 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Loader2, RefreshCw, Sparkles } from 'lucide-react';
+import { HealthScoreRing } from '@/components/website-doctor/HealthScoreRing';
+import { DiffViewer } from '@/components/website-doctor/DiffViewer';
+import { AiActivityFeed } from '@/components/website-doctor/AiActivityFeed';
+
 
 const sevColor: Record<string, string> = {
   critical: 'destructive', high: 'destructive', medium: 'default', low: 'secondary', info: 'outline',
@@ -98,16 +102,14 @@ export default function WebsiteDoctorProject() {
               ABA 512 / GDPR / EU AI Act compliant | All AI decisions are logged
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <div className="text-4xl font-bold text-primary">{project.health_score ?? '|'}</div>
-              <div className="text-xs text-muted-foreground">health score</div>
-            </div>
+          <div className="flex items-center gap-4">
+            <HealthScoreRing score={project.health_score} />
             <Button onClick={runAudit} disabled={busy}>
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><RefreshCw className="h-4 w-4 mr-1" /> Re-scan</>}
             </Button>
           </div>
         </div>
+
 
         <Tabs defaultValue="findings">
           <TabsList>
@@ -154,7 +156,7 @@ export default function WebsiteDoctorProject() {
                   {p.file_path && <code className="text-xs">{p.file_path}</code>}
                 </div>
                 <p className="text-sm mb-2">{p.explanation}</p>
-                <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-64">{p.diff}</pre>
+                <DiffViewer diff={p.diff} />
               </Card>
             ))}
           </TabsContent>
@@ -224,14 +226,10 @@ export default function WebsiteDoctorProject() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="activity" className="space-y-2">
-            {activity.map((a) => (
-              <Card key={a.id} className="p-2 text-sm">
-                <Badge variant="outline">{a.agent}</Badge> {a.action}
-                <span className="text-xs text-muted-foreground ml-2">{new Date(a.created_at).toLocaleString()}</span>
-              </Card>
-            ))}
+          <TabsContent value="activity">
+            <AiActivityFeed events={activity} />
           </TabsContent>
+
 
           <TabsContent value="stack">
             <Card className="p-4"><pre className="text-xs overflow-auto">{JSON.stringify(project.detected_stack, null, 2)}</pre></Card>
