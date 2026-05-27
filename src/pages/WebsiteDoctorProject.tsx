@@ -206,12 +206,21 @@ export default function WebsiteDoctorProject() {
                   ))}
                 </div>
               )}
-              {token && (
-                <div className="p-3 bg-muted rounded text-xs break-all">
-                  <div className="font-medium mb-1">One-time token (shown once):</div>
-                  <code>{token}</code>
+              {token && connector && (
+                <div className="space-y-2">
+                  <div className="p-3 bg-muted rounded text-xs break-all">
+                    <div className="font-medium mb-1">One-time token (shown once, save it now):</div>
+                    <code>{token}</code>
+                  </div>
+                  {connector.type === 'generic' && (
+                    <div className="p-3 bg-muted rounded text-xs">
+                      <div className="font-medium mb-2">Paste before {'</body>'} on your site:</div>
+                      <pre className="overflow-auto whitespace-pre-wrap">{`<script>(function(){var P="${connector.public_id}",T="${token}",U="https://sdtphgskqpelpbwhipls.supabase.co/functions/v1/wd-beacon",Q=[];function s(e){Q.push(e);if(Q.length>=5)f()}function f(){if(!Q.length)return;var b=JSON.stringify({public_id:P,token:T,events:Q.splice(0)});(navigator.sendBeacon&&navigator.sendBeacon(U,b))||fetch(U,{method:"POST",headers:{"Content-Type":"application/json"},body:b,keepalive:true})}addEventListener("error",function(e){s({kind:"js_error",severity:"high",payload:{msg:e.message,src:e.filename,ln:e.lineno}})});addEventListener("load",function(){s({kind:"page_view",payload:{url:location.href,t:performance.now()|0}})});addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden")f()});setInterval(f,15000)})();</script>`}</pre>
+                    </div>
+                  )}
                 </div>
               )}
+
             </Card>
           </TabsContent>
 
