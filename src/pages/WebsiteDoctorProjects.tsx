@@ -22,6 +22,7 @@ interface Project {
 
 export default function WebsiteDoctorProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [findingCounts, setFindingCounts] = useState<Record<string, { critical: number; high: number; total: number }>>({});
   const [loading, setLoading] = useState(true);
   const [url, setUrl] = useState('');
   const [creating, setCreating] = useState(false);
