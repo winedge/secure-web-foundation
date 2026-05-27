@@ -119,6 +119,8 @@ const SeoBacklinks = lazyWithRetry(() => import("./pages/seo/SeoTools").then(m =
 const SeoCitations = lazyWithRetry(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoCitations })));
 const AiSeoToolPage = lazyWithRetry(() => import("./pages/seo/ai/AiSeoToolPage"));
 const CompetitorAdLibrary = lazyWithRetry(() => import("./pages/seo/ai/CompetitorAdLibrary"));
+const WebsiteDoctorProjects = lazyWithRetry(() => import("./pages/WebsiteDoctorProjects"));
+const WebsiteDoctorProject = lazyWithRetry(() => import("./pages/WebsiteDoctorProject"));
 const queryClient = new QueryClient();
 
 function PageLoader() {
@@ -210,6 +212,9 @@ const App = () => (
                 <Route path="/fraud-detection" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="fraud_detection" label="Fraud Detection"><FraudDetection /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/crm-integrations" element={<ProtectedRoute><LazyRoute><CrmIntegrations /></LazyRoute></ProtectedRoute>} />
                 <Route path="/ai-case-evaluator" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="case_evaluator" label="AI Lead Evaluator"><AiCaseEvaluator /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/website-doctor" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="website_doctor" label="Website Doctor"><WebsiteDoctorProjects /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/website-doctor/:projectId" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="website_doctor" label="Website Doctor"><WebsiteDoctorProject /></ModuleGate></LazyRoute></ProtectedRoute>} />
+
 
                 {/* Dynamic AI tool route - all 40 vertical-specific tools */}
                 <Route path="/tools/:toolKey" element={<ProtectedRoute><LazyRoute><AiToolPage /></LazyRoute></ProtectedRoute>} />
