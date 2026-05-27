@@ -32,7 +32,22 @@ export default function WebsiteDoctorProjects() {
       .from('wd_projects')
       .select('*')
       .order('created_at', { ascending: false });
-    setProjects((data as any) ?? []);
+    const list = (data as any) ?? [];
+    setProjects(list);
+    if (list.length) {
+      const { data: f } = await supabase
+        .from('wd_findings')
+        .select('project_id, severity')
+        .in('project_id', list.map((p: Project) => p.id));
+      const counts: Record<string, { critical: number; high: number; total: number }> = {};
+      (f ?? []).forEach((row: any) => {
+        const c = counts[row.project_id] ??= { critical: 0, high: 0, total: 0 };
+        c.total++;
+        if (row.severity === 'critical') c.critical++;
+        if (row.severity === 'high') c.high++;
+      });
+      setFindingCounts(counts);
+    }
     setLoading(false);
   };
 
