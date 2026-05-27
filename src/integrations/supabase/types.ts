@@ -5704,6 +5704,421 @@ export type Database = {
           },
         ]
       }
+      wd_ai_activity: {
+        Row: {
+          action: string
+          agent: string
+          cost_cents: number | null
+          created_at: string
+          firm_id: string
+          id: string
+          input: Json | null
+          output: Json | null
+          project_id: string | null
+          tokens: number | null
+        }
+        Insert: {
+          action: string
+          agent: string
+          cost_cents?: number | null
+          created_at?: string
+          firm_id: string
+          id?: string
+          input?: Json | null
+          output?: Json | null
+          project_id?: string | null
+          tokens?: number | null
+        }
+        Update: {
+          action?: string
+          agent?: string
+          cost_cents?: number | null
+          created_at?: string
+          firm_id?: string
+          id?: string
+          input?: Json | null
+          output?: Json | null
+          project_id?: string | null
+          tokens?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wd_ai_activity_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "wd_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wd_audits: {
+        Row: {
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          firm_id: string
+          id: string
+          kind: string
+          lighthouse: Json | null
+          project_id: string
+          screenshots: Json | null
+          started_at: string | null
+          status: string
+          summary: Json
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          firm_id: string
+          id?: string
+          kind: string
+          lighthouse?: Json | null
+          project_id: string
+          screenshots?: Json | null
+          started_at?: string | null
+          status?: string
+          summary?: Json
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          firm_id?: string
+          id?: string
+          kind?: string
+          lighthouse?: Json | null
+          project_id?: string
+          screenshots?: Json | null
+          started_at?: string | null
+          status?: string
+          summary?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wd_audits_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "wd_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wd_connectors: {
+        Row: {
+          created_at: string
+          firm_id: string
+          framework_metadata: Json
+          id: string
+          last_seen_at: string | null
+          project_id: string
+          public_id: string
+          status: string
+          token_hash: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          firm_id: string
+          framework_metadata?: Json
+          id?: string
+          last_seen_at?: string | null
+          project_id: string
+          public_id: string
+          status?: string
+          token_hash: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          firm_id?: string
+          framework_metadata?: Json
+          id?: string
+          last_seen_at?: string | null
+          project_id?: string
+          public_id?: string
+          status?: string
+          token_hash?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wd_connectors_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "wd_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wd_findings: {
+        Row: {
+          audit_id: string
+          category: string
+          confidence: number | null
+          created_at: string
+          description: string | null
+          evidence: Json
+          firm_id: string
+          id: string
+          project_id: string
+          severity: string
+          status: string
+          suggested_fix: Json | null
+          title: string
+        }
+        Insert: {
+          audit_id: string
+          category: string
+          confidence?: number | null
+          created_at?: string
+          description?: string | null
+          evidence?: Json
+          firm_id: string
+          id?: string
+          project_id: string
+          severity: string
+          status?: string
+          suggested_fix?: Json | null
+          title: string
+        }
+        Update: {
+          audit_id?: string
+          category?: string
+          confidence?: number | null
+          created_at?: string
+          description?: string | null
+          evidence?: Json
+          firm_id?: string
+          id?: string
+          project_id?: string
+          severity?: string
+          status?: string
+          suggested_fix?: Json | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wd_findings_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "wd_audits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wd_findings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "wd_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wd_jobs: {
+        Row: {
+          attempts: number
+          created_at: string
+          firm_id: string
+          id: string
+          last_error: string | null
+          locked_until: string | null
+          payload: Json
+          project_id: string | null
+          run_after: string
+          status: string
+          type: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          firm_id: string
+          id?: string
+          last_error?: string | null
+          locked_until?: string | null
+          payload?: Json
+          project_id?: string | null
+          run_after?: string
+          status?: string
+          type: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          firm_id?: string
+          id?: string
+          last_error?: string | null
+          locked_until?: string | null
+          payload?: Json
+          project_id?: string | null
+          run_after?: string
+          status?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wd_jobs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "wd_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wd_monitor_events: {
+        Row: {
+          created_at: string
+          firm_id: string
+          id: string
+          kind: string
+          payload: Json
+          project_id: string
+          severity: string
+        }
+        Insert: {
+          created_at?: string
+          firm_id: string
+          id?: string
+          kind: string
+          payload?: Json
+          project_id: string
+          severity?: string
+        }
+        Update: {
+          created_at?: string
+          firm_id?: string
+          id?: string
+          kind?: string
+          payload?: Json
+          project_id?: string
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wd_monitor_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "wd_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wd_patches: {
+        Row: {
+          after_preview: string | null
+          applied_at: string | null
+          applied_by: string | null
+          before_preview: string | null
+          confidence: number | null
+          created_at: string
+          diff: string
+          explanation: string | null
+          file_path: string | null
+          finding_id: string | null
+          firm_id: string
+          id: string
+          project_id: string
+          risk: string
+          rollback_ref: string | null
+          status: string
+        }
+        Insert: {
+          after_preview?: string | null
+          applied_at?: string | null
+          applied_by?: string | null
+          before_preview?: string | null
+          confidence?: number | null
+          created_at?: string
+          diff: string
+          explanation?: string | null
+          file_path?: string | null
+          finding_id?: string | null
+          firm_id: string
+          id?: string
+          project_id: string
+          risk?: string
+          rollback_ref?: string | null
+          status?: string
+        }
+        Update: {
+          after_preview?: string | null
+          applied_at?: string | null
+          applied_by?: string | null
+          before_preview?: string | null
+          confidence?: number | null
+          created_at?: string
+          diff?: string
+          explanation?: string | null
+          file_path?: string | null
+          finding_id?: string | null
+          firm_id?: string
+          id?: string
+          project_id?: string
+          risk?: string
+          rollback_ref?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wd_patches_finding_id_fkey"
+            columns: ["finding_id"]
+            isOneToOne: false
+            referencedRelation: "wd_findings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wd_patches_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "wd_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wd_projects: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          detected_stack: Json
+          firm_id: string
+          health_score: number | null
+          id: string
+          monitoring_enabled: boolean
+          name: string
+          normalized_domain: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          detected_stack?: Json
+          firm_id: string
+          health_score?: number | null
+          id?: string
+          monitoring_enabled?: boolean
+          name: string
+          normalized_domain: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          detected_stack?: Json
+          firm_id?: string
+          health_score?: number | null
+          id?: string
+          monitoring_enabled?: boolean
+          name?: string
+          normalized_domain?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       webauthn_challenges: {
         Row: {
           challenge: string
