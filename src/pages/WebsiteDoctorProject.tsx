@@ -150,16 +150,36 @@ export default function WebsiteDoctorProject() {
             {patches.length === 0 && <Card className="p-6 text-center text-muted-foreground">No patches yet.</Card>}
             {patches.map((p) => (
               <Card key={p.id} className="p-4">
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <Badge>{p.status}</Badge>
                   <Badge variant="outline">risk: {p.risk}</Badge>
                   {p.file_path && <code className="text-xs">{p.file_path}</code>}
+                  <div className="ml-auto flex gap-2">
+                    {p.status === 'proposed' && (
+                      <>
+                        <Button size="sm" variant="outline" onClick={async () => {
+                          await supabase.functions.invoke('wd-approve-patch', { body: { patch_id: p.id, action: 'reject' } });
+                          load();
+                        }}>Reject</Button>
+                        <Button size="sm" onClick={async () => {
+                          const { error } = await supabase.functions.invoke('wd-approve-patch', { body: { patch_id: p.id, action: 'approve' } });
+                          if (error) toast.error(error.message);
+                          else toast.success('Approved | connector will apply on next poll');
+                          load();
+                        }}>Approve & queue</Button>
+                      </>
+                    )}
+                    {p.status === 'approved' && (
+                      <Badge variant="outline" className="text-emerald-500">queued for connector</Badge>
+                    )}
+                  </div>
                 </div>
                 <p className="text-sm mb-2">{p.explanation}</p>
                 <DiffViewer diff={p.diff} />
               </Card>
             ))}
           </TabsContent>
+
 
           <TabsContent value="audits" className="space-y-2">
             {audits.map((a) => (
