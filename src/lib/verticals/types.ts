@@ -85,7 +85,9 @@ export type ModuleKey =
   | 'tool_backlink_audit'
   | 'tool_local_citations'
   | 'tool_review_manager'
-  | 'tool_gmb_post_scheduler';
+  | 'tool_gmb_post_scheduler'
+  // ===== Website Doctor (cross-vertical) =====
+  | 'website_doctor';
 
 export interface IndustryVertical {
   id: string;
