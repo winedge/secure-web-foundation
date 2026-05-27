@@ -9,6 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Loader2, RefreshCw, Sparkles } from 'lucide-react';
+import { HealthScoreRing } from '@/components/website-doctor/HealthScoreRing';
+import { DiffViewer } from '@/components/website-doctor/DiffViewer';
+import { AiActivityFeed } from '@/components/website-doctor/AiActivityFeed';
+
 
 const sevColor: Record<string, string> = {
   critical: 'destructive', high: 'destructive', medium: 'default', low: 'secondary', info: 'outline',
