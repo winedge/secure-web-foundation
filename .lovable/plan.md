@@ -1,96 +1,148 @@
-## What's actually wrong
 
-The builder's renderer can only produce a narrow band of layouts | basically Hero (centered, image-bg, split, split-form) and Features (grid, zigzag, icon-row, two-col-large). Every other archetype (editorial paper, dark noir studio, brutalist tag cloud, aurora glass, magazine, big-quote testimonials, asymmetric splits, photo-led portfolio, full-bleed event) has nowhere to live in the current section components. So no matter what the AI generator emits | or what a starter template stores | applying it collapses back into the same handful of skins.
+# Website Doctor | AI Website Intelligence & Autonomous Repair
 
-The fix is not honest thumbnails. It's raising the design ceiling, then teaching the AI to use it.
+A new vertical-agnostic tool inside the existing SaaS. Users enter a URL, get a deep AI audit (UI/UX, SEO, performance, security, accessibility), optionally install a framework connector for codebase-level analysis, and receive AI-generated patches with safe apply + rollback. Designed multi-tenant from day one.
 
-## Plan
+Since the existing repo is a React + Vite + Supabase (Lovable Cloud) app, this plan is scoped to what we can ship inside that stack. Heavy infra items (K8s, Playwright workers, multi-region) are called out as future phases — MVP runs on Edge Functions + queue tables + Firecrawl + Lovable AI.
 
-### 1. Catalog the target archetypes
+---
 
-Pick the 10 archetypes the builder needs to render at agency quality. These are the ones the cover images in the gallery were trying to depict:
+## 1. Scope of this first build (MVP)
 
-1. **Editorial paper** | centered serif, thin top/bottom rules, eyebrow date label, cream background, gold accent.
-2. **Dark noir studio** | full-bleed atmospheric photo, large serif over dark wash, gold micro-CTA.
-3. **Aurora glass fintech** | midnight bg with mesh aurora blobs, floating glass product card, 3D-feeling stat chips.
-4. **Bento dark SaaS** | mixed-size grid with mint accents, video-poster hero, code/UI snippets.
-5. **Brutalist pop** | white bg with one saturated accent, oversized Archivo Black headline, scattered tag pills.
-6. **Magazine** | column rules between sections, drop-cap intro paragraph, large pull-quotes.
-7. **Big-quote testimonial** | one quote at hero scale instead of a wall of cards.
-8. **Asymmetric split** | 60/40 split with offset image and overlap.
-9. **Full-bleed event** | dark background, huge Bebas Neue title, ticker date strip.
-10. **Photo-led portfolio** | masonry/gallery with hover captions, minimal chrome.
+In-app deliverables:
+- New tool "Website Doctor" exposed to **every vertical** (not gated by `enabled_modules`, or added to all vertical presets).
+- Sidebar entry + route `/website-doctor` and detail route `/website-doctor/:projectId`.
+- Pages: Projects list, New Project (URL input), Audit Report, Findings detail, Patches, Monitoring, Activity, Settings.
+- External scan pipeline (no connector required) using Firecrawl + Lovable AI.
+- Connector scaffolding (DB + token issuance + verify endpoint) but only the **Generic JS snippet** + **WordPress plugin stub** + **Laravel/Node SDK stubs** documented. Deep codebase analysis = Phase 2.
+- Patch model + diff viewer UI in "suggest only" mode. Autonomous apply = Phase 3.
+- Continuous monitoring scheduled via `pg_cron` calling an Edge Function (uptime + re-scan weekly).
 
-These become the "design DNA recipes" the rest of the work targets.
+Out of scope for MVP (tracked in roadmap below): autonomous apply, validation engine running real test suites, vector DB / AI memory, K8s workers, multi-region.
 
-### 2. Add the missing renderer variants
+---
 
-For each section component, add the layout variants needed by those archetypes. Concretely:
+## 2. Vertical integration
 
-- **Hero.tsx**: add `editorial-centered`, `aurora-product`, `noir-photo`, `brutalist-massive`, `asymmetric-split`, `full-bleed-event`, `magazine-rule`.
-- **Features.tsx**: add `bento-mix`, `tag-cloud`, `magazine-columns`, `photo-zigzag` (zigzag with real images, not just text).
-- **Testimonials.tsx**: add `big-quote` (single oversized quote with author byline), `marquee-row`.
-- **Stats.tsx**: add `ticker-strip`, `oversized-numerals`.
-- **LogoCloud.tsx**: add `featured-in-rule` (centered "AS FEATURED IN" with thin rule, editorial style).
-- **Faq.tsx**: add `two-col-rule` (magazine-style two-column with column rules).
-- **Footer.tsx**: add `editorial-minimal` and `dark-studio` variants.
-- **SectionBackground.tsx**: add `paper-texture`, `aurora-mesh`, `full-bleed-photo`, `dark-grain`, `gold-on-black` presets.
+Website Doctor is universal. Two changes:
+- Add `website_doctor` to `ModuleKey` in `src/lib/verticals/types.ts`.
+- Enable it by default in every preset in `src/lib/verticals/presets.ts` AND in a migration that inserts `vertical_module_access` rows for all existing verticals.
+- Sidebar item in `sidebar-nav-data.ts` rendered unconditionally (or via `ModuleGate` that defaults open).
 
-These are CSS-driven; no new dependencies needed.
+---
 
-### 3. Make typography and spacing real design controls
+## 3. Database schema (new migration)
 
-Today typography is global and most sections use the same vertical rhythm. To hit agency quality:
+All tables in `public`, RLS on, GRANTs included. Scoped by `firm_id` via existing `get_user_firm_id` / `is_admin` helpers.
 
-- Load and apply all 15 Google Font pairs from `questions_design_preferences` so any DNA pair the AI picks actually renders.
-- Add per-section `density` token (`tight`, `default`, `roomy`, `editorial`) that scales padding, max-width, and headline size. Editorial archetypes need 2-3x the whitespace of a default SaaS hero.
-- Add `headlineScale` (sm, md, lg, hero, oversized) so brutalist and event archetypes can go to ~120px display type.
-- Honor `typography.heading` and `typography.body` per-section, not just globally, so a magazine block on the same page can use Instrument Serif while the form block stays sans.
+- `wd_projects` — id, firm_id, url, normalized_domain, name, detected_stack jsonb, health_score, monitoring_enabled, created_by, timestamps.
+- `wd_connectors` — id, project_id, firm_id, type (`wordpress|laravel|node|generic`), status (`pending|verified|revoked`), token_hash, public_id, last_seen_at, framework_metadata jsonb.
+- `wd_audits` — id, project_id, firm_id, kind (`external|internal`), status (`queued|running|complete|failed`), started_at, finished_at, summary jsonb, lighthouse jsonb, screenshots jsonb, error.
+- `wd_findings` — id, audit_id, project_id, firm_id, category (`ui|seo|perf|security|a11y|code|infra`), severity (`info|low|medium|high|critical`), title, description, evidence jsonb, suggested_fix jsonb, confidence numeric, status (`open|acknowledged|fixed|ignored`).
+- `wd_patches` — id, finding_id, project_id, firm_id, file_path, diff text, before_preview, after_preview, risk (`low|med|high`), confidence, status (`proposed|approved|applied|reverted|failed`), applied_at, applied_by, rollback_ref.
+- `wd_monitor_events` — id, project_id, firm_id, kind (`uptime|cwv|error|security|seo_change`), payload jsonb, severity, created_at (partitioned-friendly index).
+- `wd_ai_activity` — id, project_id, firm_id, agent (`auditor|uiux|perf|seo|security|code|patcher|validator|maintenance`), action, input jsonb, output jsonb, tokens, cost_cents, created_at.
+- `wd_jobs` — id, project_id, firm_id, type, payload jsonb, status, attempts, run_after, locked_until, last_error. Drives the queue.
 
-### 4. First-class image slots with curated stock
+Indexes on `firm_id`, `project_id`, `(status, run_after)` for the job table.
 
-Most archetypes are photo-led, but today sections are mostly text-only. Add:
+RLS pattern: firm members SELECT/INSERT/UPDATE rows where `firm_id = get_user_firm_id(auth.uid())`; admins full access via `is_admin`. Connectors authenticate via signed token (verified in Edge Function with service role) — no anon GRANT on connector tables.
 
-- `imageUrl` / `backgroundImageUrl` props on Hero, Features (zigzag/bento), Testimonials, Footer, plus a unified upload + crop + Unsplash-style search picker reusing the existing `ImageCropDialog`.
-- Bundle a small set of license-clean stock images keyed to each archetype so starter templates render correctly out of the box even before the user uploads anything.
+---
 
-### 5. Upgrade the AI page generator
+## 4. Edge Functions
 
-The generator currently emits mostly the same shape regardless of DNA. Update `landing-theme-ai`:
+- `wd-detect-stack` — input URL; uses Firecrawl scrape (html + headers + branding) and a Lovable AI call to classify CMS / framework / hosting / CDN / analytics.
+- `wd-external-audit` — orchestrates Firecrawl scrape + a Lighthouse-style report via PageSpeed Insights public API (no key needed) + AI summarization into structured findings. Writes `wd_findings`.
+- `wd-issue-connector-token` — creates `wd_connectors` row, returns one-time token (hashed at rest).
+- `wd-connector-verify` — connector POSTs signed handshake; marks verified, stores framework metadata.
+- `wd-connector-ingest` — receives codebase metadata/snippets from agents (Phase 2 stub now).
+- `wd-generate-patch` — takes a finding + optional code context, calls Lovable AI with structured `Output.object` to return unified diff + risk + explanation.
+- `wd-monitor-tick` — cron entrypoint; iterates projects with `monitoring_enabled`, runs uptime check + scheduled re-audit, writes `wd_monitor_events`.
+- `wd-job-runner` — pulls from `wd_jobs`, dispatches.
 
-- Emit a `designRecipe` field on every generation, drawn from the 10 archetypes above. The recipe pins which Hero/Features/Testimonials/Footer variants to use.
-- Pass the recipe + Brand Identity tokens + chosen typography pair into the prompt as hard constraints, not suggestions.
-- Use Gemini 2.5 Pro for layout selection (better at honoring constraints) and fall back to GPT-5 only for retry. Increase `maxOutputTokens` so multi-section JSON isn't truncated; check `finishReason` and retry with a tighter recipe if it is.
-- Validate the response against a schema that requires `layout`, `density`, `headlineScale`, and `background.preset` on every section. Reject and retry on missing fields rather than silently falling back to defaults.
+All use the shared CORS + JWT-validation pattern, plus zod input validation. AI calls go through the AI SDK + Lovable AI Gateway (`google/gemini-3-flash-preview` default; `gpt-5-mini` for code reasoning).
 
-### 6. Rewrite the 16 starter snapshots to use the new ceiling
+---
 
-Once the renderer can express the archetypes, regenerate the starter templates so each one fully commits to its DNA: correct typography pair, correct density, correct background preset, correct layout per section, real image refs. The cover images in the gallery then become accurate previews because the renderer can actually produce them.
+## 5. Frontend architecture
 
-### 7. Replace fake covers with real ones
+New folder `src/components/website-doctor/` and pages under `src/pages/website-doctor/`:
 
-After the snapshots render correctly, run a one-off Puppeteer script against `/lp/preview/template/:id` (a new chrome-less preview route) and save the screenshots back to `thumbnail_url`. Delete the AI-imagined JPGs.
+- `WebsiteDoctorProjects.tsx` — list + "Add website" dialog (URL only).
+- `WebsiteDoctorProject.tsx` — tabs: Overview, Audit, Findings, Patches, Connector, Monitoring, Activity, Settings.
+- `NewScanFlow.tsx` — URL → detect stack → run external audit (live progress via Supabase Realtime on `wd_audits`).
+- `FindingCard.tsx`, `SeverityBadge.tsx`, `HealthScoreRing.tsx`, `StackBadge.tsx`.
+- `DiffViewer.tsx` — react-diff-viewer for `wd_patches.diff`.
+- `ConnectorInstall.tsx` — tabbed install instructions (WordPress / Laravel / Node / Generic JS) + token reveal + verification status (polls/realtime).
+- `MonitoringPanel.tsx` — uptime sparkline, CWV trend, alert list.
+- `AiActivityFeed.tsx` — live stream of `wd_ai_activity`.
 
-### 8. Design QA gate
+Hooks: `use-wd-projects`, `use-wd-audit`, `use-wd-findings`, `use-wd-patches`, `use-wd-monitor`, all using `@tanstack/react-query` + Supabase realtime subscriptions.
 
-Add a smoke check: render each of the 16 starters in CI-ish fashion (Vite preview + Puppeteer) and diff against an approved baseline screenshot. Fails the build if a renderer change regresses a starter's visual identity. This is what keeps the ceiling from drifting back down on future changes.
+Design follows existing tokens (dark navy / emerald). Pipe symbol `|` instead of em dashes (project rule).
 
-## What you'll see
+---
 
-- The Hero, Features, Testimonials, etc. inspectors get a new "Layout" selector with 8-12 visually distinct options each, previewed as wireframes.
-- The "AI Generate Page" output actually varies in shape | a fintech prompt produces aurora glass with bento; a law prompt produces editorial paper with featured-in rule.
-- Applying any of the 16 starters renders a page that matches its gallery cover.
-- New per-section controls: Density (tight | default | roomy | editorial), Headline scale (sm | md | lg | hero | oversized), Background preset (paper | aurora | full-bleed photo | dark grain | gold-on-black | none).
+## 6. Connector architecture (scaffolding now, depth later)
 
-## Technical notes
+- Token issued by `wd-issue-connector-token`, stored hashed; connector keeps it in env.
+- Handshake: connector signs `{project_id, timestamp, nonce}` with HMAC(token), Edge Function verifies and marks verified.
+- Ingest channel: connector POSTs framework metadata (routes, plugins, package.json, composer.json, etc.) → stored in `wd_connectors.framework_metadata`.
+- Repo placeholders: `connectors/wordpress/`, `connectors/laravel/`, `connectors/node/`, `connectors/generic/` each with a README describing handshake + ingest contract. Actual plugin/package publishing is Phase 2.
 
-- All work stays in `src/components/landing-sections/*`, `src/components/landing-builder/*`, and `supabase/functions/landing-theme-ai/`.
-- No new third-party libraries required; Framer Motion, Tailwind, and the existing CSS variable system cover everything.
-- Snapshot shape stays backward-compatible: new props are optional with sensible defaults so existing user pages don't regress.
-- Migration only needed to refresh the 16 starter rows; no schema change.
+Safety contract documented up-front: connectors never receive shell commands in MVP. Patch apply endpoint (`wd-apply-patch`) exists but returns `mode_disabled` until Phase 3.
 
-## Out of scope for this pass
+---
 
-- True drag-to-design freeform canvas (this stays section-based).
-- Custom font uploads beyond the curated Google Fonts list.
-- 3D / WebGL hero scenes (the aurora hero uses CSS gradients + blur, not Three.js).
+## 7. AI agent orchestration
+
+Single orchestrator Edge Function `wd-orchestrator` that runs an AI SDK loop with `stopWhen: stepCountIs(50)` and tools:
+- `detectStack`, `runExternalAudit`, `summarizeLighthouse`, `classifyFinding`, `generatePatch`, `scoreRisk`, `writeFinding`, `writePatch`.
+
+Each tool's result is logged to `wd_ai_activity`. Agents 1–10 from the brief are realized as **prompts + tool subsets** rather than separate services, which keeps MVP shippable while matching the conceptual model.
+
+Memory: per-project rolling summary stored on `wd_projects.detected_stack` + a `wd_project_memory` table (Phase 2, pgvector).
+
+---
+
+## 8. Monitoring & scheduling
+
+- `pg_cron` job every 5 min → `wd-monitor-tick` (uptime).
+- Daily cron → CWV re-check via PageSpeed Insights.
+- Weekly cron → full external re-audit.
+- Realtime publication added for `wd_audits`, `wd_findings`, `wd_ai_activity`, `wd_monitor_events`.
+
+---
+
+## 9. Security
+
+- RLS on every table; firm isolation enforced via `get_user_firm_id`.
+- Connector tokens stored as SHA-256 hash; shown once.
+- Signed connector requests (HMAC) verified server-side.
+- Edge Functions validate JWT for user-facing endpoints; connector endpoints validate HMAC instead.
+- All AI decisions written to `wd_ai_activity` (matches existing AI transparency rule).
+- Compliance badge ("ABA 512 / GDPR / EU AI Act") shown on Website Doctor pages per project memory.
+
+---
+
+## 10. Roadmap
+
+- **MVP (this build):** schema, vertical wiring, projects, external audit, findings, patch suggestions (no apply), connector token issuance + verify, basic monitoring, dashboards.
+- **Phase 2:** real connector packages (WordPress plugin, Laravel/Node SDKs), codebase ingestion, pgvector memory, validation engine running connector-side tests, richer diff/PR flow.
+- **Phase 3:** approved-apply mode, autonomous maintenance mode ("AI CTO"), rollback automation, K8s Playwright workers, multi-region queue, billing/usage metering per scan.
+
+---
+
+## 11. Files to add / change (high level)
+
+- Migration: create `wd_*` tables + RLS + GRANTs + cron jobs + realtime publication + seed `vertical_module_access` rows.
+- `src/lib/verticals/types.ts`, `src/lib/verticals/presets.ts` — add `website_doctor` module.
+- `src/components/layout/sidebar-nav-data.ts` — add nav entry.
+- `src/App.tsx` — add routes.
+- New pages + components under `src/pages/website-doctor/` and `src/components/website-doctor/`.
+- New hooks under `src/hooks/website-doctor/`.
+- Edge Functions under `supabase/functions/wd-*`.
+- `connectors/` folder with README stubs for each framework.
+
+Approve this and I'll start with the migration + vertical wiring, then the projects/audit UI, then the AI orchestrator + Firecrawl/PageSpeed integrations.
