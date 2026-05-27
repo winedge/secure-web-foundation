@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Loader2, Stethoscope, Plus, ExternalLink } from 'lucide-react';
+import { Loader2, Stethoscope, Plus, ExternalLink, AlertTriangle, Activity, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { HealthScoreRing } from '@/components/website-doctor/HealthScoreRing';
 
 interface Project {
   id: string;
