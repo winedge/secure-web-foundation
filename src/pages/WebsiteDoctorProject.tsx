@@ -102,16 +102,14 @@ export default function WebsiteDoctorProject() {
               ABA 512 / GDPR / EU AI Act compliant | All AI decisions are logged
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <div className="text-4xl font-bold text-primary">{project.health_score ?? '|'}</div>
-              <div className="text-xs text-muted-foreground">health score</div>
-            </div>
+          <div className="flex items-center gap-4">
+            <HealthScoreRing score={project.health_score} />
             <Button onClick={runAudit} disabled={busy}>
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><RefreshCw className="h-4 w-4 mr-1" /> Re-scan</>}
             </Button>
           </div>
         </div>
+
 
         <Tabs defaultValue="findings">
           <TabsList>
