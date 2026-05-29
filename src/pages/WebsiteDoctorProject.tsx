@@ -51,14 +51,30 @@ export default function WebsiteDoctorProject() {
   };
 
   useEffect(() => {
+    if (!projectId) return;
     load();
+    const filter = `project_id=eq.${projectId}`;
     const ch = supabase
       .channel(`wd-${projectId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'wd_audits', filter: `project_id=eq.${projectId}` }, load)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'wd_findings', filter: `project_id=eq.${projectId}` }, load)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'wd_ai_activity', filter: `project_id=eq.${projectId}` }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'wd_audits', filter }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'wd_findings', filter }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'wd_patches', filter }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'wd_monitor_events', filter }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'wd_ai_activity', filter }, load)
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    // Polling fallback: refresh every 15s while the tab is visible, in case
+    // realtime delivery is delayed or the connector applies a queued patch
+    // between websocket events.
+    const poll = window.setInterval(() => {
+      if (document.visibilityState === 'visible') load();
+    }, 15000);
+    const onVisible = () => { if (document.visibilityState === 'visible') load(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      supabase.removeChannel(ch);
+      window.clearInterval(poll);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, [projectId]);
 
   const runAudit = async () => {
