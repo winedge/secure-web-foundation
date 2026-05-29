@@ -246,6 +246,15 @@ export default function BrandedIntake() {
         });
       }
 
+      // Auto-assign this lead to the firm that owns the branded intake page
+      // so it shows up immediately in their My Leads pipeline.
+      if (branding?.firm_id) {
+        const { error: assignErr } = await supabase.functions.invoke('intake-assign-lead', {
+          body: { lead_id: lead.id, firm_id: branding.firm_id },
+        });
+        if (assignErr) console.error('intake-assign-lead failed:', assignErr);
+      }
+
       // Upload session recording (non-blocking)
       uploadRecording(lead.id).catch(console.error);
 
