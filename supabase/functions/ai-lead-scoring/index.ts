@@ -119,16 +119,20 @@ Tailor your scoring rubric, factors, and recommended action to the ${verticalSlu
     if (!aiResponse.ok) {
       const status = aiResponse.status;
       if (status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded, please try again later." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ error: "Rate limit exceeded, please try again later.", fallback: true }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add funds." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add funds to your Lovable workspace.", fallback: true }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      throw new Error(`AI gateway error: ${status}`);
+      const errText = await aiResponse.text().catch(() => "");
+      console.error("AI gateway error:", status, errText);
+      return new Response(JSON.stringify({ error: `AI gateway error: ${status}`, fallback: true }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const aiData = await aiResponse.json();
