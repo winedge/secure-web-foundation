@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { createSupabaseClient } from "../_shared/auth.ts";
+import { requireUser, requireFirmMember } from "../_shared/firm-auth.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
@@ -10,11 +11,14 @@ serve(async (req) => {
   const supabase = createSupabaseClient(true);
 
   try {
-    const { campaign_id, action } = await req.json();
+    const user = await requireUser(req);
+    const { campaign_id, action, reallocation_id } = await req.json();
 
     if (action === "analyze_and_reallocate") {
       const { data: campaign } = await supabase.from("meta_campaigns").select("*").eq("id", campaign_id).single();
       if (!campaign) throw new Error("Campaign not found");
+      await requireFirmMember(supabase, user.id, campaign.firm_id);
+
 
       const { data: adSets } = await supabase.from("meta_ad_sets").select("*").eq("campaign_id", campaign_id).eq("status", "active");
 
@@ -100,9 +104,9 @@ Return JSON: { "reallocations": [{ "from_ad_set_id": "...", "to_ad_set_id": "...
     }
 
     if (action === "apply_reallocation") {
-      const { reallocation_id } = await req.json();
-      const { data: log } = await supabase.from("budget_reallocation_logs").select("*").eq("id", reallocation_id).single();
+      const { data: log } = await supabase.from("budget_reallocation_logs").select("*, meta_campaigns!inner(firm_id)").eq("id", reallocation_id).single();
       if (!log) throw new Error("Reallocation not found");
+      await requireFirmMember(supabase, user.id, (log as any).meta_campaigns?.firm_id);
 
       if (log.from_ad_set_id) {
         await supabase.from("meta_ad_sets").update({ daily_budget: log.from_budget - log.amount_moved }).eq("id", log.from_ad_set_id);
@@ -118,7 +122,8 @@ Return JSON: { "reallocations": [{ "from_ad_set_id": "...", "to_ad_set_id": "...
 
     return jsonResponse({ error: "Unknown action" }, 400);
   } catch (e) {
+    if (e instanceof Response) return e;
     console.error("budget-reallocation error:", e);
-    return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
+    return jsonResponse({ error: "Request failed" }, 500);
   }
 });
