@@ -2,6 +2,22 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { createSupabaseClient } from "../_shared/auth.ts";
 
+// Shared-secret verification. Configure GOOGLE_WEBHOOK_SECRET in Supabase secrets
+// and add the same value to Google Ads webhook config as a custom header `x-google-webhook-secret`
+// (or the legacy `Google-Lead-Webhook-Key` Google parameter).
+function verifyWebhookSecret(req: Request): boolean {
+  const expected = Deno.env.get("GOOGLE_WEBHOOK_SECRET");
+  if (!expected) {
+    console.error("GOOGLE_WEBHOOK_SECRET not configured — refusing all requests");
+    return false;
+  }
+  const provided =
+    req.headers.get("x-google-webhook-secret") ||
+    req.headers.get("google-lead-webhook-key") ||
+    new URL(req.url).searchParams.get("secret");
+  return provided === expected;
+}
+
 /**
  * Google Ads Lead Form Webhook
  * Receives leads from Google Ads Lead Form Extensions via webhook.
@@ -108,6 +124,11 @@ function extractGoogleLeadFields(payload: GoogleLeadData): Record<string, string
 serve(async (req) => {
   const corsResp = handleCors(req);
   if (corsResp) return corsResp;
+
+  // Reject any request that doesn't carry the configured shared secret.
+  if (!verifyWebhookSecret(req)) {
+    return jsonResponse({ error: 'Unauthorized' }, 401);
+  }
 
   try {
     const supabase = createSupabaseClient(true);

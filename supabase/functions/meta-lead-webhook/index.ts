@@ -73,9 +73,50 @@ serve(async (req) => {
 
   try {
     const supabase = createSupabaseClient(true);
-    const payload = await req.json();
-    
-    console.log('Meta webhook received:', JSON.stringify(payload).slice(0, 500));
+
+    // Verify Meta's X-Hub-Signature-256 HMAC before processing.
+    // Read the raw body once for both signature verification and JSON parsing.
+    const rawBody = await req.text();
+    const sigHeader = req.headers.get('x-hub-signature-256') || '';
+
+    // Prefer env var, fall back to admin_settings for backward compatibility.
+    let appSecret = Deno.env.get('META_APP_SECRET');
+    if (!appSecret) {
+      const { data: secretRow } = await supabase
+        .from('admin_settings')
+        .select('value')
+        .eq('key', 'meta_app_secret')
+        .maybeSingle();
+      appSecret = (secretRow?.value as any)?.app_secret;
+    }
+    if (!appSecret) {
+      console.error('META_APP_SECRET not configured');
+      return jsonResponse({ error: 'Webhook not configured' }, 500);
+    }
+
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      enc.encode(appSecret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign'],
+    );
+    const sigBuf = await crypto.subtle.sign('HMAC', key, enc.encode(rawBody));
+    const expected = 'sha256=' + Array.from(new Uint8Array(sigBuf))
+      .map((b) => b.toString(16).padStart(2, '0')).join('');
+
+    // Constant-time-ish compare
+    const a = enc.encode(sigHeader);
+    const b = enc.encode(expected);
+    let ok = a.length === b.length;
+    for (let i = 0; i < Math.min(a.length, b.length); i++) ok = ok && a[i] === b[i];
+    if (!ok) {
+      console.warn('Meta webhook signature mismatch');
+      return jsonResponse({ error: 'Invalid signature' }, 401);
+    }
+
+    const payload = JSON.parse(rawBody);
 
     // Check if lead verification is required
     const { data: verificationSetting } = await supabase

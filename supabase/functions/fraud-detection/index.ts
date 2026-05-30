@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createSupabaseClient, createLogger } from "../_shared/auth.ts";
 import { handleCors, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { getVerticalContext } from "../_shared/vertical.ts";
+import { requireUser, requireFirmMember } from "../_shared/firm-auth.ts";
 
 const log = createLogger("fraud-detection");
 
@@ -27,6 +28,7 @@ serve(async (req) => {
 
   try {
     const supabase = createSupabaseClient(true);
+    const user = await requireUser(req);
     const { lead_id } = await req.json();
 
     if (!lead_id) return errorResponse("lead_id is required");
@@ -41,6 +43,9 @@ serve(async (req) => {
       .single();
 
     if (leadErr || !lead) return errorResponse("Lead not found", 404);
+
+    // Verify caller belongs to the firm that owns this lead.
+    await requireFirmMember(supabase, user.id, lead.firm_id);
 
     const { verticalSlug } = await getVerticalContext(lead.firm_id ?? null, "fraud");
     const verticalHints = VERTICAL_FRAUD_HINTS[verticalSlug] ?? VERTICAL_FRAUD_HINTS.mass_tort;
@@ -188,7 +193,8 @@ serve(async (req) => {
         : "clean",
     });
   } catch (err) {
+    if (err instanceof Response) return err;
     log("Error", { error: (err as Error).message });
-    return errorResponse((err as Error).message, 500);
+    return errorResponse("Request failed", 500);
   }
 });

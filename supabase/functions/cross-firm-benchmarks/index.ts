@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { createSupabaseClient } from "../_shared/auth.ts";
 import { getVerticalContext } from "../_shared/vertical.ts";
+import { requireUser, requireFirmMember } from "../_shared/firm-auth.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
@@ -10,9 +11,12 @@ serve(async (req) => {
   const supabase = createSupabaseClient(true);
 
   try {
+    const user = await requireUser(req);
     const { firm_id, period, tort_type, category } = await req.json();
     if (!firm_id) throw new Error("firm_id required");
+    await requireFirmMember(supabase, user.id, firm_id);
     const subject = category || tort_type;
+
 
     const currentPeriod = period || new Date().toISOString().slice(0, 7);
 
@@ -125,7 +129,8 @@ Return JSON:
 
     return jsonResponse({ ...parsed, vertical: verticalSlug });
   } catch (e) {
+    if (e instanceof Response) return e;
     console.error("cross-firm-benchmarks error:", e);
-    return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
+    return jsonResponse({ error: "Request failed" }, 500);
   }
 });
