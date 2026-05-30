@@ -125,6 +125,11 @@ serve(async (req) => {
   const corsResp = handleCors(req);
   if (corsResp) return corsResp;
 
+  // Reject any request that doesn't carry the configured shared secret.
+  if (!verifyWebhookSecret(req)) {
+    return jsonResponse({ error: 'Unauthorized' }, 401);
+  }
+
   try {
     const supabase = createSupabaseClient(true);
     const payload: GoogleLeadData = await req.json();
