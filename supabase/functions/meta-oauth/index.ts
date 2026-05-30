@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleCors, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { createSupabaseClient } from "../_shared/auth.ts";
+import { requireUser, requireFirmMember, getUserFirmId } from "../_shared/firm-auth.ts";
 
 serve(async (req) => {
   const corsResp = handleCors(req);
@@ -9,7 +10,19 @@ serve(async (req) => {
   const supabase = createSupabaseClient(true);
 
   try {
-    const { action, code, redirect_uri, user_id, firm_id } = await req.json();
+    // Require auth on every action — never trust client-supplied user_id/firm_id.
+    const authUser = await requireUser(req);
+    const body = await req.json();
+    const { action, code, redirect_uri } = body;
+    let { firm_id } = body;
+    // Always derive user_id from the verified JWT.
+    const user_id = authUser.id;
+    // Verify firm membership if firm_id was provided; otherwise resolve it.
+    if (firm_id) {
+      await requireFirmMember(supabase, user_id, firm_id);
+    } else {
+      firm_id = await getUserFirmId(supabase, user_id);
+    }
 
     const { data: metaSettings } = await supabase
       .from("admin_settings")
@@ -128,7 +141,8 @@ serve(async (req) => {
 
     return errorResponse("Unknown action");
   } catch (e) {
+    if (e instanceof Response) return e;
     console.error("meta-oauth error:", e);
-    return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
+    return jsonResponse({ error: "Request failed" }, 500);
   }
 });
