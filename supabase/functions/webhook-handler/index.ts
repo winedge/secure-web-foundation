@@ -166,20 +166,36 @@ serve(async (req) => {
         const p = payload as CRMSyncPayload;
         console.log(`CRM sync: ${p.action} ${p.entity_type} ${p.external_id}`);
 
+        // Explicit allowlist of fields a CRM webhook may set on leads.
+        // Prevents mass-assignment of trust/pricing fields like is_verified,
+        // ai_quality_score, tier, price, status, etc.
+        const ALLOWED_LEAD_FIELDS = new Set([
+          'first_name', 'last_name', 'email', 'phone',
+          'city', 'state', 'zip_code', 'address',
+          'tort_type', 'category', 'notes', 'metadata',
+        ]);
+        const sanitize = (data: Record<string, unknown>) =>
+          Object.fromEntries(
+            Object.entries(data || {}).filter(([k]) => ALLOWED_LEAD_FIELDS.has(k))
+          );
+
         if (p.entity_type === 'lead') {
           if (p.action === 'create' || p.action === 'update') {
+            const safeData = sanitize(p.data);
             const existingLeadId = await findLeadByExternalId(supabase, p.external_id);
-            
+
             if (existingLeadId) {
-              await supabase.from('leads').update({ ...p.data, updated_at: new Date().toISOString() }).eq('id', existingLeadId);
+              await supabase.from('leads')
+                .update({ ...safeData, updated_at: new Date().toISOString() })
+                .eq('id', existingLeadId);
             } else if (p.action === 'create' && p.data.state && p.data.tort_type) {
               await supabase.from('leads').insert({
                 external_id: p.external_id,
-                state: p.data.state as string,
-                tort_type: p.data.tort_type as string,
-                price: (p.data.price as number) || 300,
+                ...safeData,
+                state: (p.data.state as string),
+                tort_type: (p.data.tort_type as string),
+                price: 300,
                 status: 'available',
-                ...p.data,
               });
             }
           }
