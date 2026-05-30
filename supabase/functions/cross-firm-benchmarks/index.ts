@@ -129,7 +129,8 @@ Return JSON:
 
     return jsonResponse({ ...parsed, vertical: verticalSlug });
   } catch (e) {
+    if (e instanceof Response) return e;
     console.error("cross-firm-benchmarks error:", e);
-    return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
+    return jsonResponse({ error: "Request failed" }, 500);
   }
 });
