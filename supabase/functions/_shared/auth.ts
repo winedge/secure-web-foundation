@@ -10,17 +10,27 @@ export function createSupabaseClient(useServiceRole = false) {
   );
 }
 
-export async function getAuthenticatedUser(req: Request, supabaseClient: any) {
+export async function getAuthenticatedUser(req: Request, _supabaseClient?: any) {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) throw new Error("No authorization header provided");
 
   const token = authHeader.replace("Bearer ", "");
-  const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+
+  // Use a user-context client (anon key + caller's JWT) so getUser validates
+  // the token against the Auth server instead of treating the service-role
+  // key as the bearer (which lacks a `sub` claim).
+  const userClient = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    { global: { headers: { Authorization: `Bearer ${token}` } } }
+  );
+
+  const { data: userData, error: userError } = await userClient.auth.getUser();
   if (userError) throw new Error(`Authentication error: ${userError.message}`);
-  
+
   const user = userData.user;
   if (!user?.email) throw new Error("User not authenticated or email not available");
-  
+
   return user;
 }
 
