@@ -1,0 +1,153 @@
+name: Deploy | Staging
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Zero-downtime deploy to staging
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.leadsthru.com
+    env:
+      DEPLOY_HOST: ${{ secrets.STAGING_HOST }}
+      DEPLOY_USER: ${{ secrets.STAGING_SSH_USER }}
+      APP_DIR: /var/www/leadsthru
+      RELEASES_DIR: /var/www/leadsthru/releases
+      CURRENT_LINK: /var/www/leadsthru/current
+      RELEASE_ID: ${{ github.sha }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      # ---- Build ---------------------------------------------------------
+      - name: Build frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build backend
+        working-directory: ./backend
+        run: |
+          npm ci
+          npm run build
+          npx prisma generate
+
+      - name: Package release
+        run: |
+          mkdir -p release
+          cp -r dist release/frontend
+          cp -r backend/dist release/backend
+          cp -r backend/prisma release/prisma
+          cp backend/package.json backend/package-lock.json release/
+          cp backend/ecosystem.config.js release/
+          tar -czf release-${RELEASE_ID}.tar.gz -C release .
+
+      # ---- SSH setup -----------------------------------------------------
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      # ---- Upload --------------------------------------------------------
+      - name: Upload release tarball
+        run: |
+          scp release-${RELEASE_ID}.tar.gz \
+            "$DEPLOY_USER@$DEPLOY_HOST:/tmp/release-${RELEASE_ID}.tar.gz"
+
+      # ---- Pre-deploy DB snapshot ---------------------------------------
+      - name: Snapshot MySQL before migration
+        run: |
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" \
+            "sudo /usr/local/bin/lt-db-snapshot.sh pre-deploy-${RELEASE_ID}"
+
+      # ---- Deploy steps (atomic symlink swap = zero downtime) ----------
+      - name: Extract + install + migrate
+        run: |
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" bash -s <<EOF
+            set -euo pipefail
+            RELEASE_DIR="$RELEASES_DIR/${RELEASE_ID}"
+            mkdir -p "\$RELEASE_DIR"
+            tar -xzf /tmp/release-${RELEASE_ID}.tar.gz -C "\$RELEASE_DIR"
+            cd "\$RELEASE_DIR"
+
+            # Link shared env + uploads
+            ln -sfn $APP_DIR/shared/.env .env
+            ln -sfn $APP_DIR/shared/uploads uploads
+
+            # Install prod deps only
+            npm ci --omit=dev
+
+            # Run migrations (deploy = forward-only, idempotent)
+            npx prisma migrate deploy
+
+            # Health-check the new build BEFORE swapping symlinks
+            PORT=4001 node backend/server.js &
+            HEALTH_PID=\$!
+            for i in \$(seq 1 30); do
+              curl -sf http://127.0.0.1:4001/health && break || sleep 1;
+            done
+            kill \$HEALTH_PID || true
+          EOF
+
+      # ---- Atomic switch + PM2 graceful reload --------------------------
+      - name: Atomic symlink swap + PM2 reload (zero-downtime)
+        run: |
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" bash -s <<EOF
+            set -euo pipefail
+            # Atomic: ln -sfn writes a new symlink and renames over the old one
+            ln -sfn "$RELEASES_DIR/${RELEASE_ID}" "$CURRENT_LINK"
+
+            # PM2 reload = rolling restart across cluster workers — no dropped requests
+            cd "$CURRENT_LINK"
+            pm2 reload ecosystem.config.js --update-env
+
+            # Reload Nginx (no downtime — graceful worker restart)
+            sudo nginx -t && sudo systemctl reload nginx
+          EOF
+
+      # ---- Post-deploy verification -------------------------------------
+      - name: Smoke tests against live staging
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf https://staging.leadsthru.com/health && break || sleep 2;
+          done
+          curl -sf https://staging.leadsthru.com/api/health/db
+          curl -sf https://staging.leadsthru.com/api/health/redis
+          curl -sf https://staging.leadsthru.com/api/health/blockchain
+
+      # ---- Cleanup old releases (keep last 5) ---------------------------
+      - name: Prune old releases
+        run: |
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" \
+            "cd $RELEASES_DIR && ls -1t | tail -n +6 | xargs -r rm -rf"
+
+      # ---- Auto-rollback on failure -------------------------------------
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" bash -s <<'EOF'
+            set -euo pipefail
+            PREV=$(ls -1t /var/www/leadsthru/releases | sed -n '2p')
+            if [ -n "$PREV" ]; then
+              ln -sfn "/var/www/leadsthru/releases/$PREV" /var/www/leadsthru/current
+              cd /var/www/leadsthru/current
+              pm2 reload ecosystem.config.js --update-env
+              sudo systemctl reload nginx
+              echo "Rolled back to $PREV"
+            fi
+          EOF

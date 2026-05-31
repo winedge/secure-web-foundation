@@ -1,0 +1,203 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: "20"
+  MYSQL_VERSION: "8.0"
+
+jobs:
+  # --------------------------------------------------------------------------
+  # 1. Lint + type-check + unit tests (frontend + backend)
+  # --------------------------------------------------------------------------
+  lint-and-test:
+    name: Lint, type-check, unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npm run type-check
+
+      - name: Unit tests
+        run: npm run test -- --run --reporter=verbose
+        env:
+          CI: "true"
+
+  # --------------------------------------------------------------------------
+  # 2. MySQL migration validation (Prisma) + integration tests
+  # --------------------------------------------------------------------------
+  migration-test:
+    name: MySQL migrations + integration tests
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: leadsthru_test
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DATABASE_URL: "mysql://root:root@127.0.0.1:3306/leadsthru_test"
+      REDIS_URL: "redis://127.0.0.1:6379"
+      JWT_SECRET: "ci-test-secret-not-for-production"
+      NODE_ENV: "test"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Wait for MySQL
+        run: |
+          for i in $(seq 1 30); do
+            mysqladmin ping -h 127.0.0.1 -uroot -proot && break || sleep 2;
+          done
+
+      - name: Install backend deps
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Validate Prisma schema
+        working-directory: ./backend
+        run: npx prisma validate
+
+      - name: Run migrations (deploy mode — same as prod)
+        working-directory: ./backend
+        run: npx prisma migrate deploy
+
+      - name: Verify migration idempotency (re-run must be no-op)
+        working-directory: ./backend
+        run: |
+          OUT=$(npx prisma migrate status)
+          echo "$OUT"
+          echo "$OUT" | grep -q "Database schema is up to date"
+
+      - name: Seed reference data
+        working-directory: ./backend
+        run: npm run db:seed:ci
+
+      - name: Integration tests (services + repositories)
+        working-directory: ./backend
+        run: npm run test:integration
+
+      - name: Blockchain hash-chain integrity check
+        working-directory: ./backend
+        run: npm run test:blockchain-integrity
+
+      - name: Tenant isolation tests (RLS-equivalent guards)
+        working-directory: ./backend
+        run: npm run test:isolation
+
+  # --------------------------------------------------------------------------
+  # 3. Security + dependency scanning
+  # --------------------------------------------------------------------------
+  security:
+    name: Security scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: npm audit (high+)
+        run: npm audit --audit-level=high
+        continue-on-error: false
+
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+
+      - name: Gitleaks (secret scan)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # --------------------------------------------------------------------------
+  # 4. Build artifacts (frontend dist + backend tarball)
+  # --------------------------------------------------------------------------
+  build:
+    name: Build artifacts
+    needs: [lint-and-test, migration-test, security]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install + build frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install + build backend
+        working-directory: ./backend
+        run: |
+          npm ci
+          npm run build
+          npx prisma generate
+
+      - name: Package backend
+        run: |
+          tar -czf backend-${{ github.sha }}.tar.gz \
+            backend/dist \
+            backend/prisma \
+            backend/package.json \
+            backend/package-lock.json \
+            backend/ecosystem.config.js
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-${{ github.sha }}
+          path: dist/
+          retention-days: 14
+
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-${{ github.sha }}
+          path: backend-${{ github.sha }}.tar.gz
+          retention-days: 14

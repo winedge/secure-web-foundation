@@ -1,0 +1,189 @@
+name: Deploy | Production
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "DEPLOY" to confirm production deploy'
+        required: true
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    name: Manual confirmation guard
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify confirmation
+        run: |
+          if [ "${{ inputs.confirm }}" != "DEPLOY" ]; then
+            echo "Confirmation phrase missing. Aborting."
+            exit 1
+          fi
+
+  deploy:
+    name: Zero-downtime production deploy
+    needs: [guard]
+    if: always() && (needs.guard.result == 'success' || github.event_name == 'push')
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://app.leadsthru.com
+    env:
+      DEPLOY_HOST: ${{ secrets.PROD_HOST }}
+      DEPLOY_USER: ${{ secrets.PROD_SSH_USER }}
+      APP_DIR: /var/www/leadsthru
+      RELEASES_DIR: /var/www/leadsthru/releases
+      CURRENT_LINK: /var/www/leadsthru/current
+      RELEASE_ID: ${{ github.sha }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Build frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build backend
+        working-directory: ./backend
+        run: |
+          npm ci
+          npm run build
+          npx prisma generate
+
+      - name: Package release
+        run: |
+          mkdir -p release
+          cp -r dist release/frontend
+          cp -r backend/dist release/backend
+          cp -r backend/prisma release/prisma
+          cp backend/package.json backend/package-lock.json release/
+          cp backend/ecosystem.config.js release/
+          tar -czf release-${RELEASE_ID}.tar.gz -C release .
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      # ---- Mandatory pre-deploy snapshot + binlog checkpoint -----------
+      - name: MySQL snapshot + binlog checkpoint
+        run: |
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" \
+            "sudo /usr/local/bin/lt-db-snapshot.sh pre-prod-${RELEASE_ID} --tag=production"
+
+      - name: Upload release
+        run: |
+          scp release-${RELEASE_ID}.tar.gz \
+            "$DEPLOY_USER@$DEPLOY_HOST:/tmp/release-${RELEASE_ID}.tar.gz"
+
+      - name: Extract, install, migrate (dry-run first)
+        run: |
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" bash -s <<EOF
+            set -euo pipefail
+            RELEASE_DIR="$RELEASES_DIR/${RELEASE_ID}"
+            mkdir -p "\$RELEASE_DIR"
+            tar -xzf /tmp/release-${RELEASE_ID}.tar.gz -C "\$RELEASE_DIR"
+            cd "\$RELEASE_DIR"
+            ln -sfn $APP_DIR/shared/.env .env
+            ln -sfn $APP_DIR/shared/uploads uploads
+            npm ci --omit=dev
+
+            # 1) Show pending migrations (dry-run / preview)
+            npx prisma migrate status
+
+            # 2) Apply forward-only migrations (idempotent)
+            npx prisma migrate deploy
+
+            # 3) Boot health-check on isolated port BEFORE swapping
+            PORT=4001 NODE_ENV=production node backend/server.js &
+            HEALTH_PID=\$!
+            HEALTHY=0
+            for i in \$(seq 1 60); do
+              if curl -sf http://127.0.0.1:4001/health > /dev/null; then
+                HEALTHY=1; break
+              fi
+              sleep 1
+            done
+            kill \$HEALTH_PID || true
+            if [ "\$HEALTHY" -ne 1 ]; then
+              echo "New release failed pre-swap health check"
+              exit 1
+            fi
+          EOF
+
+      # ---- Zero-downtime cutover ---------------------------------------
+      - name: Atomic symlink swap + PM2 graceful reload
+        run: |
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" bash -s <<EOF
+            set -euo pipefail
+            ln -sfn "$RELEASES_DIR/${RELEASE_ID}" "$CURRENT_LINK"
+            cd "$CURRENT_LINK"
+
+            # PM2 cluster reload — workers restart one-by-one, no dropped connections.
+            # See ecosystem.config.js: instances=max, exec_mode=cluster, wait_ready=true, listen_timeout=10000
+            pm2 reload ecosystem.config.js --update-env
+
+            # Nginx reload spawns new workers + drains old ones gracefully (no downtime)
+            sudo nginx -t && sudo systemctl reload nginx
+          EOF
+
+      - name: Production smoke tests
+        run: |
+          set -e
+          for i in $(seq 1 30); do
+            curl -sf https://app.leadsthru.com/health && break || sleep 2;
+          done
+          curl -sf https://app.leadsthru.com/api/health/db
+          curl -sf https://app.leadsthru.com/api/health/redis
+          curl -sf https://app.leadsthru.com/api/health/blockchain
+          curl -sf https://app.leadsthru.com/api/health/stripe
+
+      - name: Prune old releases (keep last 10)
+        run: |
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" \
+            "cd $RELEASES_DIR && ls -1t | tail -n +11 | xargs -r rm -rf"
+
+      - name: Auto-rollback on failure
+        if: failure()
+        run: |
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" bash -s <<'EOF'
+            set -euo pipefail
+            PREV=$(ls -1t /var/www/leadsthru/releases | sed -n '2p')
+            if [ -n "$PREV" ]; then
+              ln -sfn "/var/www/leadsthru/releases/$PREV" /var/www/leadsthru/current
+              cd /var/www/leadsthru/current
+              pm2 reload ecosystem.config.js --update-env
+              sudo systemctl reload nginx
+              echo "Rolled back to release $PREV"
+            else
+              echo "No previous release to roll back to"
+              exit 1
+            fi
+          EOF
+
+      - name: Notify Slack on success
+        if: success()
+        run: |
+          curl -X POST -H 'Content-Type: application/json' \
+            -d "{\"text\":\"Production deploy succeeded | release ${RELEASE_ID}\"}" \
+            "${{ secrets.SLACK_WEBHOOK_URL }}"
+
+      - name: Notify Slack on failure
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-Type: application/json' \
+            -d "{\"text\":\"Production deploy FAILED | release ${RELEASE_ID} | auto-rolled back\"}" \
+            "${{ secrets.SLACK_WEBHOOK_URL }}"
