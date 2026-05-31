@@ -9,13 +9,11 @@ serve(async (req) => {
   const corsResp = handleCors(req);
   if (corsResp) return corsResp;
 
-  const supabaseClient = createSupabaseClient(true);
-
   try {
     log("Function started");
 
     const stripe = getStripe();
-    const user = await getAuthenticatedUser(req, supabaseClient);
+    const user = await getAuthenticatedUser(req);
     log("User authenticated", { userId: user.id, email: user.email });
 
     const customers = await stripe.customers.list({ email: user.email!, limit: 1 });
@@ -55,6 +53,7 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     log("ERROR", { message: errorMessage });
-    return jsonResponse({ error: errorMessage }, 500);
+    const status = errorMessage.startsWith("Unauthorized") || errorMessage.includes("not authenticated") ? 401 : 500;
+    return jsonResponse({ error: errorMessage }, status);
   }
 });
