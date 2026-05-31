@@ -28,6 +28,7 @@ export default function WebsiteDoctorProject() {
   const [activity, setActivity] = useState<any[]>([]);
   const [connector, setConnector] = useState<any>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [issuedConnector, setIssuedConnector] = useState<any>(null);
   const [busy, setBusy] = useState(false);
 
   const load = async () => {
@@ -101,11 +102,26 @@ export default function WebsiteDoctorProject() {
       body: { project_id: projectId, type },
     });
     if (error) return toast.error(error.message);
-    setToken((data as any).token);
+    const issued = data as any;
+    setToken(issued.token);
+    setIssuedConnector({
+      id: issued.connector_id,
+      type: issued.type,
+      public_id: issued.public_id,
+      status: 'pending',
+    });
+    setConnector((current: any) => current ?? {
+      id: issued.connector_id,
+      type: issued.type,
+      public_id: issued.public_id,
+      status: 'pending',
+    });
     load();
   };
 
   if (!project) return <DashboardLayout><div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div></DashboardLayout>;
+
+  const activeConnector = connector ?? issuedConnector;
 
   return (
     <DashboardLayout>
