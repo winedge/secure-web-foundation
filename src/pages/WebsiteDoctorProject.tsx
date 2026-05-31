@@ -18,6 +18,20 @@ const sevColor: Record<string, string> = {
   critical: 'destructive', high: 'destructive', medium: 'default', low: 'secondary', info: 'outline',
 };
 
+type StackValue = string | number | boolean | null | string[];
+type DetectedStack = Record<string, StackValue>;
+
+interface ConnectorTokenResponse {
+  connector_id: string;
+  type: string;
+  public_id: string;
+  token: string;
+}
+
+interface DetectStackResponse {
+  stack?: DetectedStack;
+}
+
 export default function WebsiteDoctorProject() {
   const { projectId } = useParams();
   const [project, setProject] = useState<any>(null);
@@ -107,11 +121,12 @@ export default function WebsiteDoctorProject() {
         body: { url: project.url, project_id: projectId },
       });
       if (error) throw error;
-      if ((data as any)?.stack) setProject((current: any) => ({ ...current, detected_stack: (data as any).stack }));
+      const stack = (data as DetectStackResponse | null)?.stack;
+      if (stack) setProject((current: Record<string, unknown> | null) => current ? ({ ...current, detected_stack: stack }) : current);
       toast.success('Stack detection complete');
       load();
-    } catch (e: any) {
-      toast.error(e.message ?? 'Stack detection failed');
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Stack detection failed');
     } finally {
       setDetectingStack(false);
     }
@@ -123,7 +138,7 @@ export default function WebsiteDoctorProject() {
       body: { project_id: projectId, type },
     });
     if (error) return toast.error(error.message);
-    const issued = data as any;
+    const issued = data as ConnectorTokenResponse;
     setToken(issued.token);
     setIssuedConnector({
       id: issued.connector_id,
@@ -131,7 +146,7 @@ export default function WebsiteDoctorProject() {
       public_id: issued.public_id,
       status: 'pending',
     });
-    setConnector((current: any) => current ?? {
+    setConnector((current: unknown) => current ?? {
       id: issued.connector_id,
       type: issued.type,
       public_id: issued.public_id,
