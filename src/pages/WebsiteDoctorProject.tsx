@@ -18,6 +18,20 @@ const sevColor: Record<string, string> = {
   critical: 'destructive', high: 'destructive', medium: 'default', low: 'secondary', info: 'outline',
 };
 
+type StackValue = string | number | boolean | null | string[];
+type DetectedStack = Record<string, StackValue>;
+
+interface ConnectorTokenResponse {
+  connector_id: string;
+  type: string;
+  public_id: string;
+  token: string;
+}
+
+interface DetectStackResponse {
+  stack?: DetectedStack;
+}
+
 export default function WebsiteDoctorProject() {
   const { projectId } = useParams();
   const [project, setProject] = useState<any>(null);
@@ -31,6 +45,7 @@ export default function WebsiteDoctorProject() {
   const [issuedConnector, setIssuedConnector] = useState<any>(null);
   const [selectedConnectorType, setSelectedConnectorType] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [detectingStack, setDetectingStack] = useState(false);
 
   const load = async () => {
     const [{ data: p }, { data: a }, { data: f }, { data: pa }, { data: ev }, { data: act }, { data: c }] =
@@ -98,13 +113,32 @@ export default function WebsiteDoctorProject() {
     load();
   };
 
+  const detectStack = async () => {
+    if (!project?.url) return;
+    setDetectingStack(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('wd-detect-stack', {
+        body: { url: project.url, project_id: projectId },
+      });
+      if (error) throw error;
+      const stack = (data as DetectStackResponse | null)?.stack;
+      if (stack) setProject((current: Record<string, unknown> | null) => current ? ({ ...current, detected_stack: stack }) : current);
+      toast.success('Stack detection complete');
+      load();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Stack detection failed');
+    } finally {
+      setDetectingStack(false);
+    }
+  };
+
   const issueToken = async (type: string) => {
     setSelectedConnectorType(type);
     const { data, error } = await supabase.functions.invoke('wd-issue-connector-token', {
       body: { project_id: projectId, type },
     });
     if (error) return toast.error(error.message);
-    const issued = data as any;
+    const issued = data as ConnectorTokenResponse;
     setToken(issued.token);
     setIssuedConnector({
       id: issued.connector_id,
@@ -112,7 +146,7 @@ export default function WebsiteDoctorProject() {
       public_id: issued.public_id,
       status: 'pending',
     });
-    setConnector((current: any) => current ?? {
+    setConnector((current: unknown) => current ?? {
       id: issued.connector_id,
       type: issued.type,
       public_id: issued.public_id,
@@ -127,6 +161,8 @@ export default function WebsiteDoctorProject() {
   const connectorType = activeConnector?.type ?? selectedConnectorType;
   const connectorPublicId = activeConnector?.public_id ?? 'YOUR_PUBLIC_ID';
   const connectorToken = token ?? 'YOUR_ONE_TIME_TOKEN';
+  const detectedStack = project.detected_stack ?? {};
+  const hasDetectedStack = Object.values(detectedStack).some((value) => Array.isArray(value) ? value.length > 0 : Boolean(value));
 
   return (
     <DashboardLayout>
@@ -363,7 +399,42 @@ node wd-connector.mjs`}</pre>
 
 
           <TabsContent value="stack">
-            <Card className="p-4"><pre className="text-xs overflow-auto">{JSON.stringify(project.detected_stack, null, 2)}</pre></Card>
+            <Card className="p-4 space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="font-medium">Detected technology stack</div>
+                  <div className="text-xs text-muted-foreground">Shows CMS, framework, hosting, analytics, payments, auth, and third-party services.</div>
+                </div>
+                <Button size="sm" variant="outline" onClick={detectStack} disabled={detectingStack}>
+                  {detectingStack ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+                  Detect stack
+                </Button>
+              </div>
+
+              {hasDetectedStack ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  {Object.entries(detectedStack).map(([key, value]) => {
+                    if (value == null || (Array.isArray(value) && value.length === 0)) return null;
+                    return (
+                      <div key={key} className="rounded border border-border bg-muted/40 p-3">
+                        <div className="text-xs uppercase text-muted-foreground">{key.replace(/_/g, ' ')}</div>
+                        {Array.isArray(value) ? (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {value.map((item) => <Badge key={String(item)} variant="secondary">{String(item)}</Badge>)}
+                          </div>
+                        ) : (
+                          <div className="mt-1 text-sm">{String(value)}</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded border border-border bg-muted/40 p-6 text-center text-sm text-muted-foreground">
+                  No stack data has been detected yet. Click Detect stack to analyze this site now.
+                </div>
+              )}
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

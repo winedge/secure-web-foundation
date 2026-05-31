@@ -23,7 +23,7 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
   }
 }
 
-export async function getAuthenticatedUser(req: Request, _supabaseClient?: any) {
+export async function getAuthenticatedUser(req: Request, _supabaseClient?: unknown) {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) throw new Error("Unauthorized: missing user session");
 
