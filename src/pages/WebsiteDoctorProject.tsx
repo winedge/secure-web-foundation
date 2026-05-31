@@ -252,6 +252,16 @@ export default function WebsiteDoctorProject() {
               <div className="text-sm text-muted-foreground">
                 Install a connector to enable deep codebase analysis. Patches are suggest-only in this release.
               </div>
+              <div className="p-3 bg-muted rounded text-xs space-y-2">
+                <div className="font-medium">Download connector files</div>
+                <div className="flex gap-2 flex-wrap">
+                  <a href="/connectors/wordpress/website-doctor-connector.php" download><Button size="sm" variant="outline">WordPress plugin</Button></a>
+                  <a href="/connectors/wordpress/README.md" download><Button size="sm" variant="outline">WordPress README</Button></a>
+                  <a href="/connectors/node/wd-connector.mjs" download><Button size="sm" variant="outline">Node / Laravel agent</Button></a>
+                  <a href="/connectors/node/package.json" download><Button size="sm" variant="outline">Node package.json</Button></a>
+                  <a href="/connectors/node/README.md" download><Button size="sm" variant="outline">Node README</Button></a>
+                </div>
+              </div>
               {activeConnector ? (
                 <div className="flex items-center gap-2">
                   <Badge>{activeConnector.type}</Badge>
