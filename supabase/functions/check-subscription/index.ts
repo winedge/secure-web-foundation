@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { corsHeaders, handleCors, jsonResponse } from "../_shared/cors.ts";
-import { createSupabaseClient, getAuthenticatedUser, createLogger } from "../_shared/auth.ts";
+import { getAuthenticatedUser, createLogger } from "../_shared/auth.ts";
 import { getStripe } from "../_shared/stripe.ts";
 
 const log = createLogger("CHECK-SUBSCRIPTION");
@@ -9,13 +9,11 @@ serve(async (req) => {
   const corsResp = handleCors(req);
   if (corsResp) return corsResp;
 
-  const supabaseClient = createSupabaseClient(true);
-
   try {
     log("Function started");
 
     const stripe = getStripe();
-    const user = await getAuthenticatedUser(req, supabaseClient);
+    const user = await getAuthenticatedUser(req);
     log("User authenticated", { userId: user.id, email: user.email });
 
     const customers = await stripe.customers.list({ email: user.email!, limit: 1 });
@@ -55,6 +53,7 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     log("ERROR", { message: errorMessage });
-    return jsonResponse({ error: errorMessage }, 500);
+    const status = errorMessage.startsWith("Unauthorized") || errorMessage.includes("not authenticated") ? 401 : 500;
+    return jsonResponse({ error: errorMessage }, status);
   }
 });

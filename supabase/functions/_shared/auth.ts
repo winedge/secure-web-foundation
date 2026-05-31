@@ -10,22 +10,38 @@ export function createSupabaseClient(useServiceRole = false) {
   );
 }
 
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+    return JSON.parse(atob(padded));
+  } catch {
+    return null;
+  }
+}
+
 export async function getAuthenticatedUser(req: Request, _supabaseClient?: any) {
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) throw new Error("No authorization header provided");
+  if (!authHeader?.startsWith("Bearer ")) throw new Error("Unauthorized: missing user session");
 
   const token = authHeader.replace("Bearer ", "");
+  const claims = decodeJwtPayload(token);
+  if (!claims?.sub || claims.role === "anon" || claims.role === "service_role") {
+    throw new Error("Unauthorized: missing user session");
+  }
 
-  // Use a user-context client (anon key + caller's JWT) so getUser validates
-  // the token against the Auth server instead of treating the service-role
-  // key as the bearer (which lacks a `sub` claim).
+  // Validate the caller's JWT explicitly. Passing the token to getUser avoids
+  // the SDK falling back to the function/project key as the bearer token.
   const userClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-    { global: { headers: { Authorization: `Bearer ${token}` } } }
+    { auth: { persistSession: false } }
   );
 
-  const { data: userData, error: userError } = await userClient.auth.getUser();
+  const { data: userData, error: userError } = await userClient.auth.getUser(token);
   if (userError) throw new Error(`Authentication error: ${userError.message}`);
 
   const user = userData.user;

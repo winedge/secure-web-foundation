@@ -26,25 +26,33 @@ function getTierFromProductId(productId: string | null): SubscriptionTier {
 }
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
 
   const { data, isLoading } = useQuery({
     queryKey: ['subscription', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('check-subscription');
+      if (!session?.access_token) {
+        return { subscribed: false, product_id: null, subscription_end: null };
+      }
+
+      const { data, error } = await supabase.functions.invoke('check-subscription', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
       if (error) throw error;
       return data as { subscribed: boolean; product_id: string | null; subscription_end: string | null };
     },
-    enabled: !!user,
+    enabled: !authLoading && !!user && !!session?.access_token,
     refetchInterval: 60_000,
     staleTime: 30_000,
+    retry: false,
+    throwOnError: false,
   });
 
   const value: SubscriptionContextValue = {
     subscribed: data?.subscribed ?? false,
     tier: getTierFromProductId(data?.product_id ?? null),
     subscriptionEnd: data?.subscription_end ?? null,
-    loading: isLoading,
+    loading: authLoading || isLoading,
   };
 
   return (
