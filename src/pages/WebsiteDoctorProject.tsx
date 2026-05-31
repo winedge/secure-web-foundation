@@ -31,6 +31,7 @@ export default function WebsiteDoctorProject() {
   const [issuedConnector, setIssuedConnector] = useState<any>(null);
   const [selectedConnectorType, setSelectedConnectorType] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [detectingStack, setDetectingStack] = useState(false);
 
   const load = async () => {
     const [{ data: p }, { data: a }, { data: f }, { data: pa }, { data: ev }, { data: act }, { data: c }] =
@@ -98,6 +99,24 @@ export default function WebsiteDoctorProject() {
     load();
   };
 
+  const detectStack = async () => {
+    if (!project?.url) return;
+    setDetectingStack(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('wd-detect-stack', {
+        body: { url: project.url, project_id: projectId },
+      });
+      if (error) throw error;
+      if ((data as any)?.stack) setProject((current: any) => ({ ...current, detected_stack: (data as any).stack }));
+      toast.success('Stack detection complete');
+      load();
+    } catch (e: any) {
+      toast.error(e.message ?? 'Stack detection failed');
+    } finally {
+      setDetectingStack(false);
+    }
+  };
+
   const issueToken = async (type: string) => {
     setSelectedConnectorType(type);
     const { data, error } = await supabase.functions.invoke('wd-issue-connector-token', {
@@ -127,6 +146,8 @@ export default function WebsiteDoctorProject() {
   const connectorType = activeConnector?.type ?? selectedConnectorType;
   const connectorPublicId = activeConnector?.public_id ?? 'YOUR_PUBLIC_ID';
   const connectorToken = token ?? 'YOUR_ONE_TIME_TOKEN';
+  const detectedStack = project.detected_stack ?? {};
+  const hasDetectedStack = Object.values(detectedStack).some((value) => Array.isArray(value) ? value.length > 0 : Boolean(value));
 
   return (
     <DashboardLayout>
