@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { corsHeaders, handleCors, jsonResponse } from "../_shared/cors.ts";
-import { createSupabaseClient, getAuthenticatedUser, createLogger } from "../_shared/auth.ts";
+import { getAuthenticatedUser, createLogger } from "../_shared/auth.ts";
 import { getStripe } from "../_shared/stripe.ts";
 
 const log = createLogger("CHECK-SUBSCRIPTION");
