@@ -384,7 +384,42 @@ node wd-connector.mjs`}</pre>
 
 
           <TabsContent value="stack">
-            <Card className="p-4"><pre className="text-xs overflow-auto">{JSON.stringify(project.detected_stack, null, 2)}</pre></Card>
+            <Card className="p-4 space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="font-medium">Detected technology stack</div>
+                  <div className="text-xs text-muted-foreground">Shows CMS, framework, hosting, analytics, payments, auth, and third-party services.</div>
+                </div>
+                <Button size="sm" variant="outline" onClick={detectStack} disabled={detectingStack}>
+                  {detectingStack ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+                  Detect stack
+                </Button>
+              </div>
+
+              {hasDetectedStack ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  {Object.entries(detectedStack).map(([key, value]) => {
+                    if (value == null || (Array.isArray(value) && value.length === 0)) return null;
+                    return (
+                      <div key={key} className="rounded border border-border bg-muted/40 p-3">
+                        <div className="text-xs uppercase text-muted-foreground">{key.replace(/_/g, ' ')}</div>
+                        {Array.isArray(value) ? (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {value.map((item) => <Badge key={String(item)} variant="secondary">{String(item)}</Badge>)}
+                          </div>
+                        ) : (
+                          <div className="mt-1 text-sm">{String(value)}</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded border border-border bg-muted/40 p-6 text-center text-sm text-muted-foreground">
+                  No stack data has been detected yet. Click Detect stack to analyze this site now.
+                </div>
+              )}
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
