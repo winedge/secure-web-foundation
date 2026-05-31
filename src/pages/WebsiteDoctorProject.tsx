@@ -29,6 +29,7 @@ export default function WebsiteDoctorProject() {
   const [connector, setConnector] = useState<any>(null);
   const [token, setToken] = useState<string | null>(null);
   const [issuedConnector, setIssuedConnector] = useState<any>(null);
+  const [selectedConnectorType, setSelectedConnectorType] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const load = async () => {
@@ -40,7 +41,7 @@ export default function WebsiteDoctorProject() {
         supabase.from('wd_patches').select('*').eq('project_id', projectId!).order('created_at', { ascending: false }),
         supabase.from('wd_monitor_events').select('*').eq('project_id', projectId!).order('created_at', { ascending: false }).limit(50),
         supabase.from('wd_ai_activity').select('*').eq('project_id', projectId!).order('created_at', { ascending: false }).limit(50),
-        supabase.from('wd_connectors').select('*').eq('project_id', projectId!).maybeSingle(),
+        supabase.from('wd_connectors').select('*').eq('project_id', projectId!).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       ]);
     setProject(p);
     setAudits(a ?? []);
@@ -98,6 +99,7 @@ export default function WebsiteDoctorProject() {
   };
 
   const issueToken = async (type: string) => {
+    setSelectedConnectorType(type);
     const { data, error } = await supabase.functions.invoke('wd-issue-connector-token', {
       body: { project_id: projectId, type },
     });
@@ -122,6 +124,9 @@ export default function WebsiteDoctorProject() {
   if (!project) return <DashboardLayout><div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div></DashboardLayout>;
 
   const activeConnector = connector ?? issuedConnector;
+  const connectorType = activeConnector?.type ?? selectedConnectorType;
+  const connectorPublicId = activeConnector?.public_id ?? 'YOUR_PUBLIC_ID';
+  const connectorToken = token ?? 'YOUR_ONE_TIME_TOKEN';
 
   return (
     <DashboardLayout>
