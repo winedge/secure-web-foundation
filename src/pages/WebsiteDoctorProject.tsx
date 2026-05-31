@@ -256,6 +256,61 @@ export default function WebsiteDoctorProject() {
                       <pre className="overflow-auto whitespace-pre-wrap">{`<script>(function(){var P="${connector.public_id}",T="${token}",U="https://sdtphgskqpelpbwhipls.supabase.co/functions/v1/wd-beacon",Q=[];function s(e){Q.push(e);if(Q.length>=5)f()}function f(){if(!Q.length)return;var b=JSON.stringify({public_id:P,token:T,events:Q.splice(0)});(navigator.sendBeacon&&navigator.sendBeacon(U,b))||fetch(U,{method:"POST",headers:{"Content-Type":"application/json"},body:b,keepalive:true})}addEventListener("error",function(e){s({kind:"js_error",severity:"high",payload:{msg:e.message,src:e.filename,ln:e.lineno}})});addEventListener("load",function(){s({kind:"page_view",payload:{url:location.href,t:performance.now()|0}})});addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden")f()});setInterval(f,15000)})();</script>`}</pre>
                     </div>
                   )}
+
+                  {connector.type === 'node' && (
+                    <div className="p-3 bg-muted rounded text-xs space-y-2">
+                      <div className="font-medium">Install the Node connector</div>
+                      <div className="flex gap-2 flex-wrap">
+                        <a href="/connectors/node/wd-connector.mjs" download><Button size="sm" variant="outline">Download wd-connector.mjs</Button></a>
+                        <a href="/connectors/node/package.json" download><Button size="sm" variant="outline">package.json</Button></a>
+                        <a href="/connectors/node/README.md" download><Button size="sm" variant="outline">README</Button></a>
+                      </div>
+                      <pre className="overflow-auto whitespace-pre-wrap">{`npm install diff
+export WD_API_URL="https://sdtphgskqpelpbwhipls.supabase.co/functions/v1"
+export WD_PUBLIC_ID="${connector.public_id}"
+export WD_TOKEN="${token}"
+export WD_ROOT="/var/www/yoursite"
+node wd-connector.mjs`}</pre>
+                    </div>
+                  )}
+
+                  {connector.type === 'wordpress' && (
+                    <div className="p-3 bg-muted rounded text-xs space-y-2">
+                      <div className="font-medium">Install the WordPress connector</div>
+                      <div className="flex gap-2 flex-wrap">
+                        <a href="/connectors/wordpress/website-doctor-connector.php" download><Button size="sm" variant="outline">Download plugin (.php)</Button></a>
+                        <a href="/connectors/wordpress/README.md" download><Button size="sm" variant="outline">README</Button></a>
+                      </div>
+                      <ol className="list-decimal pl-4 space-y-1">
+                        <li>Upload <code>website-doctor-connector.php</code> to <code>wp-content/mu-plugins/</code> (create the folder if missing).</li>
+                        <li>Add to <code>wp-config.php</code>:</li>
+                      </ol>
+                      <pre className="overflow-auto whitespace-pre-wrap">{`define('WD_API_URL',   'https://sdtphgskqpelpbwhipls.supabase.co/functions/v1');
+define('WD_PUBLIC_ID', '${connector.public_id}');
+define('WD_TOKEN',     '${token}');
+define('WD_ROOT',      ABSPATH);`}</pre>
+                    </div>
+                  )}
+
+                  {connector.type === 'laravel' && (
+                    <div className="p-3 bg-muted rounded text-xs space-y-2">
+                      <div className="font-medium">Install the Laravel connector</div>
+                      <div className="text-muted-foreground">
+                        The Laravel connector reuses the Node agent. Download the files and run the poller from your Laravel project root (or schedule it via the Laravel task scheduler / supervisor).
+                      </div>
+                      <div className="flex gap-2 flex-wrap">
+                        <a href="/connectors/node/wd-connector.mjs" download><Button size="sm" variant="outline">Download wd-connector.mjs</Button></a>
+                        <a href="/connectors/node/README.md" download><Button size="sm" variant="outline">README</Button></a>
+                      </div>
+                      <pre className="overflow-auto whitespace-pre-wrap">{`# In your Laravel project root
+npm install diff
+WD_API_URL="https://sdtphgskqpelpbwhipls.supabase.co/functions/v1" \\
+WD_PUBLIC_ID="${connector.public_id}" \\
+WD_TOKEN="${token}" \\
+WD_ROOT="$(pwd)" \\
+node wd-connector.mjs`}</pre>
+                    </div>
+                  )}
                 </div>
               )}
 
