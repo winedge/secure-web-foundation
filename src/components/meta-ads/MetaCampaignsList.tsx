@@ -65,11 +65,6 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
     });
   };
 
-  const [formData, setFormData] = useState({
-    name: '', tort_type: '', objective: 'LEAD_GENERATION', daily_budget: 50, lifetime_budget: 0,
-    bid_strategy: 'LOWEST_COST', target_states: '',
-  });
-
   const allCampaigns = campaigns || [];
   const list = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -89,37 +84,8 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
     totalBudget: allCampaigns.reduce((s, c) => s + (c.lifetime_budget || 0), 0),
   };
 
-  const openCreate = () => {
-    setEditCampaign(null);
-    setFormData({ name: '', tort_type: '', objective: 'LEAD_GENERATION', daily_budget: 50, lifetime_budget: 0, bid_strategy: 'LOWEST_COST', target_states: '' });
-    setFormOpen(true);
-  };
-
-  const openEdit = (c: MetaCampaign) => {
-    setEditCampaign(c);
-    setFormData({
-      name: c.name, tort_type: c.tort_type || '', objective: c.objective, daily_budget: c.daily_budget,
-      lifetime_budget: c.lifetime_budget, bid_strategy: c.bid_strategy, target_states: (c.target_states || []).join(', '),
-    });
-    setFormOpen(true);
-  };
-
-  const handleSave = () => {
-    const payload = {
-      name: formData.name,
-      tort_type: formData.tort_type,
-      objective: formData.objective,
-      daily_budget: formData.daily_budget,
-      lifetime_budget: formData.lifetime_budget,
-      bid_strategy: formData.bid_strategy,
-      target_states: formData.target_states.split(',').map((s) => s.trim()).filter(Boolean),
-    };
-    if (editCampaign) {
-      updateCampaign.mutate({ id: editCampaign.id, ...payload }, { onSuccess: () => setFormOpen(false) });
-    } else {
-      createCampaign.mutate({ ...payload, status: 'draft' }, { onSuccess: () => setFormOpen(false) });
-    }
-  };
+  const openCreate = () => { setEditCampaign(null); setFormOpen(true); };
+  const openEdit = (c: MetaCampaign) => { setEditCampaign(c); setFormOpen(true); };
 
   const handleBulkDelete = () => {
     selected.forEach((id) => deleteCampaign.mutate(id));
