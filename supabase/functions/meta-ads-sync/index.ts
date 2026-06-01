@@ -531,8 +531,7 @@ serve(async (req) => {
 
       // ── 1) Campaigns ──
       const campFields = "id,name,objective,status,effective_status,daily_budget,lifetime_budget,budget_remaining,bid_strategy,buying_type,start_time,stop_time,special_ad_categories,attribution_setting,created_time,updated_time";
-      const campResp = await fetch(`${META_API}/${adAccountId}/campaigns?fields=${campFields}&limit=200&access_token=${token}`);
-      const campData = await campResp.json();
+      const campData = await fetchMetaWithRetry(`${META_API}/${adAccountId}/campaigns?fields=${campFields}&limit=200&access_token=${token}`);
       if (campData.error) return errorResponse(campData.error.message);
 
       const campaignIdMap = new Map<string, string>(); // metaId → localId
