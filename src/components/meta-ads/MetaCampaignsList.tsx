@@ -18,6 +18,7 @@ import { MetaAdsTable } from './MetaAdsTable';
 import { PublishCampaignReviewDialog } from './PublishCampaignReviewDialog';
 import { AbTestWizardDialog } from './AbTestWizardDialog';
 import { CampaignFormDialog } from './forms/CampaignFormDialog';
+import { CampaignCreateWizard } from './forms/CampaignCreateWizard';
 
 const COL_STORAGE_KEY = 'meta-ads-visible-cols-v1';
 const DEFAULT_COLS: ColumnId[] = ['delivery', 'results', 'cost_per_result', 'budget', 'spent', 'impressions', 'reach', 'ends'];
