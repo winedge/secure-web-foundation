@@ -7,6 +7,8 @@ interface BaseListOptions {
   pageSize: number;
   search?: string;
   status?: string;
+  sortColumn?: string | null;
+  sortDirection?: 'asc' | 'desc';
 }
 
 export interface AdSetRow {
@@ -26,9 +28,9 @@ export interface AdSetRow {
 
 export function useMetaAdSetsTable(opts: BaseListOptions & { campaignId?: string | null }) {
   const { data: firm } = useFirm();
-  const { page, pageSize, search, status, campaignId } = opts;
+  const { page, pageSize, search, status, campaignId, sortColumn, sortDirection } = opts;
   return useQuery({
-    queryKey: ['meta-adsets-table', firm?.id, page, pageSize, search, status, campaignId],
+    queryKey: ['meta-adsets-table', firm?.id, page, pageSize, search, status, campaignId, sortColumn, sortDirection],
     queryFn: async () => {
       if (!firm?.id) return { rows: [] as AdSetRow[], total: 0 };
       let q = (supabase as any)
@@ -38,7 +40,9 @@ export function useMetaAdSetsTable(opts: BaseListOptions & { campaignId?: string
       if (search) q = q.ilike('name', `%${search}%`);
       if (status && status !== 'all') q = q.eq('status', status);
       if (campaignId) q = q.eq('campaign_id', campaignId);
-      q = q.order('created_at', { ascending: false }).range(page * pageSize, page * pageSize + pageSize - 1);
+      const col = sortColumn || 'created_at';
+      const dir = sortDirection === 'asc';
+      q = q.order(col, { ascending: dir }).range(page * pageSize, page * pageSize + pageSize - 1);
       const { data, count, error } = await q;
       if (error) throw error;
       return { rows: (data || []) as AdSetRow[], total: count || 0 };
@@ -60,9 +64,9 @@ export interface AdRow {
 
 export function useMetaAdsTable(opts: BaseListOptions & { adSetId?: string | null; campaignId?: string | null }) {
   const { data: firm } = useFirm();
-  const { page, pageSize, search, status, adSetId, campaignId } = opts;
+  const { page, pageSize, search, status, adSetId, campaignId, sortColumn, sortDirection } = opts;
   return useQuery({
-    queryKey: ['meta-ads-table', firm?.id, page, pageSize, search, status, adSetId, campaignId],
+    queryKey: ['meta-ads-table', firm?.id, page, pageSize, search, status, adSetId, campaignId, sortColumn, sortDirection],
     queryFn: async () => {
       if (!firm?.id) return { rows: [] as AdRow[], total: 0 };
       let q = (supabase as any)
@@ -73,7 +77,9 @@ export function useMetaAdsTable(opts: BaseListOptions & { adSetId?: string | nul
       if (status && status !== 'all') q = q.eq('status', status);
       if (adSetId) q = q.eq('ad_set_id', adSetId);
       if (campaignId) q = q.eq('ad_set.campaign_id', campaignId);
-      q = q.order('created_at', { ascending: false }).range(page * pageSize, page * pageSize + pageSize - 1);
+      const col = sortColumn || 'created_at';
+      const dir = sortDirection === 'asc';
+      q = q.order(col, { ascending: dir }).range(page * pageSize, page * pageSize + pageSize - 1);
       const { data, count, error } = await q;
       if (error) throw error;
       return { rows: (data || []) as AdRow[], total: count || 0 };
@@ -95,9 +101,9 @@ export interface AudienceRow {
 
 export function useMetaAudiencesTable(opts: BaseListOptions & { subtype?: string }) {
   const { data: firm } = useFirm();
-  const { page, pageSize, search, subtype } = opts;
+  const { page, pageSize, search, subtype, sortColumn, sortDirection } = opts;
   return useQuery({
-    queryKey: ['meta-audiences-table', firm?.id, page, pageSize, search, subtype],
+    queryKey: ['meta-audiences-table', firm?.id, page, pageSize, search, subtype, sortColumn, sortDirection],
     queryFn: async () => {
       if (!firm?.id) return { rows: [] as AudienceRow[], total: 0 };
       const useSaved = subtype === 'SAVED';
@@ -108,7 +114,9 @@ export function useMetaAudiencesTable(opts: BaseListOptions & { subtype?: string
           .select('id,name,created_at', { count: 'exact' })
           .eq('firm_id', firm.id);
         if (search) q = q.ilike('name', `%${search}%`);
-        q = q.order('created_at', { ascending: false }).range(page * pageSize, page * pageSize + pageSize - 1);
+        const col = sortColumn || 'created_at';
+        const dir = sortDirection === 'asc';
+        q = q.order(col, { ascending: dir }).range(page * pageSize, page * pageSize + pageSize - 1);
         const { data, count, error } = await q;
         if (error) throw error;
         const rows: AudienceRow[] = (data || []).map((r: any) => ({
@@ -124,7 +132,9 @@ export function useMetaAudiencesTable(opts: BaseListOptions & { subtype?: string
         .eq('firm_id', firm.id);
       if (search) q = q.ilike('name', `%${search}%`);
       if (subtype && subtype !== 'all') q = q.eq('subtype', subtype);
-      q = q.order('created_at', { ascending: false }).range(page * pageSize, page * pageSize + pageSize - 1);
+      const col = sortColumn || 'created_at';
+      const dir = sortDirection === 'asc';
+      q = q.order(col, { ascending: dir }).range(page * pageSize, page * pageSize + pageSize - 1);
       const { data, count, error } = await q;
       if (error) throw error;
       const rows: AudienceRow[] = (data || []).map((r: any) => ({ ...r, source: 'custom' }));
@@ -146,9 +156,9 @@ export interface ReportRow {
 
 export function useMetaReportsTable(opts: BaseListOptions & { level?: string }) {
   const { data: firm } = useFirm();
-  const { page, pageSize, search, level } = opts;
+  const { page, pageSize, search, level, sortColumn, sortDirection } = opts;
   return useQuery({
-    queryKey: ['meta-reports-table', firm?.id, page, pageSize, search, level],
+    queryKey: ['meta-reports-table', firm?.id, page, pageSize, search, level, sortColumn, sortDirection],
     queryFn: async () => {
       if (!firm?.id) return { rows: [] as ReportRow[], total: 0 };
       let q = (supabase as any)
@@ -157,7 +167,9 @@ export function useMetaReportsTable(opts: BaseListOptions & { level?: string }) 
         .eq('firm_id', firm.id);
       if (search) q = q.ilike('name', `%${search}%`);
       if (level && level !== 'all') q = q.eq('level', level);
-      q = q.order('created_at', { ascending: false }).range(page * pageSize, page * pageSize + pageSize - 1);
+      const col = sortColumn || 'created_at';
+      const dir = sortDirection === 'asc';
+      q = q.order(col, { ascending: dir }).range(page * pageSize, page * pageSize + pageSize - 1);
       const { data, count, error } = await q;
       if (error) throw error;
       return { rows: (data || []) as ReportRow[], total: count || 0 };
