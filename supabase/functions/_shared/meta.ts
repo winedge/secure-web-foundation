@@ -15,7 +15,8 @@ export async function getFirmConnection(supabase: any, firmId: string): Promise<
     .select("firm_id, access_token, ad_account_id, business_id")
     .eq("firm_id", firmId)
     .eq("platform", "facebook")
-    .eq("status", "connected")
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
     .maybeSingle();
   return data ?? null;
 }
