@@ -426,14 +426,20 @@ export function CampaignFormDialog({ open, onOpenChange, editCampaign }: Props) 
   );
 }
 
-// ───── Small reusable: chip input for US states ─────
-function StatesChipsInput({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+// ───── Reusable: generic location chip input ─────
+function LocationChipsInput({
+  country, value, onChange,
+}: { country: string; value: string[]; onChange: (v: string[]) => void }) {
   const [input, setInput] = useState('');
+  const isUS = country === 'US';
   const add = (raw: string) => {
-    const v = raw.trim().toUpperCase();
+    let v = raw.trim();
     if (!v) return;
-    if (!US_STATES.includes(v)) return;
-    if (value.includes(v)) return;
+    if (isUS) {
+      v = v.toUpperCase();
+      if (!US_STATES.includes(v)) return;
+    }
+    if (value.some((x) => x.toLowerCase() === v.toLowerCase())) return;
     onChange([...value, v]);
     setInput('');
   };
@@ -446,20 +452,22 @@ function StatesChipsInput({ value, onChange }: { value: string[]; onChange: (v: 
         </Badge>
       ))}
       <input
-        list="us-states-list"
+        list={isUS ? 'us-states-list' : undefined}
         className="flex-1 min-w-[80px] bg-transparent outline-none text-sm"
         value={input}
-        placeholder={value.length ? '' : 'FL, TX, CA…'}
+        placeholder={value.length ? '' : isUS ? 'FL, TX, CA…' : 'London, Bavaria, Mumbai…'}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ',' || e.key === ' ') { e.preventDefault(); add(input); }
+          if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(input); }
           else if (e.key === 'Backspace' && !input && value.length) onChange(value.slice(0, -1));
         }}
         onBlur={() => add(input)}
       />
-      <datalist id="us-states-list">
-        {US_STATES.map((s) => <option key={s} value={s} />)}
-      </datalist>
+      {isUS && (
+        <datalist id="us-states-list">
+          {US_STATES.map((s) => <option key={s} value={s} />)}
+        </datalist>
+      )}
     </div>
   );
 }
