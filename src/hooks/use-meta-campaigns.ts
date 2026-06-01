@@ -670,9 +670,14 @@ export function useSyncFromMeta() {
       qc.invalidateQueries({ queryKey: ['meta-live-insights'] });
       qc.invalidateQueries({ queryKey: ['meta-analytics'] });
       const s = data?.synced || {};
+      const errs: string[] = data?.errors || [];
+      const hasErrors = errs.length > 0;
       toast({
-        title: 'Sync from Meta complete',
-        description: `${s.campaigns ?? 0} campaigns · ${s.adsets ?? 0} ad sets · ${s.ads ?? 0} ads · ${s.audiences ?? 0} audiences`,
+        title: hasErrors ? 'Sync completed with errors' : 'Sync from Meta complete',
+        description: hasErrors
+          ? `${s.campaigns ?? 0} campaigns · ${s.adsets ?? 0} ad sets · ${s.ads ?? 0} ads\n${errs.slice(0, 3).join('\n')}${errs.length > 3 ? `\n+${errs.length - 3} more` : ''}`
+          : `${s.campaigns ?? 0} campaigns · ${s.adsets ?? 0} ad sets · ${s.ads ?? 0} ads · ${s.audiences ?? 0} audiences`,
+        variant: hasErrors ? 'destructive' : 'default',
       });
     },
     onError: (e: any) => toast({ title: 'Sync Error', description: e.message, variant: 'destructive' }),
