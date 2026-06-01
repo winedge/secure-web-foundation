@@ -4,6 +4,35 @@ import { createSupabaseClient } from "../_shared/auth.ts";
 
 const META_API = "https://graph.facebook.com/v21.0";
 
+// Meta rate-limit error codes that warrant retry with exponential backoff.
+// 4 = app-level rate limit, 17 = user/account request limit, 32 = page-level rate limit,
+// 613 = custom audience rate limit, 80000-80014 = ads-management rate limits, 2 = transient.
+const RATE_LIMIT_CODES = new Set([2, 4, 17, 32, 613, 80000, 80001, 80002, 80003, 80004, 80008, 80014]);
+
+async function fetchMetaWithRetry(url: string, maxAttempts = 5): Promise<any> {
+  let lastErr: any = null;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const resp = await fetch(url);
+      const data = await resp.json();
+      if (!data?.error) return data;
+      const code = Number(data.error.code);
+      const isTransient = data.error.is_transient === true;
+      if (!RATE_LIMIT_CODES.has(code) && !isTransient) return data; // non-retryable, return as-is
+      lastErr = data;
+      // Exponential backoff: 2s, 4s, 8s, 16s, 32s (+jitter), capped
+      const delayMs = Math.min(32000, 2000 * Math.pow(2, attempt)) + Math.floor(Math.random() * 500);
+      console.log(`[meta-retry] code=${code} attempt=${attempt + 1}/${maxAttempts} waiting ${delayMs}ms — ${data.error.message}`);
+      await new Promise((r) => setTimeout(r, delayMs));
+    } catch (e) {
+      lastErr = { error: { message: String(e) } };
+      const delayMs = Math.min(32000, 2000 * Math.pow(2, attempt));
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+  return lastErr ?? { error: { message: "Meta API failed after retries" } };
+}
+
 serve(async (req) => {
   const corsResp = handleCors(req);
   if (corsResp) return corsResp;
