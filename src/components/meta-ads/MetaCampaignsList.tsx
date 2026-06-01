@@ -1,16 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  useMetaCampaigns, useUpdateMetaCampaign, useDeleteMetaCampaign, useSyncFromMeta,
-  useCreateMetaCampaign, useDuplicateMetaCampaign, MetaCampaign,
+  useMetaCampaigns, useDeleteMetaCampaign, useSyncFromMeta,
+  useDuplicateMetaCampaign, MetaCampaign,
 } from '@/hooks/use-meta-campaigns';
 import { useMetaAdSets, useMetaAds } from '@/hooks/use-meta-campaigns';
-import { useVertical } from '@/hooks/use-vertical';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -18,10 +13,11 @@ import {
 import { DollarSign, TrendingUp, Zap, Target, Cloud, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { MetaAdsManagerShell, type ChipFilter } from './MetaAdsManagerShell';
-import { MetaAdsToolbar, ALL_COLUMNS, type ColumnId, type Breakdown } from './MetaAdsToolbar';
+import { MetaAdsToolbar, type ColumnId, type Breakdown } from './MetaAdsToolbar';
 import { MetaAdsTable } from './MetaAdsTable';
 import { PublishCampaignReviewDialog } from './PublishCampaignReviewDialog';
 import { AbTestWizardDialog } from './AbTestWizardDialog';
+import { CampaignFormDialog } from './forms/CampaignFormDialog';
 
 const COL_STORAGE_KEY = 'meta-ads-visible-cols-v1';
 const DEFAULT_COLS: ColumnId[] = ['delivery', 'results', 'cost_per_result', 'budget', 'spent', 'impressions', 'reach', 'ends'];
