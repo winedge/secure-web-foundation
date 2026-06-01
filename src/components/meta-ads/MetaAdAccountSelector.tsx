@@ -66,7 +66,9 @@ export function MetaAdAccountSelector({ connectionId, currentAdAccountId, curren
       toast({ title: 'Ad account selected', description: 'Future syncs will use this account.' });
       qc.invalidateQueries({ queryKey: ['platform-connections'] });
       qc.invalidateQueries({ queryKey: ['meta-firm-connection'] });
+      onSaved?.();
     },
+
     onError: (e: any) => toast({ title: 'Failed to save', description: e.message, variant: 'destructive' }),
   });
 
