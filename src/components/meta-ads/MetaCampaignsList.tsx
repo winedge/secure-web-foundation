@@ -1,16 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  useMetaCampaigns, useUpdateMetaCampaign, useDeleteMetaCampaign, useSyncFromMeta,
-  useCreateMetaCampaign, useDuplicateMetaCampaign, MetaCampaign,
+  useMetaCampaigns, useDeleteMetaCampaign, useSyncFromMeta,
+  useDuplicateMetaCampaign, MetaCampaign,
 } from '@/hooks/use-meta-campaigns';
 import { useMetaAdSets, useMetaAds } from '@/hooks/use-meta-campaigns';
-import { useVertical } from '@/hooks/use-vertical';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -18,10 +13,11 @@ import {
 import { DollarSign, TrendingUp, Zap, Target, Cloud, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { MetaAdsManagerShell, type ChipFilter } from './MetaAdsManagerShell';
-import { MetaAdsToolbar, ALL_COLUMNS, type ColumnId, type Breakdown } from './MetaAdsToolbar';
+import { MetaAdsToolbar, type ColumnId, type Breakdown } from './MetaAdsToolbar';
 import { MetaAdsTable } from './MetaAdsTable';
 import { PublishCampaignReviewDialog } from './PublishCampaignReviewDialog';
 import { AbTestWizardDialog } from './AbTestWizardDialog';
+import { CampaignFormDialog } from './forms/CampaignFormDialog';
 
 const COL_STORAGE_KEY = 'meta-ads-visible-cols-v1';
 const DEFAULT_COLS: ColumnId[] = ['delivery', 'results', 'cost_per_result', 'budget', 'spent', 'impressions', 'reach', 'ends'];
@@ -34,13 +30,9 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
   const { data: campaigns, isLoading } = useMetaCampaigns();
   const { data: allAdSets } = useMetaAdSets();
   const { data: allAds } = useMetaAds();
-  const createCampaign = useCreateMetaCampaign();
-  const updateCampaign = useUpdateMetaCampaign();
   const deleteCampaign = useDeleteMetaCampaign();
   const duplicateCampaign = useDuplicateMetaCampaign();
   const syncFromMeta = useSyncFromMeta();
-  const { categories, term } = useVertical();
-  const categoryLabel = term('category_label', 'Category');
 
   const [selected, setSelected] = useState<string[]>([]);
   const [formOpen, setFormOpen] = useState(false);
@@ -73,11 +65,6 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
     });
   };
 
-  const [formData, setFormData] = useState({
-    name: '', tort_type: '', objective: 'LEAD_GENERATION', daily_budget: 50, lifetime_budget: 0,
-    bid_strategy: 'LOWEST_COST', target_states: '',
-  });
-
   const allCampaigns = campaigns || [];
   const list = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -97,37 +84,8 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
     totalBudget: allCampaigns.reduce((s, c) => s + (c.lifetime_budget || 0), 0),
   };
 
-  const openCreate = () => {
-    setEditCampaign(null);
-    setFormData({ name: '', tort_type: '', objective: 'LEAD_GENERATION', daily_budget: 50, lifetime_budget: 0, bid_strategy: 'LOWEST_COST', target_states: '' });
-    setFormOpen(true);
-  };
-
-  const openEdit = (c: MetaCampaign) => {
-    setEditCampaign(c);
-    setFormData({
-      name: c.name, tort_type: c.tort_type || '', objective: c.objective, daily_budget: c.daily_budget,
-      lifetime_budget: c.lifetime_budget, bid_strategy: c.bid_strategy, target_states: (c.target_states || []).join(', '),
-    });
-    setFormOpen(true);
-  };
-
-  const handleSave = () => {
-    const payload = {
-      name: formData.name,
-      tort_type: formData.tort_type,
-      objective: formData.objective,
-      daily_budget: formData.daily_budget,
-      lifetime_budget: formData.lifetime_budget,
-      bid_strategy: formData.bid_strategy,
-      target_states: formData.target_states.split(',').map((s) => s.trim()).filter(Boolean),
-    };
-    if (editCampaign) {
-      updateCampaign.mutate({ id: editCampaign.id, ...payload }, { onSuccess: () => setFormOpen(false) });
-    } else {
-      createCampaign.mutate({ ...payload, status: 'draft' }, { onSuccess: () => setFormOpen(false) });
-    }
-  };
+  const openCreate = () => { setEditCampaign(null); setFormOpen(true); };
+  const openEdit = (c: MetaCampaign) => { setEditCampaign(c); setFormOpen(true); };
 
   const handleBulkDelete = () => {
     selected.forEach((id) => deleteCampaign.mutate(id));
@@ -215,57 +173,11 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
       />
 
       {/* Create/Edit Dialog */}
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{editCampaign ? 'Edit Campaign' : 'New Meta Campaign (draft)'}</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div><Label>Campaign Name</Label><Input value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} /></div>
-            <div><Label>{categoryLabel}</Label>
-              {categories.length > 0 ? (
-                <Select value={formData.tort_type} onValueChange={(v) => setFormData((p) => ({ ...p, tort_type: v }))}>
-                  <SelectTrigger><SelectValue placeholder={`Select ${categoryLabel.toLowerCase()}`} /></SelectTrigger>
-                  <SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.label}>{c.label}</SelectItem>)}</SelectContent>
-                </Select>
-              ) : (
-                <Input value={formData.tort_type} onChange={(e) => setFormData((p) => ({ ...p, tort_type: e.target.value }))} placeholder={`e.g., ${categoryLabel}`} />
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label>Objective</Label>
-                <Select value={formData.objective} onValueChange={(v) => setFormData((p) => ({ ...p, objective: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="LEAD_GENERATION">Lead Generation</SelectItem>
-                    <SelectItem value="CONVERSIONS">Conversions</SelectItem>
-                    <SelectItem value="TRAFFIC">Traffic</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div><Label>Bid Strategy</Label>
-                <Select value={formData.bid_strategy} onValueChange={(v) => setFormData((p) => ({ ...p, bid_strategy: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="LOWEST_COST">Lowest Cost</SelectItem>
-                    <SelectItem value="COST_CAP">Cost Cap</SelectItem>
-                    <SelectItem value="BID_CAP">Bid Cap</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label>Daily Budget ($)</Label><Input type="number" value={formData.daily_budget} onChange={(e) => setFormData((p) => ({ ...p, daily_budget: Number(e.target.value) }))} /></div>
-              <div><Label>Lifetime Budget ($)</Label><Input type="number" value={formData.lifetime_budget} onChange={(e) => setFormData((p) => ({ ...p, lifetime_budget: Number(e.target.value) }))} /></div>
-            </div>
-            <div><Label>Target States (comma-separated)</Label><Input value={formData.target_states} onChange={(e) => setFormData((p) => ({ ...p, target_states: e.target.value }))} placeholder="FL, TX, CA" /></div>
-            <p className="text-xs text-muted-foreground">
-              Saving creates a <strong>draft</strong> only. Click <strong>Review &amp; Publish</strong> on the row to push it live on Meta.
-            </p>
-            <Button onClick={handleSave} disabled={!formData.name || createCampaign.isPending || updateCampaign.isPending} className="w-full">
-              {editCampaign ? 'Update Campaign' : 'Save Draft'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <CampaignFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        editCampaign={editCampaign}
+      />
 
       <AlertDialog open={!!deletingId} onOpenChange={(o) => !o && setDeletingId(null)}>
         <AlertDialogContent>
