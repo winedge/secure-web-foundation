@@ -4522,6 +4522,9 @@ export type Database = {
           start_time: string | null
           status: Database["public"]["Enums"]["meta_campaign_status"] | null
           stop_time: string | null
+          target_country: string | null
+          target_states: string[] | null
+          tort_type: string | null
           updated_at: string
         }
         Insert: {
@@ -4556,6 +4559,9 @@ export type Database = {
           start_time?: string | null
           status?: Database["public"]["Enums"]["meta_campaign_status"] | null
           stop_time?: string | null
+          target_country?: string | null
+          target_states?: string[] | null
+          tort_type?: string | null
           updated_at?: string
         }
         Update: {
@@ -4590,6 +4596,9 @@ export type Database = {
           start_time?: string | null
           status?: Database["public"]["Enums"]["meta_campaign_status"] | null
           stop_time?: string | null
+          target_country?: string | null
+          target_states?: string[] | null
+          tort_type?: string | null
           updated_at?: string
         }
         Relationships: [
