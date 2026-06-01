@@ -572,8 +572,7 @@ serve(async (req) => {
 
       // ── 2) Ad sets (account-level bulk) ──
       const adsetFields = "id,name,campaign_id,status,effective_status,daily_budget,lifetime_budget,optimization_goal,billing_event,bid_strategy,bid_amount,targeting,promoted_object,attribution_spec,destination_type,pacing_type,start_time,end_time,created_time";
-      const asResp = await fetch(`${META_API}/${adAccountId}/adsets?fields=${adsetFields}&limit=200&access_token=${token}`);
-      const asData = await asResp.json();
+      const asData = await fetchMetaWithRetry(`${META_API}/${adAccountId}/adsets?fields=${adsetFields}&limit=200&access_token=${token}`);
       if (asData.error) {
         errors.push(`adsets: ${asData.error.message}`);
       } else {
