@@ -457,7 +457,7 @@ export function AdSetFormDialog({ open, onOpenChange, campaignId, editAdSet, onS
           <div className="flex gap-2 pt-2">
             <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1">Cancel</Button>
             <Button onClick={handleSave} disabled={!canSave} className="flex-1">
-              {editAdSet ? 'Update Ad Set' : 'Create Ad Set'}
+              {saveLabel ?? (editAdSet ? 'Update Ad Set' : 'Create Ad Set')}
             </Button>
           </div>
         </div>
