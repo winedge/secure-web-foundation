@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -9,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { AlertTriangle, ChevronDown, X, Zap, ChevronRight, Circle } from 'lucide-react';
+import { AlertTriangle, ChevronDown, X, Zap } from 'lucide-react';
 import {
   META_OBJECTIVES, META_SPECIAL_AD_CATEGORIES, META_BID_STRATEGIES, META_BUYING_TYPES,
   META_LIMITS, US_STATES,
@@ -18,6 +17,11 @@ import {
   useCreateMetaCampaign, useUpdateMetaCampaign, MetaCampaign,
 } from '@/hooks/use-meta-campaigns';
 import { useVertical } from '@/hooks/use-vertical';
+import {
+  dialogContentCls, inputCls, FieldLabel, Section,
+  WizardHeader, WizardFooter, WIZARD_STEPS,
+} from './wizard-ui';
+
 
 interface Props {
   open: boolean;
