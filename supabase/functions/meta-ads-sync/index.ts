@@ -792,10 +792,12 @@ serve(async (req) => {
 
     // ─── LIVE INSIGHTS for the Ads-Manager table ───
     if (action === "live_insights") {
-      const { firm_id, date_preset } = params;
-      const { data: camps } = await supabase
+      const { firm_id, ad_account_row_id, date_preset } = params;
+      let campsQuery = supabase
         .from("meta_campaigns").select("id, meta_campaign_id")
         .eq("firm_id", firm_id).not("meta_campaign_id", "is", null);
+      if (ad_account_row_id) campsQuery = campsQuery.eq("ad_account_id", ad_account_row_id);
+      const { data: camps } = await campsQuery;
       const insights: Record<string, any> = {};
       for (const c of camps || []) {
         const fields = "impressions,clicks,spend,actions,reach,cost_per_action_type,delivery_info";
