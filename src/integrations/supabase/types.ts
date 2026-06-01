@@ -4187,51 +4187,87 @@ export type Database = {
       meta_ads: {
         Row: {
           ad_set_id: string
+          ai_generated: boolean | null
+          ai_score: number | null
+          body_text: string | null
+          call_to_action: string | null
           conversion_specs: Json | null
           created_at: string
           creative_id: string | null
+          creative_type: string | null
+          description: string | null
+          display_link: string | null
           effective_status: string | null
           firm_id: string
+          headline: string | null
           id: string
+          image_url: string | null
+          link_url: string | null
           meta_ad_id: string | null
+          meta_creative_id: string | null
           name: string
           preview_shareable_link: string | null
           raw: Json | null
           status: Database["public"]["Enums"]["meta_campaign_status"] | null
           tracking_specs: Json | null
           updated_at: string
+          video_url: string | null
         }
         Insert: {
           ad_set_id: string
+          ai_generated?: boolean | null
+          ai_score?: number | null
+          body_text?: string | null
+          call_to_action?: string | null
           conversion_specs?: Json | null
           created_at?: string
           creative_id?: string | null
+          creative_type?: string | null
+          description?: string | null
+          display_link?: string | null
           effective_status?: string | null
           firm_id: string
+          headline?: string | null
           id?: string
+          image_url?: string | null
+          link_url?: string | null
           meta_ad_id?: string | null
+          meta_creative_id?: string | null
           name: string
           preview_shareable_link?: string | null
           raw?: Json | null
           status?: Database["public"]["Enums"]["meta_campaign_status"] | null
           tracking_specs?: Json | null
           updated_at?: string
+          video_url?: string | null
         }
         Update: {
           ad_set_id?: string
+          ai_generated?: boolean | null
+          ai_score?: number | null
+          body_text?: string | null
+          call_to_action?: string | null
           conversion_specs?: Json | null
           created_at?: string
           creative_id?: string | null
+          creative_type?: string | null
+          description?: string | null
+          display_link?: string | null
           effective_status?: string | null
           firm_id?: string
+          headline?: string | null
           id?: string
+          image_url?: string | null
+          link_url?: string | null
           meta_ad_id?: string | null
+          meta_creative_id?: string | null
           name?: string
           preview_shareable_link?: string | null
           raw?: Json | null
           status?: Database["public"]["Enums"]["meta_campaign_status"] | null
           tracking_specs?: Json | null
           updated_at?: string
+          video_url?: string | null
         }
         Relationships: [
           {
