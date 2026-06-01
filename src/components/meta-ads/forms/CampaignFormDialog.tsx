@@ -87,7 +87,7 @@ const COUNTRY_OPTIONS: { value: string; label: string }[] = [
   { value: 'EU', label: 'European Union' },
 ];
 
-export function CampaignFormDialog({ open, onOpenChange, editCampaign }: Props) {
+export function CampaignFormDialog({ open, onOpenChange, editCampaign, onSaved, saveLabel }: Props) {
   const create = useCreateMetaCampaign();
   const update = useUpdateMetaCampaign();
   const { categories, term } = useVertical();
