@@ -10,8 +10,10 @@ import { AutopilotPanel } from '@/components/meta-ads/AutopilotPanel';
 import { MetaPixelPanel } from '@/components/meta-ads/MetaPixelPanel';
 import { MetaLeadFormsPanel } from '@/components/meta-ads/MetaLeadFormsPanel';
 import { MetaSelfLearningPanel } from '@/components/meta-ads/MetaSelfLearningPanel';
+import { MetaConnectionBanner } from '@/components/meta-ads/MetaConnectionBanner';
 import { UpgradeGate } from '@/components/subscription/UpgradeGate';
 import { LayoutDashboard, Target, Megaphone, BarChart3, Bot, Zap, Activity, FileText, Brain } from 'lucide-react';
+
 
 export default function MetaAds() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
@@ -33,7 +35,10 @@ export default function MetaAds() {
             </p>
           </div>
 
+          <MetaConnectionBanner />
+
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+
             <TabsList className="flex flex-wrap w-full h-auto gap-1">
               <TabsTrigger value="campaigns" className="gap-1.5 text-xs sm:text-sm py-2">
                 <LayoutDashboard className="h-4 w-4 hidden sm:block" />
