@@ -36,10 +36,10 @@ export function MetaAdAccountSelector({ connectionId, firmId, currentAdAccountId
   }, [currentAdAccountId]);
 
   const { data: accounts, isLoading, error } = useQuery({
-    queryKey: ['meta-ad-accounts', user?.id],
+    queryKey: ['meta-ad-accounts', firmId || user?.id],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
-        body: { action: 'get_ad_accounts', user_id: user?.id },
+        body: { action: 'get_ad_accounts', user_id: user?.id, firm_id: firmId },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -52,32 +52,18 @@ export function MetaAdAccountSelector({ connectionId, firmId, currentAdAccountId
   const saveMutation = useMutation({
     mutationFn: async (adAccountId: string) => {
       const acc = accounts?.find((a) => a.id === adAccountId);
-      const newMeta = {
-        ...(currentMetadata || {}),
-        ad_account_id: adAccountId,
-        ad_account_name: acc?.name,
-        ad_account_currency: acc?.currency,
-      };
-      const { error } = await (supabase as any)
-        .from('platform_connections')
-        .update({ metadata: newMeta, ad_account_id: adAccountId })
-        .eq('id', connectionId);
+      const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
+        body: {
+          action: 'set_ad_account',
+          user_id: user?.id,
+          firm_id: firmId,
+          connection_id: connectionId,
+          ad_account_id: adAccountId,
+          ad_account: acc,
+        },
+      });
       if (error) throw error;
-
-      if (firmId && acc) {
-        const { error: accountError } = await (supabase as any)
-          .from('meta_ad_accounts')
-          .upsert({
-            firm_id: firmId,
-            meta_ad_account_id: acc.id,
-            name: acc.name,
-            currency: acc.currency,
-            timezone_name: acc.timezone_name,
-            account_status: acc.account_status,
-            raw: acc,
-          }, { onConflict: 'firm_id,meta_ad_account_id' });
-        if (accountError) throw accountError;
-      }
+      if (data?.error) throw new Error(data.error);
     },
     onSuccess: (_data, adAccountId) => {
       toast({ title: 'Ad account selected', description: 'Future syncs will use this account.' });
