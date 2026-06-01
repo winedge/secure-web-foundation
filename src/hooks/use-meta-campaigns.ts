@@ -215,8 +215,8 @@ export function useCreateMetaCampaign() {
         !input.status || input.status === 'draft' || input.created_by_ai === true;
       const insertPayload: any = {
         firm_id: firm.id,
-        ad_account_id: selectedAdAccount?.id ?? input.ad_account_id ?? null,
         ...input,
+        ad_account_id: selectedAdAccount?.id ?? input.ad_account_id ?? null,
         status: isDraft ? 'draft' : input.status,
       };
       const { data, error } = await (supabase as any)
