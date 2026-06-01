@@ -692,8 +692,7 @@ serve(async (req) => {
       }
 
       // ── 4) Custom audiences ──
-      const caResp = await fetch(`${META_API}/${adAccountId}/customaudiences?fields=id,name,description,subtype,approximate_count,retention_days,rule,operation_status&limit=200&access_token=${token}`);
-      const caData = await caResp.json();
+      const caData = await fetchMetaWithRetry(`${META_API}/${adAccountId}/customaudiences?fields=id,name,description,subtype,approximate_count,retention_days,rule,operation_status&limit=200&access_token=${token}`);
       if (caData.error) {
         errors.push(`audiences: ${caData.error.message}`);
       } else {
