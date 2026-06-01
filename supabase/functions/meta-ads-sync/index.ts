@@ -28,14 +28,20 @@ serve(async (req) => {
       return errorResponse("Verification failed", 403);
     }
 
-    // Get user's Facebook connection for access token + ad account
-    const { data: fbConn } = await supabase
+    // Get the firm's Facebook connection first so admins and firm users share the same connection.
+    const firmId = params.firm_id;
+    let connQuery = supabase
       .from("platform_connections")
       .select("*")
-      .eq("user_id", user_id)
       .eq("platform", "facebook")
       .eq("is_active", true)
-      .single();
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (firmId) connQuery = connQuery.eq("firm_id", firmId);
+    else if (user_id) connQuery = connQuery.eq("user_id", user_id);
+
+    const { data: fbConn } = await connQuery.maybeSingle();
 
     if (!fbConn?.access_token) {
       return errorResponse("Facebook not connected. Go to Settings → Connections to connect.");
@@ -44,10 +50,10 @@ serve(async (req) => {
     const token = fbConn.access_token;
 
     // Get ad account ID from metadata or fetch it
-    let adAccountId = fbConn.metadata?.ad_account_id;
+    let adAccountId = params.ad_account_id || fbConn.ad_account_id || fbConn.metadata?.ad_account_id;
     if (!adAccountId) {
       const resp = await fetch(
-        `${META_API}/me/adaccounts?fields=id,name,account_status&access_token=${token}`
+        `${META_API}/me/adaccounts?fields=id,name,account_status,currency,timezone_name&access_token=${token}`
       );
       const data = await resp.json();
       if (data.error) throw new Error(data.error.message);
@@ -55,7 +61,7 @@ serve(async (req) => {
       adAccountId = data.data[0].id;
       await supabase
         .from("platform_connections")
-        .update({ metadata: { ...fbConn.metadata, ad_account_id: adAccountId, ad_accounts: data.data } })
+        .update({ ad_account_id: adAccountId, metadata: { ...fbConn.metadata, ad_account_id: adAccountId, ad_accounts: data.data } })
         .eq("id", fbConn.id);
     }
 
