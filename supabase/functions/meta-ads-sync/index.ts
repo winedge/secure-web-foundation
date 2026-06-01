@@ -460,7 +460,7 @@ serve(async (req) => {
       return jsonResponse({ success: true, data: analyticsRows, count: analyticsRows.length });
     }
 
-    // ─── SYNC ALL  |  pull campaigns from Meta into local DB ───
+    // ─── SYNC ALL  |  pull campaigns + adsets + ads + audiences + insights from Meta ───
     if (action === "sync_from_meta") {
       const { firm_id, ad_account_row_id } = params;
       if (!firm_id) return errorResponse("firm_id is required");
@@ -468,11 +468,8 @@ serve(async (req) => {
       let localAdAccountId = ad_account_row_id;
       if (!localAdAccountId) {
         const { data: existingAccount } = await supabase
-          .from("meta_ad_accounts")
-          .select("id")
-          .eq("firm_id", firm_id)
-          .eq("meta_ad_account_id", adAccountId)
-          .maybeSingle();
+          .from("meta_ad_accounts").select("id")
+          .eq("firm_id", firm_id).eq("meta_ad_account_id", adAccountId).maybeSingle();
 
         if (existingAccount?.id) {
           localAdAccountId = existingAccount.id;
@@ -484,38 +481,46 @@ serve(async (req) => {
           const { data: insertedAccount, error: accountInsertError } = await supabase
             .from("meta_ad_accounts")
             .upsert({
-              firm_id,
-              meta_ad_account_id: adAccountId,
+              firm_id, meta_ad_account_id: adAccountId,
               name: accountData.name || fbConn.metadata?.ad_account_name || adAccountId,
               currency: accountData.currency || fbConn.metadata?.ad_account_currency || null,
               timezone_name: accountData.timezone_name || null,
               account_status: accountData.account_status || null,
               raw: accountData.error ? { id: adAccountId } : accountData,
             }, { onConflict: "firm_id,meta_ad_account_id" })
-            .select("id")
-            .single();
+            .select("id").single();
           if (accountInsertError) return errorResponse(accountInsertError.message);
           localAdAccountId = insertedAccount?.id;
         }
       }
 
-      const resp = await fetch(
-        `${META_API}/${adAccountId}/campaigns?fields=id,name,objective,status,daily_budget,lifetime_budget,bid_strategy,start_time,stop_time&limit=100&access_token=${token}`
-      );
-      const data = await resp.json();
-      if (data.error) return errorResponse(data.error.message);
+      const report: Record<string, number> = {
+        campaigns: 0, adsets: 0, ads: 0, audiences: 0,
+        campaign_insights: 0, adset_insights: 0, ad_insights: 0,
+      };
+      const errors: string[] = [];
 
-      const synced = [];
-      for (const mc of data.data || []) {
-        const campaignPayload = {
-          firm_id,
-          ad_account_id: localAdAccountId,
+      // ── 1) Campaigns ──
+      const campFields = "id,name,objective,status,effective_status,daily_budget,lifetime_budget,budget_remaining,bid_strategy,buying_type,start_time,stop_time,special_ad_categories,attribution_setting,created_time,updated_time";
+      const campResp = await fetch(`${META_API}/${adAccountId}/campaigns?fields=${campFields}&limit=200&access_token=${token}`);
+      const campData = await campResp.json();
+      if (campData.error) return errorResponse(campData.error.message);
+
+      const campaignIdMap = new Map<string, string>(); // metaId → localId
+      for (const mc of campData.data || []) {
+        const payload: any = {
+          firm_id, ad_account_id: localAdAccountId,
           name: mc.name,
           objective: normalizeMetaObjective(mc.objective),
           status: normalizeMetaStatus(mc.status),
+          effective_status: mc.effective_status || null,
           daily_budget: mc.daily_budget ? Number(mc.daily_budget) / 100 : 0,
           lifetime_budget: mc.lifetime_budget ? Number(mc.lifetime_budget) / 100 : 0,
+          budget_remaining: mc.budget_remaining ? Number(mc.budget_remaining) / 100 : null,
           bid_strategy: normalizeMetaBidStrategy(mc.bid_strategy),
+          buying_type: mc.buying_type === "RESERVED" ? "RESERVED" : "AUCTION",
+          special_ad_categories: mc.special_ad_categories || [],
+          attribution_setting: mc.attribution_setting || null,
           meta_campaign_id: mc.id,
           start_time: mc.start_time || null,
           stop_time: mc.stop_time || null,
@@ -523,33 +528,188 @@ serve(async (req) => {
           published_at: new Date().toISOString(),
           raw: mc,
         };
-
         const { data: existing } = await supabase
-          .from("meta_campaigns")
-          .select("id")
-          .eq("firm_id", firm_id)
-          .eq("meta_campaign_id", mc.id)
-          .maybeSingle();
-
+          .from("meta_campaigns").select("id")
+          .eq("firm_id", firm_id).eq("meta_campaign_id", mc.id).maybeSingle();
         if (existing) {
-          const { error: updateError } = await supabase
-            .from("meta_campaigns")
-            .update(campaignPayload)
-            .eq("id", existing.id);
-          if (updateError) return errorResponse(updateError.message);
-          synced.push({ id: existing.id, name: mc.name, action: "updated" });
+          const { error: e } = await supabase.from("meta_campaigns").update(payload).eq("id", existing.id);
+          if (e) errors.push(`campaign ${mc.id}: ${e.message}`);
+          else { campaignIdMap.set(mc.id, existing.id); report.campaigns++; }
         } else {
-          const { data: newCampaign, error: insertError } = await supabase
-            .from("meta_campaigns")
-            .insert(campaignPayload)
-            .select()
-            .single();
-          if (insertError) return errorResponse(insertError.message);
-          synced.push({ id: newCampaign?.id, name: mc.name, action: "created" });
+          const { data: ins, error: e } = await supabase.from("meta_campaigns").insert(payload).select("id").single();
+          if (e) errors.push(`campaign ${mc.id}: ${e.message}`);
+          else if (ins) { campaignIdMap.set(mc.id, ins.id); report.campaigns++; }
         }
       }
 
-      return jsonResponse({ success: true, synced, count: synced.length });
+      // ── 2) Ad sets (account-level bulk) ──
+      const adsetFields = "id,name,campaign_id,status,effective_status,daily_budget,lifetime_budget,optimization_goal,billing_event,bid_strategy,bid_amount,targeting,promoted_object,attribution_spec,destination_type,pacing_type,start_time,end_time,created_time";
+      const asResp = await fetch(`${META_API}/${adAccountId}/adsets?fields=${adsetFields}&limit=200&access_token=${token}`);
+      const asData = await asResp.json();
+      if (asData.error) {
+        errors.push(`adsets: ${asData.error.message}`);
+      } else {
+        const adsetIdMap = new Map<string, string>(); // metaAdsetId → localAdsetId (populated below)
+        for (const as of asData.data || []) {
+          const localCampId = campaignIdMap.get(as.campaign_id);
+          if (!localCampId) continue;
+          const payload: any = {
+            firm_id, campaign_id: localCampId,
+            name: as.name,
+            status: normalizeMetaStatus(as.status),
+            effective_status: as.effective_status || null,
+            optimization_goal: normalizeOptGoal(as.optimization_goal),
+            billing_event: normalizeBillingEvent(as.billing_event),
+            bid_strategy: normalizeMetaBidStrategy(as.bid_strategy),
+            bid_amount: as.bid_amount ? Number(as.bid_amount) / 100 : null,
+            daily_budget: as.daily_budget ? Number(as.daily_budget) / 100 : null,
+            lifetime_budget: as.lifetime_budget ? Number(as.lifetime_budget) / 100 : null,
+            start_time: as.start_time || null,
+            end_time: as.end_time || null,
+            targeting: as.targeting || {},
+            promoted_object: as.promoted_object || {},
+            attribution_spec: as.attribution_spec || {},
+            destination_type: as.destination_type || null,
+            pacing_type: as.pacing_type || null,
+            meta_adset_id: as.id,
+            raw: as,
+          };
+          const { data: existing } = await supabase
+            .from("meta_ad_sets").select("id")
+            .eq("firm_id", firm_id).eq("meta_adset_id", as.id).maybeSingle();
+          if (existing) {
+            const { error: e } = await supabase.from("meta_ad_sets").update(payload).eq("id", existing.id);
+            if (e) errors.push(`adset ${as.id}: ${e.message}`);
+            else { adsetIdMap.set(as.id, existing.id); report.adsets++; }
+          } else {
+            const { data: ins, error: e } = await supabase.from("meta_ad_sets").insert(payload).select("id").single();
+            if (e) errors.push(`adset ${as.id}: ${e.message}`);
+            else if (ins) { adsetIdMap.set(as.id, ins.id); report.adsets++; }
+          }
+        }
+
+        // ── 3) Ads (account-level bulk) ──
+        const adFields = "id,name,adset_id,status,effective_status,tracking_specs,conversion_specs,preview_shareable_link,created_time";
+        const adResp = await fetch(`${META_API}/${adAccountId}/ads?fields=${adFields}&limit=200&access_token=${token}`);
+        const adData = await adResp.json();
+        if (adData.error) {
+          errors.push(`ads: ${adData.error.message}`);
+        } else {
+          for (const ad of adData.data || []) {
+            const localAdsetId = adsetIdMap.get(ad.adset_id);
+            if (!localAdsetId) continue;
+            const payload: any = {
+              firm_id, ad_set_id: localAdsetId,
+              name: ad.name,
+              status: normalizeMetaStatus(ad.status),
+              effective_status: ad.effective_status || null,
+              tracking_specs: ad.tracking_specs || {},
+              conversion_specs: ad.conversion_specs || {},
+              preview_shareable_link: ad.preview_shareable_link || null,
+              meta_ad_id: ad.id,
+              raw: ad,
+            };
+            const { data: existing } = await supabase
+              .from("meta_ads").select("id")
+              .eq("firm_id", firm_id).eq("meta_ad_id", ad.id).maybeSingle();
+            if (existing) {
+              const { error: e } = await supabase.from("meta_ads").update(payload).eq("id", existing.id);
+              if (e) errors.push(`ad ${ad.id}: ${e.message}`); else report.ads++;
+            } else {
+              const { error: e } = await supabase.from("meta_ads").insert(payload);
+              if (e) errors.push(`ad ${ad.id}: ${e.message}`); else report.ads++;
+            }
+          }
+
+          // ── 5) Ad-level insights (account bulk, aggregate per ad) ──
+          const adInsResp = await fetch(`${META_API}/${adAccountId}/insights?level=ad&fields=ad_id,impressions,reach,frequency,clicks,ctr,cpc,cpm,spend,actions,action_values&date_preset=last_30d&limit=500&access_token=${token}`);
+          const adIns = await adInsResp.json();
+          if (!adIns.error) {
+            const today = new Date().toISOString().slice(0, 10);
+            for (const r of adIns.data || []) {
+              const localAdId = (await supabase.from("meta_ads").select("id").eq("firm_id", firm_id).eq("meta_ad_id", r.ad_id).maybeSingle()).data?.id;
+              if (!localAdId) continue;
+              const leads = Number(r.actions?.find((a: any) => a.action_type === "lead")?.value || 0);
+              const { error: e } = await supabase.from("meta_insights_ad_daily").upsert({
+                firm_id, ad_id: localAdId, date_start: today,
+                impressions: Number(r.impressions || 0), reach: Number(r.reach || 0),
+                frequency: r.frequency ? Number(r.frequency) : null,
+                clicks: Number(r.clicks || 0), ctr: r.ctr ? Number(r.ctr) : null,
+                cpc: r.cpc ? Number(r.cpc) : null, cpm: r.cpm ? Number(r.cpm) : null,
+                spend: Number(r.spend || 0), conversions: leads,
+                actions: r.actions || [], raw: r,
+              }, { onConflict: "ad_id,date_start" });
+              if (!e) report.ad_insights++;
+            }
+          }
+        }
+
+        // ── 4b) Adset-level insights (account bulk) ──
+        const asInsResp = await fetch(`${META_API}/${adAccountId}/insights?level=adset&fields=adset_id,impressions,reach,frequency,clicks,ctr,cpc,cpm,spend,actions,action_values&date_preset=last_30d&limit=500&access_token=${token}`);
+        const asIns = await asInsResp.json();
+        if (!asIns.error) {
+          const today = new Date().toISOString().slice(0, 10);
+          for (const r of asIns.data || []) {
+            const localAsId = adsetIdMap.get(r.adset_id);
+            if (!localAsId) continue;
+            const leads = Number(r.actions?.find((a: any) => a.action_type === "lead")?.value || 0);
+            const { error: e } = await supabase.from("meta_insights_adset_daily").upsert({
+              firm_id, ad_set_id: localAsId, date_start: today,
+              impressions: Number(r.impressions || 0), reach: Number(r.reach || 0),
+              frequency: r.frequency ? Number(r.frequency) : null,
+              clicks: Number(r.clicks || 0), ctr: r.ctr ? Number(r.ctr) : null,
+              cpc: r.cpc ? Number(r.cpc) : null, cpm: r.cpm ? Number(r.cpm) : null,
+              spend: Number(r.spend || 0), conversions: leads,
+              actions: r.actions || [], raw: r,
+            }, { onConflict: "ad_set_id,date_start" });
+            if (!e) report.adset_insights++;
+          }
+        }
+      }
+
+      // ── 4) Custom audiences ──
+      const caResp = await fetch(`${META_API}/${adAccountId}/customaudiences?fields=id,name,description,subtype,approximate_count,retention_days,rule,operation_status&limit=200&access_token=${token}`);
+      const caData = await caResp.json();
+      if (caData.error) {
+        errors.push(`audiences: ${caData.error.message}`);
+      } else {
+        for (const ca of caData.data || []) {
+          const { error: e } = await supabase.from("meta_custom_audiences").upsert({
+            firm_id, ad_account_id: localAdAccountId,
+            meta_audience_id: ca.id, name: ca.name || null,
+            description: ca.description || null, subtype: ca.subtype || null,
+            approximate_count: ca.approximate_count ?? null,
+            retention_days: ca.retention_days ?? null,
+            rule: ca.rule || {}, operation_status: ca.operation_status || {},
+            raw: ca,
+          }, { onConflict: "firm_id,meta_audience_id" });
+          if (e) errors.push(`audience ${ca.id}: ${e.message}`); else report.audiences++;
+        }
+      }
+
+      // ── 6) Campaign-level insights (account bulk, aggregate per campaign for "today" snapshot) ──
+      const cInsResp = await fetch(`${META_API}/${adAccountId}/insights?level=campaign&fields=campaign_id,impressions,reach,frequency,clicks,ctr,cpc,cpm,spend,actions,action_values&date_preset=last_30d&limit=500&access_token=${token}`);
+      const cIns = await cInsResp.json();
+      if (!cIns.error) {
+        const today = new Date().toISOString().slice(0, 10);
+        for (const r of cIns.data || []) {
+          const localCid = campaignIdMap.get(r.campaign_id);
+          if (!localCid) continue;
+          const leads = Number(r.actions?.find((a: any) => a.action_type === "lead")?.value || 0);
+          const { error: e } = await supabase.from("meta_insights_campaign_daily").upsert({
+            firm_id, campaign_id: localCid, date_start: today,
+            impressions: Number(r.impressions || 0), reach: Number(r.reach || 0),
+            frequency: r.frequency ? Number(r.frequency) : null,
+            clicks: Number(r.clicks || 0), ctr: r.ctr ? Number(r.ctr) : null,
+            cpc: r.cpc ? Number(r.cpc) : null, cpm: r.cpm ? Number(r.cpm) : null,
+            spend: Number(r.spend || 0), conversions: leads,
+            actions: r.actions || [], raw: r,
+          }, { onConflict: "campaign_id,date_start" });
+          if (!e) report.campaign_insights++;
+        }
+      }
+
+      return jsonResponse({ success: true, synced: report, errors });
     }
 
     // ─── GET AD ACCOUNTS ───
