@@ -37,6 +37,8 @@ export default function MetaAds() {
           </div>
 
           <MetaConnectionBanner />
+          <MetaAdAccountBar />
+
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
             <TabsList className="flex flex-wrap w-full h-auto gap-1">
