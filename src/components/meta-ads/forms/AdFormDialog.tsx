@@ -27,6 +27,8 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   adSetId: string;
   editAd?: MetaAd | null;
+  onSaved?: (id: string) => void;
+  saveLabel?: string;
 }
 
 type FormState = {
