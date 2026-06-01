@@ -519,6 +519,31 @@ serve(async (req) => {
       return jsonResponse({ success: true, meta_ad_id: adData.id });
     }
 
+    if (action === "refresh_ad_creative") {
+      const { firm_id, ad_id, meta_ad_id } = params;
+      if (!firm_id) return errorResponse("Missing firm_id", 400);
+
+      let query = supabase.from("meta_ads").select("*").eq("firm_id", firm_id).limit(1);
+      query = ad_id ? query.eq("id", ad_id) : query.eq("meta_ad_id", meta_ad_id);
+      const { data: localAd, error: localError } = await query.maybeSingle();
+      if (localError) return errorResponse(localError.message);
+      if (!localAd?.meta_ad_id) return errorResponse("Ad is not synced to Meta yet", 400);
+
+      const metaAd = await fetchMetaWithRetry(`${META_API}/${localAd.meta_ad_id}?fields=${AD_CREATIVE_FIELDS}&access_token=${token}`, 3);
+      if (metaAd.error) return errorResponse(metaAd.error.message);
+
+      const creativeFields = await enrichAdCreativeFields(metaAd, token);
+      const { data: updated, error: updateError } = await supabase
+        .from("meta_ads")
+        .update({ ...creativeFields, raw: metaAd })
+        .eq("id", localAd.id)
+        .select("*")
+        .single();
+      if (updateError) return errorResponse(updateError.message);
+
+      return jsonResponse({ success: true, ad: updated });
+    }
+
     // ─── FETCH REAL ANALYTICS FROM META ───
     if (action === "fetch_analytics") {
       const { campaign_id, meta_campaign_id, date_preset } = params;
