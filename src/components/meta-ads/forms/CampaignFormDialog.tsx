@@ -432,57 +432,21 @@ export function CampaignFormDialog({
           )}
         </div>
 
-        {/* ─────────── Sticky Footer ─────────── */}
-        <footer className="px-6 py-3 bg-slate-900/60 backdrop-blur-md border-t border-slate-800 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2">
-            <Circle className="w-2 h-2 fill-amber-500 text-amber-500" />
-            <span className="text-[10px] font-medium text-slate-500">Unsaved draft</span>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => onOpenChange(false)}
-              className="px-3 py-1.5 text-[11px] font-bold text-slate-400 hover:text-white transition-colors rounded-md"
-            >
-              {editCampaign ? 'Cancel' : 'Discard'}
-            </button>
-            <Button
-              onClick={handleSave}
-              disabled={!canSave}
-              className="px-6 py-1.5 h-auto bg-emerald-500 hover:bg-emerald-400 text-[#0F172A] text-[11px] font-bold rounded-md transition-all flex items-center gap-2 disabled:opacity-40 disabled:hover:bg-emerald-500"
-            >
-              {saveLabel ?? (editCampaign ? 'Update Campaign' : 'Save Draft')}
-              <ChevronRight className="w-3 h-3" />
-            </Button>
-          </div>
-        </footer>
+        <WizardFooter
+          primaryLabel={saveLabel ?? (editCampaign ? 'Update Campaign' : 'Save Draft')}
+          onPrimary={handleSave}
+          primaryDisabled={!canSave}
+          primaryLoading={create.isPending || update.isPending}
+          onSecondary={() => onOpenChange(false)}
+          secondaryLabel={editCampaign ? 'Cancel' : 'Discard'}
+          statusLabel={editCampaign ? 'Editing draft' : 'Unsaved draft'}
+        />
       </DialogContent>
     </Dialog>
   );
 }
 
-/* ─────────── helpers / sub-components ─────────── */
-const inputCls =
-  'w-full bg-[#1E293B] border-slate-700 text-white placeholder:text-slate-500 rounded-md px-3 py-1.5 h-9 text-sm focus-visible:ring-1 focus-visible:ring-emerald-500 focus-visible:ring-offset-0';
 
-function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
-  return (
-    <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-tighter block">
-      {children}{required && <span className="text-emerald-500 ml-0.5">*</span>}
-    </label>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-4">
-      <div className="flex items-center gap-3">
-        <h3 className="text-[10px] font-bold tracking-widest text-emerald-500/80 uppercase">{title}</h3>
-        <span className="h-px flex-1 bg-slate-800/60" />
-      </div>
-      {children}
-    </section>
-  );
-}
 
 // ───── Reusable: generic location chip input ─────
 function LocationChipsInput({
