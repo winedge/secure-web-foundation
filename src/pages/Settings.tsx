@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { Save, Building, User, Bell, Shield, Link2, Facebook, Instagram, Linkedin, Twitter, Video, CheckCircle, XCircle, Loader2, RefreshCw, ExternalLink, Scale, MessageCircle, Upload } from 'lucide-react';
 import { TwoFactorSetup } from '@/components/auth/TwoFactorSetup';
 import { WebAuthnSetup } from '@/components/auth/WebAuthnSetup';
+import { MetaAdAccountSelector } from '@/components/meta-ads/MetaAdAccountSelector';
+
 import { ZeroKnowledgeSetup } from '@/components/auth/ZeroKnowledgeSetup';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -600,7 +602,13 @@ export default function Settings() {
                                     {metaVerification.connected ? '✓ Token verified and active' : '✗ Token expired - please reconnect'}
                                   </div>
                                 )}
+                                <MetaAdAccountSelector
+                                  connectionId={fbConn.id}
+                                  currentAdAccountId={(fbConn as any).metadata?.ad_account_id}
+                                  currentMetadata={(fbConn as any).metadata}
+                                />
                               </div>
+
                             );
                           }
                           return null;
