@@ -27,7 +27,7 @@ const OUT_DIR = resolve(__dirname, '..', 'migrations');
 mkdirSync(OUT_DIR, { recursive: true });
 
 const psql = (sql) =>
-  execSync(`psql -tAF $'\\t' -c ${JSON.stringify(sql)}`, { encoding: 'utf8' })
+  execSync(`psql -tAF $'\\t'`, { input: sql, encoding: 'utf8' })
     .trim()
     .split('\n')
     .filter(Boolean)
