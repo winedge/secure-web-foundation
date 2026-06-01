@@ -177,6 +177,8 @@ const App = () => (
                 <Route path="/lp/:slug" element={<LazyRoute><LandingPage /></LazyRoute>} />
                 <Route path="/verify" element={<LazyRoute><VerifyChain /></LazyRoute>} />
                 <Route path="/verify/:leadId" element={<LazyRoute><VerifyChain /></LazyRoute>} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
 
                 {/* Protected routes */}
                 <Route path="/dashboard" element={<ProtectedRoute><LazyRoute><Dashboard /></LazyRoute></ProtectedRoute>} />
