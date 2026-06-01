@@ -997,7 +997,7 @@ serve(async (req) => {
       return jsonResponse({ estimate: d.data });
     }
 
-    // ─── LIVE INSIGHTS for the Ads-Manager table ───
+    // ─── LIVE INSIGHTS for the Ads-Manager table (bulk, account-level) ───
     if (action === "live_insights") {
       const { firm_id, ad_account_row_id, date_preset } = params;
       let campsQuery = supabase
@@ -1005,26 +1005,30 @@ serve(async (req) => {
         .eq("firm_id", firm_id).not("meta_campaign_id", "is", null);
       if (ad_account_row_id) campsQuery = campsQuery.eq("ad_account_id", ad_account_row_id);
       const { data: camps } = await campsQuery;
+      const byMeta = new Map<string, string>();
+      for (const c of camps || []) byMeta.set(c.meta_campaign_id, c.id);
+
+      const fields = "campaign_id,impressions,clicks,spend,actions,reach";
+      const r = await fetch(
+        `${META_API}/${adAccountId}/insights?level=campaign&fields=${fields}&date_preset=${date_preset || "last_30d"}&limit=500&access_token=${token}`
+      );
+      const d = await r.json();
       const insights: Record<string, any> = {};
-      for (const c of camps || []) {
-        const fields = "impressions,clicks,spend,actions,reach,cost_per_action_type,delivery_info";
-        const r = await fetch(
-          `${META_API}/${c.meta_campaign_id}/insights?fields=${fields}&date_preset=${date_preset || "last_30d"}&access_token=${token}`
-        );
-        const d = await r.json();
-        if (d.error) continue;
-        const row = d.data?.[0];
-        if (!row) continue;
-        const leads = Number(row.actions?.find((a: any) => a.action_type === "lead")?.value || 0);
-        const spend = Number(row.spend || 0);
-        insights[c.id] = {
-          impressions: Number(row.impressions || 0),
-          reach: Number(row.reach || 0),
-          spend,
-          results: leads,
-          cost_per_result: leads ? spend / leads : 0,
-          delivery: "active",
-        };
+      if (!d.error) {
+        for (const row of d.data || []) {
+          const localId = byMeta.get(row.campaign_id);
+          if (!localId) continue;
+          const leads = Number(row.actions?.find((a: any) => a.action_type === "lead")?.value || 0);
+          const spend = Number(row.spend || 0);
+          insights[localId] = {
+            impressions: Number(row.impressions || 0),
+            reach: Number(row.reach || 0),
+            spend,
+            results: leads,
+            cost_per_result: leads ? spend / leads : 0,
+            delivery: "active",
+          };
+        }
       }
       return jsonResponse({ insights });
     }
