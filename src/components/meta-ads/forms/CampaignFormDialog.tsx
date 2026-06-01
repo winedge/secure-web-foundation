@@ -106,6 +106,7 @@ export function CampaignFormDialog({ open, onOpenChange, editCampaign }: Props) 
         spend_cap: 0,
         bid_strategy: editCampaign.bid_strategy || 'LOWEST_COST_WITHOUT_CAP',
         tort_type: editCampaign.tort_type || '',
+        target_country: (editCampaign as any).target_country || 'WORLDWIDE',
         target_states: editCampaign.target_states || [],
       });
     } else {
