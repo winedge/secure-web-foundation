@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ExternalLink } from 'lucide-react';
 import { MetaTableShell, MetaStatusBadge, type MetaTableColumn } from './MetaTableShell';
 import { useMetaAdsTable, useMetaAdSetsLookup, useMetaCampaignsLookup, type AdRow } from '@/hooks/use-meta-tables';
+import { AdDetailDialog } from '../AdDetailDialog';
 
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
