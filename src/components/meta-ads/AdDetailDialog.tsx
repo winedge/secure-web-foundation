@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ExternalLink, Loader2, Sparkles } from 'lucide-react';
 import { AdPreviewPanel } from './AdPreviewPanel';
 import { useUpdateMetaAd, useToggleMetaStatus, useMetaAiAssistant, type MetaAd } from '@/hooks/use-meta-campaigns';
+import { useAuth } from '@/lib/auth-context';
+import { useFirm } from '@/hooks/use-firm';
 
 interface Props {
   adId: string | null;
@@ -26,9 +28,14 @@ const CTA_OPTIONS = [
 ];
 
 export function AdDetailDialog({ adId, open, onOpenChange }: Props) {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  const { data: firm } = useFirm();
   const update = useUpdateMetaAd();
   const toggle = useToggleMetaStatus();
   const ai = useMetaAiAssistant();
+  const [refreshedFor, setRefreshedFor] = useState<string | null>(null);
+  const [isRefreshingCreative, setIsRefreshingCreative] = useState(false);
 
   const { data: ad, isLoading } = useQuery({
     queryKey: ['meta-ad-detail', adId],
@@ -64,6 +71,27 @@ export function AdDetailDialog({ adId, open, onOpenChange }: Props) {
       });
     }
   }, [ad]);
+
+  useEffect(() => {
+    const needsCreativeRefresh = ad?.meta_ad_id && (!ad.body_text || !ad.headline || !ad.image_url);
+    if (!open || !ad || !firm?.id || !user?.id || !needsCreativeRefresh || refreshedFor === ad.id) return;
+
+    setRefreshedFor(ad.id);
+    setIsRefreshingCreative(true);
+    supabase.functions.invoke('meta-ads-sync', {
+      body: {
+        action: 'refresh_ad_creative',
+        user_id: user.id,
+        firm_id: firm.id,
+        ad_id: ad.id,
+      },
+    }).then(({ data, error }) => {
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.ad) qc.setQueryData(['meta-ad-detail', ad.id], data.ad);
+    }).catch((err) => console.warn('Meta creative refresh failed:', err))
+      .finally(() => setIsRefreshingCreative(false));
+  }, [ad, firm?.id, open, qc, refreshedFor, user?.id]);
 
   const handleSave = () => {
     if (!ad) return;
@@ -139,8 +167,8 @@ export function AdDetailDialog({ adId, open, onOpenChange }: Props) {
 
               <div className="flex justify-end">
                 <Button variant="outline" size="sm" onClick={generateWithAi} disabled={ai.isPending} className="gap-2">
-                  {ai.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                  Generate with AI
+                  {ai.isPending || isRefreshingCreative ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  {isRefreshingCreative ? 'Loading Meta creative' : 'Generate with AI'}
                 </Button>
               </div>
 
