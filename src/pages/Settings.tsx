@@ -95,6 +95,10 @@ export default function Settings() {
     exchangedCodeRef.current = code;
 
     console.log('[MetaOAuth] callback received, exchanging code…');
+    toast({
+      title: 'Connecting Facebook…',
+      description: 'Exchanging authorization code and syncing your pages. This may take a few seconds.',
+    });
     exchangeToken.mutate(code, {
       onSuccess: (data) => {
         console.log('[MetaOAuth] exchange success', data);
@@ -109,6 +113,7 @@ export default function Settings() {
         });
       },
     });
+
   }, [searchParams, user]);
 
   const handleVerifyMeta = async () => {
