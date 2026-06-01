@@ -530,7 +530,17 @@ export default function Settings() {
 
           <TabsContent value="connections">
             <div className="space-y-4">
+              {exchangeToken.isPending && (
+                <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-900 px-4 py-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-blue-600 dark:text-blue-400 shrink-0" />
+                  <div className="text-sm">
+                    <p className="font-medium text-blue-900 dark:text-blue-200">Connecting your Facebook account…</p>
+                    <p className="text-blue-700 dark:text-blue-300/80 text-xs">Exchanging the authorization code and syncing your pages. Please don't close this tab.</p>
+                  </div>
+                </div>
+              )}
               <Card>
+
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Link2 className="h-5 w-5" />
