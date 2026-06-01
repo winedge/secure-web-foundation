@@ -1,0 +1,68 @@
+[
+  {
+    "id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "slug": "mass_tort",
+    "name": "Mass Tort Legal",
+    "description": "Legal firms handling mass tort, personal injury, and class action cases",
+    "icon": "Scale",
+    "is_system": true,
+    "is_active": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "slug": "skin_clinic",
+    "name": "Skin & Aesthetics Clinic",
+    "description": "Dermatology, cosmetic, and aesthetics practices",
+    "icon": "Sparkles",
+    "is_system": true,
+    "is_active": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "slug": "real_estate",
+    "name": "Real Estate",
+    "description": "Residential and commercial real estate brokerages and agents",
+    "icon": "Home",
+    "is_system": true,
+    "is_active": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "slug": "solar",
+    "name": "Solar & Energy",
+    "description": "Solar installation, battery, and renewable energy providers",
+    "icon": "Sun",
+    "is_system": true,
+    "is_active": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "slug": "dental",
+    "name": "Dental Practice",
+    "description": "General, cosmetic, and orthodontic dental practices",
+    "icon": "Smile",
+    "is_system": true,
+    "is_active": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "slug": "home_services",
+    "name": "Home Services",
+    "description": "HVAC, plumbing, roofing, landscaping, and home improvement",
+    "icon": "Wrench",
+    "is_system": true,
+    "is_active": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  }
+]

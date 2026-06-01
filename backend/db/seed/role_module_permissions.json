@@ -1,0 +1,839 @@
+[
+  {
+    "id": "2508ff4e-fdc1-4079-b1a3-f4c45c8c5fc7",
+    "role": "firm_owner",
+    "module_key": "dashboard",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "7afb4ed7-40f9-444e-b7b5-68ee57c5a673",
+    "role": "firm_owner",
+    "module_key": "marketplace",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "11fb9115-c1f2-4e23-ada7-b9258b865617",
+    "role": "firm_owner",
+    "module_key": "my_leads",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "b6096353-4a44-4a33-bdf4-d193e02846a1",
+    "role": "firm_owner",
+    "module_key": "intake_submissions",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "f25ebb5b-d915-44ff-a9c8-57644f1b9439",
+    "role": "firm_owner",
+    "module_key": "campaigns",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "82ead243-ba3b-4045-a8f5-175dbc7c0042",
+    "role": "firm_owner",
+    "module_key": "meta_ads",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "3c612399-16a6-4dbd-bcb9-f3f8cc4a0c27",
+    "role": "firm_owner",
+    "module_key": "google_ads",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "3d87bbb3-3fca-4172-bbce-630844d89f26",
+    "role": "firm_owner",
+    "module_key": "social_calendar",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "70fb7eee-a887-49b5-9ab8-d2d670bffcce",
+    "role": "firm_owner",
+    "module_key": "competitor_intelligence",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "ee6be43b-415c-4e5d-b94b-46e722f44cdb",
+    "role": "firm_owner",
+    "module_key": "market_pulse",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "e44327a7-826f-4a17-bd56-2af72f786499",
+    "role": "firm_owner",
+    "module_key": "predictive_leads",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "fbdcff91-aff0-4d22-8718-9d8fb0a96e62",
+    "role": "firm_owner",
+    "module_key": "intent_signals",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "a0cf1945-fa05-4d8d-8021-27144635f599",
+    "role": "firm_owner",
+    "module_key": "lookalike_audience",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "9dfef699-9983-4a48-9cc0-66c80b2e37eb",
+    "role": "firm_owner",
+    "module_key": "geofence_campaigns",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "9df9d2d6-be67-4741-8aac-26ae8140112e",
+    "role": "firm_owner",
+    "module_key": "dark_funnel",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "43531a8b-f5ad-4eb2-973d-3d7342f79106",
+    "role": "firm_owner",
+    "module_key": "creative_studio",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "b365dc21-170c-4bdb-b372-be6e535bbdaf",
+    "role": "firm_owner",
+    "module_key": "viral_content",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "f4d6ece6-86ec-4c49-a968-f899bead0675",
+    "role": "firm_owner",
+    "module_key": "video_ads",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "cc521f3b-0190-4d51-987f-333480e899f8",
+    "role": "firm_owner",
+    "module_key": "judge_intelligence",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "05f3c112-74fd-49a7-b8ae-0ec9795cf5f4",
+    "role": "firm_owner",
+    "module_key": "evidence_vault",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "557af288-72f6-4de4-a9f5-53f3c77d8e9e",
+    "role": "firm_owner",
+    "module_key": "benchmarks",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "8b73f2c5-37de-42f4-8160-cffbe41498e8",
+    "role": "firm_owner",
+    "module_key": "cross_platform_autopilot",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "97277b95-ff16-49b3-a047-ca04c57dc3e1",
+    "role": "firm_owner",
+    "module_key": "wallet",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "0d06a692-4eb4-4600-b04a-b9348e465399",
+    "role": "firm_owner",
+    "module_key": "reports",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "aeba5fe9-281e-4d9b-88b8-289ea7241609",
+    "role": "firm_owner",
+    "module_key": "intake_builder",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "f2ce2aa0-48f8-44b1-b056-ed3cdccc83ce",
+    "role": "firm_owner",
+    "module_key": "teams",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "26997a5c-4ca8-482d-ac0b-29c0484c247d",
+    "role": "firm_owner",
+    "module_key": "smart_alerts",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "d32fd3c0-f7db-4ccd-8068-00f35e930331",
+    "role": "firm_owner",
+    "module_key": "referral_network",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "499784ed-925b-41b2-8813-8a1d5c906d76",
+    "role": "firm_owner",
+    "module_key": "fraud_detection",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "84210abb-e393-427b-b80e-4ec9686511c6",
+    "role": "firm_owner",
+    "module_key": "crm_integrations",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "7ac33ce0-8a67-42ca-afeb-8b5c8a897cd6",
+    "role": "firm_owner",
+    "module_key": "settings",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "a77211e0-4e9e-4c92-a437-80552c4de39d",
+    "role": "firm_staff",
+    "module_key": "dashboard",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "00165539-5c2a-4ef2-8925-4d74d70d6f33",
+    "role": "firm_staff",
+    "module_key": "marketplace",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "733f143f-7b0b-4f2c-91ca-38ae19225133",
+    "role": "firm_staff",
+    "module_key": "my_leads",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "0bed9faa-1bb0-43c7-bd1e-69e766be7f9d",
+    "role": "firm_staff",
+    "module_key": "intake_submissions",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "744d5e8c-55cd-4a8e-94f5-37e0b573aafe",
+    "role": "firm_staff",
+    "module_key": "campaigns",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "4deeb7c0-c88e-4880-8126-6d68c51bf5ff",
+    "role": "firm_staff",
+    "module_key": "meta_ads",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "bd7212a1-839c-4c32-a111-852608105ad5",
+    "role": "firm_staff",
+    "module_key": "google_ads",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "a2d1f536-ee04-4319-bc78-6dbc5849e67e",
+    "role": "firm_staff",
+    "module_key": "social_calendar",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "0cdff85c-b5a1-4099-bd58-6dc94f541849",
+    "role": "firm_staff",
+    "module_key": "competitor_intelligence",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "8d97f131-663f-4d37-b024-d1224cafaa14",
+    "role": "firm_staff",
+    "module_key": "market_pulse",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "520be062-f0b1-43f9-8501-ada08b43aef0",
+    "role": "firm_staff",
+    "module_key": "predictive_leads",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "0de63971-7211-4e9f-b0d8-fed6f4f36832",
+    "role": "firm_staff",
+    "module_key": "intent_signals",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "c7acc198-b554-4f49-9067-98df402f2c88",
+    "role": "firm_staff",
+    "module_key": "lookalike_audience",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "070ab0dd-9454-4ae7-aeb5-422de59def11",
+    "role": "firm_staff",
+    "module_key": "geofence_campaigns",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "0568dcd0-e51f-4d03-83c8-222a3d3476ea",
+    "role": "firm_staff",
+    "module_key": "dark_funnel",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "91f1f042-111c-4807-8d9e-39b8b28483ca",
+    "role": "firm_staff",
+    "module_key": "creative_studio",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "e759518e-85f9-4f6c-baa7-a52f6662093e",
+    "role": "firm_staff",
+    "module_key": "viral_content",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "6adb9f5c-5663-45b7-b2d1-a5162c0f56af",
+    "role": "firm_staff",
+    "module_key": "video_ads",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "614e46ce-c32a-4966-ad80-673ea049d363",
+    "role": "firm_staff",
+    "module_key": "judge_intelligence",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "6180f2f6-1c24-4f4d-bd83-2d7539cb35c1",
+    "role": "firm_staff",
+    "module_key": "evidence_vault",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "9904e62d-9292-4aec-a8d1-0266c00e063c",
+    "role": "firm_staff",
+    "module_key": "benchmarks",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "caf187e4-9b28-49ec-9963-e89fe9f8af1d",
+    "role": "firm_staff",
+    "module_key": "cross_platform_autopilot",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "2b4dec78-b831-4b5c-b0b3-bf2a3b1cf59b",
+    "role": "firm_staff",
+    "module_key": "wallet",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "14a0d201-2dc2-4dbd-927d-024e651f317c",
+    "role": "firm_staff",
+    "module_key": "reports",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "209fdb21-3dba-4cc8-bb63-127f80698975",
+    "role": "firm_staff",
+    "module_key": "intake_builder",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "97f8c9cc-d16e-4b12-93ce-bdc8d7125cb7",
+    "role": "firm_staff",
+    "module_key": "teams",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "0fbc9cc9-14eb-4785-bd32-8401d744091c",
+    "role": "firm_staff",
+    "module_key": "smart_alerts",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "dcd3b5a6-47fb-456e-b085-1882f88e5412",
+    "role": "firm_staff",
+    "module_key": "referral_network",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "eb0d954f-62b8-412f-ab8d-c433f43cdb06",
+    "role": "firm_staff",
+    "module_key": "fraud_detection",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "f455ebc6-ef96-4822-a85d-0e16924f5196",
+    "role": "firm_staff",
+    "module_key": "crm_integrations",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "41f8d565-f334-49bd-ab32-09d20303b7b5",
+    "role": "firm_staff",
+    "module_key": "settings",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "3956db55-2b41-4c00-b514-4bddb1e06a63",
+    "role": "claimant",
+    "module_key": "dashboard",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "c5c28248-8bde-4752-a6e0-5ac378e2d1db",
+    "role": "claimant",
+    "module_key": "marketplace",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "f2a7957d-ba51-4390-84ce-34f26ff6a3f9",
+    "role": "claimant",
+    "module_key": "my_leads",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "730c4a20-36b1-4526-b6b6-8e764bbc2316",
+    "role": "claimant",
+    "module_key": "intake_submissions",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "7e90c0dc-618a-4901-b99e-763e5aae64ff",
+    "role": "claimant",
+    "module_key": "campaigns",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "1924d9c4-0d4d-44ea-9350-6579be8c927d",
+    "role": "claimant",
+    "module_key": "meta_ads",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "12377ad8-64eb-434e-b1dc-349116d1f774",
+    "role": "claimant",
+    "module_key": "google_ads",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "9b012dad-c388-4ae9-8e6e-e9e705cab4a4",
+    "role": "claimant",
+    "module_key": "social_calendar",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "c2931203-e0e8-4c67-a824-78ad2c5c0314",
+    "role": "claimant",
+    "module_key": "competitor_intelligence",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "b30ab548-5824-4e6b-8bba-f6f043a32aa5",
+    "role": "claimant",
+    "module_key": "market_pulse",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "2ae5e3ee-9b5c-443b-854a-92692d13a6ff",
+    "role": "claimant",
+    "module_key": "predictive_leads",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "6731914c-b710-44b4-805f-5c36df925245",
+    "role": "claimant",
+    "module_key": "intent_signals",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "3229f15f-a704-4d2e-8d5d-17d1618d9a75",
+    "role": "claimant",
+    "module_key": "lookalike_audience",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "754e6ba8-6b10-4dfd-86e9-515eff3fd621",
+    "role": "claimant",
+    "module_key": "geofence_campaigns",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "ebd782ce-bcc3-406f-b38c-d934a0c4d17c",
+    "role": "claimant",
+    "module_key": "dark_funnel",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "6922851d-6e27-4d84-aca5-77fd23077be0",
+    "role": "claimant",
+    "module_key": "creative_studio",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "e43e150a-0e00-4bad-9394-970d81a9aa01",
+    "role": "claimant",
+    "module_key": "viral_content",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "c28efc79-40fc-40a9-9324-f60707e7f368",
+    "role": "claimant",
+    "module_key": "video_ads",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "9a642f73-f9c4-4b94-a495-0114af3bf10e",
+    "role": "claimant",
+    "module_key": "judge_intelligence",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "b768a2bd-dfc7-4e4e-8321-a3c989e7c313",
+    "role": "claimant",
+    "module_key": "evidence_vault",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "7221561b-b026-4d33-b867-f035c79ca648",
+    "role": "claimant",
+    "module_key": "benchmarks",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "eede1957-d0ba-424f-ad78-d9b7313ca742",
+    "role": "claimant",
+    "module_key": "cross_platform_autopilot",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "8ea20837-8532-4b3a-a34f-aac817b23f1d",
+    "role": "claimant",
+    "module_key": "wallet",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "9e726968-ab2c-4509-9423-ff5633b8b19a",
+    "role": "claimant",
+    "module_key": "reports",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "e5eec3d8-d0db-43c8-875b-1a3be327ac5f",
+    "role": "claimant",
+    "module_key": "intake_builder",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "16fe7eb4-b057-4147-ad85-425b622c36f3",
+    "role": "claimant",
+    "module_key": "teams",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "5eef8745-5184-40b3-bbb3-501d6c7187dc",
+    "role": "claimant",
+    "module_key": "smart_alerts",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "ad667fa7-f0bf-4db0-bdc0-5a80dafb5f16",
+    "role": "claimant",
+    "module_key": "referral_network",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "41f49c61-a9a2-4210-a8a4-6757987c1f36",
+    "role": "claimant",
+    "module_key": "fraud_detection",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "7e75677e-215b-498b-9bbc-9320797a1036",
+    "role": "claimant",
+    "module_key": "crm_integrations",
+    "is_enabled": false,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  },
+  {
+    "id": "7f9f526d-c015-47ae-9c6f-5dd909047e4c",
+    "role": "claimant",
+    "module_key": "settings",
+    "is_enabled": true,
+    "updated_by": null,
+    "created_at": "2026-02-25T04:54:03.801366+00:00",
+    "updated_at": "2026-02-25T04:54:03.801366+00:00"
+  }
+]

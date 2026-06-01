@@ -1,0 +1,116 @@
+[
+  {
+    "id": "8db4063a-b6e9-4b47-b1b5-fb31e3dba0f1",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "terminology": {
+      "lead_plural": "Leads",
+      "client_plural": "Claimants",
+      "lead_singular": "Lead",
+      "category_label": "Tort Type",
+      "pipeline_title": "Case Pipeline",
+      "category_plural": "Tort Types",
+      "client_singular": "Claimant",
+      "evaluator_title": "AI Case Evaluator",
+      "evaluator_subject": "case",
+      "marketplace_title": "Mass Tort Marketplace"
+    },
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "4db11394-e8f1-4948-b0e4-251e4b8f6a6a",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "terminology": {
+      "lead_plural": "Patient Inquiries",
+      "client_plural": "Patients",
+      "lead_singular": "Patient Inquiry",
+      "category_label": "Treatment Type",
+      "pipeline_title": "Patient Pipeline",
+      "category_plural": "Treatment Types",
+      "client_singular": "Patient",
+      "evaluator_title": "AI Patient Evaluator",
+      "evaluator_subject": "consultation",
+      "marketplace_title": "Patient Lead Marketplace"
+    },
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "ecf04eb2-0b62-45a4-bac6-b9c334aaaad7",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "terminology": {
+      "lead_plural": "Leads",
+      "client_plural": "Clients",
+      "lead_singular": "Lead",
+      "category_label": "Property Type",
+      "pipeline_title": "Deal Pipeline",
+      "category_plural": "Property Types",
+      "client_singular": "Client",
+      "evaluator_title": "AI Lead Evaluator",
+      "evaluator_subject": "lead",
+      "marketplace_title": "Real Estate Lead Marketplace"
+    },
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "8deef91c-f042-4d69-a001-02aa9a12a3b4",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "terminology": {
+      "lead_plural": "Leads",
+      "client_plural": "Customers",
+      "lead_singular": "Lead",
+      "category_label": "Service Type",
+      "pipeline_title": "Project Pipeline",
+      "category_plural": "Service Types",
+      "client_singular": "Customer",
+      "evaluator_title": "AI Site Evaluator",
+      "evaluator_subject": "site",
+      "marketplace_title": "Solar Lead Marketplace"
+    },
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "196de848-2def-41f6-9148-e2d1e6c78b0f",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "terminology": {
+      "lead_plural": "Patient Inquiries",
+      "client_plural": "Patients",
+      "lead_singular": "Patient Inquiry",
+      "category_label": "Procedure Type",
+      "pipeline_title": "Patient Pipeline",
+      "category_plural": "Procedure Types",
+      "client_singular": "Patient",
+      "evaluator_title": "AI Patient Evaluator",
+      "evaluator_subject": "consultation",
+      "marketplace_title": "Dental Patient Marketplace"
+    },
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "64133b32-d0a1-4d27-b834-453ffda4156f",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "terminology": {
+      "lead_plural": "Leads",
+      "client_plural": "Customers",
+      "lead_singular": "Lead",
+      "category_label": "Service Type",
+      "pipeline_title": "Job Pipeline",
+      "category_plural": "Service Types",
+      "client_singular": "Customer",
+      "evaluator_title": "AI Job Evaluator",
+      "evaluator_subject": "job",
+      "marketplace_title": "Home Services Marketplace"
+    },
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  }
+]

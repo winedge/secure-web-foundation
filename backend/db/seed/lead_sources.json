@@ -1,0 +1,72 @@
+[
+  {
+    "id": "5471792f-6643-43ee-b7ad-a6a6d5b4e25a",
+    "name": "CSV Upload",
+    "source_type": "csv_upload",
+    "description": "Leads imported from CSV files",
+    "is_active": true,
+    "configuration": {},
+    "created_at": "2026-02-04T08:41:39.467515+00:00",
+    "updated_at": "2026-02-04T08:41:39.467515+00:00"
+  },
+  {
+    "id": "7450bd04-af10-496f-b783-954f46d5145c",
+    "name": "Google Ads",
+    "source_type": "google_ads",
+    "description": "Leads from Google Ads campaigns",
+    "is_active": true,
+    "configuration": {},
+    "created_at": "2026-02-04T08:41:39.467515+00:00",
+    "updated_at": "2026-02-04T08:41:39.467515+00:00"
+  },
+  {
+    "id": "3c3114fe-2767-428d-84e3-6300b3ea1009",
+    "name": "Meta Ads",
+    "source_type": "meta_ads",
+    "description": "Leads from Meta/Facebook Ads campaigns",
+    "is_active": true,
+    "configuration": {},
+    "created_at": "2026-02-04T08:41:39.467515+00:00",
+    "updated_at": "2026-02-04T08:41:39.467515+00:00"
+  },
+  {
+    "id": "3d2d250c-cf91-4ba9-950b-87b273ce08c7",
+    "name": "Dialer System",
+    "source_type": "dialer",
+    "description": "Leads from outbound dialer",
+    "is_active": true,
+    "configuration": {},
+    "created_at": "2026-02-04T08:41:39.467515+00:00",
+    "updated_at": "2026-02-04T08:41:39.467515+00:00"
+  },
+  {
+    "id": "d19f472e-27eb-4434-b365-0b5cbd181119",
+    "name": "CRM Import",
+    "source_type": "crm",
+    "description": "Leads imported from CRM system",
+    "is_active": true,
+    "configuration": {},
+    "created_at": "2026-02-04T08:41:39.467515+00:00",
+    "updated_at": "2026-02-04T08:41:39.467515+00:00"
+  },
+  {
+    "id": "8c902e39-0785-4793-adb2-bf3a73b9132b",
+    "name": "Intake Form",
+    "source_type": "intake_form",
+    "description": "Leads from website intake form",
+    "is_active": true,
+    "configuration": {},
+    "created_at": "2026-02-04T08:41:39.467515+00:00",
+    "updated_at": "2026-02-04T08:41:39.467515+00:00"
+  },
+  {
+    "id": "a515c8f7-355e-4354-85c1-1167cc1e5786",
+    "name": "Referral",
+    "source_type": "referral",
+    "description": "Referred leads",
+    "is_active": true,
+    "configuration": {},
+    "created_at": "2026-02-04T08:41:39.467515+00:00",
+    "updated_at": "2026-02-04T08:41:39.467515+00:00"
+  }
+]
