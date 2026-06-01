@@ -135,16 +135,24 @@ const uniques = psql(
    ORDER BY tc.table_name, tc.constraint_name, kcu.ordinal_position`
 );
 
+// FK rule code from pg_constraint.confdeltype / confupdtype
+const FK_RULE = { a: 'NO ACTION', r: 'RESTRICT', c: 'CASCADE', n: 'SET NULL', d: 'SET DEFAULT' };
 const fks = psql(
-  `SELECT tc.table_name, kcu.column_name, ccu.table_name AS ref_table, ccu.column_name AS ref_column,
-          rc.delete_rule, rc.update_rule, tc.constraint_name
-   FROM information_schema.table_constraints tc
-   JOIN information_schema.key_column_usage kcu USING (constraint_schema, constraint_name)
-   JOIN information_schema.referential_constraints rc USING (constraint_schema, constraint_name)
-   JOIN information_schema.constraint_column_usage ccu USING (constraint_schema, constraint_name)
-   WHERE tc.constraint_type='FOREIGN KEY' AND tc.table_schema='public'
-   ORDER BY tc.table_name, tc.constraint_name`
+  `SELECT cl.relname, a.attname, rcl.relname, ra.attname,
+          c.confdeltype, c.confupdtype, c.conname, rn.nspname
+   FROM pg_constraint c
+   JOIN pg_class cl ON cl.oid = c.conrelid
+   JOIN pg_namespace n ON n.oid = cl.relnamespace
+   JOIN pg_class rcl ON rcl.oid = c.confrelid
+   JOIN pg_namespace rn ON rn.oid = rcl.relnamespace
+   JOIN unnest(c.conkey)  WITH ORDINALITY k(attnum, ord)  ON true
+   JOIN unnest(c.confkey) WITH ORDINALITY rk(attnum, ord) ON rk.ord = k.ord
+   JOIN pg_attribute a  ON a.attrelid  = c.conrelid  AND a.attnum  = k.attnum
+   JOIN pg_attribute ra ON ra.attrelid = c.confrelid AND ra.attnum = rk.attnum
+   WHERE c.contype='f' AND n.nspname='public'
+   ORDER BY cl.relname, c.conname, k.ord`
 );
+
 
 const indexes = psql(
   `SELECT schemaname||'.'||tablename, indexname, indexdef
