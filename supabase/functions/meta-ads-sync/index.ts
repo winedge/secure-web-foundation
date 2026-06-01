@@ -514,6 +514,314 @@ serve(async (req) => {
       return jsonResponse({ ad_accounts: data.data || [] });
     }
 
+    // ─── PUBLISH AN AI/MANUAL DRAFT TO META (atomic create-tree + activate) ───
+    if (action === "publish_campaign") {
+      const { campaign_id, firm_id } = params;
+      if (!campaign_id) return errorResponse("campaign_id is required");
+
+      const { data: camp } = await supabase
+        .from("meta_campaigns").select("*").eq("id", campaign_id).single();
+      if (!camp) return errorResponse("Campaign not found");
+      if (camp.meta_campaign_id) return errorResponse("Campaign already published to Meta");
+
+      const createdIds: { type: string; id: string }[] = [];
+      const rollback = async () => {
+        for (const { id } of createdIds.reverse()) {
+          try {
+            await fetch(`${META_API}/${id}?access_token=${token}`, { method: "DELETE" });
+          } catch (_) { /* ignore */ }
+        }
+      };
+
+      try {
+        // 1) Campaign (start PAUSED so Meta validates before we activate)
+        const campBody: Record<string, string> = {
+          name: camp.name,
+          objective: mapObjective(camp.objective),
+          status: "PAUSED",
+          special_ad_categories: JSON.stringify(camp.special_ad_categories?.length ? camp.special_ad_categories : []),
+          access_token: token,
+        };
+        if (camp.bid_strategy) campBody.bid_strategy = camp.bid_strategy;
+        if (camp.daily_budget) campBody.daily_budget = String(Math.round(camp.daily_budget * 100));
+
+        const campResp = await fetch(`${META_API}/${adAccountId}/campaigns`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams(campBody),
+        });
+        const campData = await campResp.json();
+        if (campData.error) throw new Error(`Campaign: ${campData.error.message}`);
+        createdIds.push({ type: "campaign", id: campData.id });
+        const metaCampaignId = campData.id;
+
+        // Get page for ad creatives
+        const { data: pageConn } = await supabase
+          .from("platform_connections")
+          .select("page_id, page_access_token")
+          .eq("user_id", user_id).eq("platform", "facebook_page").eq("is_active", true).limit(1).single();
+
+        // 2) Ad sets + 3) Ads
+        const { data: adsets } = await supabase
+          .from("meta_ad_sets").select("*").eq("campaign_id", campaign_id);
+
+        for (const adset of adsets || []) {
+          const targeting: any = {
+            age_min: adset.age_min || 18,
+            age_max: adset.age_max || 65,
+            geo_locations: {
+              countries: ["US"],
+              regions: (adset.locations || []).map((l: any) => ({
+                key: typeof l === "string" ? l : l.key || l.name,
+              })).filter((r: any) => r.key),
+            },
+          };
+          if (adset.interests?.length) {
+            targeting.flexible_spec = [{
+              interests: adset.interests.map((i: any) => ({
+                name: typeof i === "string" ? i : i.name,
+              })),
+            }];
+          }
+
+          const adsetBody: Record<string, string> = {
+            campaign_id: metaCampaignId,
+            name: adset.name,
+            optimization_goal: mapOptimizationGoal(adset.optimization_event),
+            billing_event: "IMPRESSIONS",
+            daily_budget: String(Math.round((adset.daily_budget || camp.daily_budget || 25) * 100)),
+            targeting: JSON.stringify(targeting),
+            status: "PAUSED",
+            access_token: token,
+          };
+          const adsetResp = await fetch(`${META_API}/${adAccountId}/adsets`, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams(adsetBody),
+          });
+          const adsetData = await adsetResp.json();
+          if (adsetData.error) throw new Error(`Ad Set "${adset.name}": ${adsetData.error.message}`);
+          createdIds.push({ type: "adset", id: adsetData.id });
+          await supabase.from("meta_ad_sets").update({ meta_adset_id: adsetData.id, status: "active" }).eq("id", adset.id);
+
+          const { data: ads } = await supabase.from("meta_ads").select("*").eq("ad_set_id", adset.id);
+          for (const ad of ads || []) {
+            if (!pageConn?.page_id) throw new Error("No Facebook page connected | cannot create ad creative");
+
+            const creativeBody: Record<string, string> = {
+              name: `Creative - ${ad.name}`,
+              object_story_spec: JSON.stringify({
+                page_id: pageConn.page_id,
+                link_data: {
+                  message: ad.body_text || "",
+                  link: ad.link_url || "https://example.com",
+                  name: ad.headline || "",
+                  description: ad.description || "",
+                  call_to_action: { type: ad.call_to_action || "LEARN_MORE" },
+                  ...(ad.image_url ? { picture: ad.image_url } : {}),
+                },
+              }),
+              access_token: token,
+            };
+            const crResp = await fetch(`${META_API}/${adAccountId}/adcreatives`, {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams(creativeBody),
+            });
+            const crData = await crResp.json();
+            if (crData.error) throw new Error(`Creative "${ad.name}": ${crData.error.message}`);
+
+            const adBody: Record<string, string> = {
+              name: ad.name,
+              adset_id: adsetData.id,
+              creative: JSON.stringify({ creative_id: crData.id }),
+              status: "PAUSED",
+              access_token: token,
+            };
+            const adResp = await fetch(`${META_API}/${adAccountId}/ads`, {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams(adBody),
+            });
+            const adData = await adResp.json();
+            if (adData.error) throw new Error(`Ad "${ad.name}": ${adData.error.message}`);
+            createdIds.push({ type: "ad", id: adData.id });
+            await supabase.from("meta_ads").update({
+              meta_ad_id: adData.id, meta_creative_id: crData.id, status: "active",
+            }).eq("id", ad.id);
+          }
+        }
+
+        // 4) Flip campaign + adsets + ads to ACTIVE
+        for (const { id } of createdIds) {
+          const r = await fetch(`${META_API}/${id}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ status: "ACTIVE", access_token: token }),
+          });
+          const rd = await r.json();
+          if (rd.error) throw new Error(`Activate ${id}: ${rd.error.message}`);
+        }
+
+        // 5) Mark local campaign published
+        await supabase.from("meta_campaigns").update({
+          meta_campaign_id: metaCampaignId,
+          status: "active",
+          published_at: new Date().toISOString(),
+          published_by: user_id,
+          meta_ad_account_id: adAccountId,
+        }).eq("id", campaign_id);
+
+        return jsonResponse({ success: true, meta_campaign_id: metaCampaignId, created: createdIds.length });
+      } catch (err) {
+        console.error("publish_campaign rollback:", err);
+        await rollback();
+        return errorResponse(err instanceof Error ? err.message : "Publish failed");
+      }
+    }
+
+    // ─── TOGGLE STATUS (campaign / adset / ad) ───
+    if (action === "toggle_status") {
+      const { level, id, status } = params;
+      const tableMap: Record<string, { table: string; metaCol: string }> = {
+        campaign: { table: "meta_campaigns", metaCol: "meta_campaign_id" },
+        adset: { table: "meta_ad_sets", metaCol: "meta_adset_id" },
+        ad: { table: "meta_ads", metaCol: "meta_ad_id" },
+      };
+      const cfg = tableMap[level];
+      if (!cfg) return errorResponse("Invalid level");
+
+      const { data: row } = await supabase.from(cfg.table).select("*").eq("id", id).single();
+      if (!row) return errorResponse("Not found");
+
+      // For campaigns: cannot go ACTIVE unless already published (DB trigger also enforces)
+      if (level === "campaign" && status === "active" && !row.meta_campaign_id) {
+        return errorResponse("Publish this campaign to Meta first.");
+      }
+
+      const metaId = row[cfg.metaCol];
+      if (metaId) {
+        const r = await fetch(`${META_API}/${metaId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            status: status === "active" ? "ACTIVE" : "PAUSED",
+            access_token: token,
+          }),
+        });
+        const rd = await r.json();
+        if (rd.error) return errorResponse(rd.error.message);
+      }
+      await supabase.from(cfg.table).update({ status }).eq("id", id);
+      return jsonResponse({ success: true });
+    }
+
+    // ─── REACH ESTIMATE for the publish review dialog ───
+    if (action === "reach_estimate") {
+      const { campaign_id } = params;
+      const { data: adsets } = await supabase
+        .from("meta_ad_sets").select("*").eq("campaign_id", campaign_id);
+      if (!adsets?.length) return jsonResponse({ estimate: null });
+
+      const a = adsets[0];
+      const targeting = {
+        age_min: a.age_min || 18,
+        age_max: a.age_max || 65,
+        geo_locations: {
+          countries: ["US"],
+          regions: (a.locations || []).map((l: any) => ({
+            key: typeof l === "string" ? l : l.key || l.name,
+          })).filter((r: any) => r.key),
+        },
+      };
+      const url = `${META_API}/${adAccountId}/reachestimate?targeting_spec=${encodeURIComponent(JSON.stringify(targeting))}&optimization_goal=LEAD_GENERATION&access_token=${token}`;
+      const r = await fetch(url);
+      const d = await r.json();
+      if (d.error) return jsonResponse({ estimate: null, error: d.error.message });
+      return jsonResponse({ estimate: d.data });
+    }
+
+    // ─── LIVE INSIGHTS for the Ads-Manager table ───
+    if (action === "live_insights") {
+      const { firm_id, date_preset } = params;
+      const { data: camps } = await supabase
+        .from("meta_campaigns").select("id, meta_campaign_id")
+        .eq("firm_id", firm_id).not("meta_campaign_id", "is", null);
+      const insights: Record<string, any> = {};
+      for (const c of camps || []) {
+        const fields = "impressions,clicks,spend,actions,reach,cost_per_action_type,delivery_info";
+        const r = await fetch(
+          `${META_API}/${c.meta_campaign_id}/insights?fields=${fields}&date_preset=${date_preset || "last_30d"}&access_token=${token}`
+        );
+        const d = await r.json();
+        if (d.error) continue;
+        const row = d.data?.[0];
+        if (!row) continue;
+        const leads = Number(row.actions?.find((a: any) => a.action_type === "lead")?.value || 0);
+        const spend = Number(row.spend || 0);
+        insights[c.id] = {
+          impressions: Number(row.impressions || 0),
+          reach: Number(row.reach || 0),
+          spend,
+          results: leads,
+          cost_per_result: leads ? spend / leads : 0,
+          delivery: "active",
+        };
+      }
+      return jsonResponse({ insights });
+    }
+
+    // ─── DUPLICATE CAMPAIGN ───
+    if (action === "duplicate_campaign") {
+      const { campaign_id, firm_id } = params;
+      const { data: src } = await supabase.from("meta_campaigns").select("*").eq("id", campaign_id).single();
+      if (!src) return errorResponse("Campaign not found");
+      const { id: _omit, created_at, updated_at, meta_campaign_id, published_at, published_by, ...rest } = src;
+      const { data: copy, error: copyErr } = await supabase.from("meta_campaigns").insert({
+        ...rest, firm_id: firm_id || rest.firm_id,
+        name: `${src.name} (Copy)`, status: "draft",
+        meta_campaign_id: null, published_at: null, published_by: null,
+      }).select().single();
+      if (copyErr) return errorResponse(copyErr.message);
+      return jsonResponse({ success: true, id: copy.id });
+    }
+
+    // ─── CREATE A/B TEST (Meta Experiments / ad_studies) ───
+    if (action === "create_ab_test") {
+      const { firm_id, name, variable, cell_a_campaign_id, cell_b_campaign_id, start_date, end_date } = params;
+      const { data: a } = await supabase.from("meta_campaigns").select("meta_campaign_id").eq("id", cell_a_campaign_id).single();
+      const { data: b } = await supabase.from("meta_campaigns").select("meta_campaign_id").eq("id", cell_b_campaign_id).single();
+      if (!a?.meta_campaign_id || !b?.meta_campaign_id) {
+        return errorResponse("Both campaigns must be published to Meta before testing.");
+      }
+      const studyBody: Record<string, string> = {
+        name,
+        type: "SPLIT_TEST",
+        start_time: String(Math.floor(new Date(start_date).getTime() / 1000)),
+        end_time: String(Math.floor(new Date(end_date).getTime() / 1000)),
+        cells: JSON.stringify([
+          { name: "Cell A", treatment: "TEST", adentities: { campaigns: [a.meta_campaign_id] } },
+          { name: "Cell B", treatment: "TEST", adentities: { campaigns: [b.meta_campaign_id] } },
+        ]),
+        objectives: JSON.stringify([{ name: variable, type: "ECOSYSTEM" }]),
+        access_token: token,
+      };
+      const r = await fetch(`${META_API}/${adAccountId}/ad_studies`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(studyBody),
+      });
+      const d = await r.json();
+      if (d.error) return errorResponse(d.error.message);
+      const { data: row, error: rowErr } = await supabase.from("meta_ab_tests").insert({
+        firm_id, name, variable, cell_a_campaign_id, cell_b_campaign_id,
+        start_date, end_date, status: "running",
+        meta_study_id: d.id, created_by: user_id,
+      }).select().single();
+      if (rowErr) return errorResponse(rowErr.message);
+      return jsonResponse({ success: true, id: row.id, meta_study_id: d.id });
+    }
+
     return errorResponse("Unknown action: " + action);
   } catch (e) {
     console.error("meta-ads-sync error:", e);
