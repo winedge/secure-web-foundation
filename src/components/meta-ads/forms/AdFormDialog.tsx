@@ -87,7 +87,7 @@ function counter(value: string, lim: { recommended: number; hard: number }) {
   );
 }
 
-export function AdFormDialog({ open, onOpenChange, adSetId, editAd }: Props) {
+export function AdFormDialog({ open, onOpenChange, adSetId, editAd, onSaved, saveLabel }: Props) {
   const create = useCreateMetaAd();
   const update = useUpdateMetaAd();
   const ai = useMetaAiAssistant();
