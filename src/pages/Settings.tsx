@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -83,15 +83,33 @@ export default function Settings() {
   const [metaVerification, setMetaVerification] = useState<any>(null);
   const [verifying, setVerifying] = useState(false);
 
+  // Guard against React StrictMode double-firing the exchange (which would
+  // consume the FB authorization code twice and fail the second call).
+  const exchangedCodeRef = useRef<string | null>(null);
   useEffect(() => {
+    if (!user) return; // wait for auth so user_id is sent
     const code = searchParams.get('code');
     const callback = searchParams.get('callback');
-    if (code && callback === 'meta') {
-      exchangeToken.mutate(code);
-      // Clean URL
-      window.history.replaceState({}, '', '/settings?tab=connections');
-    }
-  }, [searchParams]);
+    if (!code || callback !== 'meta') return;
+    if (exchangedCodeRef.current === code) return;
+    exchangedCodeRef.current = code;
+
+    console.log('[MetaOAuth] callback received, exchanging code…');
+    exchangeToken.mutate(code, {
+      onSuccess: (data) => {
+        console.log('[MetaOAuth] exchange success', data);
+        window.history.replaceState({}, '', '/settings?tab=connections');
+      },
+      onError: (err: any) => {
+        console.error('[MetaOAuth] exchange failed', err);
+        toast({
+          title: 'Facebook connection failed',
+          description: err?.message || 'The OAuth code could not be exchanged. Check the edge function logs.',
+          variant: 'destructive',
+        });
+      },
+    });
+  }, [searchParams, user]);
 
   const handleVerifyMeta = async () => {
     setVerifying(true);
