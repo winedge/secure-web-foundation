@@ -66,7 +66,7 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
     });
   };
 
-  const allCampaigns = campaigns || [];
+  const allCampaigns = useMemo(() => campaigns || [], [campaigns]);
   const list = useMemo(() => {
     const q = search.trim().toLowerCase();
     return allCampaigns.filter((c) => {
