@@ -1222,3 +1222,13 @@ function normalizeMetaBidStrategy(strategy?: string): string | null {
   const allowed = new Set(["LOWEST_COST_WITHOUT_CAP", "LOWEST_COST_WITH_BID_CAP", "COST_CAP", "LOWEST_COST_WITH_MIN_ROAS"]);
   return strategy && allowed.has(strategy) ? strategy : null;
 }
+
+function normalizeOptGoal(g?: string): string | null {
+  const allowed = new Set(["REACH","IMPRESSIONS","LINK_CLICKS","LANDING_PAGE_VIEWS","POST_ENGAGEMENT","PAGE_LIKES","VIDEO_VIEWS","LEAD_GENERATION","CONVERSIONS","OFFSITE_CONVERSIONS","APP_INSTALLS","VALUE","THRUPLAY","QUALITY_LEAD"]);
+  return g && allowed.has(g) ? g : null;
+}
+
+function normalizeBillingEvent(b?: string): string | null {
+  const allowed = new Set(["IMPRESSIONS","LINK_CLICKS","PAGE_LIKES","POST_ENGAGEMENT","VIDEO_VIEWS","THRUPLAY","APP_INSTALLS"]);
+  return b && allowed.has(b) ? b : null;
+}
