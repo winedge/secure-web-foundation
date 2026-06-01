@@ -88,7 +88,7 @@ export function AdDetailDialog({ adId, open, onOpenChange }: Props) {
     }).then(({ data, error }) => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      if (data?.ad) qc.setQueryData(['meta-ad-detail', ad.id], data.ad);
+      if (data?.ad) qc.setQueryData(['meta-ad-detail', ad.id], (current: any) => ({ ...current, ...data.ad }));
     }).catch((err) => console.warn('Meta creative refresh failed:', err))
       .finally(() => setIsRefreshingCreative(false));
   }, [ad, firm?.id, open, qc, refreshedFor, user?.id]);
