@@ -10,8 +10,10 @@ import { AutopilotPanel } from '@/components/meta-ads/AutopilotPanel';
 import { MetaPixelPanel } from '@/components/meta-ads/MetaPixelPanel';
 import { MetaLeadFormsPanel } from '@/components/meta-ads/MetaLeadFormsPanel';
 import { MetaSelfLearningPanel } from '@/components/meta-ads/MetaSelfLearningPanel';
+import { MetaConnectionBanner } from '@/components/meta-ads/MetaConnectionBanner';
 import { UpgradeGate } from '@/components/subscription/UpgradeGate';
 import { LayoutDashboard, Target, Megaphone, BarChart3, Bot, Zap, Activity, FileText, Brain } from 'lucide-react';
+
 
 export default function MetaAds() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
