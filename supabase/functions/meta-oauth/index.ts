@@ -3,6 +3,20 @@ import { handleCors, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { createSupabaseClient } from "../_shared/auth.ts";
 import { requireUser, requireFirmMember, getUserFirmId } from "../_shared/firm-auth.ts";
 
+async function savePlatformConnection(supabase: any, values: Record<string, unknown>, match: Record<string, unknown>) {
+  let query = supabase.from("platform_connections").select("id");
+  for (const [key, value] of Object.entries(match)) query = query.eq(key, value);
+  const { data: existing, error: lookupError } = await query.order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (lookupError) throw new Error(`Connection lookup failed: ${lookupError.message}`);
+
+  const result = existing?.id
+    ? await supabase.from("platform_connections").update(values).eq("id", existing.id).select().single()
+    : await supabase.from("platform_connections").insert(values).select().single();
+
+  if (result.error) throw new Error(`Connection save failed: ${result.error.message}`);
+  return result.data;
+}
+
 serve(async (req) => {
   const corsResp = handleCors(req);
   if (corsResp) return corsResp;
@@ -74,30 +88,26 @@ serve(async (req) => {
       const permsData = await permsResp.json();
       const grantedPerms = permsData.data?.filter((p: any) => p.status === "granted").map((p: any) => p.permission) || [];
 
-      await supabase.from("platform_connections").upsert(
-        {
-          user_id, firm_id, platform: "facebook",
-          platform_user_id: userData.id, platform_username: userData.name,
-          access_token: longTokenData.access_token,
-          token_expires_at: new Date(Date.now() + (longTokenData.expires_in || 5184000) * 1000).toISOString(),
-          permissions: grantedPerms, is_active: true,
-          metadata: { pages: pagesData.data || [] },
-        },
-        { onConflict: "user_id,platform" }
-      ).select().single();
+      await savePlatformConnection(supabase, {
+        user_id, firm_id, platform: "facebook",
+        platform_user_id: userData.id, platform_username: userData.name,
+        access_token: longTokenData.access_token,
+        token_expires_at: new Date(Date.now() + (longTokenData.expires_in || 5184000) * 1000).toISOString(),
+        permissions: grantedPerms, is_active: true,
+        metadata: { pages: pagesData.data || [] },
+        connected_at: new Date().toISOString(),
+      }, { user_id, platform: "facebook" });
 
       if (pagesData.data) {
         for (const page of pagesData.data) {
-          await supabase.from("platform_connections").upsert(
-            {
-              user_id, firm_id, platform: "facebook_page",
-              platform_user_id: page.id, platform_username: page.name,
-              page_id: page.id, page_name: page.name,
-              page_access_token: page.access_token, access_token: longTokenData.access_token,
-              is_active: true, metadata: { category: page.category },
-            },
-            { onConflict: "user_id,platform" }
-          );
+          await savePlatformConnection(supabase, {
+            user_id, firm_id, platform: "facebook_page",
+            platform_user_id: page.id, platform_username: page.name,
+            page_id: page.id, page_name: page.name,
+            page_access_token: page.access_token, access_token: longTokenData.access_token,
+            is_active: true, metadata: { category: page.category },
+            connected_at: new Date().toISOString(),
+          }, { user_id, platform: "facebook_page", page_id: page.id });
         }
       }
 
