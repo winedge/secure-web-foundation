@@ -648,8 +648,7 @@ serve(async (req) => {
           }
 
           // ── 5) Ad-level insights (account bulk, aggregate per ad) ──
-          const adInsResp = await fetch(`${META_API}/${adAccountId}/insights?level=ad&fields=ad_id,impressions,reach,frequency,clicks,ctr,cpc,cpm,spend,actions,action_values&date_preset=last_30d&limit=500&access_token=${token}`);
-          const adIns = await adInsResp.json();
+          const adIns = await fetchMetaWithRetry(`${META_API}/${adAccountId}/insights?level=ad&fields=ad_id,impressions,reach,frequency,clicks,ctr,cpc,cpm,spend,actions,action_values&date_preset=last_30d&limit=500&access_token=${token}`);
           if (!adIns.error) {
             const today = new Date().toISOString().slice(0, 10);
             for (const r of adIns.data || []) {
