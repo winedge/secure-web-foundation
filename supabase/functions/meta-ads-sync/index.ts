@@ -33,7 +33,7 @@ async function fetchMetaWithRetry(url: string, maxAttempts = 5): Promise<any> {
   return lastErr ?? { error: { message: "Meta API failed after retries" } };
 }
 
-const AD_CREATIVE_FIELDS = "id,name,adset_id,status,effective_status,tracking_specs,conversion_specs,preview_shareable_link,created_time,creative{id,title,body,name,image_url,thumbnail_url,video_id,call_to_action_type,object_story_spec,asset_feed_spec,link_url,template_url}";
+const AD_CREATIVE_FIELDS = "id,name,adset_id,status,effective_status,tracking_specs,conversion_specs,preview_shareable_link,created_time,creative{id,title,body,name,image_url,thumbnail_url,video_id,call_to_action_type,object_story_id,effective_object_story_id,object_story_spec,asset_feed_spec,link_url,template_url}";
 
 function firstCreativeValue(arr: any): string | null {
   if (!Array.isArray(arr) || !arr.length) return null;
@@ -63,6 +63,46 @@ function extractAdCreativeFields(ad: any) {
     creative_type: ld.video_id || cr.video_id ? "video"
       : (Array.isArray(ld.child_attachments) && ld.child_attachments.length ? "carousel" : "image"),
   };
+}
+
+function getPostObjectId(ad: any): string | null {
+  const cr = ad?.creative || {};
+  if (cr.effective_object_story_id || cr.object_story_id) return cr.effective_object_story_id || cr.object_story_id;
+  const spec = Array.isArray(ad?.tracking_specs) ? ad.tracking_specs.find((s: any) => s?.post?.[0] && s?.["post.wall"]?.[0]) : null;
+  return spec ? `${spec["post.wall"][0]}_${spec.post[0]}` : null;
+}
+
+async function enrichAdCreativeFields(ad: any, token: string) {
+  const fields = extractAdCreativeFields(ad);
+  const cr = ad?.creative || {};
+
+  if ((!fields.headline || !fields.body_text || !fields.link_url) && cr.video_id) {
+    const video = await fetchMetaWithRetry(`${META_API}/${cr.video_id}?fields=title,description,picture,permalink_url&access_token=${token}`, 3);
+    if (!video?.error) {
+      fields.headline ||= video.title || null;
+      fields.body_text ||= video.description || null;
+      fields.image_url ||= video.picture || null;
+      fields.link_url ||= video.permalink_url || null;
+    }
+  }
+
+  if (!fields.headline || !fields.body_text || !fields.description || !fields.link_url) {
+    const postId = getPostObjectId(ad);
+    if (postId) {
+      const post = await fetchMetaWithRetry(`${META_API}/${postId}?fields=message,permalink_url,attachments{title,description,url,media,target,subattachments}&access_token=${token}`, 3);
+      const attachment = post?.attachments?.data?.[0];
+      const sub = attachment?.subattachments?.data?.[0];
+      if (!post?.error) {
+        fields.body_text ||= post.message || null;
+        fields.headline ||= attachment?.title || sub?.title || fields.body_text?.split("\n")[0]?.slice(0, 40) || null;
+        fields.description ||= attachment?.description || sub?.description || null;
+        fields.link_url ||= attachment?.target?.url || attachment?.url || sub?.target?.url || post.permalink_url || null;
+        fields.image_url ||= attachment?.media?.image?.src || sub?.media?.image?.src || null;
+      }
+    }
+  }
+
+  return fields;
 }
 
 serve(async (req) => {
