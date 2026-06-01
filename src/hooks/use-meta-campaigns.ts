@@ -20,6 +20,12 @@ export interface MetaCampaign {
   meta_campaign_id: string | null;
   tort_type: string | null;
   target_states: string[];
+  created_by_ai?: boolean;
+  published_at?: string | null;
+  published_by?: string | null;
+  attribution_setting?: string | null;
+  special_ad_categories?: string[];
+  meta_ad_account_id?: string | null;
   created_at: string;
   updated_at: string;
 }
