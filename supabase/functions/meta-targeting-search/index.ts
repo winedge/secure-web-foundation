@@ -109,7 +109,7 @@ function filterFallback<T extends { name: string }>(arr: T[], q: string, limit =
 }
 
 async function getFacebookToken(supabase: any, userId: string) {
-  // Look up the user's firm, then platform_connections.
+  // Look up the user's firm, then their active Facebook connection.
   const { data: firmMember } = await supabase
     .from("firm_members")
     .select("firm_id")
@@ -119,11 +119,19 @@ async function getFacebookToken(supabase: any, userId: string) {
 
   const { data } = await supabase
     .from("platform_connections")
-    .select("access_token, account_id")
+    .select("access_token, ad_account_id, metadata")
     .eq("firm_id", firmMember.firm_id)
     .eq("platform", "facebook")
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
-  return data || null;
+  if (!data) return null;
+  const adAccountId =
+    data.ad_account_id ||
+    data.metadata?.ad_account_id ||
+    null;
+  return { access_token: data.access_token, ad_account_id: adAccountId };
 }
 
 Deno.serve(async (req) => {
@@ -153,7 +161,9 @@ Deno.serve(async (req) => {
     }
     const conn = userId ? await getFacebookToken(supabase, userId) : null;
     const token = conn?.access_token;
-    const adAccountId = conn?.account_id;
+    // ad_account_id may be stored with or without the "act_" prefix; normalize.
+    const rawAdAcct = conn?.ad_account_id || "";
+    const adAccountId = rawAdAcct.startsWith("act_") ? rawAdAcct.slice(4) : rawAdAcct;
 
     /* ─── 1. Detailed targeting search ─── */
     if (op === "search_targeting") {
