@@ -137,6 +137,7 @@ export function CampaignFormDialog({ open, onOpenChange, editCampaign }: Props) 
       daily_budget: form.budget_type === 'daily' ? form.daily_budget : 0,
       lifetime_budget: form.budget_type === 'lifetime' ? form.lifetime_budget : 0,
       tort_type: form.tort_type || null,
+      target_country: form.target_country,
       target_states: form.target_states,
       special_ad_categories: form.special_ad_categories,
     };
