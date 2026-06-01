@@ -173,57 +173,11 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
       />
 
       {/* Create/Edit Dialog */}
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{editCampaign ? 'Edit Campaign' : 'New Meta Campaign (draft)'}</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div><Label>Campaign Name</Label><Input value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} /></div>
-            <div><Label>{categoryLabel}</Label>
-              {categories.length > 0 ? (
-                <Select value={formData.tort_type} onValueChange={(v) => setFormData((p) => ({ ...p, tort_type: v }))}>
-                  <SelectTrigger><SelectValue placeholder={`Select ${categoryLabel.toLowerCase()}`} /></SelectTrigger>
-                  <SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.label}>{c.label}</SelectItem>)}</SelectContent>
-                </Select>
-              ) : (
-                <Input value={formData.tort_type} onChange={(e) => setFormData((p) => ({ ...p, tort_type: e.target.value }))} placeholder={`e.g., ${categoryLabel}`} />
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label>Objective</Label>
-                <Select value={formData.objective} onValueChange={(v) => setFormData((p) => ({ ...p, objective: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="LEAD_GENERATION">Lead Generation</SelectItem>
-                    <SelectItem value="CONVERSIONS">Conversions</SelectItem>
-                    <SelectItem value="TRAFFIC">Traffic</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div><Label>Bid Strategy</Label>
-                <Select value={formData.bid_strategy} onValueChange={(v) => setFormData((p) => ({ ...p, bid_strategy: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="LOWEST_COST">Lowest Cost</SelectItem>
-                    <SelectItem value="COST_CAP">Cost Cap</SelectItem>
-                    <SelectItem value="BID_CAP">Bid Cap</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label>Daily Budget ($)</Label><Input type="number" value={formData.daily_budget} onChange={(e) => setFormData((p) => ({ ...p, daily_budget: Number(e.target.value) }))} /></div>
-              <div><Label>Lifetime Budget ($)</Label><Input type="number" value={formData.lifetime_budget} onChange={(e) => setFormData((p) => ({ ...p, lifetime_budget: Number(e.target.value) }))} /></div>
-            </div>
-            <div><Label>Target States (comma-separated)</Label><Input value={formData.target_states} onChange={(e) => setFormData((p) => ({ ...p, target_states: e.target.value }))} placeholder="FL, TX, CA" /></div>
-            <p className="text-xs text-muted-foreground">
-              Saving creates a <strong>draft</strong> only. Click <strong>Review &amp; Publish</strong> on the row to push it live on Meta.
-            </p>
-            <Button onClick={handleSave} disabled={!formData.name || createCampaign.isPending || updateCampaign.isPending} className="w-full">
-              {editCampaign ? 'Update Campaign' : 'Save Draft'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <CampaignFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        editCampaign={editCampaign}
+      />
 
       <AlertDialog open={!!deletingId} onOpenChange={(o) => !o && setDeletingId(null)}>
         <AlertDialogContent>
