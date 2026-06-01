@@ -21,7 +21,7 @@ export function MetaConnectionBanner() {
       if (!firm?.id) return null;
       const { data } = await (supabase as any)
         .from('platform_connections')
-        .select('id, platform, platform_username, page_name, is_active, firm_id')
+        .select('id, platform, platform_username, page_name, is_active, firm_id, metadata')
         .eq('firm_id', firm.id)
         .eq('platform', 'facebook')
         .eq('is_active', true)
@@ -42,7 +42,8 @@ export function MetaConnectionBanner() {
         .from('meta_job_queue')
         .select('id,job_type,status,created_at,completed_at,last_error')
         .eq('firm_id', firm.id)
-        .eq('job_type', 'sync_ad_accounts')
+        .in('job_type', ['sync_campaigns', 'sync_insights_daily'])
+        .in('status', ['queued', 'running', 'retrying'])
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -55,8 +56,8 @@ export function MetaConnectionBanner() {
   const syncMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await (supabase as any).rpc('meta_enqueue_job', {
-        _job_type: 'sync_ad_accounts',
-        _payload: {},
+        _job_type: 'sync_campaigns',
+        _payload: { ad_account_id: meta?.metadata?.ad_account_row_id },
         _firm_id: firm?.id ?? null,
         _priority: 3,
         _delay_seconds: 0,
@@ -118,7 +119,7 @@ export function MetaConnectionBanner() {
           size="sm"
           variant="outline"
           onClick={() => syncMutation.mutate()}
-          disabled={syncMutation.isPending || running}
+          disabled={syncMutation.isPending || running || !meta?.metadata?.ad_account_row_id}
         >
           <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${running ? 'animate-spin' : ''}`} />
           {running ? 'Syncing…' : 'Sync now'}
