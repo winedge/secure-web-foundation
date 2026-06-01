@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Search, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, RefreshCw, ArrowUp, ArrowDown } from 'lucide-react';
 
 export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
@@ -14,6 +14,8 @@ export interface MetaTableColumn<T> {
   label: string;
   align?: 'left' | 'right' | 'center';
   width?: string;
+  sortable?: boolean;
+  sortKey?: string;
   render: (row: T) => ReactNode;
 }
 
@@ -38,6 +40,9 @@ interface Props<T> {
   rightActions?: ReactNode;
   emptyMessage?: string;
   onRowClick?: (row: T) => void;
+  sortColumn?: string | null;
+  sortDirection?: 'asc' | 'desc';
+  onSortChange?: (column: string | null, direction: 'asc' | 'desc') => void;
 }
 
 export function MetaTableShell<T extends { id: string }>({
@@ -45,10 +50,21 @@ export function MetaTableShell<T extends { id: string }>({
   onPageChange, onPageSizeChange, search, onSearchChange, searchPlaceholder,
   statusValue, onStatusChange, statusOptions, extraFilters, onRefresh,
   rightActions, emptyMessage, onRowClick,
+  sortColumn, sortDirection, onSortChange,
 }: Props<T>) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const from = total === 0 ? 0 : page * pageSize + 1;
   const to = Math.min((page + 1) * pageSize, total);
+
+  function handleHeaderClick(c: MetaTableColumn<T>) {
+    if (!onSortChange || !c.sortable) return;
+    const key = c.sortKey || c.key;
+    if (sortColumn === key) {
+      onSortChange(key, sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      onSortChange(key, 'asc');
+    }
+  }
 
   return (
     <div className="space-y-3">
@@ -94,15 +110,31 @@ export function MetaTableShell<T extends { id: string }>({
         <Table>
           <TableHeader>
             <TableRow>
-              {columns.map(c => (
-                <TableHead
-                  key={c.key}
-                  style={c.width ? { width: c.width } : undefined}
-                  className={c.align === 'right' ? 'text-right' : c.align === 'center' ? 'text-center' : ''}
-                >
-                  {c.label}
-                </TableHead>
-              ))}
+              {columns.map(c => {
+                const active = sortColumn === (c.sortKey || c.key);
+                return (
+                  <TableHead
+                    key={c.key}
+                    style={c.width ? { width: c.width } : undefined}
+                    className={[
+                      c.align === 'right' ? 'text-right' : c.align === 'center' ? 'text-center' : '',
+                      c.sortable && onSortChange ? 'cursor-pointer select-none' : '',
+                    ].join(' ')}
+                    onClick={() => handleHeaderClick(c)}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      {c.label}
+                      {c.sortable && onSortChange && (
+                        active ? (
+                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3 text-primary" /> : <ArrowDown className="h-3 w-3 text-primary" />
+                        ) : (
+                          <ArrowUp className="h-3 w-3 text-muted-foreground/40" />
+                        )
+                      )}
+                    </span>
+                  </TableHead>
+                );
+              })}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -148,7 +180,7 @@ export function MetaTableShell<T extends { id: string }>({
               {PAGE_SIZE_OPTIONS.map(s => <SelectItem key={s} value={String(s)}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
-          <span>| {from.toLocaleString()}–{to.toLocaleString()} of {total.toLocaleString()}</span>
+          <span>| {from.toLocaleString()}|{to.toLocaleString()} of {total.toLocaleString()}</span>
         </div>
         <div className="flex items-center gap-1">
           <Button variant="outline" size="sm" className="h-7" disabled={page === 0} onClick={() => onPageChange(page - 1)}>
