@@ -1,25 +1,27 @@
 import { useState } from 'react';
-import { useMetaCampaigns, useUpdateMetaCampaign, useDeleteMetaCampaign, useSyncFromMeta, useCreateMetaCampaign, MetaCampaign } from '@/hooks/use-meta-campaigns';
+import {
+  useMetaCampaigns, useUpdateMetaCampaign, useDeleteMetaCampaign, useSyncFromMeta,
+  useCreateMetaCampaign, useDuplicateMetaCampaign, MetaCampaign,
+} from '@/hooks/use-meta-campaigns';
+import { useMetaAdSets, useMetaAds } from '@/hooks/use-meta-campaigns';
 import { useVertical } from '@/hooks/use-vertical';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { MetaCampaignWizard } from './MetaCampaignWizard';
-import { Plus, Search, Play, Pause, Trash2, Edit2, Eye, DollarSign, TrendingUp, Zap, Target, Loader2, Cloud } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { DollarSign, TrendingUp, Zap, Target, Cloud, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
-
-const statusColors: Record<string, string> = {
-  draft: 'bg-muted text-muted-foreground',
-  active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  paused: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  completed: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-};
+import { MetaAdsManagerShell } from './MetaAdsManagerShell';
+import { MetaAdsToolbar } from './MetaAdsToolbar';
+import { MetaAdsTable } from './MetaAdsTable';
+import { PublishCampaignReviewDialog } from './PublishCampaignReviewDialog';
+import { AbTestWizardDialog } from './AbTestWizardDialog';
 
 interface Props {
   onSelectCampaign: (id: string) => void;
@@ -27,35 +29,34 @@ interface Props {
 
 export function MetaCampaignsList({ onSelectCampaign }: Props) {
   const { data: campaigns, isLoading } = useMetaCampaigns();
+  const { data: allAdSets } = useMetaAdSets();
+  const { data: allAds } = useMetaAds();
   const createCampaign = useCreateMetaCampaign();
   const updateCampaign = useUpdateMetaCampaign();
   const deleteCampaign = useDeleteMetaCampaign();
+  const duplicateCampaign = useDuplicateMetaCampaign();
   const syncFromMeta = useSyncFromMeta();
   const { categories, term } = useVertical();
   const categoryLabel = term('category_label', 'Category');
 
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [selected, setSelected] = useState<string[]>([]);
   const [formOpen, setFormOpen] = useState(false);
   const [editCampaign, setEditCampaign] = useState<MetaCampaign | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [publishCampaign, setPublishCampaign] = useState<MetaCampaign | null>(null);
+  const [abOpen, setAbOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '', tort_type: '', objective: 'LEAD_GENERATION', daily_budget: 50, lifetime_budget: 0,
     bid_strategy: 'LOWEST_COST', target_states: '',
   });
 
-  const filtered = campaigns?.filter(c => {
-    const matchSearch = c.name.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === 'all' || c.status === statusFilter;
-    return matchSearch && matchStatus;
-  }) || [];
-
+  const list = campaigns || [];
   const stats = {
-    total: campaigns?.length || 0,
-    active: campaigns?.filter(c => c.status === 'active').length || 0,
-    dailySpend: campaigns?.filter(c => c.status === 'active').reduce((s, c) => s + (c.daily_budget || 0), 0) || 0,
-    totalBudget: campaigns?.reduce((s, c) => s + (c.lifetime_budget || 0), 0) || 0,
+    total: list.length,
+    active: list.filter((c) => c.status === 'active').length,
+    dailySpend: list.filter((c) => c.status === 'active').reduce((s, c) => s + (c.daily_budget || 0), 0),
+    totalBudget: list.reduce((s, c) => s + (c.lifetime_budget || 0), 0),
   };
 
   const openCreate = () => {
@@ -81,22 +82,36 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
       daily_budget: formData.daily_budget,
       lifetime_budget: formData.lifetime_budget,
       bid_strategy: formData.bid_strategy,
-      target_states: formData.target_states.split(',').map(s => s.trim()).filter(Boolean),
+      target_states: formData.target_states.split(',').map((s) => s.trim()).filter(Boolean),
     };
     if (editCampaign) {
       updateCampaign.mutate({ id: editCampaign.id, ...payload }, { onSuccess: () => setFormOpen(false) });
     } else {
-      createCampaign.mutate(payload, { onSuccess: () => setFormOpen(false) });
+      createCampaign.mutate({ ...payload, status: 'draft' }, { onSuccess: () => setFormOpen(false) });
     }
   };
 
-  const toggleStatus = (c: MetaCampaign) => {
-    updateCampaign.mutate({ id: c.id, status: c.status === 'active' ? 'paused' : 'active' });
+  const handleBulkDelete = () => {
+    selected.forEach((id) => deleteCampaign.mutate(id));
+    setSelected([]);
+  };
+
+  const handleExport = () => {
+    const rows = list.filter((c) => selected.includes(c.id));
+    const csv = [
+      ['Name', 'Status', 'Objective', 'Daily Budget', 'States'].join(','),
+      ...rows.map((r) => [r.name, r.status, r.objective, r.daily_budget, (r.target_states || []).join(';')].join(',')),
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'meta-campaigns.csv';
+    a.click();
   };
 
   return (
     <div className="space-y-4">
-      {/* Stats */}
+      {/* Stat strip */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total</CardTitle><TrendingUp className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{stats.total}</div></CardContent></Card>
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Active</CardTitle><Zap className="h-4 w-4 text-green-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-green-600">{stats.active}</div></CardContent></Card>
@@ -104,98 +119,69 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total Budget</CardTitle><Target className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{formatCurrency(stats.totalBudget)}</div></CardContent></Card>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center flex-1">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search campaigns..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="paused">Paused</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => syncFromMeta.mutate()} disabled={syncFromMeta.isPending} className="gap-2">
-            {syncFromMeta.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Cloud className="h-4 w-4" />}
-            Sync from Meta
-          </Button>
-          <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" />New Campaign</Button>
-        </div>
+      <div className="flex items-center justify-end">
+        <Button variant="outline" onClick={() => syncFromMeta.mutate()} disabled={syncFromMeta.isPending} className="gap-2 h-8">
+          {syncFromMeta.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Cloud className="h-4 w-4" />}
+          Sync from Meta
+        </Button>
       </div>
 
-      {/* List */}
-      {isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[...Array(3)].map((_, i) => <Card key={i}><CardHeader><Skeleton className="h-6 w-3/4" /><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-4 w-full" /></CardContent></Card>)}
-        </div>
-      ) : filtered.length === 0 ? (
-        <Card className="py-12"><CardContent className="text-center">
-          <TrendingUp className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">{campaigns?.length === 0 ? 'No Meta campaigns yet' : 'No matching campaigns'}</h3>
-          <p className="text-muted-foreground mb-4">{campaigns?.length === 0 ? 'Use AI Autopilot to create your first campaign.' : 'Try adjusting your filters.'}</p>
-          {campaigns?.length === 0 && <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" />Create Campaign</Button>}
-        </CardContent></Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filtered.map(c => (
-            <Card key={c.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onSelectCampaign(c.id)}>
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <CardTitle className="text-base truncate">{c.name}</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-0.5">{c.tort_type || 'General'}</p>
-                  </div>
-                  <Badge className={statusColors[c.status] || ''}>{c.status}</Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div><span className="text-muted-foreground">Daily Budget</span><p className="font-medium">{formatCurrency(c.daily_budget)}</p></div>
-                  <div><span className="text-muted-foreground">Objective</span><p className="font-medium text-xs">{c.objective.replace(/_/g, ' ')}</p></div>
-                  <div><span className="text-muted-foreground">Bid Strategy</span><p className="font-medium text-xs">{c.bid_strategy.replace(/_/g, ' ')}</p></div>
-                  <div><span className="text-muted-foreground">States</span><p className="font-medium text-xs truncate">{(c.target_states || []).join(', ') || 'All'}</p></div>
-                </div>
-                <div className="flex gap-1 pt-1" onClick={e => e.stopPropagation()}>
-                  <Button variant="ghost" size="sm" onClick={() => onSelectCampaign(c.id)}><Eye className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="sm" onClick={() => openEdit(c)}><Edit2 className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="sm" onClick={() => toggleStatus(c)}>
-                    {c.status === 'active' ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setDeletingId(c.id)}><Trash2 className="h-4 w-4" /></Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      <MetaAdsManagerShell
+        campaignsSlot={
+          <>
+            <MetaAdsToolbar
+              selectedCount={selected.length}
+              onCreate={openCreate}
+              onDuplicate={() => selected.forEach((id) => duplicateCampaign.mutate(id))}
+              onEdit={() => { const c = list.find((x) => x.id === selected[0]); if (c) openEdit(c); }}
+              onAbTest={() => setAbOpen(true)}
+              onDelete={handleBulkDelete}
+              onExport={handleExport}
+            />
+            <MetaAdsTable
+              campaigns={list}
+              isLoading={isLoading}
+              selected={selected}
+              onSelectionChange={setSelected}
+              onOpenCampaign={onSelectCampaign}
+              onEdit={openEdit}
+              onDelete={(id) => setDeletingId(id)}
+              onPublish={(c) => setPublishCampaign(c)}
+            />
+          </>
+        }
+        adSetsSlot={
+          <div className="p-6 text-sm text-muted-foreground">
+            Open a campaign to inspect and edit its ad sets, or use the existing Ad Sets top tab.
+            {allAdSets?.length ? <span> ({allAdSets.length} total)</span> : null}
+          </div>
+        }
+        adsSlot={
+          <div className="p-6 text-sm text-muted-foreground">
+            Open a campaign and ad set to manage its ads. {allAds?.length ? `(${allAds.length} total)` : null}
+          </div>
+        }
+      />
 
       {/* Create/Edit Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{editCampaign ? 'Edit Campaign' : 'New Meta Campaign'}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editCampaign ? 'Edit Campaign' : 'New Meta Campaign (draft)'}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div><Label>Campaign Name</Label><Input value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} /></div>
+            <div><Label>Campaign Name</Label><Input value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} /></div>
             <div><Label>{categoryLabel}</Label>
               {categories.length > 0 ? (
-                <Select value={formData.tort_type} onValueChange={v => setFormData(p => ({ ...p, tort_type: v }))}>
+                <Select value={formData.tort_type} onValueChange={(v) => setFormData((p) => ({ ...p, tort_type: v }))}>
                   <SelectTrigger><SelectValue placeholder={`Select ${categoryLabel.toLowerCase()}`} /></SelectTrigger>
-                  <SelectContent>{categories.map(c => <SelectItem key={c.id} value={c.label}>{c.label}</SelectItem>)}</SelectContent>
+                  <SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.label}>{c.label}</SelectItem>)}</SelectContent>
                 </Select>
               ) : (
-                <Input value={formData.tort_type} onChange={e => setFormData(p => ({ ...p, tort_type: e.target.value }))} placeholder={`e.g., ${categoryLabel}`} />
+                <Input value={formData.tort_type} onChange={(e) => setFormData((p) => ({ ...p, tort_type: e.target.value }))} placeholder={`e.g., ${categoryLabel}`} />
               )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Objective</Label>
-                <Select value={formData.objective} onValueChange={v => setFormData(p => ({ ...p, objective: v }))}>
+                <Select value={formData.objective} onValueChange={(v) => setFormData((p) => ({ ...p, objective: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="LEAD_GENERATION">Lead Generation</SelectItem>
@@ -205,7 +191,7 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
                 </Select>
               </div>
               <div><Label>Bid Strategy</Label>
-                <Select value={formData.bid_strategy} onValueChange={v => setFormData(p => ({ ...p, bid_strategy: v }))}>
+                <Select value={formData.bid_strategy} onValueChange={(v) => setFormData((p) => ({ ...p, bid_strategy: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="LOWEST_COST">Lowest Cost</SelectItem>
@@ -216,27 +202,42 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Daily Budget ($)</Label><Input type="number" value={formData.daily_budget} onChange={e => setFormData(p => ({ ...p, daily_budget: Number(e.target.value) }))} /></div>
-              <div><Label>Lifetime Budget ($)</Label><Input type="number" value={formData.lifetime_budget} onChange={e => setFormData(p => ({ ...p, lifetime_budget: Number(e.target.value) }))} /></div>
+              <div><Label>Daily Budget ($)</Label><Input type="number" value={formData.daily_budget} onChange={(e) => setFormData((p) => ({ ...p, daily_budget: Number(e.target.value) }))} /></div>
+              <div><Label>Lifetime Budget ($)</Label><Input type="number" value={formData.lifetime_budget} onChange={(e) => setFormData((p) => ({ ...p, lifetime_budget: Number(e.target.value) }))} /></div>
             </div>
-            <div><Label>Target States (comma-separated)</Label><Input value={formData.target_states} onChange={e => setFormData(p => ({ ...p, target_states: e.target.value }))} placeholder="FL, TX, CA" /></div>
+            <div><Label>Target States (comma-separated)</Label><Input value={formData.target_states} onChange={(e) => setFormData((p) => ({ ...p, target_states: e.target.value }))} placeholder="FL, TX, CA" /></div>
+            <p className="text-xs text-muted-foreground">
+              Saving creates a <strong>draft</strong> only. Click <strong>Review &amp; Publish</strong> on the row to push it live on Meta.
+            </p>
             <Button onClick={handleSave} disabled={!formData.name || createCampaign.isPending || updateCampaign.isPending} className="w-full">
-              {editCampaign ? 'Update Campaign' : 'Create Campaign'}
+              {editCampaign ? 'Update Campaign' : 'Save Draft'}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Delete dialog */}
-      <AlertDialog open={!!deletingId} onOpenChange={o => !o && setDeletingId(null)}>
+      <AlertDialog open={!!deletingId} onOpenChange={(o) => !o && setDeletingId(null)}>
         <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle>Delete Campaign?</AlertDialogTitle><AlertDialogDescription>This will permanently delete this campaign and all its ad sets and ads.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogHeader><AlertDialogTitle>Delete Campaign?</AlertDialogTitle><AlertDialogDescription>This will permanently delete this campaign and all its ad sets and ads (on Meta too if published).</AlertDialogDescription></AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => { if (deletingId) deleteCampaign.mutate(deletingId, { onSuccess: () => setDeletingId(null) }); }}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <PublishCampaignReviewDialog
+        campaign={publishCampaign}
+        open={!!publishCampaign}
+        onOpenChange={(o) => !o && setPublishCampaign(null)}
+      />
+
+      <AbTestWizardDialog
+        open={abOpen}
+        onOpenChange={setAbOpen}
+        candidates={list}
+        preselected={selected.slice(0, 2)}
+      />
     </div>
   );
 }
