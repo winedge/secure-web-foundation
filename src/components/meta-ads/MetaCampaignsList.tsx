@@ -30,13 +30,9 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
   const { data: campaigns, isLoading } = useMetaCampaigns();
   const { data: allAdSets } = useMetaAdSets();
   const { data: allAds } = useMetaAds();
-  const createCampaign = useCreateMetaCampaign();
-  const updateCampaign = useUpdateMetaCampaign();
   const deleteCampaign = useDeleteMetaCampaign();
   const duplicateCampaign = useDuplicateMetaCampaign();
   const syncFromMeta = useSyncFromMeta();
-  const { categories, term } = useVertical();
-  const categoryLabel = term('category_label', 'Category');
 
   const [selected, setSelected] = useState<string[]>([]);
   const [formOpen, setFormOpen] = useState(false);
