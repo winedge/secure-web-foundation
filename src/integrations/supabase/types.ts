@@ -6156,7 +6156,13 @@ export type Database = {
         | "pending_review"
       lead_tier: "A" | "B" | "C" | "D"
       meta_audience_type: "saved" | "custom" | "lookalike"
-      meta_job_status: "queued" | "running" | "done" | "failed" | "cancelled"
+      meta_job_status:
+        | "queued"
+        | "running"
+        | "done"
+        | "failed"
+        | "cancelled"
+        | "retrying"
       meta_object_level: "account" | "campaign" | "adset" | "ad"
       meta_rec_status: "pending" | "applied" | "dismissed" | "expired"
       subscription_plan: "basic" | "premium"
@@ -6346,7 +6352,14 @@ export const Constants = {
       ],
       lead_tier: ["A", "B", "C", "D"],
       meta_audience_type: ["saved", "custom", "lookalike"],
-      meta_job_status: ["queued", "running", "done", "failed", "cancelled"],
+      meta_job_status: [
+        "queued",
+        "running",
+        "done",
+        "failed",
+        "cancelled",
+        "retrying",
+      ],
       meta_object_level: ["account", "campaign", "adset", "ad"],
       meta_rec_status: ["pending", "applied", "dismissed", "expired"],
       subscription_plan: ["basic", "premium"],
