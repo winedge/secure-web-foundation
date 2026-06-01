@@ -15,20 +15,22 @@ export function ReportsTable() {
   const [pageSize, setPageSize] = useState(25);
   const [search, setSearch] = useState('');
   const [level, setLevel] = useState('all');
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
-  const { data, isLoading, isFetching, refetch } = useMetaReportsTable({ page, pageSize, search, level });
+  const { data, isLoading, isFetching, refetch } = useMetaReportsTable({ page, pageSize, search, level, sortColumn, sortDirection });
 
   const columns: MetaTableColumn<ReportRow>[] = [
-    { key: 'name', label: 'Report', render: (r) => (
+    { key: 'name', label: 'Report', sortable: true, render: (r) => (
       <div className="min-w-0">
         <div className="font-medium truncate">{r.name}</div>
         {r.description && <div className="text-xs text-muted-foreground truncate">{r.description}</div>}
       </div>
     ) },
-    { key: 'level', label: 'Level', render: (r) => <Badge variant="outline" className="text-[10px] capitalize">{r.level.replace('_', ' ')}</Badge> },
-    { key: 'preset', label: 'Date range', render: (r) => <span className="text-xs">{r.date_preset || 'custom'}</span> },
+    { key: 'level', label: 'Level', sortable: true, render: (r) => <Badge variant="outline" className="text-[10px] capitalize">{r.level.replace('_', ' ')}</Badge> },
+    { key: 'preset', label: 'Date range', sortable: true, sortKey: 'date_preset', render: (r) => <span className="text-xs">{r.date_preset || 'custom'}</span> },
     { key: 'recipients', label: 'Recipients', render: (r) => <span className="text-xs">{r.recipients?.length ? `${r.recipients.length} subscribed` : '|'}</span> },
-    { key: 'created', label: 'Created', render: (r) => <span className="text-xs">{new Date(r.created_at).toLocaleDateString()}</span> },
+    { key: 'created', label: 'Created', sortable: true, sortKey: 'created_at', render: (r) => <span className="text-xs">{new Date(r.created_at).toLocaleDateString()}</span> },
   ];
 
   return (
@@ -43,6 +45,8 @@ export function ReportsTable() {
       search={search} onSearchChange={setSearch}
       searchPlaceholder="Search reports by name…"
       onRefresh={() => refetch()}
+      sortColumn={sortColumn} sortDirection={sortDirection}
+      onSortChange={(col, dir) => { setPage(0); setSortColumn(col); setSortDirection(dir); }}
       extraFilters={
         <Select value={level} onValueChange={(v) => { setPage(0); setLevel(v); }}>
           <SelectTrigger className="w-full sm:w-[180px] h-8 text-sm"><SelectValue placeholder="Level" /></SelectTrigger>
