@@ -166,46 +166,16 @@ export function CampaignFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="max-w-4xl p-0 gap-0 overflow-hidden border-slate-800 bg-[#0F172A] text-white sm:rounded-xl max-h-[95vh] flex flex-col"
-      >
-        {/* ─────────── Condensed Header ─────────── */}
-        <header className="px-6 py-4 border-b border-slate-800/60 shrink-0">
-          <div className="flex justify-between items-center mb-3 gap-4">
-            <div className="flex items-baseline gap-2 min-w-0">
-              <h2 className="text-lg font-bold tracking-tight text-white truncate">
-                {editCampaign ? 'Edit Campaign' : 'New Meta Campaign'}
-              </h2>
-              {!editCampaign && (
-                <span className="text-xs text-slate-500 font-normal">(draft)</span>
-              )}
-            </div>
+      <DialogContent className={dialogContentCls}>
+        <WizardHeader
+          title={editCampaign ? 'Edit Campaign' : 'New Meta Campaign'}
+          draft={!editCampaign}
+          subtitle="Configure campaign settings | Nothing is sent to Meta until you click Review & Publish."
+          steps={wizardSteps ?? (wizardActiveStep ? WIZARD_STEPS : undefined)}
+          activeStep={wizardActiveStep}
+        />
 
-            {wizardSteps && (
-              <nav className="hidden md:flex items-center gap-1 bg-slate-900/60 p-1 rounded-lg border border-slate-800">
-                {wizardSteps.map((s) => {
-                  const active = s.id === wizardActiveStep;
-                  return (
-                    <span
-                      key={s.id}
-                      className={[
-                        'px-3 py-1 font-semibold text-[10px] rounded-md uppercase tracking-wider transition-colors',
-                        active
-                          ? 'bg-emerald-500 text-[#0F172A] cursor-default'
-                          : 'text-slate-500',
-                      ].join(' ')}
-                    >
-                      {s.label}
-                    </span>
-                  );
-                })}
-              </nav>
-            )}
-          </div>
-          <p className="text-[11px] text-slate-400">
-            Configure campaign settings | Nothing is sent to Meta until you click Review & Publish.
-          </p>
-        </header>
+
 
         {/* ─────────── Scrollable Body ─────────── */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-7 cmd-scroll">
