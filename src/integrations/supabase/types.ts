@@ -7740,6 +7740,65 @@ export type Database = {
           match_score: number
         }[]
       }
+      meta_claim_jobs: {
+        Args: { _batch_size?: number; _worker_id: string }
+        Returns: {
+          attempts: number | null
+          completed_at: string | null
+          created_at: string
+          firm_id: string | null
+          id: string
+          job_type: string
+          last_error: string | null
+          locked_at: string | null
+          locked_by: string | null
+          max_attempts: number | null
+          payload: Json
+          priority: number | null
+          result: Json | null
+          run_after: string
+          status: Database["public"]["Enums"]["meta_job_status"]
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "meta_job_queue"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      meta_complete_job: {
+        Args: { _job_id: string; _result?: Json }
+        Returns: undefined
+      }
+      meta_enqueue_job: {
+        Args: {
+          _delay_seconds?: number
+          _firm_id?: string
+          _job_type: string
+          _max_attempts?: number
+          _payload?: Json
+          _priority?: number
+        }
+        Returns: string
+      }
+      meta_fail_job: {
+        Args: { _error: string; _job_id: string }
+        Returns: undefined
+      }
+      meta_log_audit: {
+        Args: {
+          _action: string
+          _actor_id: string
+          _after: Json
+          _before: Json
+          _firm_id: string
+          _level: Database["public"]["Enums"]["meta_object_level"]
+          _meta_object_id: string
+          _object_id: string
+        }
+        Returns: string
+      }
       purchase_lead: {
         Args: { _firm_id: string; _lead_id: string; _user_id: string }
         Returns: Json
