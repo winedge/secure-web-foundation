@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MetaCampaignsList } from '@/components/meta-ads/MetaCampaignsList';
-import { MetaAdSetsPanel } from '@/components/meta-ads/MetaAdSetsPanel';
-import { MetaAdsPanel } from '@/components/meta-ads/MetaAdsPanel';
+import { AdSetsTable } from '@/components/meta-ads/tables/AdSetsTable';
+import { AdsTable } from '@/components/meta-ads/tables/AdsTable';
+import { AudiencesTable } from '@/components/meta-ads/tables/AudiencesTable';
+import { ReportsTable } from '@/components/meta-ads/tables/ReportsTable';
 import { MetaAnalyticsPanel } from '@/components/meta-ads/MetaAnalyticsPanel';
 import { MetaAiPanel } from '@/components/meta-ads/MetaAiPanel';
 import { AutopilotPanel } from '@/components/meta-ads/AutopilotPanel';
@@ -12,8 +14,7 @@ import { MetaLeadFormsPanel } from '@/components/meta-ads/MetaLeadFormsPanel';
 import { MetaSelfLearningPanel } from '@/components/meta-ads/MetaSelfLearningPanel';
 import { MetaConnectionBanner } from '@/components/meta-ads/MetaConnectionBanner';
 import { UpgradeGate } from '@/components/subscription/UpgradeGate';
-import { LayoutDashboard, Target, Megaphone, BarChart3, Bot, Zap, Activity, FileText, Brain } from 'lucide-react';
-
+import { LayoutDashboard, Target, Megaphone, BarChart3, Bot, Zap, Activity, FileText, Brain, Users, FileBarChart } from 'lucide-react';
 
 export default function MetaAds() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
@@ -30,51 +31,45 @@ export default function MetaAds() {
         <div className="space-y-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Meta Ads Manager</h1>
-            <p className="text-muted-foreground">
-              AI-powered campaign management for lead generation
-            </p>
+            <p className="text-muted-foreground">AI-powered campaign management for lead generation</p>
           </div>
 
           <MetaConnectionBanner />
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-
             <TabsList className="flex flex-wrap w-full h-auto gap-1">
               <TabsTrigger value="campaigns" className="gap-1.5 text-xs sm:text-sm py-2">
-                <LayoutDashboard className="h-4 w-4 hidden sm:block" />
-                Campaigns
+                <LayoutDashboard className="h-4 w-4 hidden sm:block" />Campaigns
               </TabsTrigger>
               <TabsTrigger value="ad-sets" className="gap-1.5 text-xs sm:text-sm py-2">
-                <Target className="h-4 w-4 hidden sm:block" />
-                Ad Sets
+                <Target className="h-4 w-4 hidden sm:block" />Ad Sets
               </TabsTrigger>
               <TabsTrigger value="ads" className="gap-1.5 text-xs sm:text-sm py-2">
-                <Megaphone className="h-4 w-4 hidden sm:block" />
-                Ads
+                <Megaphone className="h-4 w-4 hidden sm:block" />Ads
+              </TabsTrigger>
+              <TabsTrigger value="audiences" className="gap-1.5 text-xs sm:text-sm py-2">
+                <Users className="h-4 w-4 hidden sm:block" />Audiences
+              </TabsTrigger>
+              <TabsTrigger value="reports" className="gap-1.5 text-xs sm:text-sm py-2">
+                <FileBarChart className="h-4 w-4 hidden sm:block" />Reports
               </TabsTrigger>
               <TabsTrigger value="pixel" className="gap-1.5 text-xs sm:text-sm py-2">
-                <Activity className="h-4 w-4 hidden sm:block" />
-                Pixel
+                <Activity className="h-4 w-4 hidden sm:block" />Pixel
               </TabsTrigger>
               <TabsTrigger value="lead-forms" className="gap-1.5 text-xs sm:text-sm py-2">
-                <FileText className="h-4 w-4 hidden sm:block" />
-                Lead Forms
+                <FileText className="h-4 w-4 hidden sm:block" />Lead Forms
               </TabsTrigger>
               <TabsTrigger value="analytics" className="gap-1.5 text-xs sm:text-sm py-2">
-                <BarChart3 className="h-4 w-4 hidden sm:block" />
-                Analytics
+                <BarChart3 className="h-4 w-4 hidden sm:block" />Analytics
               </TabsTrigger>
               <TabsTrigger value="ai" className="gap-1.5 text-xs sm:text-sm py-2">
-                <Bot className="h-4 w-4 hidden sm:block" />
-                AI Brain
+                <Bot className="h-4 w-4 hidden sm:block" />AI Brain
               </TabsTrigger>
               <TabsTrigger value="autopilot" className="gap-1.5 text-xs sm:text-sm py-2">
-                <Zap className="h-4 w-4 hidden sm:block" />
-                Autopilot
+                <Zap className="h-4 w-4 hidden sm:block" />Autopilot
               </TabsTrigger>
               <TabsTrigger value="learning" className="gap-1.5 text-xs sm:text-sm py-2">
-                <Brain className="h-4 w-4 hidden sm:block" />
-                Self-Learn
+                <Brain className="h-4 w-4 hidden sm:block" />Self-Learn
               </TabsTrigger>
             </TabsList>
 
@@ -88,34 +83,30 @@ export default function MetaAds() {
             </TabsContent>
 
             <TabsContent value="ad-sets">
-              <MetaAdSetsPanel
-                campaignId={selectedCampaignId}
+              <AdSetsTable
+                initialCampaignId={selectedCampaignId}
                 onSelectAdSet={(id) => {
                   setSelectedAdSetId(id);
                   setActiveTab('ads');
                 }}
-                onBack={() => setActiveTab('campaigns')}
               />
             </TabsContent>
 
             <TabsContent value="ads">
-              <MetaAdsPanel
-                adSetId={selectedAdSetId}
-                onBack={() => setActiveTab('ad-sets')}
-              />
+              <AdsTable initialAdSetId={selectedAdSetId} initialCampaignId={selectedCampaignId} />
             </TabsContent>
 
-            <TabsContent value="pixel">
-              <MetaPixelPanel />
+            <TabsContent value="audiences">
+              <AudiencesTable />
             </TabsContent>
 
-            <TabsContent value="lead-forms">
-              <MetaLeadFormsPanel />
+            <TabsContent value="reports">
+              <ReportsTable />
             </TabsContent>
 
-            <TabsContent value="analytics">
-              <MetaAnalyticsPanel campaignId={selectedCampaignId} />
-            </TabsContent>
+            <TabsContent value="pixel"><MetaPixelPanel /></TabsContent>
+            <TabsContent value="lead-forms"><MetaLeadFormsPanel /></TabsContent>
+            <TabsContent value="analytics"><MetaAnalyticsPanel campaignId={selectedCampaignId} /></TabsContent>
 
             <TabsContent value="ai">
               <MetaAiPanel
@@ -127,13 +118,8 @@ export default function MetaAds() {
               />
             </TabsContent>
 
-            <TabsContent value="autopilot">
-              <AutopilotPanel campaignId={selectedCampaignId} />
-            </TabsContent>
-
-            <TabsContent value="learning">
-              <MetaSelfLearningPanel campaignId={selectedCampaignId} />
-            </TabsContent>
+            <TabsContent value="autopilot"><AutopilotPanel campaignId={selectedCampaignId} /></TabsContent>
+            <TabsContent value="learning"><MetaSelfLearningPanel campaignId={selectedCampaignId} /></TabsContent>
           </Tabs>
         </div>
       </UpgradeGate>
