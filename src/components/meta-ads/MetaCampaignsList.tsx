@@ -18,6 +18,7 @@ import { MetaAdsTable } from './MetaAdsTable';
 import { PublishCampaignReviewDialog } from './PublishCampaignReviewDialog';
 import { AbTestWizardDialog } from './AbTestWizardDialog';
 import { CampaignFormDialog } from './forms/CampaignFormDialog';
+import { CampaignCreateWizard } from './forms/CampaignCreateWizard';
 
 const COL_STORAGE_KEY = 'meta-ads-visible-cols-v1';
 const DEFAULT_COLS: ColumnId[] = ['delivery', 'results', 'cost_per_result', 'budget', 'spent', 'impressions', 'reach', 'ends'];
@@ -36,6 +37,7 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
 
   const [selected, setSelected] = useState<string[]>([]);
   const [formOpen, setFormOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [editCampaign, setEditCampaign] = useState<MetaCampaign | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [publishCampaign, setPublishCampaign] = useState<MetaCampaign | null>(null);
@@ -84,7 +86,7 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
     totalBudget: allCampaigns.reduce((s, c) => s + (c.lifetime_budget || 0), 0),
   };
 
-  const openCreate = () => { setEditCampaign(null); setFormOpen(true); };
+  const openCreate = () => { setEditCampaign(null); setWizardOpen(true); };
   const openEdit = (c: MetaCampaign) => { setEditCampaign(c); setFormOpen(true); };
 
   const handleBulkDelete = () => {
@@ -172,11 +174,17 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
         }
       />
 
-      {/* Create/Edit Dialog */}
+      {/* Edit Dialog (single-step) */}
       <CampaignFormDialog
         open={formOpen}
         onOpenChange={setFormOpen}
         editCampaign={editCampaign}
+      />
+
+      {/* Create wizard: Campaign → Ad Set → Ad → Review */}
+      <CampaignCreateWizard
+        open={wizardOpen}
+        onOpenChange={setWizardOpen}
       />
 
       <AlertDialog open={!!deletingId} onOpenChange={(o) => !o && setDeletingId(null)}>

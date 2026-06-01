@@ -26,6 +26,8 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   campaignId: string;
   editAdSet?: MetaAdSet | null;
+  onSaved?: (id: string) => void;
+  saveLabel?: string;
 }
 
 type FormState = {
@@ -86,7 +88,7 @@ const INITIAL: FormState = {
   positions: {},
 };
 
-export function AdSetFormDialog({ open, onOpenChange, campaignId, editAdSet }: Props) {
+export function AdSetFormDialog({ open, onOpenChange, campaignId, editAdSet, onSaved, saveLabel }: Props) {
   const create = useCreateMetaAdSet();
   const update = useUpdateMetaAdSet();
   const [form, setForm] = useState<FormState>(INITIAL);
@@ -165,10 +167,11 @@ export function AdSetFormDialog({ open, onOpenChange, campaignId, editAdSet }: P
       bid_amount: form.cost_per_result_goal > 0 ? Math.round(form.cost_per_result_goal * 100) : null,
     };
 
+    const done = (d: any) => { if (onSaved) onSaved(d.id); else onOpenChange(false); };
     if (editAdSet) {
-      update.mutate({ id: editAdSet.id, ...payload }, { onSuccess: () => onOpenChange(false) });
+      update.mutate({ id: editAdSet.id, ...payload }, { onSuccess: done });
     } else {
-      create.mutate(payload, { onSuccess: () => onOpenChange(false) });
+      create.mutate(payload, { onSuccess: done });
     }
   };
 
@@ -454,7 +457,7 @@ export function AdSetFormDialog({ open, onOpenChange, campaignId, editAdSet }: P
           <div className="flex gap-2 pt-2">
             <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1">Cancel</Button>
             <Button onClick={handleSave} disabled={!canSave} className="flex-1">
-              {editAdSet ? 'Update Ad Set' : 'Create Ad Set'}
+              {saveLabel ?? (editAdSet ? 'Update Ad Set' : 'Create Ad Set')}
             </Button>
           </div>
         </div>

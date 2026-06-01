@@ -25,6 +25,10 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editCampaign?: MetaCampaign | null;
+  /** Called with the new/updated row id on save. If provided, dialog won't auto-close. */
+  onSaved?: (id: string) => void;
+  /** Override the primary CTA label (e.g. "Save & continue to Ad Set"). */
+  saveLabel?: string;
 }
 
 type FormState = {
@@ -83,7 +87,7 @@ const COUNTRY_OPTIONS: { value: string; label: string }[] = [
   { value: 'EU', label: 'European Union' },
 ];
 
-export function CampaignFormDialog({ open, onOpenChange, editCampaign }: Props) {
+export function CampaignFormDialog({ open, onOpenChange, editCampaign, onSaved, saveLabel }: Props) {
   const create = useCreateMetaCampaign();
   const update = useUpdateMetaCampaign();
   const { categories, term } = useVertical();
@@ -141,10 +145,11 @@ export function CampaignFormDialog({ open, onOpenChange, editCampaign }: Props) 
       target_states: form.target_states,
       special_ad_categories: form.special_ad_categories,
     };
+    const done = (d: any) => { if (onSaved) onSaved(d.id); else onOpenChange(false); };
     if (editCampaign) {
-      update.mutate({ id: editCampaign.id, ...payload }, { onSuccess: () => onOpenChange(false) });
+      update.mutate({ id: editCampaign.id, ...payload }, { onSuccess: done });
     } else {
-      create.mutate({ ...payload, status: 'draft' }, { onSuccess: () => onOpenChange(false) });
+      create.mutate({ ...payload, status: 'draft' }, { onSuccess: done });
     }
   };
 
@@ -418,7 +423,7 @@ export function CampaignFormDialog({ open, onOpenChange, editCampaign }: Props) 
           <div className="flex gap-2 pt-2">
             <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1">Cancel</Button>
             <Button onClick={handleSave} disabled={!canSave} className="flex-1">
-              {editCampaign ? 'Update Campaign' : 'Save Draft'}
+              {saveLabel ?? (editCampaign ? 'Update Campaign' : 'Save Draft')}
             </Button>
           </div>
         </div>

@@ -27,6 +27,8 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   adSetId: string;
   editAd?: MetaAd | null;
+  onSaved?: (id: string) => void;
+  saveLabel?: string;
 }
 
 type FormState = {
@@ -85,7 +87,7 @@ function counter(value: string, lim: { recommended: number; hard: number }) {
   );
 }
 
-export function AdFormDialog({ open, onOpenChange, adSetId, editAd }: Props) {
+export function AdFormDialog({ open, onOpenChange, adSetId, editAd, onSaved, saveLabel }: Props) {
   const create = useCreateMetaAd();
   const update = useUpdateMetaAd();
   const ai = useMetaAiAssistant();
@@ -192,10 +194,11 @@ export function AdFormDialog({ open, onOpenChange, adSetId, editAd }: Props) {
       image_url: form.image_url || null,
       ai_generated: false,
     };
+    const done = (d: any) => { if (onSaved) onSaved(d.id); else onOpenChange(false); };
     if (editAd) {
-      update.mutate({ id: editAd.id, ...payload }, { onSuccess: () => onOpenChange(false) });
+      update.mutate({ id: editAd.id, ...payload }, { onSuccess: done });
     } else {
-      create.mutate(payload, { onSuccess: () => onOpenChange(false) });
+      create.mutate(payload, { onSuccess: done });
     }
   };
 
@@ -390,7 +393,7 @@ export function AdFormDialog({ open, onOpenChange, adSetId, editAd }: Props) {
             <div className="flex gap-2 pt-2">
               <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1">Cancel</Button>
               <Button onClick={handleSave} disabled={!canSave} className="flex-1">
-                {editAd ? 'Update Ad' : 'Create Ad'}
+                {saveLabel ?? (editAd ? 'Update Ad' : 'Create Ad')}
               </Button>
             </div>
           </div>
