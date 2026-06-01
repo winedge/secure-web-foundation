@@ -3920,6 +3920,336 @@ export type Database = {
           },
         ]
       }
+      meta_ab_tests: {
+        Row: {
+          ad_account_id: string | null
+          cells: Json | null
+          confidence_level: number | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_time: string | null
+          firm_id: string
+          id: string
+          meta_study_id: string | null
+          name: string
+          raw: Json | null
+          start_time: string | null
+          status: string | null
+          updated_at: string
+          variable: string
+          winner_campaign_id: string | null
+        }
+        Insert: {
+          ad_account_id?: string | null
+          cells?: Json | null
+          confidence_level?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_time?: string | null
+          firm_id: string
+          id?: string
+          meta_study_id?: string | null
+          name: string
+          raw?: Json | null
+          start_time?: string | null
+          status?: string | null
+          updated_at?: string
+          variable: string
+          winner_campaign_id?: string | null
+        }
+        Update: {
+          ad_account_id?: string | null
+          cells?: Json | null
+          confidence_level?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_time?: string | null
+          firm_id?: string
+          id?: string
+          meta_study_id?: string | null
+          name?: string
+          raw?: Json | null
+          start_time?: string | null
+          status?: string | null
+          updated_at?: string
+          variable?: string
+          winner_campaign_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ab_tests_ad_account_id_fkey"
+            columns: ["ad_account_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ad_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_ad_accounts: {
+        Row: {
+          account_status: number | null
+          amount_spent: number | null
+          balance: number | null
+          business_manager_id: string | null
+          created_at: string
+          currency: string | null
+          disable_reason: number | null
+          firm_id: string
+          funding_source: string | null
+          id: string
+          meta_ad_account_id: string
+          name: string | null
+          raw: Json | null
+          spend_cap: number | null
+          timezone_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_status?: number | null
+          amount_spent?: number | null
+          balance?: number | null
+          business_manager_id?: string | null
+          created_at?: string
+          currency?: string | null
+          disable_reason?: number | null
+          firm_id: string
+          funding_source?: string | null
+          id?: string
+          meta_ad_account_id: string
+          name?: string | null
+          raw?: Json | null
+          spend_cap?: number | null
+          timezone_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_status?: number | null
+          amount_spent?: number | null
+          balance?: number | null
+          business_manager_id?: string | null
+          created_at?: string
+          currency?: string | null
+          disable_reason?: number | null
+          firm_id?: string
+          funding_source?: string | null
+          id?: string
+          meta_ad_account_id?: string
+          name?: string | null
+          raw?: Json | null
+          spend_cap?: number | null
+          timezone_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ad_accounts_business_manager_id_fkey"
+            columns: ["business_manager_id"]
+            isOneToOne: false
+            referencedRelation: "meta_business_managers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_ad_sets: {
+        Row: {
+          attribution_spec: Json | null
+          bid_amount: number | null
+          bid_strategy: Database["public"]["Enums"]["meta_bid_strategy"] | null
+          billing_event:
+            | Database["public"]["Enums"]["meta_billing_event"]
+            | null
+          campaign_id: string
+          created_at: string
+          daily_budget: number | null
+          destination_type: string | null
+          effective_status: string | null
+          end_time: string | null
+          firm_id: string
+          frequency_control_specs: Json | null
+          id: string
+          ig_account_id: string | null
+          lifetime_budget: number | null
+          meta_adset_id: string | null
+          name: string
+          optimization_goal:
+            | Database["public"]["Enums"]["meta_optimization_goal"]
+            | null
+          pacing_type: string[] | null
+          page_id: string | null
+          pixel_id: string | null
+          promoted_object: Json | null
+          raw: Json | null
+          start_time: string | null
+          status: Database["public"]["Enums"]["meta_campaign_status"] | null
+          targeting: Json | null
+          updated_at: string
+        }
+        Insert: {
+          attribution_spec?: Json | null
+          bid_amount?: number | null
+          bid_strategy?: Database["public"]["Enums"]["meta_bid_strategy"] | null
+          billing_event?:
+            | Database["public"]["Enums"]["meta_billing_event"]
+            | null
+          campaign_id: string
+          created_at?: string
+          daily_budget?: number | null
+          destination_type?: string | null
+          effective_status?: string | null
+          end_time?: string | null
+          firm_id: string
+          frequency_control_specs?: Json | null
+          id?: string
+          ig_account_id?: string | null
+          lifetime_budget?: number | null
+          meta_adset_id?: string | null
+          name: string
+          optimization_goal?:
+            | Database["public"]["Enums"]["meta_optimization_goal"]
+            | null
+          pacing_type?: string[] | null
+          page_id?: string | null
+          pixel_id?: string | null
+          promoted_object?: Json | null
+          raw?: Json | null
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["meta_campaign_status"] | null
+          targeting?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          attribution_spec?: Json | null
+          bid_amount?: number | null
+          bid_strategy?: Database["public"]["Enums"]["meta_bid_strategy"] | null
+          billing_event?:
+            | Database["public"]["Enums"]["meta_billing_event"]
+            | null
+          campaign_id?: string
+          created_at?: string
+          daily_budget?: number | null
+          destination_type?: string | null
+          effective_status?: string | null
+          end_time?: string | null
+          firm_id?: string
+          frequency_control_specs?: Json | null
+          id?: string
+          ig_account_id?: string | null
+          lifetime_budget?: number | null
+          meta_adset_id?: string | null
+          name?: string
+          optimization_goal?:
+            | Database["public"]["Enums"]["meta_optimization_goal"]
+            | null
+          pacing_type?: string[] | null
+          page_id?: string | null
+          pixel_id?: string | null
+          promoted_object?: Json | null
+          raw?: Json | null
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["meta_campaign_status"] | null
+          targeting?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ad_sets_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "meta_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_ad_sets_ig_account_id_fkey"
+            columns: ["ig_account_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ig_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_ad_sets_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "meta_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_ad_sets_pixel_id_fkey"
+            columns: ["pixel_id"]
+            isOneToOne: false
+            referencedRelation: "meta_pixels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_ads: {
+        Row: {
+          ad_set_id: string
+          conversion_specs: Json | null
+          created_at: string
+          creative_id: string | null
+          effective_status: string | null
+          firm_id: string
+          id: string
+          meta_ad_id: string | null
+          name: string
+          preview_shareable_link: string | null
+          raw: Json | null
+          status: Database["public"]["Enums"]["meta_campaign_status"] | null
+          tracking_specs: Json | null
+          updated_at: string
+        }
+        Insert: {
+          ad_set_id: string
+          conversion_specs?: Json | null
+          created_at?: string
+          creative_id?: string | null
+          effective_status?: string | null
+          firm_id: string
+          id?: string
+          meta_ad_id?: string | null
+          name: string
+          preview_shareable_link?: string | null
+          raw?: Json | null
+          status?: Database["public"]["Enums"]["meta_campaign_status"] | null
+          tracking_specs?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          ad_set_id?: string
+          conversion_specs?: Json | null
+          created_at?: string
+          creative_id?: string | null
+          effective_status?: string | null
+          firm_id?: string
+          id?: string
+          meta_ad_id?: string | null
+          name?: string
+          preview_shareable_link?: string | null
+          raw?: Json | null
+          status?: Database["public"]["Enums"]["meta_campaign_status"] | null
+          tracking_specs?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ads_ad_set_id_fkey"
+            columns: ["ad_set_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ad_sets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_ads_creative_id_fkey"
+            columns: ["creative_id"]
+            isOneToOne: false
+            referencedRelation: "meta_creatives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meta_ai_logs: {
         Row: {
           action_type: string
@@ -3950,6 +4280,152 @@ export type Database = {
           description?: string | null
           id?: string
           recommendation?: Json | null
+        }
+        Relationships: []
+      }
+      meta_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after: Json | null
+          before: Json | null
+          created_at: string
+          diff: Json | null
+          firm_id: string
+          id: string
+          ip_address: string | null
+          meta_object_id: string | null
+          object_id: string | null
+          object_level: Database["public"]["Enums"]["meta_object_level"] | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          diff?: Json | null
+          firm_id: string
+          id?: string
+          ip_address?: string | null
+          meta_object_id?: string | null
+          object_id?: string | null
+          object_level?: Database["public"]["Enums"]["meta_object_level"] | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          diff?: Json | null
+          firm_id?: string
+          id?: string
+          ip_address?: string | null
+          meta_object_id?: string | null
+          object_id?: string | null
+          object_level?: Database["public"]["Enums"]["meta_object_level"] | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      meta_automated_rules: {
+        Row: {
+          actions: Json
+          ad_account_id: string | null
+          created_at: string
+          created_by: string | null
+          firm_id: string
+          id: string
+          is_active: boolean | null
+          last_run_at: string | null
+          meta_rule_id: string | null
+          name: string
+          raw: Json | null
+          schedule: Json | null
+          scope: string
+          trigger_conditions: Json
+          updated_at: string
+        }
+        Insert: {
+          actions?: Json
+          ad_account_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          firm_id: string
+          id?: string
+          is_active?: boolean | null
+          last_run_at?: string | null
+          meta_rule_id?: string | null
+          name: string
+          raw?: Json | null
+          schedule?: Json | null
+          scope: string
+          trigger_conditions?: Json
+          updated_at?: string
+        }
+        Update: {
+          actions?: Json
+          ad_account_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          firm_id?: string
+          id?: string
+          is_active?: boolean | null
+          last_run_at?: string | null
+          meta_rule_id?: string | null
+          name?: string
+          raw?: Json | null
+          schedule?: Json | null
+          scope?: string
+          trigger_conditions?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_automated_rules_ad_account_id_fkey"
+            columns: ["ad_account_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ad_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_business_managers: {
+        Row: {
+          created_at: string
+          firm_id: string
+          id: string
+          meta_business_id: string
+          name: string | null
+          primary_page_id: string | null
+          raw: Json | null
+          updated_at: string
+          verification_status: string | null
+        }
+        Insert: {
+          created_at?: string
+          firm_id: string
+          id?: string
+          meta_business_id: string
+          name?: string | null
+          primary_page_id?: string | null
+          raw?: Json | null
+          updated_at?: string
+          verification_status?: string | null
+        }
+        Update: {
+          created_at?: string
+          firm_id?: string
+          id?: string
+          meta_business_id?: string
+          name?: string | null
+          primary_page_id?: string | null
+          raw?: Json | null
+          updated_at?: string
+          verification_status?: string | null
         }
         Relationships: []
       }
@@ -4010,6 +4486,1146 @@ export type Database = {
           leads?: number | null
           reach?: number | null
           spend?: number | null
+        }
+        Relationships: []
+      }
+      meta_campaigns: {
+        Row: {
+          ad_account_id: string | null
+          ai_generated: boolean | null
+          ai_metadata: Json | null
+          attribution_setting: string | null
+          bid_strategy: Database["public"]["Enums"]["meta_bid_strategy"] | null
+          budget_remaining: number | null
+          buying_type: Database["public"]["Enums"]["meta_buying_type"] | null
+          created_at: string
+          created_by: string | null
+          daily_budget: number | null
+          effective_status: string | null
+          firm_id: string
+          id: string
+          is_cbo: boolean | null
+          lifetime_budget: number | null
+          meta_campaign_id: string | null
+          name: string
+          objective: Database["public"]["Enums"]["meta_objective"] | null
+          published_at: string | null
+          raw: Json | null
+          review_status:
+            | Database["public"]["Enums"]["meta_review_status"]
+            | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          special_ad_categories: string[] | null
+          special_ad_category_country: string[] | null
+          spend_cap: number | null
+          start_time: string | null
+          status: Database["public"]["Enums"]["meta_campaign_status"] | null
+          stop_time: string | null
+          updated_at: string
+        }
+        Insert: {
+          ad_account_id?: string | null
+          ai_generated?: boolean | null
+          ai_metadata?: Json | null
+          attribution_setting?: string | null
+          bid_strategy?: Database["public"]["Enums"]["meta_bid_strategy"] | null
+          budget_remaining?: number | null
+          buying_type?: Database["public"]["Enums"]["meta_buying_type"] | null
+          created_at?: string
+          created_by?: string | null
+          daily_budget?: number | null
+          effective_status?: string | null
+          firm_id: string
+          id?: string
+          is_cbo?: boolean | null
+          lifetime_budget?: number | null
+          meta_campaign_id?: string | null
+          name: string
+          objective?: Database["public"]["Enums"]["meta_objective"] | null
+          published_at?: string | null
+          raw?: Json | null
+          review_status?:
+            | Database["public"]["Enums"]["meta_review_status"]
+            | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          special_ad_categories?: string[] | null
+          special_ad_category_country?: string[] | null
+          spend_cap?: number | null
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["meta_campaign_status"] | null
+          stop_time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ad_account_id?: string | null
+          ai_generated?: boolean | null
+          ai_metadata?: Json | null
+          attribution_setting?: string | null
+          bid_strategy?: Database["public"]["Enums"]["meta_bid_strategy"] | null
+          budget_remaining?: number | null
+          buying_type?: Database["public"]["Enums"]["meta_buying_type"] | null
+          created_at?: string
+          created_by?: string | null
+          daily_budget?: number | null
+          effective_status?: string | null
+          firm_id?: string
+          id?: string
+          is_cbo?: boolean | null
+          lifetime_budget?: number | null
+          meta_campaign_id?: string | null
+          name?: string
+          objective?: Database["public"]["Enums"]["meta_objective"] | null
+          published_at?: string | null
+          raw?: Json | null
+          review_status?:
+            | Database["public"]["Enums"]["meta_review_status"]
+            | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          special_ad_categories?: string[] | null
+          special_ad_category_country?: string[] | null
+          spend_cap?: number | null
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["meta_campaign_status"] | null
+          stop_time?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_campaigns_ad_account_id_fkey"
+            columns: ["ad_account_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ad_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_creatives: {
+        Row: {
+          ad_account_id: string | null
+          asset_feed_spec: Json | null
+          body: string | null
+          call_to_action_type: string | null
+          created_at: string
+          degrees_of_freedom_spec: Json | null
+          display_url: string | null
+          firm_id: string
+          id: string
+          ig_account_id: string | null
+          link_url: string | null
+          meta_creative_id: string | null
+          name: string | null
+          object_story_spec: Json | null
+          page_id: string | null
+          primary_media_id: string | null
+          raw: Json | null
+          status: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          ad_account_id?: string | null
+          asset_feed_spec?: Json | null
+          body?: string | null
+          call_to_action_type?: string | null
+          created_at?: string
+          degrees_of_freedom_spec?: Json | null
+          display_url?: string | null
+          firm_id: string
+          id?: string
+          ig_account_id?: string | null
+          link_url?: string | null
+          meta_creative_id?: string | null
+          name?: string | null
+          object_story_spec?: Json | null
+          page_id?: string | null
+          primary_media_id?: string | null
+          raw?: Json | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ad_account_id?: string | null
+          asset_feed_spec?: Json | null
+          body?: string | null
+          call_to_action_type?: string | null
+          created_at?: string
+          degrees_of_freedom_spec?: Json | null
+          display_url?: string | null
+          firm_id?: string
+          id?: string
+          ig_account_id?: string | null
+          link_url?: string | null
+          meta_creative_id?: string | null
+          name?: string | null
+          object_story_spec?: Json | null
+          page_id?: string | null
+          primary_media_id?: string | null
+          raw?: Json | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_creatives_ad_account_id_fkey"
+            columns: ["ad_account_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ad_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_creatives_ig_account_id_fkey"
+            columns: ["ig_account_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ig_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_creatives_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "meta_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_creatives_primary_media_id_fkey"
+            columns: ["primary_media_id"]
+            isOneToOne: false
+            referencedRelation: "meta_media_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_custom_audiences: {
+        Row: {
+          ad_account_id: string | null
+          approximate_count: number | null
+          created_at: string
+          description: string | null
+          firm_id: string
+          id: string
+          meta_audience_id: string
+          name: string | null
+          operation_status: Json | null
+          raw: Json | null
+          retention_days: number | null
+          rule: Json | null
+          subtype: string | null
+          updated_at: string
+        }
+        Insert: {
+          ad_account_id?: string | null
+          approximate_count?: number | null
+          created_at?: string
+          description?: string | null
+          firm_id: string
+          id?: string
+          meta_audience_id: string
+          name?: string | null
+          operation_status?: Json | null
+          raw?: Json | null
+          retention_days?: number | null
+          rule?: Json | null
+          subtype?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ad_account_id?: string | null
+          approximate_count?: number | null
+          created_at?: string
+          description?: string | null
+          firm_id?: string
+          id?: string
+          meta_audience_id?: string
+          name?: string | null
+          operation_status?: Json | null
+          raw?: Json | null
+          retention_days?: number | null
+          rule?: Json | null
+          subtype?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_custom_audiences_ad_account_id_fkey"
+            columns: ["ad_account_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ad_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_ig_accounts: {
+        Row: {
+          created_at: string
+          firm_id: string
+          followers_count: number | null
+          id: string
+          meta_ig_id: string
+          page_id: string | null
+          profile_picture_url: string | null
+          raw: Json | null
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          firm_id: string
+          followers_count?: number | null
+          id?: string
+          meta_ig_id: string
+          page_id?: string | null
+          profile_picture_url?: string | null
+          raw?: Json | null
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          firm_id?: string
+          followers_count?: number | null
+          id?: string
+          meta_ig_id?: string
+          page_id?: string | null
+          profile_picture_url?: string | null
+          raw?: Json | null
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ig_accounts_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "meta_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_insights_ad_daily: {
+        Row: {
+          actions: Json | null
+          ad_id: string
+          clicks: number | null
+          conversion_value: number | null
+          conversions: number | null
+          cpc: number | null
+          cpm: number | null
+          ctr: number | null
+          date_start: string
+          fetched_at: string
+          firm_id: string
+          frequency: number | null
+          id: string
+          impressions: number | null
+          raw: Json | null
+          reach: number | null
+          roas: number | null
+          spend: number | null
+          video_p100_watched_actions: Json | null
+          video_p25_watched_actions: Json | null
+          video_p50_watched_actions: Json | null
+          video_p75_watched_actions: Json | null
+        }
+        Insert: {
+          actions?: Json | null
+          ad_id: string
+          clicks?: number | null
+          conversion_value?: number | null
+          conversions?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          ctr?: number | null
+          date_start: string
+          fetched_at?: string
+          firm_id: string
+          frequency?: number | null
+          id?: string
+          impressions?: number | null
+          raw?: Json | null
+          reach?: number | null
+          roas?: number | null
+          spend?: number | null
+          video_p100_watched_actions?: Json | null
+          video_p25_watched_actions?: Json | null
+          video_p50_watched_actions?: Json | null
+          video_p75_watched_actions?: Json | null
+        }
+        Update: {
+          actions?: Json | null
+          ad_id?: string
+          clicks?: number | null
+          conversion_value?: number | null
+          conversions?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          ctr?: number | null
+          date_start?: string
+          fetched_at?: string
+          firm_id?: string
+          frequency?: number | null
+          id?: string
+          impressions?: number | null
+          raw?: Json | null
+          reach?: number | null
+          roas?: number | null
+          spend?: number | null
+          video_p100_watched_actions?: Json | null
+          video_p25_watched_actions?: Json | null
+          video_p50_watched_actions?: Json | null
+          video_p75_watched_actions?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_insights_ad_daily_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_insights_adset_daily: {
+        Row: {
+          actions: Json | null
+          ad_set_id: string
+          clicks: number | null
+          conversion_value: number | null
+          conversions: number | null
+          cpc: number | null
+          cpm: number | null
+          ctr: number | null
+          date_start: string
+          fetched_at: string
+          firm_id: string
+          frequency: number | null
+          id: string
+          impressions: number | null
+          raw: Json | null
+          reach: number | null
+          roas: number | null
+          spend: number | null
+        }
+        Insert: {
+          actions?: Json | null
+          ad_set_id: string
+          clicks?: number | null
+          conversion_value?: number | null
+          conversions?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          ctr?: number | null
+          date_start: string
+          fetched_at?: string
+          firm_id: string
+          frequency?: number | null
+          id?: string
+          impressions?: number | null
+          raw?: Json | null
+          reach?: number | null
+          roas?: number | null
+          spend?: number | null
+        }
+        Update: {
+          actions?: Json | null
+          ad_set_id?: string
+          clicks?: number | null
+          conversion_value?: number | null
+          conversions?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          ctr?: number | null
+          date_start?: string
+          fetched_at?: string
+          firm_id?: string
+          frequency?: number | null
+          id?: string
+          impressions?: number | null
+          raw?: Json | null
+          reach?: number | null
+          roas?: number | null
+          spend?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_insights_adset_daily_ad_set_id_fkey"
+            columns: ["ad_set_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ad_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_insights_campaign_daily: {
+        Row: {
+          action_values: Json | null
+          actions: Json | null
+          campaign_id: string
+          clicks: number | null
+          conversion_value: number | null
+          conversions: number | null
+          cpc: number | null
+          cpm: number | null
+          ctr: number | null
+          date_start: string
+          fetched_at: string
+          firm_id: string
+          frequency: number | null
+          id: string
+          impressions: number | null
+          raw: Json | null
+          reach: number | null
+          roas: number | null
+          spend: number | null
+          unique_clicks: number | null
+        }
+        Insert: {
+          action_values?: Json | null
+          actions?: Json | null
+          campaign_id: string
+          clicks?: number | null
+          conversion_value?: number | null
+          conversions?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          ctr?: number | null
+          date_start: string
+          fetched_at?: string
+          firm_id: string
+          frequency?: number | null
+          id?: string
+          impressions?: number | null
+          raw?: Json | null
+          reach?: number | null
+          roas?: number | null
+          spend?: number | null
+          unique_clicks?: number | null
+        }
+        Update: {
+          action_values?: Json | null
+          actions?: Json | null
+          campaign_id?: string
+          clicks?: number | null
+          conversion_value?: number | null
+          conversions?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          ctr?: number | null
+          date_start?: string
+          fetched_at?: string
+          firm_id?: string
+          frequency?: number | null
+          id?: string
+          impressions?: number | null
+          raw?: Json | null
+          reach?: number | null
+          roas?: number | null
+          spend?: number | null
+          unique_clicks?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_insights_campaign_daily_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "meta_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_job_queue: {
+        Row: {
+          attempts: number | null
+          completed_at: string | null
+          created_at: string
+          firm_id: string | null
+          id: string
+          job_type: string
+          last_error: string | null
+          locked_at: string | null
+          locked_by: string | null
+          max_attempts: number | null
+          payload: Json
+          priority: number | null
+          result: Json | null
+          run_after: string
+          status: Database["public"]["Enums"]["meta_job_status"]
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number | null
+          completed_at?: string | null
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          job_type: string
+          last_error?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          max_attempts?: number | null
+          payload?: Json
+          priority?: number | null
+          result?: Json | null
+          run_after?: string
+          status?: Database["public"]["Enums"]["meta_job_status"]
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number | null
+          completed_at?: string | null
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          job_type?: string
+          last_error?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          max_attempts?: number | null
+          payload?: Json
+          priority?: number | null
+          result?: Json | null
+          run_after?: string
+          status?: Database["public"]["Enums"]["meta_job_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      meta_lead_forms: {
+        Row: {
+          created_at: string
+          firm_id: string
+          follow_up_action_url: string | null
+          id: string
+          meta_form_id: string
+          name: string | null
+          page_id: string | null
+          privacy_policy_url: string | null
+          questions: Json | null
+          raw: Json | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          firm_id: string
+          follow_up_action_url?: string | null
+          id?: string
+          meta_form_id: string
+          name?: string | null
+          page_id?: string | null
+          privacy_policy_url?: string | null
+          questions?: Json | null
+          raw?: Json | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          firm_id?: string
+          follow_up_action_url?: string | null
+          id?: string
+          meta_form_id?: string
+          name?: string | null
+          page_id?: string | null
+          privacy_policy_url?: string | null
+          questions?: Json | null
+          raw?: Json | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_lead_forms_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "meta_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_lead_submissions: {
+        Row: {
+          ad_id: string | null
+          campaign_id: string | null
+          created_at: string
+          created_time: string | null
+          field_data: Json | null
+          firm_id: string
+          form_id: string | null
+          id: string
+          meta_leadgen_id: string
+          raw: Json | null
+          synced_lead_id: string | null
+        }
+        Insert: {
+          ad_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          created_time?: string | null
+          field_data?: Json | null
+          firm_id: string
+          form_id?: string | null
+          id?: string
+          meta_leadgen_id: string
+          raw?: Json | null
+          synced_lead_id?: string | null
+        }
+        Update: {
+          ad_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          created_time?: string | null
+          field_data?: Json | null
+          firm_id?: string
+          form_id?: string | null
+          id?: string
+          meta_leadgen_id?: string
+          raw?: Json | null
+          synced_lead_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_lead_submissions_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_lead_submissions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "meta_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_lead_submissions_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "meta_lead_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_media_assets: {
+        Row: {
+          ad_account_id: string | null
+          created_at: string
+          duration_seconds: number | null
+          file_size_bytes: number | null
+          firm_id: string
+          height: number | null
+          id: string
+          meta_hash: string | null
+          meta_video_id: string | null
+          raw: Json | null
+          storage_path: string | null
+          thumbnail_url: string | null
+          type: string
+          updated_at: string
+          url: string | null
+          width: number | null
+        }
+        Insert: {
+          ad_account_id?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          firm_id: string
+          height?: number | null
+          id?: string
+          meta_hash?: string | null
+          meta_video_id?: string | null
+          raw?: Json | null
+          storage_path?: string | null
+          thumbnail_url?: string | null
+          type: string
+          updated_at?: string
+          url?: string | null
+          width?: number | null
+        }
+        Update: {
+          ad_account_id?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          firm_id?: string
+          height?: number | null
+          id?: string
+          meta_hash?: string | null
+          meta_video_id?: string | null
+          raw?: Json | null
+          storage_path?: string | null
+          thumbnail_url?: string | null
+          type?: string
+          updated_at?: string
+          url?: string | null
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_media_assets_ad_account_id_fkey"
+            columns: ["ad_account_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ad_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_pages: {
+        Row: {
+          access_token_ciphertext: string | null
+          access_token_iv: string | null
+          category: string | null
+          created_at: string
+          firm_id: string
+          id: string
+          meta_page_id: string
+          name: string | null
+          picture_url: string | null
+          raw: Json | null
+          tasks: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          access_token_ciphertext?: string | null
+          access_token_iv?: string | null
+          category?: string | null
+          created_at?: string
+          firm_id: string
+          id?: string
+          meta_page_id: string
+          name?: string | null
+          picture_url?: string | null
+          raw?: Json | null
+          tasks?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          access_token_ciphertext?: string | null
+          access_token_iv?: string | null
+          category?: string | null
+          created_at?: string
+          firm_id?: string
+          id?: string
+          meta_page_id?: string
+          name?: string | null
+          picture_url?: string | null
+          raw?: Json | null
+          tasks?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      meta_pixels: {
+        Row: {
+          ad_account_id: string | null
+          code: string | null
+          created_at: string
+          firm_id: string
+          id: string
+          is_active: boolean | null
+          last_fired_time: string | null
+          meta_pixel_id: string
+          name: string | null
+          raw: Json | null
+          updated_at: string
+        }
+        Insert: {
+          ad_account_id?: string | null
+          code?: string | null
+          created_at?: string
+          firm_id: string
+          id?: string
+          is_active?: boolean | null
+          last_fired_time?: string | null
+          meta_pixel_id: string
+          name?: string | null
+          raw?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          ad_account_id?: string | null
+          code?: string | null
+          created_at?: string
+          firm_id?: string
+          id?: string
+          is_active?: boolean | null
+          last_fired_time?: string | null
+          meta_pixel_id?: string
+          name?: string | null
+          raw?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_pixels_ad_account_id_fkey"
+            columns: ["ad_account_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ad_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_recommendations: {
+        Row: {
+          ad_account_id: string | null
+          applied_at: string | null
+          applied_by: string | null
+          body: string | null
+          category: string
+          confidence: number | null
+          created_at: string
+          dismissed_at: string | null
+          firm_id: string
+          id: string
+          model_name: string | null
+          raw: Json | null
+          scope_id: string | null
+          scope_level: Database["public"]["Enums"]["meta_object_level"] | null
+          severity: string | null
+          status: string | null
+          suggested_action: Json | null
+          title: string
+        }
+        Insert: {
+          ad_account_id?: string | null
+          applied_at?: string | null
+          applied_by?: string | null
+          body?: string | null
+          category: string
+          confidence?: number | null
+          created_at?: string
+          dismissed_at?: string | null
+          firm_id: string
+          id?: string
+          model_name?: string | null
+          raw?: Json | null
+          scope_id?: string | null
+          scope_level?: Database["public"]["Enums"]["meta_object_level"] | null
+          severity?: string | null
+          status?: string | null
+          suggested_action?: Json | null
+          title: string
+        }
+        Update: {
+          ad_account_id?: string | null
+          applied_at?: string | null
+          applied_by?: string | null
+          body?: string | null
+          category?: string
+          confidence?: number | null
+          created_at?: string
+          dismissed_at?: string | null
+          firm_id?: string
+          id?: string
+          model_name?: string | null
+          raw?: Json | null
+          scope_id?: string | null
+          scope_level?: Database["public"]["Enums"]["meta_object_level"] | null
+          severity?: string | null
+          status?: string | null
+          suggested_action?: Json | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_recommendations_ad_account_id_fkey"
+            columns: ["ad_account_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ad_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_saved_audiences: {
+        Row: {
+          ad_account_id: string | null
+          created_at: string
+          created_by: string | null
+          firm_id: string
+          id: string
+          name: string
+          targeting_spec: Json
+          updated_at: string
+        }
+        Insert: {
+          ad_account_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          firm_id: string
+          id?: string
+          name: string
+          targeting_spec?: Json
+          updated_at?: string
+        }
+        Update: {
+          ad_account_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          firm_id?: string
+          id?: string
+          name?: string
+          targeting_spec?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_saved_audiences_ad_account_id_fkey"
+            columns: ["ad_account_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ad_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_saved_reports: {
+        Row: {
+          breakdowns: Json | null
+          columns: Json | null
+          created_at: string
+          created_by: string | null
+          date_preset: string | null
+          description: string | null
+          filters: Json | null
+          firm_id: string
+          id: string
+          level: Database["public"]["Enums"]["meta_object_level"]
+          name: string
+          recipients: string[] | null
+          schedule: Json | null
+          updated_at: string
+        }
+        Insert: {
+          breakdowns?: Json | null
+          columns?: Json | null
+          created_at?: string
+          created_by?: string | null
+          date_preset?: string | null
+          description?: string | null
+          filters?: Json | null
+          firm_id: string
+          id?: string
+          level: Database["public"]["Enums"]["meta_object_level"]
+          name: string
+          recipients?: string[] | null
+          schedule?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          breakdowns?: Json | null
+          columns?: Json | null
+          created_at?: string
+          created_by?: string | null
+          date_preset?: string | null
+          description?: string | null
+          filters?: Json | null
+          firm_id?: string
+          id?: string
+          level?: Database["public"]["Enums"]["meta_object_level"]
+          name?: string
+          recipients?: string[] | null
+          schedule?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      meta_sync_state: {
+        Row: {
+          ad_account_id: string | null
+          created_at: string
+          entity_type: string
+          firm_id: string
+          id: string
+          last_cursor: string | null
+          last_error: string | null
+          last_status: string | null
+          last_synced_at: string | null
+          next_run_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          ad_account_id?: string | null
+          created_at?: string
+          entity_type: string
+          firm_id: string
+          id?: string
+          last_cursor?: string | null
+          last_error?: string | null
+          last_status?: string | null
+          last_synced_at?: string | null
+          next_run_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ad_account_id?: string | null
+          created_at?: string
+          entity_type?: string
+          firm_id?: string
+          id?: string
+          last_cursor?: string | null
+          last_error?: string | null
+          last_status?: string | null
+          last_synced_at?: string | null
+          next_run_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_sync_state_ad_account_id_fkey"
+            columns: ["ad_account_id"]
+            isOneToOne: false
+            referencedRelation: "meta_ad_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_webhook_events: {
+        Row: {
+          error: string | null
+          field: string | null
+          firm_id: string | null
+          id: string
+          meta_object_id: string | null
+          object: string
+          payload: Json
+          processed: boolean | null
+          processed_at: string | null
+          received_at: string
+          signature_header: string | null
+          signature_valid: boolean | null
+        }
+        Insert: {
+          error?: string | null
+          field?: string | null
+          firm_id?: string | null
+          id?: string
+          meta_object_id?: string | null
+          object: string
+          payload: Json
+          processed?: boolean | null
+          processed_at?: string | null
+          received_at?: string
+          signature_header?: string | null
+          signature_valid?: boolean | null
+        }
+        Update: {
+          error?: string | null
+          field?: string | null
+          firm_id?: string | null
+          id?: string
+          meta_object_id?: string | null
+          object?: string
+          payload?: Json
+          processed?: boolean | null
+          processed_at?: string | null
+          received_at?: string
+          signature_header?: string | null
+          signature_valid?: boolean | null
         }
         Relationships: []
       }
@@ -6156,6 +7772,33 @@ export type Database = {
         | "pending_review"
       lead_tier: "A" | "B" | "C" | "D"
       meta_audience_type: "saved" | "custom" | "lookalike"
+      meta_bid_strategy:
+        | "LOWEST_COST_WITHOUT_CAP"
+        | "LOWEST_COST_WITH_BID_CAP"
+        | "COST_CAP"
+        | "LOWEST_COST_WITH_MIN_ROAS"
+      meta_billing_event:
+        | "IMPRESSIONS"
+        | "LINK_CLICKS"
+        | "PAGE_LIKES"
+        | "POST_ENGAGEMENT"
+        | "VIDEO_VIEWS"
+        | "THRUPLAY"
+        | "APP_INSTALLS"
+      meta_buying_type: "AUCTION" | "RESERVED"
+      meta_campaign_status:
+        | "active"
+        | "paused"
+        | "deleted"
+        | "archived"
+        | "draft"
+        | "pending_review"
+        | "disapproved"
+        | "preapproved"
+        | "pending_billing_info"
+        | "campaign_paused"
+        | "adset_paused"
+        | "with_issues"
       meta_job_status:
         | "queued"
         | "running"
@@ -6164,7 +7807,36 @@ export type Database = {
         | "cancelled"
         | "retrying"
       meta_object_level: "account" | "campaign" | "adset" | "ad"
+      meta_objective:
+        | "OUTCOME_AWARENESS"
+        | "OUTCOME_TRAFFIC"
+        | "OUTCOME_ENGAGEMENT"
+        | "OUTCOME_LEADS"
+        | "OUTCOME_APP_PROMOTION"
+        | "OUTCOME_SALES"
+      meta_optimization_goal:
+        | "REACH"
+        | "IMPRESSIONS"
+        | "LINK_CLICKS"
+        | "LANDING_PAGE_VIEWS"
+        | "POST_ENGAGEMENT"
+        | "PAGE_LIKES"
+        | "VIDEO_VIEWS"
+        | "LEAD_GENERATION"
+        | "CONVERSIONS"
+        | "OFFSITE_CONVERSIONS"
+        | "APP_INSTALLS"
+        | "VALUE"
+        | "THRUPLAY"
+        | "QUALITY_LEAD"
       meta_rec_status: "pending" | "applied" | "dismissed" | "expired"
+      meta_review_status:
+        | "draft"
+        | "pending_review"
+        | "approved"
+        | "rejected"
+        | "published"
+        | "failed"
       subscription_plan: "basic" | "premium"
       team_permission:
         | "view_leads"
@@ -6352,6 +8024,36 @@ export const Constants = {
       ],
       lead_tier: ["A", "B", "C", "D"],
       meta_audience_type: ["saved", "custom", "lookalike"],
+      meta_bid_strategy: [
+        "LOWEST_COST_WITHOUT_CAP",
+        "LOWEST_COST_WITH_BID_CAP",
+        "COST_CAP",
+        "LOWEST_COST_WITH_MIN_ROAS",
+      ],
+      meta_billing_event: [
+        "IMPRESSIONS",
+        "LINK_CLICKS",
+        "PAGE_LIKES",
+        "POST_ENGAGEMENT",
+        "VIDEO_VIEWS",
+        "THRUPLAY",
+        "APP_INSTALLS",
+      ],
+      meta_buying_type: ["AUCTION", "RESERVED"],
+      meta_campaign_status: [
+        "active",
+        "paused",
+        "deleted",
+        "archived",
+        "draft",
+        "pending_review",
+        "disapproved",
+        "preapproved",
+        "pending_billing_info",
+        "campaign_paused",
+        "adset_paused",
+        "with_issues",
+      ],
       meta_job_status: [
         "queued",
         "running",
@@ -6361,7 +8063,39 @@ export const Constants = {
         "retrying",
       ],
       meta_object_level: ["account", "campaign", "adset", "ad"],
+      meta_objective: [
+        "OUTCOME_AWARENESS",
+        "OUTCOME_TRAFFIC",
+        "OUTCOME_ENGAGEMENT",
+        "OUTCOME_LEADS",
+        "OUTCOME_APP_PROMOTION",
+        "OUTCOME_SALES",
+      ],
+      meta_optimization_goal: [
+        "REACH",
+        "IMPRESSIONS",
+        "LINK_CLICKS",
+        "LANDING_PAGE_VIEWS",
+        "POST_ENGAGEMENT",
+        "PAGE_LIKES",
+        "VIDEO_VIEWS",
+        "LEAD_GENERATION",
+        "CONVERSIONS",
+        "OFFSITE_CONVERSIONS",
+        "APP_INSTALLS",
+        "VALUE",
+        "THRUPLAY",
+        "QUALITY_LEAD",
+      ],
       meta_rec_status: ["pending", "applied", "dismissed", "expired"],
+      meta_review_status: [
+        "draft",
+        "pending_review",
+        "approved",
+        "rejected",
+        "published",
+        "failed",
+      ],
       subscription_plan: ["basic", "premium"],
       team_permission: [
         "view_leads",
