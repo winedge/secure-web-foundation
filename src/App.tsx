@@ -24,6 +24,8 @@ import { CustomDomainRoot } from "./components/CustomDomainRoot";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 type LazyImporter<T extends { default: ComponentType<any> }> = () => Promise<T>;
 
