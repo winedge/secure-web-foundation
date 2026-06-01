@@ -37,6 +37,7 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
 
   const [selected, setSelected] = useState<string[]>([]);
   const [formOpen, setFormOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [editCampaign, setEditCampaign] = useState<MetaCampaign | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [publishCampaign, setPublishCampaign] = useState<MetaCampaign | null>(null);
