@@ -174,11 +174,17 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
         }
       />
 
-      {/* Create/Edit Dialog */}
+      {/* Edit Dialog (single-step) */}
       <CampaignFormDialog
         open={formOpen}
         onOpenChange={setFormOpen}
         editCampaign={editCampaign}
+      />
+
+      {/* Create wizard: Campaign → Ad Set → Ad → Review */}
+      <CampaignCreateWizard
+        open={wizardOpen}
+        onOpenChange={setWizardOpen}
       />
 
       <AlertDialog open={!!deletingId} onOpenChange={(o) => !o && setDeletingId(null)}>
