@@ -712,13 +712,19 @@ serve(async (req) => {
           if (rd.error) throw new Error(`Activate ${id}: ${rd.error.message}`);
         }
 
+        const { data: localAccount } = await supabase
+          .from("meta_ad_accounts")
+          .select("id")
+          .eq("firm_id", firm_id)
+          .eq("meta_ad_account_id", adAccountId)
+          .maybeSingle();
+
         // 5) Mark local campaign published
         await supabase.from("meta_campaigns").update({
           meta_campaign_id: metaCampaignId,
           status: "active",
           published_at: new Date().toISOString(),
-          published_by: user_id,
-          meta_ad_account_id: adAccountId,
+          ad_account_id: localAccount?.id || camp.ad_account_id,
         }).eq("id", campaign_id);
 
         return jsonResponse({ success: true, meta_campaign_id: metaCampaignId, created: createdIds.length });
@@ -827,11 +833,11 @@ serve(async (req) => {
       const { campaign_id, firm_id } = params;
       const { data: src } = await supabase.from("meta_campaigns").select("*").eq("id", campaign_id).single();
       if (!src) return errorResponse("Campaign not found");
-      const { id: _omit, created_at, updated_at, meta_campaign_id, published_at, published_by, ...rest } = src;
+      const { id: _omit, created_at, updated_at, meta_campaign_id, published_at, ...rest } = src;
       const { data: copy, error: copyErr } = await supabase.from("meta_campaigns").insert({
         ...rest, firm_id: firm_id || rest.firm_id,
         name: `${src.name} (Copy)`, status: "draft",
-        meta_campaign_id: null, published_at: null, published_by: null,
+        meta_campaign_id: null, published_at: null,
       }).select().single();
       if (copyErr) return errorResponse(copyErr.message);
       return jsonResponse({ success: true, id: copy.id });
