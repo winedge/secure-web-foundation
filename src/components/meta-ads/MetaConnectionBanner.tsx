@@ -16,7 +16,7 @@ export function MetaConnectionBanner() {
   const { toast } = useToast();
   const qc = useQueryClient();
 
-  const meta = connections?.find((c) => c.platform === 'meta' && c.is_active);
+  const meta = connections?.find((c) => c.platform === 'facebook' && c.is_active);
 
   const lastJob = useQuery({
     queryKey: ['meta-last-sync-job', firm?.id],
