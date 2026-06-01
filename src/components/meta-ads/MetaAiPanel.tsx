@@ -77,6 +77,8 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
           bid_strategy: aiResult.bid_strategy || 'LOWEST_COST',
           target_states: targetStates.split(',').map((s: string) => s.trim()).filter(Boolean),
           ai_recommendations: aiResult,
+          status: 'draft',
+          created_by_ai: true,
         }, { onSuccess: resolve, onError: reject });
       });
 
@@ -91,6 +93,7 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
               interests: (set.interests || []).map((i: string) => ({ name: i })),
               locations: (set.locations || []).map((l: string) => ({ name: l })),
               placements: set.placements || ['facebook_feed', 'instagram_feed'],
+              status: 'draft',
             }, { onSuccess: resolve, onError: reject });
           });
 
@@ -106,6 +109,7 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
                   call_to_action: ad.call_to_action || 'LEARN_MORE',
                   ai_generated: true,
                   ai_score: Math.floor(Math.random() * 20) + 80,
+                  status: 'draft',
                 }, { onSuccess: () => resolve(), onError: reject });
               });
             }
@@ -113,7 +117,10 @@ export function MetaAiPanel({ campaignId, onCampaignCreated }: Props) {
         }
       }
 
-      toast({ title: 'Campaign created!', description: 'AI-generated campaign with ad sets and ads applied.' });
+      toast({
+        title: 'AI draft created',
+        description: 'Open the Campaigns tab and click Review & Publish to push it live on Meta.',
+      });
       onCampaignCreated(campaign.id);
     } catch (e: any) {
       toast({ title: 'Error applying strategy', description: e.message, variant: 'destructive' });
