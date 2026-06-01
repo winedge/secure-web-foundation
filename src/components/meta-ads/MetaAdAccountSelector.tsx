@@ -19,9 +19,11 @@ interface Props {
   connectionId: string;
   currentAdAccountId?: string | null;
   currentMetadata?: any;
+  onSaved?: () => void;
 }
 
-export function MetaAdAccountSelector({ connectionId, currentAdAccountId, currentMetadata }: Props) {
+export function MetaAdAccountSelector({ connectionId, currentAdAccountId, currentMetadata, onSaved }: Props) {
+
   const { user } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -64,7 +66,9 @@ export function MetaAdAccountSelector({ connectionId, currentAdAccountId, curren
       toast({ title: 'Ad account selected', description: 'Future syncs will use this account.' });
       qc.invalidateQueries({ queryKey: ['platform-connections'] });
       qc.invalidateQueries({ queryKey: ['meta-firm-connection'] });
+      onSaved?.();
     },
+
     onError: (e: any) => toast({ title: 'Failed to save', description: e.message, variant: 'destructive' }),
   });
 

@@ -13,6 +13,8 @@ import { MetaPixelPanel } from '@/components/meta-ads/MetaPixelPanel';
 import { MetaLeadFormsPanel } from '@/components/meta-ads/MetaLeadFormsPanel';
 import { MetaSelfLearningPanel } from '@/components/meta-ads/MetaSelfLearningPanel';
 import { MetaConnectionBanner } from '@/components/meta-ads/MetaConnectionBanner';
+import { MetaAdAccountBar } from '@/components/meta-ads/MetaAdAccountBar';
+
 import { UpgradeGate } from '@/components/subscription/UpgradeGate';
 import { LayoutDashboard, Target, Megaphone, BarChart3, Bot, Zap, Activity, FileText, Brain, Users, FileBarChart } from 'lucide-react';
 
@@ -35,6 +37,8 @@ export default function MetaAds() {
           </div>
 
           <MetaConnectionBanner />
+          <MetaAdAccountBar />
+
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
             <TabsList className="flex flex-wrap w-full h-auto gap-1">

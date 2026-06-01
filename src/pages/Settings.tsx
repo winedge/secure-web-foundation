@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { Save, Building, User, Bell, Shield, Link2, Facebook, Instagram, Linkedin, Twitter, Video, CheckCircle, XCircle, Loader2, RefreshCw, ExternalLink, Scale, MessageCircle, Upload } from 'lucide-react';
 import { TwoFactorSetup } from '@/components/auth/TwoFactorSetup';
 import { WebAuthnSetup } from '@/components/auth/WebAuthnSetup';
-import { MetaAdAccountSelector } from '@/components/meta-ads/MetaAdAccountSelector';
+
 
 import { ZeroKnowledgeSetup } from '@/components/auth/ZeroKnowledgeSetup';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -602,11 +602,10 @@ export default function Settings() {
                                     {metaVerification.connected ? '✓ Token verified and active' : '✗ Token expired - please reconnect'}
                                   </div>
                                 )}
-                                <MetaAdAccountSelector
-                                  connectionId={fbConn.id}
-                                  currentAdAccountId={(fbConn as any).metadata?.ad_account_id}
-                                  currentMetadata={(fbConn as any).metadata}
-                                />
+                                <p className="text-[11px] text-muted-foreground mt-2">
+                                  Choose your active ad account from the Meta Ads Manager page.
+                                </p>
+
                               </div>
 
                             );
