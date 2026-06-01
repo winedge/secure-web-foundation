@@ -204,6 +204,7 @@ export function useCreateMetaCampaign() {
   const { toast } = useToast();
   const { data: firm } = useFirm();
   const { user } = useAuth();
+  const { data: selectedAdAccount } = useSelectedMetaAdAccount();
 
   return useMutation({
     mutationFn: async (input: Partial<MetaCampaign>) => {
@@ -214,6 +215,7 @@ export function useCreateMetaCampaign() {
         !input.status || input.status === 'draft' || input.created_by_ai === true;
       const insertPayload: any = {
         firm_id: firm.id,
+        ad_account_id: selectedAdAccount?.id ?? input.ad_account_id ?? null,
         ...input,
         status: isDraft ? 'draft' : input.status,
       };
@@ -344,11 +346,19 @@ export function useReachEstimate() {
 export function useMetaLiveInsights(datePreset: string = 'last_30d') {
   const { user } = useAuth();
   const { data: firm } = useFirm();
+  const { data: selectedAdAccount } = useSelectedMetaAdAccount();
   return useQuery({
-    queryKey: ['meta-live-insights', firm?.id, datePreset],
+    queryKey: ['meta-live-insights', firm?.id, selectedAdAccount?.id ?? 'all', datePreset],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
-        body: { action: 'live_insights', user_id: user?.id, firm_id: firm?.id, date_preset: datePreset },
+        body: {
+          action: 'live_insights',
+          user_id: user?.id,
+          firm_id: firm?.id,
+          ad_account_row_id: selectedAdAccount?.id,
+          ad_account_id: selectedAdAccount?.meta_ad_account_id,
+          date_preset: datePreset,
+        },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
