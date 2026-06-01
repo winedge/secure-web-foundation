@@ -1,0 +1,15 @@
+{
+  "name": "leadsthru-db",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "db:export-schema": "node scripts/pg-to-mysql.mjs",
+    "db:export-seed":   "node scripts/export-seed.mjs",
+    "db:migrate":       "bash scripts/apply-migrations.sh",
+    "db:seed":          "node scripts/load-seed.mjs",
+    "db:reset":         "npm run db:migrate && npm run db:seed"
+  },
+  "dependencies": {
+    "mysql2": "^3.11.0"
+  }
+}

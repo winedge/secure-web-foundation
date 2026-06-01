@@ -1,0 +1,5691 @@
+[
+  {
+    "id": "ade11bfa-226f-416c-a72c-3fd816b2f0c4",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Family Dental Practice",
+    "description": "Friendly hero, services grid, patient reviews and an appointment request form.",
+    "category": "medical",
+    "tags": [
+      "dental",
+      "appointment",
+      "family"
+    ],
+    "thumbnail_url": null,
+    "is_public": true,
+    "snapshot": {
+      "slug": "family-dental",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "282bdc8e-8320-4213-8a40-13ded18612ad",
+          "type": "hero",
+          "props": {
+            "align": "center",
+            "layout": "split-form-right",
+            "eyebrow": "Accepting new patients",
+            "headline": "Gentle, modern dentistry for your whole family",
+            "imageUrl": "",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Book your visit"
+            },
+            "subheadline": "Same-week appointments, transparent pricing, and a team that treats you like family.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "Our services"
+            },
+            "formCardStyle": "card",
+            "formCardTitle": "Request a callback",
+            "formCardSubtitle": "We respond within 1 business hour."
+          },
+          "visible": true
+        },
+        {
+          "id": "364f2bcb-fabd-4d41-bca1-4632acfb88af",
+          "type": "features",
+          "props": {
+            "intro": "Comprehensive dental services under one roof.",
+            "items": [
+              {
+                "icon": "Sparkles",
+                "title": "Cleanings & exams",
+                "description": "Routine preventive care to keep smiles healthy."
+              },
+              {
+                "icon": "Smile",
+                "title": "Cosmetic dentistry",
+                "description": "Veneers, whitening and bonding for a confident smile."
+              },
+              {
+                "icon": "Shield",
+                "title": "Family-friendly",
+                "description": "Kid-friendly rooms and gentle care for every age."
+              }
+            ],
+            "columns": 3,
+            "heading": "Care we provide"
+          },
+          "visible": true
+        },
+        {
+          "id": "2be1e42d-704e-4579-8449-9701562600a3",
+          "type": "testimonials",
+          "props": {
+            "items": [
+              {
+                "role": "Patient since 2022",
+                "quote": "Best dentist experience I have ever had. Truly painless.",
+                "author": "Megan R.",
+                "rating": 5
+              },
+              {
+                "role": "Parent of two",
+                "quote": "They make my kids actually look forward to their checkups.",
+                "author": "David K.",
+                "rating": 5
+              },
+              {
+                "role": "Patient since 2021",
+                "quote": "Modern office, kind staff, fair prices. Highly recommend.",
+                "author": "Lina S.",
+                "rating": 5
+              }
+            ],
+            "layout": "grid",
+            "heading": "What patients say"
+          },
+          "visible": true
+        },
+        {
+          "id": "912b8004-ce4c-4edf-b82d-cf4629a6af8f",
+          "type": "faq",
+          "props": {
+            "items": [
+              {
+                "answer": "We accept most major dental plans. Call us with your provider name.",
+                "question": "Do you accept my insurance?"
+              },
+              {
+                "answer": "New patients can usually be scheduled within the same week.",
+                "question": "How soon can I be seen?"
+              },
+              {
+                "answer": "Yes, we offer 0% financing on treatment plans over $500.",
+                "question": "Do you offer financing?"
+              }
+            ],
+            "heading": "Common questions"
+          },
+          "visible": true
+        },
+        {
+          "id": "80f07d60-611d-4f46-98d6-7af16806465a",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Request an appointment",
+            "description": "Tell us a bit about you and we will confirm a time within one business hour."
+          },
+          "visible": true
+        },
+        {
+          "id": "22a73b34-4fa8-40b1-9880-e4c8914dea3e",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Bright Smile Family Dental. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Bright Smile Family Dental"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": "clean_slate",
+      "seo_config": {},
+      "typography": {},
+      "hero_config": {},
+      "accent_color": "#10b981",
+      "heading_text": "Gentle, modern dentistry for your whole family",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#0ea5e9",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#f8fafc",
+      "description_text": "New-patient exams, cleanings, fillings and more | with same-week appointments.",
+      "firm_display_name": "Bright Smile Family Dental"
+    },
+    "created_at": "2026-05-19T08:36:15.384582+00:00",
+    "updated_at": "2026-05-19T08:36:15.384582+00:00",
+    "vertical_slug": "dental",
+    "is_starter": true
+  },
+  {
+    "id": "944df41f-cd90-40eb-a537-a4b3c29035f7",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Cosmetic Smile Clinic",
+    "description": "Premium cosmetic-dentistry layout with before/after gallery and consultation CTA.",
+    "category": "medical",
+    "tags": [
+      "dental",
+      "cosmetic",
+      "veneers"
+    ],
+    "thumbnail_url": null,
+    "is_public": true,
+    "snapshot": {
+      "slug": "cosmetic-smile",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "bf351838-ed7d-4634-8267-3d192ec04a3a",
+          "type": "hero",
+          "props": {
+            "align": "center",
+            "layout": "centered",
+            "eyebrow": "Premium cosmetic dentistry",
+            "headline": "The smile you have always wanted",
+            "imageUrl": "",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Book a consultation"
+            },
+            "subheadline": "Hand-crafted veneers and full smile makeovers by award-winning cosmetic dentists.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "See the results"
+            },
+            "formCardStyle": "card",
+            "formCardTitle": "Request a callback",
+            "formCardSubtitle": "We respond within 1 business hour."
+          },
+          "visible": true
+        },
+        {
+          "id": "b13b894e-c7e0-461a-81ab-586cf0072037",
+          "type": "stats",
+          "props": {
+            "items": [
+              {
+                "label": "Smiles transformed",
+                "value": "2",
+                "suffix": "K+"
+              },
+              {
+                "label": "Years of experience",
+                "value": "15",
+                "suffix": "+"
+              },
+              {
+                "label": "Patient rating",
+                "value": "4.9",
+                "suffix": "/5"
+              },
+              {
+                "label": "Financing available",
+                "value": "0",
+                "suffix": "%"
+              }
+            ],
+            "heading": "Trusted results"
+          },
+          "visible": true
+        },
+        {
+          "id": "239eb173-6aae-463b-a5e3-1b862de82c07",
+          "type": "features",
+          "props": {
+            "intro": "Premium results, gentle technique.",
+            "items": [
+              {
+                "icon": "Sparkles",
+                "title": "Porcelain veneers",
+                "description": "Hand-layered, natural-looking veneers built for longevity."
+              },
+              {
+                "icon": "Sun",
+                "title": "Professional whitening",
+                "description": "Up to 8 shades brighter in a single visit."
+              },
+              {
+                "icon": "Crown",
+                "title": "Smile makeovers",
+                "description": "Comprehensive plans that combine multiple treatments."
+              }
+            ],
+            "columns": 3,
+            "heading": "Signature treatments"
+          },
+          "visible": true
+        },
+        {
+          "id": "59110c28-b24a-4c39-9f32-e1916a567755",
+          "type": "gallery",
+          "props": {
+            "images": [
+              {
+                "url": "https://images.unsplash.com/photo-1606811971618-4486d14f3f99?w=800",
+                "caption": ""
+              },
+              {
+                "url": "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=800",
+                "caption": ""
+              },
+              {
+                "url": "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=800",
+                "caption": ""
+              },
+              {
+                "url": "https://images.unsplash.com/photo-1612277795421-9bc7706a4a34?w=800",
+                "caption": ""
+              }
+            ],
+            "layout": "grid",
+            "heading": "Before & after gallery"
+          },
+          "visible": true
+        },
+        {
+          "id": "c10a398b-3ad3-436f-b5bf-47fc27b73459",
+          "type": "testimonials",
+          "props": {
+            "items": [
+              {
+                "role": "Veneers patient",
+                "quote": "My veneers look completely natural. People keep asking what I changed.",
+                "author": "Olivia M.",
+                "rating": 5
+              },
+              {
+                "role": "Smile makeover",
+                "quote": "The team made the entire process feel calm and luxurious.",
+                "author": "Anika P.",
+                "rating": 5
+              },
+              {
+                "role": "Whitening patient",
+                "quote": "Worth every dollar. I cannot stop smiling.",
+                "author": "Hiro T.",
+                "rating": 5
+              }
+            ],
+            "layout": "grid",
+            "heading": "Real patient stories"
+          },
+          "visible": true
+        },
+        {
+          "id": "ecda2989-0817-45c1-89b6-8774aefb0756",
+          "type": "cta",
+          "props": {
+            "style": "bold",
+            "heading": "Ready to see what your smile could look like?",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Book consultation"
+            },
+            "subheading": "Book a complimentary cosmetic consultation today."
+          },
+          "visible": true
+        },
+        {
+          "id": "ca673ae9-f53d-4ab7-8ce4-ff662e54dbeb",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Request a consultation",
+            "description": "Share a quick note about what you would like to change and our team will reach out."
+          },
+          "visible": true
+        },
+        {
+          "id": "35dd505e-43e0-4c78-a295-0a59ac448023",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Aura Cosmetic Dentistry. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Aura Cosmetic Dentistry"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": "clean_slate",
+      "seo_config": {},
+      "typography": {},
+      "hero_config": {},
+      "accent_color": "#d4af37",
+      "heading_text": "The smile you have always wanted",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#0f172a",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#ffffff",
+      "description_text": "Award-winning veneers, whitening and full smile makeovers.",
+      "firm_display_name": "Aura Cosmetic Dentistry"
+    },
+    "created_at": "2026-05-19T08:36:15.384582+00:00",
+    "updated_at": "2026-05-19T08:36:15.384582+00:00",
+    "vertical_slug": "dental",
+    "is_starter": true
+  },
+  {
+    "id": "93692a61-6d3a-456a-a4c5-2a7135c12262",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Medspa Treatments",
+    "description": "Modern medspa hero, treatment cards, before/after gallery and booking form.",
+    "category": "medical",
+    "tags": [
+      "medspa",
+      "aesthetics",
+      "botox"
+    ],
+    "thumbnail_url": null,
+    "is_public": true,
+    "snapshot": {
+      "slug": "medspa",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "84d06ae0-efb4-42b5-9c07-baee8d4aef68",
+          "type": "hero",
+          "props": {
+            "align": "center",
+            "layout": "split-form-right",
+            "eyebrow": "Doctor-led medspa",
+            "headline": "Glow that lasts | beauty backed by science",
+            "imageUrl": "",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Book a treatment"
+            },
+            "subheadline": "Botox, fillers, laser and medical-grade facials in a calm, luxurious setting.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "Browse services"
+            },
+            "formCardStyle": "card",
+            "formCardTitle": "Request a callback",
+            "formCardSubtitle": "We respond within 1 business hour."
+          },
+          "visible": true
+        },
+        {
+          "id": "285530a8-0caf-414a-be8c-2b818a7499b3",
+          "type": "features",
+          "props": {
+            "intro": "Tailored plans for every skin type.",
+            "items": [
+              {
+                "icon": "Sparkles",
+                "title": "Neurotoxins & filler",
+                "description": "Subtle, natural-looking results from board-certified injectors."
+              },
+              {
+                "icon": "Zap",
+                "title": "Laser & IPL",
+                "description": "Pigmentation, acne scars, hair removal and skin resurfacing."
+              },
+              {
+                "icon": "Droplet",
+                "title": "Medical facials",
+                "description": "Hydrafacial, chemical peels and microneedling."
+              }
+            ],
+            "columns": 3,
+            "heading": "Popular treatments"
+          },
+          "visible": true
+        },
+        {
+          "id": "a34c4f5c-9e4b-4d37-888b-330386c5fe57",
+          "type": "steps",
+          "props": {
+            "intro": "From consultation to glow.",
+            "items": [
+              {
+                "title": "Free consult",
+                "description": "A 20-minute virtual or in-person consult to understand your goals."
+              },
+              {
+                "title": "Custom plan",
+                "description": "We design a treatment plan with clear pricing | no surprises."
+              },
+              {
+                "title": "Visible results",
+                "description": "Most clients see results from their first session."
+              }
+            ],
+            "heading": "What to expect"
+          },
+          "visible": true
+        },
+        {
+          "id": "f3088e59-30af-435d-b4fd-3c1f9b335715",
+          "type": "testimonials",
+          "props": {
+            "items": [
+              {
+                "role": "Hydrafacial",
+                "quote": "My skin has never looked better. The team is incredible.",
+                "author": "Sophia L.",
+                "rating": 5
+              },
+              {
+                "role": "Injector patient",
+                "quote": "Very natural results | exactly what I wanted.",
+                "author": "Maya P.",
+                "rating": 5
+              },
+              {
+                "role": "Laser patient",
+                "quote": "Modern, clean, calm. Feels like a five-star spa.",
+                "author": "Riya B.",
+                "rating": 5
+              }
+            ],
+            "layout": "grid",
+            "heading": "Loved by clients"
+          },
+          "visible": true
+        },
+        {
+          "id": "754dd9ab-2618-4284-b133-013284dda291",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Book your treatment",
+            "description": "Tell us what you are interested in and we will reach out to confirm."
+          },
+          "visible": true
+        },
+        {
+          "id": "92d25631-ad87-4dc7-8b35-ea5a65fb5500",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Lumière Medspa. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Lumière Medspa"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": "clean_slate",
+      "seo_config": {},
+      "typography": {},
+      "hero_config": {},
+      "accent_color": "#f472b6",
+      "heading_text": "Glow that lasts | beauty backed by science",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#be185d",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#fdf2f8",
+      "description_text": "Botox, fillers, laser and medical-grade facials in a calm, luxurious setting.",
+      "firm_display_name": "Lumière Medspa"
+    },
+    "created_at": "2026-05-19T08:36:15.384582+00:00",
+    "updated_at": "2026-05-19T08:36:15.384582+00:00",
+    "vertical_slug": "skin_clinic",
+    "is_starter": true
+  },
+  {
+    "id": "7aa1a1ba-79ea-4abb-ba96-e0f2da68970f",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Dermatology Consult",
+    "description": "Clinical dermatology landing focused on medical consults, acne, eczema and skin checks.",
+    "category": "medical",
+    "tags": [
+      "dermatology",
+      "skin",
+      "consult"
+    ],
+    "thumbnail_url": null,
+    "is_public": true,
+    "snapshot": {
+      "slug": "derm-consult",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "aae4aeba-1963-47ec-948f-cda6ec4a4743",
+          "type": "hero",
+          "props": {
+            "align": "center",
+            "layout": "centered",
+            "eyebrow": "Board-certified dermatologists",
+            "headline": "Expert dermatology care, when you need it",
+            "imageUrl": "",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Book an appointment"
+            },
+            "subheadline": "Same-week appointments for acne, eczema, full-body skin checks and cosmetic concerns.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "Our conditions"
+            },
+            "formCardStyle": "card",
+            "formCardTitle": "Request a callback",
+            "formCardSubtitle": "We respond within 1 business hour."
+          },
+          "visible": true
+        },
+        {
+          "id": "0f7c0433-1ca7-47ab-bd14-abbec6e19e19",
+          "type": "features",
+          "props": {
+            "intro": "",
+            "items": [
+              {
+                "icon": "CircleAlert",
+                "title": "Acne & rosacea",
+                "description": "Personalised plans with prescription-grade products."
+              },
+              {
+                "icon": "Sun",
+                "title": "Skin cancer screening",
+                "description": "Full-body checks with dermoscopy and biopsy when needed."
+              },
+              {
+                "icon": "Leaf",
+                "title": "Eczema & psoriasis",
+                "description": "Modern therapies including biologics and phototherapy."
+              }
+            ],
+            "columns": 3,
+            "heading": "Conditions we treat"
+          },
+          "visible": true
+        },
+        {
+          "id": "1b88912a-4b6e-43c6-ae97-c42cb0cafcbc",
+          "type": "steps",
+          "props": {
+            "intro": "",
+            "items": [
+              {
+                "title": "Book online",
+                "description": "Pick a time that works | in-person or virtual."
+              },
+              {
+                "title": "See the doctor",
+                "description": "A focused 20-minute appointment with your dermatologist."
+              },
+              {
+                "title": "Follow-up plan",
+                "description": "Prescriptions sent to your pharmacy, follow-up scheduled."
+              }
+            ],
+            "heading": "How a visit works"
+          },
+          "visible": true
+        },
+        {
+          "id": "1cc7d989-1542-4fb4-912b-e4ac75a97e3e",
+          "type": "faq",
+          "props": {
+            "items": [
+              {
+                "answer": "We accept most major plans. Call us with your insurer.",
+                "question": "Do you accept insurance?"
+              },
+              {
+                "answer": "Yes, many follow-ups can be done by video.",
+                "question": "Do you offer telehealth?"
+              },
+              {
+                "answer": "We prioritise scheduled visits but can sometimes fit urgent cases.",
+                "question": "Are walk-ins available?"
+              }
+            ],
+            "heading": "Common questions"
+          },
+          "visible": true
+        },
+        {
+          "id": "a237226d-3859-4557-b518-840102a23664",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Request an appointment",
+            "description": "Tell us what is going on and we will help you find the right visit."
+          },
+          "visible": true
+        },
+        {
+          "id": "217543b3-d3fb-4fc5-a338-b2ea364cfdc8",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Northbridge Dermatology. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Northbridge Dermatology"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": "clean_slate",
+      "seo_config": {},
+      "typography": {},
+      "hero_config": {},
+      "accent_color": "#14b8a6",
+      "heading_text": "Expert dermatology care, when you need it",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#0f766e",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#f0fdfa",
+      "description_text": "Board-certified dermatologists for acne, eczema, full-body skin checks and more.",
+      "firm_display_name": "Northbridge Dermatology"
+    },
+    "created_at": "2026-05-19T08:36:15.384582+00:00",
+    "updated_at": "2026-05-19T08:36:15.384582+00:00",
+    "vertical_slug": "skin_clinic",
+    "is_starter": true
+  },
+  {
+    "id": "ac2f9ec8-07d9-42a7-84bf-8b8520701d55",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Mass Tort Case Eval",
+    "description": "High-converting mass tort intake page with eligibility checker and trust signals.",
+    "category": "legal",
+    "tags": [
+      "mass tort",
+      "eligibility",
+      "intake"
+    ],
+    "thumbnail_url": null,
+    "is_public": true,
+    "snapshot": {
+      "slug": "mass-tort-eval",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "5e0e3ee3-adb1-4c0e-9ab1-8cfa1545564b",
+          "type": "hero",
+          "props": {
+            "align": "center",
+            "layout": "split-form-right",
+            "eyebrow": "Free case review",
+            "headline": "You may be entitled to significant compensation",
+            "imageUrl": "",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Check your eligibility"
+            },
+            "subheadline": "If you or a loved one were harmed, our nationwide network of attorneys can help. No fees unless we win.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "Learn more"
+            },
+            "formCardStyle": "card",
+            "formCardTitle": "Request a callback",
+            "formCardSubtitle": "We respond within 1 business hour."
+          },
+          "visible": true
+        },
+        {
+          "id": "28c92337-ee3a-4f9f-a656-2a5f17d9b39b",
+          "type": "stats",
+          "props": {
+            "items": [
+              {
+                "label": "Recovered for clients",
+                "value": "500",
+                "suffix": "M+"
+              },
+              {
+                "label": "Cases evaluated",
+                "value": "20",
+                "suffix": "K+"
+              },
+              {
+                "label": "States covered",
+                "value": "50",
+                "suffix": ""
+              },
+              {
+                "label": "Free hotline",
+                "value": "24",
+                "suffix": "/7"
+              }
+            ],
+            "heading": "Why families trust us"
+          },
+          "visible": true
+        },
+        {
+          "id": "f5bb6ba4-1ee9-4d52-a9a5-200fcaa06271",
+          "type": "steps",
+          "props": {
+            "intro": "Three simple steps to find out if you qualify.",
+            "items": [
+              {
+                "title": "Tell us your story",
+                "description": "A short, confidential form | takes under 2 minutes."
+              },
+              {
+                "title": "Free case review",
+                "description": "A licensed attorney reviews your situation at no cost."
+              },
+              {
+                "title": "No win, no fee",
+                "description": "If you qualify and we accept your case, you pay nothing unless we win."
+              }
+            ],
+            "heading": "How it works"
+          },
+          "visible": true
+        },
+        {
+          "id": "2256e1f1-5ddd-45b3-bf92-d0a0ce82f7de",
+          "type": "testimonials",
+          "props": {
+            "items": [
+              {
+                "role": "Recovered $1.2M",
+                "quote": "They handled everything | I just had to focus on healing.",
+                "author": "Sarah M.",
+                "rating": 5
+              },
+              {
+                "role": "Family of victim",
+                "quote": "Compassionate, professional, and they really fought for us.",
+                "author": "James R.",
+                "rating": 5
+              },
+              {
+                "role": "Settled case",
+                "quote": "I had no idea I had a case. So glad I made the call.",
+                "author": "Maria G.",
+                "rating": 5
+              }
+            ],
+            "layout": "grid",
+            "heading": "What clients say"
+          },
+          "visible": true
+        },
+        {
+          "id": "282e36fb-9018-47eb-b011-b4a2a1481db7",
+          "type": "faq",
+          "props": {
+            "items": [
+              {
+                "answer": "Yes, 100% free and confidential. There is no obligation.",
+                "question": "Is the case review really free?"
+              },
+              {
+                "answer": "You pay no attorney fees unless we recover compensation for you.",
+                "question": "What does \"no win, no fee\" mean?"
+              },
+              {
+                "answer": "Most cases resolve in 12 | 24 months, but it depends on the specifics.",
+                "question": "How long does a case take?"
+              }
+            ],
+            "heading": "Frequently asked"
+          },
+          "visible": true
+        },
+        {
+          "id": "b5dabe6c-2c2b-421c-89f7-c1a77135a921",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Start your free case review",
+            "description": "Confidential, no obligation. A licensed attorney will reach out within 24 hours."
+          },
+          "visible": true
+        },
+        {
+          "id": "e68e4a1b-58e8-42f6-aa43-7ccdf6cc04c7",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 National Justice Partners. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "National Justice Partners"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": "clean_slate",
+      "seo_config": {},
+      "typography": {},
+      "hero_config": {},
+      "accent_color": "#dc2626",
+      "heading_text": "You may be entitled to significant compensation",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#0f172a",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#ffffff",
+      "description_text": "Free, confidential case review by our nationwide mass-tort legal network.",
+      "firm_display_name": "National Justice Partners"
+    },
+    "created_at": "2026-05-19T08:36:15.384582+00:00",
+    "updated_at": "2026-05-19T08:36:15.384582+00:00",
+    "vertical_slug": "mass_tort",
+    "is_starter": true
+  },
+  {
+    "id": "26a36c0c-de8d-47bb-ba06-c3be092a1fad",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Personal Injury Intake",
+    "description": "Local personal-injury firm landing with practice areas, results bar and quick intake form.",
+    "category": "legal",
+    "tags": [
+      "personal injury",
+      "auto accident",
+      "attorney"
+    ],
+    "thumbnail_url": null,
+    "is_public": true,
+    "snapshot": {
+      "slug": "personal-injury",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "6ca5e00d-7aaf-4426-a6c4-cb5cbe768e14",
+          "type": "hero",
+          "props": {
+            "align": "center",
+            "layout": "centered",
+            "eyebrow": "Local injury attorneys",
+            "headline": "Injured? We fight to get you every dollar you deserve.",
+            "imageUrl": "",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Get my free consult"
+            },
+            "subheadline": "Over $250M recovered for accident victims across the region. Free consult, available 24/7.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "Practice areas"
+            },
+            "formCardStyle": "card",
+            "formCardTitle": "Request a callback",
+            "formCardSubtitle": "We respond within 1 business hour."
+          },
+          "visible": true
+        },
+        {
+          "id": "ca3a44b9-553c-4e82-a1a8-301b9ba20377",
+          "type": "features",
+          "props": {
+            "intro": "",
+            "items": [
+              {
+                "icon": "Car",
+                "title": "Auto accidents",
+                "description": "Car, truck and rideshare collision claims."
+              },
+              {
+                "icon": "HardHat",
+                "title": "Workplace injury",
+                "description": "Workers compensation and third-party claims."
+              },
+              {
+                "icon": "Heart",
+                "title": "Wrongful death",
+                "description": "Compassionate representation for grieving families."
+              }
+            ],
+            "columns": 3,
+            "heading": "Practice areas"
+          },
+          "visible": true
+        },
+        {
+          "id": "1e0d474e-e550-409f-a013-a812b0c5bc5d",
+          "type": "stats",
+          "props": {
+            "items": [
+              {
+                "label": "Recovered",
+                "value": "250",
+                "suffix": "M+"
+              },
+              {
+                "label": "Clients helped",
+                "value": "3",
+                "suffix": "K+"
+              },
+              {
+                "label": "Years experience",
+                "value": "40",
+                "suffix": "+"
+              },
+              {
+                "label": "Upfront cost",
+                "value": "0",
+                "suffix": "$"
+              }
+            ],
+            "heading": "Our record"
+          },
+          "visible": true
+        },
+        {
+          "id": "fec956c6-f03e-4603-a30e-f0ec9505e00c",
+          "type": "testimonials",
+          "props": {
+            "items": [
+              {
+                "role": "Auto accident",
+                "quote": "They got me 5x what the insurance first offered.",
+                "author": "Marcus T.",
+                "rating": 5
+              },
+              {
+                "role": "Slip and fall",
+                "quote": "Treated me like family from day one.",
+                "author": "Elena V.",
+                "rating": 5
+              },
+              {
+                "role": "Workplace injury",
+                "quote": "Honest, hard-working and won my case.",
+                "author": "Devon B.",
+                "rating": 5
+              }
+            ],
+            "layout": "grid",
+            "heading": "Client outcomes"
+          },
+          "visible": true
+        },
+        {
+          "id": "12e841c4-7365-4217-9b51-7ebfee3664b2",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Get a free case review",
+            "description": "Tell us briefly what happened. An attorney will call you back within one hour."
+          },
+          "visible": true
+        },
+        {
+          "id": "3aad16f3-e1aa-495b-ae0e-487477ef10f7",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Hartwell Injury Lawyers. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Hartwell Injury Lawyers"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": "clean_slate",
+      "seo_config": {},
+      "typography": {},
+      "hero_config": {},
+      "accent_color": "#facc15",
+      "heading_text": "Injured? We fight to get you every dollar you deserve.",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#1e3a8a",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#f8fafc",
+      "description_text": "Over $250M recovered for accident victims across the region.",
+      "firm_display_name": "Hartwell Injury Lawyers"
+    },
+    "created_at": "2026-05-19T08:36:15.384582+00:00",
+    "updated_at": "2026-05-19T08:36:15.384582+00:00",
+    "vertical_slug": "mass_tort",
+    "is_starter": true
+  },
+  {
+    "id": "2545ddf9-04c4-4206-a827-57dfe4a44763",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Luxury Listings",
+    "description": "Editorial real-estate landing for luxury agents with featured listings and agent bio.",
+    "category": "general",
+    "tags": [
+      "real estate",
+      "luxury",
+      "listings"
+    ],
+    "thumbnail_url": null,
+    "is_public": true,
+    "snapshot": {
+      "slug": "luxury-listings",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "98a139ae-53ac-4e69-9823-3512e6f30d4a",
+          "type": "hero",
+          "props": {
+            "align": "center",
+            "layout": "centered",
+            "eyebrow": "Luxury real estate, redefined",
+            "headline": "Extraordinary homes, exceptional service",
+            "imageUrl": "",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Browse listings"
+            },
+            "subheadline": "A curated portfolio of luxury homes and a discreet, full-service buying experience.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "Meet your agent"
+            },
+            "formCardStyle": "card",
+            "formCardTitle": "Request a callback",
+            "formCardSubtitle": "We respond within 1 business hour."
+          },
+          "visible": true
+        },
+        {
+          "id": "906942d8-8451-437e-b3d3-558634747e9b",
+          "type": "gallery",
+          "props": {
+            "images": [
+              {
+                "url": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800",
+                "caption": ""
+              },
+              {
+                "url": "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800",
+                "caption": ""
+              },
+              {
+                "url": "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800",
+                "caption": ""
+              },
+              {
+                "url": "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800",
+                "caption": ""
+              },
+              {
+                "url": "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800",
+                "caption": ""
+              },
+              {
+                "url": "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800",
+                "caption": ""
+              }
+            ],
+            "layout": "grid",
+            "heading": "Featured listings"
+          },
+          "visible": true
+        },
+        {
+          "id": "ed0a4307-9345-4763-b356-db2f15a5a566",
+          "type": "features",
+          "props": {
+            "intro": "",
+            "items": [
+              {
+                "icon": "Award",
+                "title": "Top 1% nationally",
+                "description": "Recognised among the top luxury agents in the country."
+              },
+              {
+                "icon": "Eye",
+                "title": "Off-market access",
+                "description": "Discreet listings you will not find anywhere else."
+              },
+              {
+                "icon": "Globe",
+                "title": "Global network",
+                "description": "Buyers and partners across 40+ countries."
+              }
+            ],
+            "columns": 3,
+            "heading": "Why work with us"
+          },
+          "visible": true
+        },
+        {
+          "id": "c4b5f896-4918-4d54-a95f-de3eabc73462",
+          "type": "testimonials",
+          "props": {
+            "items": [
+              {
+                "role": "Seller",
+                "quote": "Sold our home for 12% above asking in under two weeks.",
+                "author": "The Whitfields",
+                "rating": 5
+              },
+              {
+                "role": "Buyer",
+                "quote": "They found the home of our dreams before it ever hit the market.",
+                "author": "Priya & Ravi",
+                "rating": 5
+              },
+              {
+                "role": "Investor",
+                "quote": "Professional, discreet and a joy to work with.",
+                "author": "Lorenzo M.",
+                "rating": 5
+              }
+            ],
+            "layout": "grid",
+            "heading": "Recent clients"
+          },
+          "visible": true
+        },
+        {
+          "id": "5faa66b5-bb6e-489f-9565-f01de3dd103b",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Schedule a private consultation",
+            "description": "Share what you are looking for and we will reach out within one business day."
+          },
+          "visible": true
+        },
+        {
+          "id": "bb5e02c3-d523-4537-ba45-2d11985712a4",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Marchetti Luxury Realty. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Marchetti Luxury Realty"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": "clean_slate",
+      "seo_config": {},
+      "typography": {},
+      "hero_config": {},
+      "accent_color": "#a16207",
+      "heading_text": "Extraordinary homes, exceptional service",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#0f172a",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#fefce8",
+      "description_text": "Curated luxury listings and a discreet, full-service buying experience.",
+      "firm_display_name": "Marchetti Luxury Realty"
+    },
+    "created_at": "2026-05-19T08:36:15.384582+00:00",
+    "updated_at": "2026-05-19T08:36:15.384582+00:00",
+    "vertical_slug": "real_estate",
+    "is_starter": true
+  },
+  {
+    "id": "6879fbd5-654e-4e00-ab59-01ae5259ed9b",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "First-Time Buyer Funnel",
+    "description": "Warm, educational landing for first-time home buyers with quick pre-qualification.",
+    "category": "general",
+    "tags": [
+      "real estate",
+      "first time buyer",
+      "mortgage"
+    ],
+    "thumbnail_url": null,
+    "is_public": true,
+    "snapshot": {
+      "slug": "first-time-buyer",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "50f3a614-5ba6-465a-9d01-6e1c7012f974",
+          "type": "hero",
+          "props": {
+            "align": "center",
+            "layout": "split-form-right",
+            "eyebrow": "For first-time buyers",
+            "headline": "Buying your first home? We make it simple.",
+            "imageUrl": "",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Get the free guide"
+            },
+            "subheadline": "Free buyer guide, friendly agents and a step-by-step path from renting to keys in hand.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "See how it works"
+            },
+            "formCardStyle": "card",
+            "formCardTitle": "Request a callback",
+            "formCardSubtitle": "We respond within 1 business hour."
+          },
+          "visible": true
+        },
+        {
+          "id": "9d778f52-4f7a-45a2-a0e0-ad49e7f5e3c5",
+          "type": "steps",
+          "props": {
+            "intro": "",
+            "items": [
+              {
+                "title": "Free consult",
+                "description": "A 20-minute call to understand your goals and budget."
+              },
+              {
+                "title": "Get pre-approved",
+                "description": "We connect you with trusted local lenders."
+              },
+              {
+                "title": "Tour homes",
+                "description": "Curated showings of homes that match your wishlist."
+              },
+              {
+                "title": "Close & move in",
+                "description": "We negotiate, inspect and close on your behalf."
+              }
+            ],
+            "heading": "From rent to keys, in 4 steps"
+          },
+          "visible": true
+        },
+        {
+          "id": "482d34b5-4fe8-4222-8d53-24326534cda7",
+          "type": "features",
+          "props": {
+            "intro": "",
+            "items": [
+              {
+                "icon": "BookOpen",
+                "title": "Free education",
+                "description": "Plain-English guides to mortgages, closing costs and more."
+              },
+              {
+                "icon": "DollarSign",
+                "title": "Down-payment programs",
+                "description": "We help you find grants and assistance you qualify for."
+              },
+              {
+                "icon": "Users",
+                "title": "Friendly agents",
+                "description": "No pressure, no jargon, no surprises."
+              }
+            ],
+            "columns": 3,
+            "heading": "Why first-time buyers love us"
+          },
+          "visible": true
+        },
+        {
+          "id": "4798947f-1d10-43cc-afc1-fa0e338aa778",
+          "type": "faq",
+          "props": {
+            "items": [
+              {
+                "answer": "Some programs allow as little as 3% | we will help you find the right option.",
+                "question": "How much do I need for a down payment?"
+              },
+              {
+                "answer": "Many buyers qualify with scores as low as 580. We can help you improve yours if needed.",
+                "question": "What credit score do I need?"
+              },
+              {
+                "answer": "Most first-time buyers close within 60 | 90 days from pre-approval.",
+                "question": "How long does the whole process take?"
+              }
+            ],
+            "heading": "Common questions"
+          },
+          "visible": true
+        },
+        {
+          "id": "53853fac-e070-4ada-b6b2-5e662aceaec0",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Get your free buyer guide",
+            "description": "Tell us where you would like to buy and we will send your guide plus a free consult invite."
+          },
+          "visible": true
+        },
+        {
+          "id": "fa925362-9ade-4760-9865-b3abc5361b9d",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Hometown Realty Group. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Hometown Realty Group"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": "clean_slate",
+      "seo_config": {},
+      "typography": {},
+      "hero_config": {},
+      "accent_color": "#f59e0b",
+      "heading_text": "Buying your first home? We make it simple.",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#0d9488",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#f0fdfa",
+      "description_text": "Free buyer guide, friendly agents and a step-by-step path from renting to keys.",
+      "firm_display_name": "Hometown Realty Group"
+    },
+    "created_at": "2026-05-19T08:36:15.384582+00:00",
+    "updated_at": "2026-05-19T08:36:15.384582+00:00",
+    "vertical_slug": "real_estate",
+    "is_starter": true
+  },
+  {
+    "id": "bbd22e6a-7eaa-49aa-b313-5bcd52a81b4f",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "HVAC Quote Funnel",
+    "description": "Fast HVAC lead page with service areas, financing badge and 60-second quote form.",
+    "category": "general",
+    "tags": [
+      "hvac",
+      "home services",
+      "quote"
+    ],
+    "thumbnail_url": null,
+    "is_public": true,
+    "snapshot": {
+      "slug": "hvac-quote",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "9f9d551d-b254-433e-a48c-4e22fc4efdf6",
+          "type": "hero",
+          "props": {
+            "align": "center",
+            "layout": "split-form-right",
+            "eyebrow": "24/7 emergency service",
+            "headline": "Fast, honest HVAC service | quote in 60 seconds",
+            "imageUrl": "",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Get my free quote"
+            },
+            "subheadline": "AC repair, furnace install, tune-ups and financing | with same-day appointments available.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "Call now"
+            },
+            "formCardStyle": "card",
+            "formCardTitle": "Request a callback",
+            "formCardSubtitle": "We respond within 1 business hour."
+          },
+          "visible": true
+        },
+        {
+          "id": "717d449a-288c-488f-9320-671733a50c8c",
+          "type": "features",
+          "props": {
+            "intro": "",
+            "items": [
+              {
+                "icon": "Snowflake",
+                "title": "AC repair & install",
+                "description": "Cool and efficient systems built to last."
+              },
+              {
+                "icon": "Flame",
+                "title": "Furnace & heating",
+                "description": "Repair, replace and maintain | any brand, any age."
+              },
+              {
+                "icon": "Wrench",
+                "title": "Maintenance plans",
+                "description": "Twice-yearly tune-ups starting at $14/month."
+              }
+            ],
+            "columns": 3,
+            "heading": "Services"
+          },
+          "visible": true
+        },
+        {
+          "id": "8cbf3b16-95f2-4f62-a9f3-ac3b46bccb2f",
+          "type": "stats",
+          "props": {
+            "items": [
+              {
+                "label": "Google rating",
+                "value": "4.9",
+                "suffix": "★"
+              },
+              {
+                "label": "Years in business",
+                "value": "20",
+                "suffix": "+"
+              },
+              {
+                "label": "Emergency response",
+                "value": "24",
+                "suffix": "/7"
+              },
+              {
+                "label": "Financing available",
+                "value": "0",
+                "suffix": "%"
+              }
+            ],
+            "heading": "Why neighbours choose us"
+          },
+          "visible": true
+        },
+        {
+          "id": "d02da7df-a2e8-421b-b64e-1e3a02b0e070",
+          "type": "testimonials",
+          "props": {
+            "items": [
+              {
+                "role": "AC repair",
+                "quote": "Showed up on time, fixed it right, fair price.",
+                "author": "Jenna B.",
+                "rating": 5
+              },
+              {
+                "role": "Furnace install",
+                "quote": "Replaced our furnace in a single day | very clean work.",
+                "author": "Tom D.",
+                "rating": 5
+              },
+              {
+                "role": "New system",
+                "quote": "Saved us thousands compared to the first quote we got.",
+                "author": "Pat S.",
+                "rating": 5
+              }
+            ],
+            "layout": "grid",
+            "heading": "What customers say"
+          },
+          "visible": true
+        },
+        {
+          "id": "bb03ba5a-e424-463d-8d2d-22e26dcea705",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Get your free quote",
+            "description": "Tell us what is going on and we will text you a quote within 30 minutes."
+          },
+          "visible": true
+        },
+        {
+          "id": "0c655604-48b7-4772-9118-823325f204d4",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 ClearAir Heating & Cooling. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "ClearAir Heating & Cooling"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": "clean_slate",
+      "seo_config": {},
+      "typography": {},
+      "hero_config": {},
+      "accent_color": "#f97316",
+      "heading_text": "Fast, honest HVAC service | quote in 60 seconds",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#1d4ed8",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#eff6ff",
+      "description_text": "AC repair, furnace install, maintenance plans and 24/7 emergency service.",
+      "firm_display_name": "ClearAir Heating & Cooling"
+    },
+    "created_at": "2026-05-19T08:36:15.384582+00:00",
+    "updated_at": "2026-05-19T08:36:15.384582+00:00",
+    "vertical_slug": "home_services",
+    "is_starter": true
+  },
+  {
+    "id": "170833f8-9bcb-4eb4-8f70-421603e71c94",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Roofing Inspection",
+    "description": "Storm-damage / roofing inspection landing with trust badges and inspection-booking form.",
+    "category": "general",
+    "tags": [
+      "roofing",
+      "inspection",
+      "home services"
+    ],
+    "thumbnail_url": null,
+    "is_public": true,
+    "snapshot": {
+      "slug": "roofing-inspection",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "30725c32-27c3-4e62-b23d-4649520e01b8",
+          "type": "hero",
+          "props": {
+            "align": "center",
+            "layout": "centered",
+            "eyebrow": "Insurance claim specialists",
+            "headline": "Free roof inspection | done by certified pros",
+            "imageUrl": "",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Book a free inspection"
+            },
+            "subheadline": "We document every issue, work directly with your insurer, and stand behind every job with a 25-year warranty.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "See our work"
+            },
+            "formCardStyle": "card",
+            "formCardTitle": "Request a callback",
+            "formCardSubtitle": "We respond within 1 business hour."
+          },
+          "visible": true
+        },
+        {
+          "id": "b76ee768-0b1b-4618-95d2-8edf3dcf0f6e",
+          "type": "steps",
+          "props": {
+            "intro": "",
+            "items": [
+              {
+                "title": "Schedule",
+                "description": "Pick a 1-hour window that works for you."
+              },
+              {
+                "title": "Full report",
+                "description": "Photos, drone footage and a clear written summary."
+              },
+              {
+                "title": "Repair or claim",
+                "description": "We help file an insurance claim or quote a repair | your choice."
+              }
+            ],
+            "heading": "How a free inspection works"
+          },
+          "visible": true
+        },
+        {
+          "id": "e5bd1c72-1e21-4b05-9b3e-a1136a807283",
+          "type": "features",
+          "props": {
+            "intro": "",
+            "items": [
+              {
+                "icon": "ShieldCheck",
+                "title": "25-year warranty",
+                "description": "Materials and workmanship covered."
+              },
+              {
+                "icon": "Award",
+                "title": "GAF Master Elite",
+                "description": "Among the top 3% of roofing contractors nationwide."
+              },
+              {
+                "icon": "FileCheck",
+                "title": "Insurance experts",
+                "description": "We handle the paperwork so you do not have to."
+              }
+            ],
+            "columns": 3,
+            "heading": "Why homeowners trust us"
+          },
+          "visible": true
+        },
+        {
+          "id": "84f170d2-9547-45f1-ace7-586fec85c9ca",
+          "type": "testimonials",
+          "props": {
+            "items": [
+              {
+                "role": "Storm damage",
+                "quote": "Got our full roof covered by insurance | they handled everything.",
+                "author": "Brian L.",
+                "rating": 5
+              },
+              {
+                "role": "Full replacement",
+                "quote": "Cleanest, most professional crew we have ever hired.",
+                "author": "Dana C.",
+                "rating": 5
+              },
+              {
+                "role": "Inspection",
+                "quote": "Inspection took 45 minutes and the report was incredibly detailed.",
+                "author": "Aman J.",
+                "rating": 5
+              }
+            ],
+            "layout": "grid",
+            "heading": "Recent jobs"
+          },
+          "visible": true
+        },
+        {
+          "id": "e0168aee-0c91-420e-8fc9-9452ae202ffa",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Book your free inspection",
+            "description": "Pick a day and we will confirm a 1-hour window by text."
+          },
+          "visible": true
+        },
+        {
+          "id": "a6b26614-6bb3-426a-8d82-8f78ba430d64",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Summit Roofing Co.. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Summit Roofing Co."
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": "clean_slate",
+      "seo_config": {},
+      "typography": {},
+      "hero_config": {},
+      "accent_color": "#dc2626",
+      "heading_text": "Free roof inspection | done by certified pros",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#7c2d12",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#fff7ed",
+      "description_text": "Storm damage, leaks, full replacements. Insurance specialists who fight for you.",
+      "firm_display_name": "Summit Roofing Co."
+    },
+    "created_at": "2026-05-19T08:36:15.384582+00:00",
+    "updated_at": "2026-05-19T08:36:15.384582+00:00",
+    "vertical_slug": "home_services",
+    "is_starter": true
+  },
+  {
+    "id": "b234c6b4-8c5e-4a54-a246-f88c085f5e6d",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Residential Solar Quote",
+    "description": "Homeowner-friendly solar landing with savings calculator angle and quick quote form.",
+    "category": "general",
+    "tags": [
+      "solar",
+      "residential",
+      "savings"
+    ],
+    "thumbnail_url": null,
+    "is_public": true,
+    "snapshot": {
+      "slug": "residential-solar",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "225843c0-fb2d-44bc-9039-93f278a8c4ac",
+          "type": "hero",
+          "props": {
+            "align": "center",
+            "layout": "split-form-right",
+            "eyebrow": "$0 down. 25-year warranty.",
+            "headline": "Cut your power bill by up to 90% | with solar",
+            "imageUrl": "",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Get my free quote"
+            },
+            "subheadline": "Get a custom solar design and savings estimate for your home in under 60 seconds.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "How it works"
+            },
+            "formCardStyle": "card",
+            "formCardTitle": "Request a callback",
+            "formCardSubtitle": "We respond within 1 business hour."
+          },
+          "visible": true
+        },
+        {
+          "id": "71589e73-f677-4dcd-bfce-258c6753e1dc",
+          "type": "stats",
+          "props": {
+            "items": [
+              {
+                "label": "Bill reduction",
+                "value": "90",
+                "suffix": "%"
+              },
+              {
+                "label": "Warranty",
+                "value": "25",
+                "suffix": " yr"
+              },
+              {
+                "label": "Down payment",
+                "value": "0",
+                "suffix": "$"
+              },
+              {
+                "label": "Homes powered",
+                "value": "10",
+                "suffix": "K+"
+              }
+            ],
+            "heading": "Why go solar with us"
+          },
+          "visible": true
+        },
+        {
+          "id": "53af9621-7c41-4e76-9417-35e0b3b0a416",
+          "type": "steps",
+          "props": {
+            "intro": "",
+            "items": [
+              {
+                "title": "Free design",
+                "description": "A custom solar layout for your roof | sent within 24 hours."
+              },
+              {
+                "title": "Choose financing",
+                "description": "Cash, loan or lease | we explain every option clearly."
+              },
+              {
+                "title": "Install in a day",
+                "description": "Most installs are completed in a single day."
+              },
+              {
+                "title": "Lower bills",
+                "description": "Start saving from your very first billing cycle."
+              }
+            ],
+            "heading": "From quote to power on"
+          },
+          "visible": true
+        },
+        {
+          "id": "aeb752fb-aef1-45b6-aae6-06b069aab783",
+          "type": "testimonials",
+          "props": {
+            "items": [
+              {
+                "role": "San Diego, CA",
+                "quote": "Our bill went from $280 a month to under $20.",
+                "author": "Carla T.",
+                "rating": 5
+              },
+              {
+                "role": "Austin, TX",
+                "quote": "The install team was professional and fast | done in one day.",
+                "author": "Dev R.",
+                "rating": 5
+              },
+              {
+                "role": "Phoenix, AZ",
+                "quote": "Best decision we have made for our home.",
+                "author": "Steph K.",
+                "rating": 5
+              }
+            ],
+            "layout": "grid",
+            "heading": "Homeowner stories"
+          },
+          "visible": true
+        },
+        {
+          "id": "e364e2ce-4e00-416d-8fa3-a2c634991ebf",
+          "type": "faq",
+          "props": {
+            "items": [
+              {
+                "answer": "Most homeowners save 70 | 90% on their electric bill, depending on roof and usage.",
+                "question": "How much will I save?"
+              },
+              {
+                "answer": "Yes | the federal tax credit covers 30% of the cost, and many states add more.",
+                "question": "Are there incentives?"
+              },
+              {
+                "answer": "We can replace your roof and install solar together | often financed into one payment.",
+                "question": "What if my roof is older?"
+              }
+            ],
+            "heading": "Common questions"
+          },
+          "visible": true
+        },
+        {
+          "id": "1593ca4b-fed2-412a-a8cd-cfc7ddb0fa89",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Get your free solar quote",
+            "description": "Just an address and a recent electric bill | we handle the rest."
+          },
+          "visible": true
+        },
+        {
+          "id": "60b65007-95b4-4085-8962-0a063e1ca34b",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 SunPath Residential Solar. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "SunPath Residential Solar"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": "clean_slate",
+      "seo_config": {},
+      "typography": {},
+      "hero_config": {},
+      "accent_color": "#0ea5e9",
+      "heading_text": "Cut your power bill by up to 90% | with solar",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#ca8a04",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#fefce8",
+      "description_text": "Custom-designed rooftop solar with $0-down financing and a 25-year production guarantee.",
+      "firm_display_name": "SunPath Residential Solar"
+    },
+    "created_at": "2026-05-19T08:36:15.384582+00:00",
+    "updated_at": "2026-05-19T08:36:15.384582+00:00",
+    "vertical_slug": "solar",
+    "is_starter": true
+  },
+  {
+    "id": "d176e466-5058-4408-b2b8-c37b4fc9c4ee",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Commercial Solar Lead",
+    "description": "B2B commercial-solar landing with ROI angle, case study, and project enquiry form.",
+    "category": "general",
+    "tags": [
+      "solar",
+      "commercial",
+      "b2b"
+    ],
+    "thumbnail_url": null,
+    "is_public": true,
+    "snapshot": {
+      "slug": "commercial-solar",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "0842039f-e592-4c07-ae15-48b9a9169fcd",
+          "type": "hero",
+          "props": {
+            "align": "center",
+            "layout": "centered",
+            "eyebrow": "Commercial & industrial solar",
+            "headline": "Predictable energy costs for your business",
+            "imageUrl": "",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Request a proposal"
+            },
+            "subheadline": "Custom commercial PV with PPA, lease and ownership financing | typical ROI in under 5 years.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "See case studies"
+            },
+            "formCardStyle": "card",
+            "formCardTitle": "Request a callback",
+            "formCardSubtitle": "We respond within 1 business hour."
+          },
+          "visible": true
+        },
+        {
+          "id": "367900e0-474f-452c-9466-5dcde23a23cc",
+          "type": "stats",
+          "props": {
+            "items": [
+              {
+                "label": "Installed",
+                "value": "500",
+                "suffix": " MW"
+              },
+              {
+                "label": "Avg payback",
+                "value": "4.2",
+                "suffix": " yr"
+              },
+              {
+                "label": "Commercial sites",
+                "value": "300",
+                "suffix": "+"
+              },
+              {
+                "label": "Performance guarantee",
+                "value": "25",
+                "suffix": " yr"
+              }
+            ],
+            "heading": "Track record"
+          },
+          "visible": true
+        },
+        {
+          "id": "c58a5b37-2224-4aec-bb0d-b24c736ca7c9",
+          "type": "features",
+          "props": {
+            "intro": "",
+            "items": [
+              {
+                "icon": "Building2",
+                "title": "Rooftop & ground-mount",
+                "description": "Engineered for warehouses, factories and offices."
+              },
+              {
+                "icon": "BarChart3",
+                "title": "Bankable proposals",
+                "description": "Lender-ready financials with conservative assumptions."
+              },
+              {
+                "icon": "PlugZap",
+                "title": "Battery & EV-ready",
+                "description": "Add storage and EV charging in one integrated design."
+              }
+            ],
+            "columns": 3,
+            "heading": "What we deliver"
+          },
+          "visible": true
+        },
+        {
+          "id": "9f4d15ac-a74d-4df0-ab2b-00df1c459788",
+          "type": "steps",
+          "props": {
+            "intro": "",
+            "items": [
+              {
+                "title": "Discovery",
+                "description": "30-minute call to review your sites and energy data."
+              },
+              {
+                "title": "Engineered proposal",
+                "description": "Custom design, financing options and ROI in 7 days."
+              },
+              {
+                "title": "Build & commission",
+                "description": "Turn-key delivery with single-point accountability."
+              },
+              {
+                "title": "Monitor & maintain",
+                "description": "25-year monitoring, O&M and performance guarantee."
+              }
+            ],
+            "heading": "Our process"
+          },
+          "visible": true
+        },
+        {
+          "id": "3ab5975c-ad2e-4ce0-bbda-dc5b26e22c36",
+          "type": "testimonials",
+          "props": {
+            "items": [
+              {
+                "role": "1.2 MW installation",
+                "quote": "They delivered exactly what was promised | on schedule, on budget.",
+                "author": "COO, MidwestCo",
+                "rating": 5
+              },
+              {
+                "role": "PPA agreement",
+                "quote": "Cut our energy spend by 38% in year one.",
+                "author": "CFO, Atlas Foods",
+                "rating": 5
+              },
+              {
+                "role": "Rooftop solar",
+                "quote": "Easiest capital project we have ever run.",
+                "author": "Facilities Director, Bluepoint",
+                "rating": 5
+              }
+            ],
+            "layout": "grid",
+            "heading": "Customers"
+          },
+          "visible": true
+        },
+        {
+          "id": "ba351177-4eac-4da9-87da-d2cbe824d691",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Request a commercial proposal",
+            "description": "Share your site details and we will return a custom proposal within 7 business days."
+          },
+          "visible": true
+        },
+        {
+          "id": "fe0f4a40-5b16-4a3e-a9f4-2abbda829fb3",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Apex Commercial Solar. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Apex Commercial Solar"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": "clean_slate",
+      "seo_config": {},
+      "typography": {},
+      "hero_config": {},
+      "accent_color": "#22c55e",
+      "heading_text": "Predictable energy costs for your business",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#0f172a",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#f8fafc",
+      "description_text": "Custom commercial solar with PPA, lease and ownership options. ROI in under 5 years.",
+      "firm_display_name": "Apex Commercial Solar"
+    },
+    "created_at": "2026-05-19T08:36:15.384582+00:00",
+    "updated_at": "2026-05-19T08:36:15.384582+00:00",
+    "vertical_slug": "solar",
+    "is_starter": true
+  },
+  {
+    "id": "5ad28beb-e69f-4859-b292-72daf4a1646b",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Consulting Edge",
+    "description": "Editorial navy + serif consulting site with split hero and stat strip.",
+    "category": "general",
+    "tags": [
+      "business",
+      "consulting",
+      "corporate"
+    ],
+    "thumbnail_url": "/landing-covers/consulting-edge.jpg",
+    "is_public": true,
+    "snapshot": {
+      "slug": "consulting-edge",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "50e69391-bf47-40d9-a962-8bb027b29a57",
+          "type": "hero",
+          "props": {
+            "align": "left",
+            "layout": "split-form-right",
+            "eyebrow": "Boutique strategy consultancy",
+            "headline": "Strategy for ambitious operators.",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Book a working session"
+            },
+            "subheadline": "We help mid-market companies turn complexity into momentum | engagements built around your team, not slide decks.",
+            "secondaryCta": {
+              "href": "#features",
+              "label": "Our approach"
+            },
+            "formCardStyle": "card",
+            "formCardTitle": "Tell us about your priorities",
+            "formCardSubtitle": "30-minute scoping call within 48 hours."
+          },
+          "visible": true
+        },
+        {
+          "id": "cb1a689e-3648-4828-84db-5fa0d24d9b85",
+          "type": "trustBadges",
+          "props": {
+            "items": [
+              {
+                "icon": "Award",
+                "label": "$2.1B engagements"
+              },
+              {
+                "icon": "Shield",
+                "label": "ISO 27001"
+              },
+              {
+                "icon": "BadgeCheck",
+                "label": "Founded 2014"
+              },
+              {
+                "icon": "Star",
+                "label": "Repeat clients 92%"
+              }
+            ],
+            "layout": "stat-strip",
+            "heading": ""
+          },
+          "visible": true
+        },
+        {
+          "id": "0b442337-5cf3-47bc-8ac7-d46ee0dd8e0c",
+          "type": "features",
+          "props": {
+            "intro": "Four practice areas, one operating model.",
+            "items": [
+              {
+                "icon": "TrendingUp",
+                "title": "Growth strategy",
+                "description": "Pricing, packaging and channel design that compounds annual revenue without burning the team."
+              },
+              {
+                "icon": "Cog",
+                "title": "Operating model",
+                "description": "Org design and process redesign that takes friction out of how decisions get made."
+              },
+              {
+                "icon": "BarChart3",
+                "title": "Data & analytics",
+                "description": "From dashboards no one reads to decision systems leadership trusts."
+              },
+              {
+                "icon": "Users",
+                "title": "Leadership coaching",
+                "description": "1:1 coaching for newly-promoted operators stepping into bigger seats."
+              }
+            ],
+            "layout": "two-col-large",
+            "columns": 2,
+            "heading": "Where we move the needle"
+          },
+          "visible": true
+        },
+        {
+          "id": "97b4ae31-1d51-4d40-8b86-e95efdde89a6",
+          "type": "testimonials",
+          "props": {
+            "items": [
+              {
+                "role": "COO, Northwind Logistics",
+                "quote": "They reframed our pricing in three weeks. Net revenue up 18% the next quarter.",
+                "author": "Maya Lindgren",
+                "rating": 5
+              }
+            ],
+            "layout": "big-quote",
+            "heading": "What partners say"
+          },
+          "visible": true
+        },
+        {
+          "id": "b3c37355-bc30-4c59-aec6-49225ed04636",
+          "type": "stats",
+          "props": {
+            "items": [
+              {
+                "label": "Engagements delivered",
+                "value": "120",
+                "suffix": "+"
+              },
+              {
+                "label": "Clients return within 18 months",
+                "value": "92",
+                "suffix": "%"
+              },
+              {
+                "label": "Industries served",
+                "value": "11",
+                "suffix": ""
+              },
+              {
+                "label": "Average response time",
+                "value": "48",
+                "suffix": "h"
+              }
+            ],
+            "layout": "cards-large",
+            "heading": "By the numbers"
+          },
+          "visible": true
+        },
+        {
+          "id": "fabbb6f8-a7aa-4923-82be-7a56dc188ae2",
+          "type": "faq",
+          "props": {
+            "items": [
+              {
+                "answer": "Fixed-fee, 6-12 weeks, with a shared working doc updated weekly | no surprise change orders.",
+                "question": "How are engagements scoped?"
+              },
+              {
+                "answer": "We blend onsite intensives with async work. Most engagements involve 2-4 onsite days per month.",
+                "question": "Do you work onsite?"
+              },
+              {
+                "answer": "$10M to $500M in revenue. Pre-IPO operators and PE-backed roll-ups are the sweet spot.",
+                "question": "What size companies do you serve?"
+              }
+            ],
+            "layout": "two-col",
+            "heading": "Practical questions"
+          },
+          "visible": true
+        },
+        {
+          "id": "963a0168-465b-440a-8b6a-b8a30597d8f3",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Start the conversation",
+            "description": "Tell us about the decision in front of you."
+          },
+          "visible": true
+        },
+        {
+          "id": "d7088567-24f0-4530-ac2f-095fd0a714e3",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Consulting Edge. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Consulting Edge"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": null,
+      "seo_config": {},
+      "typography": {
+        "body": "IBM Plex Sans",
+        "heading": "Libre Baskerville"
+      },
+      "hero_config": {},
+      "accent_color": "#c9a84c",
+      "heading_text": "Strategy for ambitious operators.",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#0f1b3d",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#ffffff",
+      "description_text": "We help mid-market companies turn complexity into momentum.",
+      "firm_display_name": "Consulting Edge"
+    },
+    "created_at": "2026-05-19T09:31:32.801799+00:00",
+    "updated_at": "2026-05-19T09:33:28.489957+00:00",
+    "vertical_slug": null,
+    "is_starter": true
+  },
+  {
+    "id": "75eceef6-0d61-451b-b0d8-4b6e853f8a97",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "FinTrust Advisors",
+    "description": "Paper & ink editorial advisory site with accordion features and banner CTA.",
+    "category": "general",
+    "tags": [
+      "business",
+      "finance",
+      "editorial"
+    ],
+    "thumbnail_url": "/landing-covers/fintrust.jpg",
+    "is_public": true,
+    "snapshot": {
+      "slug": "fintrust",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "237d4549-62e0-4869-803f-2c7ed2397c8d",
+          "type": "hero",
+          "props": {
+            "align": "center",
+            "layout": "centered",
+            "eyebrow": "Fee-only fiduciary",
+            "headline": "Quiet money. Loud confidence.",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Schedule introduction"
+            },
+            "subheadline": "Independent wealth advisory for families who plan in decades, not quarters.",
+            "secondaryCta": {
+              "href": "#features",
+              "label": "Our philosophy"
+            }
+          },
+          "visible": true
+        },
+        {
+          "id": "df55c648-afce-4cdf-b006-3d699523a2c5",
+          "type": "logoCloud",
+          "props": {
+            "logos": [
+              {
+                "alt": "Forbes",
+                "src": "https://placehold.co/120x40/0d0d0d/f5f3ee/png?text=Forbes&font=playfair"
+              },
+              {
+                "alt": "WSJ",
+                "src": "https://placehold.co/120x40/0d0d0d/f5f3ee/png?text=WSJ&font=playfair"
+              },
+              {
+                "alt": "Bloomberg",
+                "src": "https://placehold.co/120x40/0d0d0d/f5f3ee/png?text=Bloomberg&font=playfair"
+              },
+              {
+                "alt": "Barron's",
+                "src": "https://placehold.co/120x40/0d0d0d/f5f3ee/png?text=Barron%27s&font=playfair"
+              },
+              {
+                "alt": "FT",
+                "src": "https://placehold.co/120x40/0d0d0d/f5f3ee/png?text=FT&font=playfair"
+              },
+              {
+                "alt": "NYT",
+                "src": "https://placehold.co/120x40/0d0d0d/f5f3ee/png?text=NYT&font=playfair"
+              }
+            ],
+            "quote": "FinTrust pairs old-world discretion with modern execution.",
+            "layout": "with-quote",
+            "heading": "AS FEATURED IN",
+            "quoteAuthor": "— Private Wealth Quarterly"
+          },
+          "visible": true
+        },
+        {
+          "id": "a8c5fa57-b1a2-4f6f-9310-cd5d5efd2399",
+          "type": "features",
+          "props": {
+            "items": [
+              {
+                "icon": "PieChart",
+                "title": "Wealth planning",
+                "description": "Multi-generational planning across tax, estate and philanthropic strategy."
+              },
+              {
+                "icon": "TrendingUp",
+                "title": "Investment management",
+                "description": "Globally diversified portfolios built around your liabilities, not benchmarks."
+              },
+              {
+                "icon": "Shield",
+                "title": "Risk advisory",
+                "description": "Concentrated stock, liquidity events and insurance reviewed annually."
+              },
+              {
+                "icon": "Briefcase",
+                "title": "Family office services",
+                "description": "Bill pay, bookkeeping and coordination with your attorney and CPA."
+              }
+            ],
+            "layout": "accordion-list",
+            "columns": 1,
+            "heading": "What we manage"
+          },
+          "visible": true
+        },
+        {
+          "id": "efc2b000-e504-4018-ae54-c596a2155e35",
+          "type": "faq",
+          "props": {
+            "items": [
+              {
+                "answer": "Always. We are a fee-only registered investment advisor with no commissions, ever.",
+                "question": "Are you fiduciaries?"
+              },
+              {
+                "answer": "Households with $2M+ in investable assets typically get the most value from our model.",
+                "question": "What is the minimum?"
+              },
+              {
+                "answer": "A transparent percentage of assets advised, tiered down as the relationship grows.",
+                "question": "How do you charge?"
+              }
+            ],
+            "layout": "accordion-single",
+            "heading": "Honest answers"
+          },
+          "visible": true
+        },
+        {
+          "id": "a7e0cf2b-983c-41ac-9148-05a806606a7d",
+          "type": "cta",
+          "props": {
+            "style": "solid",
+            "layout": "banner-strip",
+            "heading": "Considering a new advisor?",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Book introduction"
+            },
+            "subheading": "A 30-minute call costs nothing and clarifies a lot."
+          },
+          "visible": true
+        },
+        {
+          "id": "d4fab29c-30ac-4422-aa74-5ed8b0967b75",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Request an introduction",
+            "description": "We respond personally within one business day."
+          },
+          "visible": true
+        },
+        {
+          "id": "c41650a0-9230-4f8b-8084-9a7e305721cb",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 FinTrust Advisors. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "FinTrust Advisors"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": null,
+      "seo_config": {},
+      "typography": {
+        "body": "Fira Sans",
+        "heading": "DM Serif Display"
+      },
+      "hero_config": {},
+      "accent_color": "#0d0d0d",
+      "heading_text": "Quiet money. Loud confidence.",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#1a1a1a",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#f5f3ee",
+      "description_text": "Independent wealth advisory for families who plan in decades.",
+      "firm_display_name": "FinTrust Advisors"
+    },
+    "created_at": "2026-05-19T09:31:32.801799+00:00",
+    "updated_at": "2026-05-19T09:33:28.489957+00:00",
+    "vertical_slug": null,
+    "is_starter": true
+  },
+  {
+    "id": "0a136a79-63eb-4a02-855c-26309a90fbd0",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Organic Market",
+    "description": "Warm sand palette grocery subscription with marquee partners and masonry testimonials.",
+    "category": "ecommerce",
+    "tags": [
+      "ecommerce",
+      "food",
+      "subscription"
+    ],
+    "thumbnail_url": "/landing-covers/organic-market.jpg",
+    "is_public": true,
+    "snapshot": {
+      "slug": "organic-market",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "2dcb3759-8b6e-4b87-946e-a30cf72d13f9",
+          "type": "hero",
+          "props": {
+            "align": "left",
+            "layout": "split-image-left",
+            "eyebrow": "Weekly farm boxes",
+            "headline": "Real food. Real farms.",
+            "imageUrl": "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=900&q=80",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Choose your box"
+            },
+            "subheadline": "Hand-picked produce, dairy and pantry staples from family farms within 100 miles of your door.",
+            "secondaryCta": {
+              "href": "#features",
+              "label": "How it works"
+            }
+          },
+          "visible": true
+        },
+        {
+          "id": "8c019d8d-7c8f-4467-a785-9078bd97cac4",
+          "type": "logoCloud",
+          "props": {
+            "logos": [
+              {
+                "alt": "Cedar+Hill",
+                "src": "https://placehold.co/140x40/4a6741/faf8f5/png?text=Cedar+Hill&font=lora"
+              },
+              {
+                "alt": "Wildflower",
+                "src": "https://placehold.co/140x40/4a6741/faf8f5/png?text=Wildflower&font=lora"
+              },
+              {
+                "alt": "Maple+Run",
+                "src": "https://placehold.co/140x40/4a6741/faf8f5/png?text=Maple+Run&font=lora"
+              },
+              {
+                "alt": "Hollow+Creek",
+                "src": "https://placehold.co/140x40/4a6741/faf8f5/png?text=Hollow+Creek&font=lora"
+              },
+              {
+                "alt": "Stone+Field",
+                "src": "https://placehold.co/140x40/4a6741/faf8f5/png?text=Stone+Field&font=lora"
+              },
+              {
+                "alt": "Bright+Acres",
+                "src": "https://placehold.co/140x40/4a6741/faf8f5/png?text=Bright+Acres&font=lora"
+              },
+              {
+                "alt": "Meadowlark",
+                "src": "https://placehold.co/140x40/4a6741/faf8f5/png?text=Meadowlark&font=lora"
+              },
+              {
+                "alt": "Riverbend",
+                "src": "https://placehold.co/140x40/4a6741/faf8f5/png?text=Riverbend&font=lora"
+              }
+            ],
+            "layout": "marquee",
+            "heading": "PARTNER FARMS"
+          },
+          "visible": true
+        },
+        {
+          "id": "e714a4a7-fc11-487b-a05e-01dc313fdee2",
+          "type": "features",
+          "props": {
+            "intro": "Friday harvest. Sunday delivery.",
+            "items": [
+              {
+                "icon": "Sprout",
+                "title": "Pick your size",
+                "description": "Solo, family or feast."
+              },
+              {
+                "icon": "Calendar",
+                "title": "Set your day",
+                "description": "Weekly or every other week."
+              },
+              {
+                "icon": "Truck",
+                "title": "Doorstep drop",
+                "description": "Insulated, contactless, on time."
+              },
+              {
+                "icon": "Heart",
+                "title": "Skip anytime",
+                "description": "No contracts. Pause whenever."
+              }
+            ],
+            "layout": "icon-row",
+            "columns": 4,
+            "heading": "How a box arrives"
+          },
+          "visible": true
+        },
+        {
+          "id": "34d6ad25-d107-4b3a-84bd-6f2a61c591b3",
+          "type": "testimonials",
+          "props": {
+            "items": [
+              {
+                "role": "Family box, 1 year",
+                "quote": "The tomatoes alone are worth the subscription.",
+                "author": "Priya N.",
+                "rating": 5
+              },
+              {
+                "role": "Solo box, 6 months",
+                "quote": "Cooking finally feels like a treasure hunt again.",
+                "author": "Theo R.",
+                "rating": 5
+              },
+              {
+                "role": "Feast box, 2 years",
+                "quote": "My kids ask for fennel. FENNEL.",
+                "author": "Lina M.",
+                "rating": 5
+              },
+              {
+                "role": "Family box",
+                "quote": "Easiest part of my week.",
+                "author": "Marcus J.",
+                "rating": 5
+              }
+            ],
+            "layout": "masonry",
+            "heading": "From the kitchen table"
+          },
+          "visible": true
+        },
+        {
+          "id": "5934557b-6731-4d17-8c17-8e5196acfe6f",
+          "type": "pricing",
+          "props": {
+            "items": [
+              {
+                "name": "Solo",
+                "price": "$29",
+                "period": "/wk",
+                "features": [
+                  "6-8 items",
+                  "Serves 1-2",
+                  "Skip anytime"
+                ]
+              },
+              {
+                "name": "Family",
+                "price": "$49",
+                "period": "/wk",
+                "features": [
+                  "10-12 items",
+                  "Serves 3-4",
+                  "Free pantry add-on"
+                ],
+                "highlighted": true
+              },
+              {
+                "name": "Feast",
+                "price": "$79",
+                "period": "/wk",
+                "features": [
+                  "14-16 items",
+                  "Serves 5-6",
+                  "Priority swaps"
+                ]
+              }
+            ],
+            "heading": "Pick your weekly box"
+          },
+          "visible": true
+        },
+        {
+          "id": "333a4307-b255-4bce-b843-bd26b230487b",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Start your first box",
+            "description": "We'll confirm your delivery day in seconds."
+          },
+          "visible": true
+        },
+        {
+          "id": "77d7f73a-b6f3-4327-831c-503779e24209",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Organic Market. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Organic Market"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": null,
+      "seo_config": {},
+      "typography": {
+        "body": "Nunito Sans",
+        "heading": "Lora"
+      },
+      "hero_config": {},
+      "accent_color": "#c4654a",
+      "heading_text": "Real food. Real farms.",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#4a6741",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#faf8f5",
+      "description_text": "Weekly produce boxes from family farms within 100 miles.",
+      "firm_display_name": "Organic Market"
+    },
+    "created_at": "2026-05-19T09:31:32.801799+00:00",
+    "updated_at": "2026-05-19T09:33:28.489957+00:00",
+    "vertical_slug": null,
+    "is_starter": true
+  },
+  {
+    "id": "95c19844-7010-402d-9628-121f3c8c3510",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Modern Storefront",
+    "description": "Bold dark + neon mint commerce SaaS with video hero, bento and pricing.",
+    "category": "saas",
+    "tags": [
+      "ecommerce",
+      "saas",
+      "dark"
+    ],
+    "thumbnail_url": "/landing-covers/modern-storefront.jpg",
+    "is_public": true,
+    "snapshot": {
+      "slug": "modern-storefront",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "a5965a91-5efb-4eae-bb5f-0225ca794a5e",
+          "type": "videoHero",
+          "props": {
+            "eyebrow": "Composable commerce platform",
+            "headline": "Headless commerce, painlessly.",
+            "videoUrl": "",
+            "posterUrl": "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1600&q=80",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Start free trial"
+            },
+            "subheadline": "Pre-built blocks, edge-rendered checkout and a CMS your merchandisers will actually use.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "Watch demo"
+            }
+          },
+          "visible": true
+        },
+        {
+          "id": "d3adce88-5a37-4ba2-9bff-b4b7fffc77a9",
+          "type": "bento",
+          "props": {
+            "items": [
+              {
+                "icon": "Zap",
+                "size": "lg",
+                "title": "Edge checkout",
+                "description": "Sub-200ms TTFB worldwide."
+              },
+              {
+                "icon": "Layout",
+                "size": "md",
+                "title": "Visual merch",
+                "description": "Drag, drop, ship."
+              },
+              {
+                "icon": "Search",
+                "size": "md",
+                "title": "AI search",
+                "description": "Semantic, multilingual."
+              },
+              {
+                "icon": "Webhook",
+                "size": "sm",
+                "title": "Webhook everything",
+                "description": "Build with any backend."
+              },
+              {
+                "icon": "Shield",
+                "size": "sm",
+                "title": "Compliance built-in",
+                "description": "PCI, SOC2, GDPR."
+              }
+            ],
+            "heading": "Everything in one canvas"
+          },
+          "visible": true
+        },
+        {
+          "id": "d7c8e532-c758-40e7-ae0a-b6bb2169f9be",
+          "type": "stats",
+          "props": {
+            "items": [
+              {
+                "label": "Merchants live",
+                "value": "12K",
+                "suffix": "+"
+              },
+              {
+                "label": "Uptime SLA",
+                "value": "99.99",
+                "suffix": "%"
+              },
+              {
+                "label": "Median TTFB",
+                "value": "180",
+                "suffix": "ms"
+              },
+              {
+                "label": "Currencies",
+                "value": "44",
+                "suffix": "+"
+              }
+            ],
+            "layout": "cards-large",
+            "heading": "Built for scale"
+          },
+          "visible": true
+        },
+        {
+          "id": "f272276d-5d4f-4afc-b809-e3cf7c91ccca",
+          "type": "pricing",
+          "props": {
+            "items": [
+              {
+                "name": "Starter",
+                "price": "$0",
+                "period": "/mo",
+                "features": [
+                  "Up to 1K orders",
+                  "1 storefront",
+                  "Community support"
+                ]
+              },
+              {
+                "name": "Growth",
+                "price": "$299",
+                "period": "/mo",
+                "features": [
+                  "Up to 25K orders",
+                  "5 storefronts",
+                  "Priority support",
+                  "Edge cache"
+                ],
+                "highlighted": true
+              },
+              {
+                "name": "Scale",
+                "price": "Custom",
+                "period": "",
+                "features": [
+                  "Unlimited orders",
+                  "SLA & DPA",
+                  "Solutions engineer"
+                ]
+              }
+            ],
+            "heading": "Simple, usage-based pricing"
+          },
+          "visible": true
+        },
+        {
+          "id": "52ceb4f3-1d29-493f-b41c-30d3f24418b9",
+          "type": "cta",
+          "props": {
+            "style": "gradient",
+            "layout": "card-floating",
+            "heading": "See it on your data.",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Start free trial"
+            },
+            "subheading": "Spin up a sandbox in 2 minutes | no credit card.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "Book a demo"
+            }
+          },
+          "visible": true
+        },
+        {
+          "id": "1a824878-7053-4309-a3bb-2b70b9df2faa",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Spin up a sandbox",
+            "description": "Tell us your stack and we'll preload a demo store."
+          },
+          "visible": true
+        },
+        {
+          "id": "6a6924dc-cbe0-4027-8956-bab29a1861fc",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Modern Storefront. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Modern Storefront"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": null,
+      "seo_config": {},
+      "typography": {
+        "body": "DM Sans",
+        "heading": "Space Grotesk"
+      },
+      "hero_config": {},
+      "accent_color": "#2dd4a8",
+      "heading_text": "Headless commerce, painlessly.",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#0d1b2a",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#0a0a0a",
+      "description_text": "Launch and scale storefronts in days, not quarters.",
+      "firm_display_name": "Modern Storefront"
+    },
+    "created_at": "2026-05-19T09:31:32.801799+00:00",
+    "updated_at": "2026-05-19T09:33:28.489957+00:00",
+    "vertical_slug": null,
+    "is_starter": true
+  },
+  {
+    "id": "f95bf8f5-ac67-4244-88e6-f73ab167e76c",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Noir Studio",
+    "description": "Black + gold studio site with zigzag work and big-quote testimonial.",
+    "category": "agency",
+    "tags": [
+      "agency",
+      "dark",
+      "portfolio"
+    ],
+    "thumbnail_url": "/landing-covers/noir-studio.jpg",
+    "is_public": true,
+    "snapshot": {
+      "slug": "noir-studio",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "d2a9d251-71ee-498e-abe3-3824c8cf7b65",
+          "type": "hero",
+          "props": {
+            "align": "left",
+            "layout": "full-bleed-image",
+            "eyebrow": "Independent design studio | EST. 2017",
+            "headline": "We build brands that age well.",
+            "imageUrl": "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=1600&q=80",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Start a project"
+            },
+            "subheadline": "Identity, web and packaging for founders who refuse to look like everyone else.",
+            "secondaryCta": {
+              "href": "#features",
+              "label": "Selected work"
+            }
+          },
+          "visible": true
+        },
+        {
+          "id": "13392b15-b68d-4c96-941a-9c31f6034705",
+          "type": "features",
+          "props": {
+            "items": [
+              {
+                "icon": "Sparkles",
+                "title": "Brand identity",
+                "imageUrl": "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=900&q=80",
+                "description": "Naming, logo systems and verbal direction that survives a decade of growth."
+              },
+              {
+                "icon": "Layout",
+                "title": "Web design & build",
+                "imageUrl": "https://images.unsplash.com/photo-1561070791-2526d30994b8?w=900&q=80",
+                "description": "Custom sites that load fast, convert better and feel handmade."
+              },
+              {
+                "icon": "Package",
+                "title": "Packaging",
+                "imageUrl": "https://images.unsplash.com/photo-1607344645866-009c320b63e0?w=900&q=80",
+                "description": "Structural and graphic design for shelves that earn second looks."
+              }
+            ],
+            "layout": "zigzag",
+            "heading": "What we do"
+          },
+          "visible": true
+        },
+        {
+          "id": "12c4b9b9-6ed9-4586-9bec-79ea6961583d",
+          "type": "testimonials",
+          "props": {
+            "items": [
+              {
+                "role": "Founder, Casa Vela",
+                "quote": "They gave us a brand that didn't need an explanation. Sales doubled within a year.",
+                "author": "Adesina Okafor",
+                "rating": 5
+              }
+            ],
+            "layout": "big-quote",
+            "heading": ""
+          },
+          "visible": true
+        },
+        {
+          "id": "a5241a59-c137-454c-9024-bfaf6c87acca",
+          "type": "logoCloud",
+          "props": {
+            "logos": [
+              {
+                "alt": "Casa+Vela",
+                "src": "https://placehold.co/140x36/0d0d0d/c9a84c/png?text=Casa+Vela&font=playfair"
+              },
+              {
+                "alt": "Northbound",
+                "src": "https://placehold.co/140x36/0d0d0d/c9a84c/png?text=Northbound&font=playfair"
+              },
+              {
+                "alt": "Petra",
+                "src": "https://placehold.co/140x36/0d0d0d/c9a84c/png?text=Petra&font=playfair"
+              },
+              {
+                "alt": "Heron+Bay",
+                "src": "https://placehold.co/140x36/0d0d0d/c9a84c/png?text=Heron+Bay&font=playfair"
+              },
+              {
+                "alt": "Studio+Olive",
+                "src": "https://placehold.co/140x36/0d0d0d/c9a84c/png?text=Studio+Olive&font=playfair"
+              },
+              {
+                "alt": "Foundry+9",
+                "src": "https://placehold.co/140x36/0d0d0d/c9a84c/png?text=Foundry+9&font=playfair"
+              },
+              {
+                "alt": "Cardamon",
+                "src": "https://placehold.co/140x36/0d0d0d/c9a84c/png?text=Cardamon&font=playfair"
+              },
+              {
+                "alt": "Atelier+M",
+                "src": "https://placehold.co/140x36/0d0d0d/c9a84c/png?text=Atelier+M&font=playfair"
+              }
+            ],
+            "layout": "dual-row",
+            "heading": "SELECTED CLIENTS"
+          },
+          "visible": true
+        },
+        {
+          "id": "30749ca1-46e3-4744-8e1c-5dcc46706bf8",
+          "type": "cta",
+          "props": {
+            "style": "solid",
+            "layout": "card-floating",
+            "heading": "Have a project in mind?",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Start a project"
+            },
+            "subheading": "We take on 8 projects a year. Tell us about yours."
+          },
+          "visible": true
+        },
+        {
+          "id": "bf2cb85d-39dd-44e9-923a-2e8992a50402",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Tell us about your brand",
+            "description": "Budget, timeline, anything | we read every note."
+          },
+          "visible": true
+        },
+        {
+          "id": "e5c3e654-b1f5-4f84-82d2-38e07d3ed822",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Noir Studio. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Noir Studio"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": null,
+      "seo_config": {},
+      "typography": {
+        "body": "Karla",
+        "heading": "Cormorant Garamond"
+      },
+      "hero_config": {},
+      "accent_color": "#c9a84c",
+      "heading_text": "We build brands that age well.",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#0d0d0d",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#0d0d0d",
+      "description_text": "A small studio for founders who refuse to look like everyone else.",
+      "firm_display_name": "Noir Studio"
+    },
+    "created_at": "2026-05-19T09:31:32.801799+00:00",
+    "updated_at": "2026-05-19T09:33:28.489957+00:00",
+    "vertical_slug": null,
+    "is_starter": true
+  },
+  {
+    "id": "733462a1-3cd9-4c25-ac80-27f789aaffed",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Crypto Vault",
+    "description": "Midnight indigo + glass aurora crypto wallet with timeline and two-col FAQ.",
+    "category": "saas",
+    "tags": [
+      "dark",
+      "crypto",
+      "fintech"
+    ],
+    "thumbnail_url": "/landing-covers/crypto-vault.jpg",
+    "is_public": true,
+    "snapshot": {
+      "slug": "crypto-vault",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "93186c15-9d5f-4b7f-b477-1e327b5a6d7f",
+          "type": "hero",
+          "props": {
+            "align": "center",
+            "layout": "centered",
+            "eyebrow": "Self-custody made simple",
+            "headline": "Take control of your digital assets.",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Download wallet"
+            },
+            "subheadline": "A single wallet for 40+ chains, with hardware-grade security and an interface anyone can use.",
+            "secondaryCta": {
+              "href": "#features",
+              "label": "How it works"
+            }
+          },
+          "visible": true
+        },
+        {
+          "id": "fedfd1c1-153b-46eb-863f-eab6c58119ff",
+          "type": "stats",
+          "props": {
+            "items": [
+              {
+                "label": "Assets secured",
+                "value": "$2.4",
+                "suffix": "B"
+              },
+              {
+                "label": "Chains supported",
+                "value": "40",
+                "suffix": "+"
+              },
+              {
+                "label": "Exploits since 2021",
+                "value": "0",
+                "suffix": ""
+              },
+              {
+                "label": "Active users",
+                "value": "1.2",
+                "suffix": "M"
+              }
+            ],
+            "layout": "inline-strip"
+          },
+          "visible": true
+        },
+        {
+          "id": "cb561c35-54df-4d7e-af34-fb7a89b7860e",
+          "type": "logoCloud",
+          "props": {
+            "logos": [
+              {
+                "alt": "Chainalysis",
+                "src": "https://placehold.co/130x36/0a0a1a/a78bfa/png?text=Chainalysis&font=montserrat"
+              },
+              {
+                "alt": "Trail+of+Bits",
+                "src": "https://placehold.co/130x36/0a0a1a/a78bfa/png?text=Trail+of+Bits&font=montserrat"
+              },
+              {
+                "alt": "OpenZeppelin",
+                "src": "https://placehold.co/130x36/0a0a1a/a78bfa/png?text=OpenZeppelin&font=montserrat"
+              },
+              {
+                "alt": "Halborn",
+                "src": "https://placehold.co/130x36/0a0a1a/a78bfa/png?text=Halborn&font=montserrat"
+              },
+              {
+                "alt": "Quantstamp",
+                "src": "https://placehold.co/130x36/0a0a1a/a78bfa/png?text=Quantstamp&font=montserrat"
+              },
+              {
+                "alt": "CertiK",
+                "src": "https://placehold.co/130x36/0a0a1a/a78bfa/png?text=CertiK&font=montserrat"
+              },
+              {
+                "alt": "Hacken",
+                "src": "https://placehold.co/130x36/0a0a1a/a78bfa/png?text=Hacken&font=montserrat"
+              },
+              {
+                "alt": "Veridise",
+                "src": "https://placehold.co/130x36/0a0a1a/a78bfa/png?text=Veridise&font=montserrat"
+              }
+            ],
+            "layout": "dual-row",
+            "heading": "TRUSTED BY"
+          },
+          "visible": true
+        },
+        {
+          "id": "e793378f-5b28-47a8-83a3-f1be3af305f6",
+          "type": "timeline",
+          "props": {
+            "items": [
+              {
+                "title": "Create your vault",
+                "description": "Generate keys on-device. Nothing leaves your phone."
+              },
+              {
+                "title": "Pick your chains",
+                "description": "Add the networks you care about. Switch anytime."
+              },
+              {
+                "title": "Move with confidence",
+                "description": "Sign transactions with biometric confirmation."
+              }
+            ],
+            "heading": "Onboard in minutes"
+          },
+          "visible": true
+        },
+        {
+          "id": "a3f88180-7e13-4f7e-90e6-2f305e0e90aa",
+          "type": "faq",
+          "props": {
+            "items": [
+              {
+                "answer": "On your device, encrypted with secure-enclave hardware. We never hold them.",
+                "question": "Where are my keys stored?"
+              },
+              {
+                "answer": "Restore from your encrypted recovery file or hardware backup at any time.",
+                "question": "What if I lose my phone?"
+              },
+              {
+                "answer": "Yes | quarterly third-party audits by Halborn and OpenZeppelin. Reports are public.",
+                "question": "Is the wallet audited?"
+              }
+            ],
+            "layout": "two-col",
+            "heading": "Security questions"
+          },
+          "visible": true
+        },
+        {
+          "id": "42a80301-8b3e-4697-92b2-ce5b481394e4",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Get early access",
+            "description": "Drop your email and we'll send the latest build."
+          },
+          "visible": true
+        },
+        {
+          "id": "a5fcd001-9968-48d5-885e-ca5d381fb3ed",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Crypto Vault. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Crypto Vault"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": null,
+      "seo_config": {},
+      "typography": {
+        "body": "Manrope",
+        "heading": "Sora"
+      },
+      "hero_config": {},
+      "accent_color": "#4f46e5",
+      "heading_text": "Take control of your digital assets.",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#0a0a1a",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#0a0a1a",
+      "description_text": "Self-custody, multi-chain, audited daily.",
+      "firm_display_name": "Crypto Vault"
+    },
+    "created_at": "2026-05-19T09:31:32.801799+00:00",
+    "updated_at": "2026-05-19T09:33:28.489957+00:00",
+    "vertical_slug": null,
+    "is_starter": true
+  },
+  {
+    "id": "2fa3d136-dce2-4ca8-8f99-dd4e7a5dc9d6",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Assemble Journal",
+    "description": "Editorial paper-and-ink magazine with marquee testimonials and banner CTA.",
+    "category": "portfolio",
+    "tags": [
+      "editorial",
+      "publishing",
+      "minimal"
+    ],
+    "thumbnail_url": "/landing-covers/assemble-journal.jpg",
+    "is_public": true,
+    "snapshot": {
+      "slug": "assemble-journal",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "cb587fab-3379-4e52-9374-1005fff23636",
+          "type": "hero",
+          "props": {
+            "align": "center",
+            "layout": "centered",
+            "eyebrow": "ISSUE 14 | SPRING 2026",
+            "headline": "A journal for people who make things.",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Subscribe — $12/mo"
+            },
+            "subheadline": "Long-form essays, interviews and field notes on craft, work and quiet rebellion. Delivered monthly, in print and online.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "Read the latest issue"
+            }
+          },
+          "visible": true
+        },
+        {
+          "id": "324b33e0-59ce-4b7d-8f8b-68dfea174de1",
+          "type": "features",
+          "props": {
+            "items": [
+              {
+                "icon": "BookOpen",
+                "title": "One long essay weekly",
+                "description": "Tuesday mornings, 3000-5000 words."
+              },
+              {
+                "icon": "Mic",
+                "title": "Monthly interview",
+                "description": "Conversations with makers we admire."
+              },
+              {
+                "icon": "Mail",
+                "title": "Print every quarter",
+                "description": "Beautifully bound | shipped worldwide."
+              }
+            ],
+            "layout": "icon-row",
+            "columns": 3,
+            "heading": "What you'll receive"
+          },
+          "visible": true
+        },
+        {
+          "id": "e37b3bc2-8391-4259-ad73-f5a1fe0d3a16",
+          "type": "testimonials",
+          "props": {
+            "items": [
+              {
+                "role": "Architect",
+                "quote": "The only newsletter I read on Tuesday mornings, fully.",
+                "author": "Ada V.",
+                "rating": 5
+              },
+              {
+                "role": "Furniture maker",
+                "quote": "Like a quiet room I get to visit each week.",
+                "author": "Felix H.",
+                "rating": 5
+              },
+              {
+                "role": "Filmmaker",
+                "quote": "I wait for the print issues like Christmas.",
+                "author": "Naomi C.",
+                "rating": 5
+              },
+              {
+                "role": "Engineer",
+                "quote": "Best $12 I spend.",
+                "author": "Said R.",
+                "rating": 5
+              }
+            ],
+            "layout": "marquee-row",
+            "heading": "From the readers"
+          },
+          "visible": true
+        },
+        {
+          "id": "318d5409-ce7b-4464-b13d-ab17babb49e7",
+          "type": "faq",
+          "props": {
+            "items": [
+              {
+                "answer": "Yes | gift subscriptions ship with a hand-written card and the latest print issue.",
+                "question": "Can I gift a subscription?"
+              },
+              {
+                "answer": "Cancel anytime, no questions. We'll refund the unused balance pro-rata.",
+                "question": "What's your refund policy?"
+              },
+              {
+                "answer": "Occasionally. Pitch us at editors@assemble.co.",
+                "question": "Do you publish guest essays?"
+              }
+            ],
+            "layout": "accordion-single",
+            "heading": "Reader questions"
+          },
+          "visible": true
+        },
+        {
+          "id": "8a20531b-9812-4eb0-8b40-964120c8118f",
+          "type": "cta",
+          "props": {
+            "style": "solid",
+            "layout": "banner-strip",
+            "heading": "Start reading Tuesday.",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Subscribe — $12/mo"
+            },
+            "subheading": "First issue arrives the next morning. Cancel anytime."
+          },
+          "visible": true
+        },
+        {
+          "id": "e5ad5186-d8f1-4cba-8669-bfbef76f0d2f",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Start your subscription",
+            "description": "We never share your email with anyone."
+          },
+          "visible": true
+        },
+        {
+          "id": "d02be570-db82-4565-8533-55597046a695",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Assemble Journal. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Assemble Journal"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": null,
+      "seo_config": {},
+      "typography": {
+        "body": "Work Sans",
+        "heading": "Instrument Serif"
+      },
+      "hero_config": {},
+      "accent_color": "#0d0d0d",
+      "heading_text": "A journal for people who make things.",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#0d0d0d",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#f5f3ee",
+      "description_text": "Long-form writing on craft, work and quiet rebellion.",
+      "firm_display_name": "Assemble Journal"
+    },
+    "created_at": "2026-05-19T09:31:32.801799+00:00",
+    "updated_at": "2026-05-19T09:33:28.489957+00:00",
+    "vertical_slug": null,
+    "is_starter": true
+  },
+  {
+    "id": "502a6340-84bf-411b-92c3-61ed8a371094",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Quiet Type",
+    "description": "Cloud-white minimal note-taking app with icon-row features and two-col FAQ.",
+    "category": "saas",
+    "tags": [
+      "minimal",
+      "saas",
+      "productivity"
+    ],
+    "thumbnail_url": "/landing-covers/quiet-type.jpg",
+    "is_public": true,
+    "snapshot": {
+      "slug": "quiet-type",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "221cdb40-e4b1-4b6c-891c-b8830c36bc05",
+          "type": "hero",
+          "props": {
+            "align": "center",
+            "layout": "centered",
+            "eyebrow": "v2 just shipped",
+            "headline": "Notes that actually find you again.",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Download for free"
+            },
+            "subheadline": "Markdown, universal search, offline-first. Nothing else.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "See the changelog"
+            }
+          },
+          "visible": true
+        },
+        {
+          "id": "d66a362f-e791-4b84-900a-8172c5e099ad",
+          "type": "features",
+          "props": {
+            "items": [
+              {
+                "icon": "Type",
+                "title": "Plain text, always",
+                "description": "Your notes are markdown files on your disk. Always portable."
+              },
+              {
+                "icon": "Search",
+                "title": "Search that just works",
+                "description": "Find any note in <50ms across thousands."
+              },
+              {
+                "icon": "Wifi",
+                "title": "Offline-first",
+                "description": "Sync is optional. The app works the same without internet."
+              }
+            ],
+            "layout": "icon-row",
+            "columns": 3,
+            "heading": "Built around three ideas"
+          },
+          "visible": true
+        },
+        {
+          "id": "863b4ee7-029e-4a71-ac9a-be3584074e5d",
+          "type": "faq",
+          "props": {
+            "items": [
+              {
+                "answer": "In a folder on your computer | by default ~/Documents/QuietType. You can change it anytime.",
+                "question": "Where are my notes stored?"
+              },
+              {
+                "answer": "Yes, free on iOS and Android, with end-to-end encrypted sync.",
+                "question": "Is there a mobile app?"
+              },
+              {
+                "answer": "The app is free. Sync across devices is $4/mo, with a 30-day trial.",
+                "question": "How does pricing work?"
+              },
+              {
+                "answer": "Yes | we have one-click importers for both, plus generic markdown.",
+                "question": "Can I import from Notion or Evernote?"
+              }
+            ],
+            "layout": "two-col",
+            "heading": "Common questions"
+          },
+          "visible": true
+        },
+        {
+          "id": "421d0a91-ce2a-4f00-843d-97f41abf471c",
+          "type": "cta",
+          "props": {
+            "style": "soft",
+            "layout": "centered",
+            "heading": "Try it for a week.",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Download for free"
+            },
+            "subheading": "If you don't love it, your notes leave with you. They're just files."
+          },
+          "visible": true
+        },
+        {
+          "id": "91b4d158-9dfc-4bf1-b718-93c998b2f992",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Get the download link",
+            "description": "We'll email you the right build for your OS."
+          },
+          "visible": true
+        },
+        {
+          "id": "fe7427d2-73f9-41ec-baa6-08b7daeace3f",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Quiet Type. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Quiet Type"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": null,
+      "seo_config": {},
+      "typography": {
+        "body": "Figtree",
+        "heading": "Outfit"
+      },
+      "hero_config": {},
+      "accent_color": "#3b82f6",
+      "heading_text": "Notes that actually find you again.",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#0f172a",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#fafbfc",
+      "description_text": "A minimal note-taking app with universal search and zero clutter.",
+      "firm_display_name": "Quiet Type"
+    },
+    "created_at": "2026-05-19T09:31:32.801799+00:00",
+    "updated_at": "2026-05-19T09:33:28.489957+00:00",
+    "vertical_slug": null,
+    "is_starter": true
+  },
+  {
+    "id": "090ee29f-b308-4f22-9865-7d32d7d6675a",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Studio Atlas",
+    "description": "Terracotta + sage architecture portfolio with masonry gallery and sidebar-photo quote.",
+    "category": "portfolio",
+    "tags": [
+      "portfolio",
+      "architecture",
+      "creative"
+    ],
+    "thumbnail_url": "/landing-covers/studio-atlas.jpg",
+    "is_public": true,
+    "snapshot": {
+      "slug": "studio-atlas",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "7426406c-e53a-4dfd-8b29-1ec8457070ee",
+          "type": "hero",
+          "props": {
+            "align": "left",
+            "layout": "split-image-right",
+            "eyebrow": "Studio Atlas | Architecture & Landscape",
+            "headline": "Architecture for places that age slowly.",
+            "imageUrl": "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1200&q=80",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Discuss a project"
+            },
+            "subheadline": "Residential, civic and adaptive-reuse projects rooted in landscape, climate and material truth.",
+            "secondaryCta": {
+              "href": "#features",
+              "label": "Selected work"
+            }
+          },
+          "visible": true
+        },
+        {
+          "id": "67a71207-386b-44bd-b673-64fc4c664bea",
+          "type": "gallery",
+          "props": {
+            "items": [
+              {
+                "title": "Hollow Stone House",
+                "imageUrl": "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80"
+              },
+              {
+                "title": "Civic Library Annex",
+                "imageUrl": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80"
+              },
+              {
+                "title": "Vineyard Pavilion",
+                "imageUrl": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80"
+              },
+              {
+                "title": "Coastal Studio",
+                "imageUrl": "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80"
+              },
+              {
+                "title": "Heron Bay Cabins",
+                "imageUrl": "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&q=80"
+              },
+              {
+                "title": "Foundry Loft",
+                "imageUrl": "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80"
+              }
+            ],
+            "layout": "masonry",
+            "heading": "Selected work"
+          },
+          "visible": true
+        },
+        {
+          "id": "6e3cebaa-4e58-4c3e-9bee-2ca620e61be2",
+          "type": "testimonials",
+          "props": {
+            "items": [
+              {
+                "role": "Hollow Stone House",
+                "quote": "They listened harder than any architect we interviewed and built something that already feels like home.",
+                "author": "Joanna & Theo Adler",
+                "rating": 5,
+                "imageUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80"
+              }
+            ],
+            "layout": "sidebar-photo",
+            "heading": ""
+          },
+          "visible": true
+        },
+        {
+          "id": "20b76c6d-ea37-4c71-a442-75beea22b627",
+          "type": "features",
+          "props": {
+            "items": [
+              {
+                "icon": "Compass",
+                "title": "Site first",
+                "description": "We design from the land outward | sun, wind, water and view inform every decision."
+              },
+              {
+                "icon": "Hammer",
+                "title": "Material truth",
+                "description": "Stone, timber, lime and earth. Honest assemblies that weather beautifully."
+              }
+            ],
+            "layout": "two-col-large",
+            "columns": 2,
+            "heading": "How we work"
+          },
+          "visible": true
+        },
+        {
+          "id": "5c8dd3db-9151-4f25-9ac6-a2a42b3e2c46",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Discuss a project",
+            "description": "Tell us about the site and the dream."
+          },
+          "visible": true
+        },
+        {
+          "id": "2bb00a04-35ed-454b-87df-4ec7dd603d4e",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Studio Atlas. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Studio Atlas"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": null,
+      "seo_config": {},
+      "typography": {
+        "body": "Plus Jakarta Sans",
+        "heading": "Syne"
+      },
+      "hero_config": {},
+      "accent_color": "#c4654a",
+      "heading_text": "Architecture for places that age slowly.",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#4a6741",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#faf8f5",
+      "description_text": "An independent architecture studio rooted in landscape.",
+      "firm_display_name": "Studio Atlas"
+    },
+    "created_at": "2026-05-19T09:31:32.801799+00:00",
+    "updated_at": "2026-05-19T09:33:28.489957+00:00",
+    "vertical_slug": null,
+    "is_starter": true
+  },
+  {
+    "id": "aff0020d-fca1-4c60-af55-e598e000b57a",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Maker's Index",
+    "description": "Brutalist directory with pill-cloud trust badges and zigzag categories.",
+    "category": "ecommerce",
+    "tags": [
+      "portfolio",
+      "ecommerce",
+      "creative"
+    ],
+    "thumbnail_url": "/landing-covers/makers-index.jpg",
+    "is_public": true,
+    "snapshot": {
+      "slug": "makers-index",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "21b647bb-eee4-47d2-851a-258adae71cba",
+          "type": "hero",
+          "props": {
+            "align": "left",
+            "layout": "centered",
+            "eyebrow": "INDEX 2026",
+            "headline": "Independent makers, on a single shelf.",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Browse the index"
+            },
+            "subheadline": "A curated directory of 240+ small-batch ceramic, leather, wood and textile makers shipping within 7 days.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "Apply as a maker"
+            }
+          },
+          "visible": true
+        },
+        {
+          "id": "6105277b-4953-4fc5-ae73-5b602299b289",
+          "type": "trustBadges",
+          "props": {
+            "items": [
+              {
+                "icon": "Truck",
+                "label": "Ships in 7 days"
+              },
+              {
+                "icon": "Hammer",
+                "label": "Made by hand"
+              },
+              {
+                "icon": "Package",
+                "label": "Small batch"
+              },
+              {
+                "icon": "Leaf",
+                "label": "Plastic-free packing"
+              },
+              {
+                "icon": "BadgeCheck",
+                "label": "Fair pricing"
+              },
+              {
+                "icon": "RotateCcw",
+                "label": "30-day return"
+              }
+            ],
+            "layout": "pill-cloud",
+            "heading": "WHAT EVERY MAKER PROMISES"
+          },
+          "visible": true
+        },
+        {
+          "id": "43dd94e0-6322-42ba-9175-4d2575c5b44b",
+          "type": "features",
+          "props": {
+            "items": [
+              {
+                "icon": "Coffee",
+                "title": "Ceramics",
+                "imageUrl": "https://images.unsplash.com/photo-1493106641515-6b5631de4bb9?w=900&q=80",
+                "description": "78 makers — mugs, vessels, planters, full dinner sets."
+              },
+              {
+                "icon": "Briefcase",
+                "title": "Leather",
+                "imageUrl": "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=900&q=80",
+                "description": "42 makers — wallets, bags and small goods with full grain leather."
+              },
+              {
+                "icon": "Trees",
+                "title": "Wood",
+                "imageUrl": "https://images.unsplash.com/photo-1503602642458-232111445657?w=900&q=80",
+                "description": "61 makers — boards, spoons, lighting and small furniture."
+              },
+              {
+                "icon": "Shirt",
+                "title": "Textile",
+                "imageUrl": "https://images.unsplash.com/photo-1551232864-3f0890e580d9?w=900&q=80",
+                "description": "59 makers — naturally-dyed throws, runners and wearables."
+              }
+            ],
+            "layout": "zigzag",
+            "heading": "Categories"
+          },
+          "visible": true
+        },
+        {
+          "id": "520b1fbd-a7a7-4716-a2c4-b3f82709dfcb",
+          "type": "stats",
+          "props": {
+            "items": [
+              {
+                "label": "Vetted makers",
+                "value": "240",
+                "suffix": "+"
+              },
+              {
+                "label": "Countries",
+                "value": "32",
+                "suffix": ""
+              },
+              {
+                "label": "Avg ship time",
+                "value": "7",
+                "suffix": "d"
+              },
+              {
+                "label": "Buyer rating",
+                "value": "4.9",
+                "suffix": "/5"
+              }
+            ],
+            "layout": "inline-strip"
+          },
+          "visible": true
+        },
+        {
+          "id": "03dc2447-3651-48c8-88f7-15d3c311e9df",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Browse the index",
+            "description": "Drop your email to get the index PDF + weekly drops."
+          },
+          "visible": true
+        },
+        {
+          "id": "efd9fede-6e54-4e33-b0ee-ff4c6e5a9bc4",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Maker's Index. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Maker's Index"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": null,
+      "seo_config": {},
+      "typography": {
+        "body": "Hind",
+        "heading": "Archivo Black"
+      },
+      "hero_config": {},
+      "accent_color": "#ff5722",
+      "heading_text": "Independent makers, on a single shelf.",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#0a0a0a",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#ffffff",
+      "description_text": "A curated directory of small-batch makers shipping within 7 days.",
+      "firm_display_name": "Maker's Index"
+    },
+    "created_at": "2026-05-19T09:31:32.801799+00:00",
+    "updated_at": "2026-05-19T09:33:28.489957+00:00",
+    "vertical_slug": null,
+    "is_starter": true
+  },
+  {
+    "id": "53db725d-713e-4fd0-87d2-01d87c690269",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Hands Together",
+    "description": "Warm sunset nonprofit with inline stats, marquee partners and donor FAQ.",
+    "category": "general",
+    "tags": [
+      "nonprofit",
+      "community",
+      "donate"
+    ],
+    "thumbnail_url": "/landing-covers/hands-together.jpg",
+    "is_public": true,
+    "snapshot": {
+      "slug": "hands-together",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "facffc51-8dda-4c54-8a81-f3c319dd4abb",
+          "type": "hero",
+          "props": {
+            "align": "left",
+            "layout": "split-image-right",
+            "eyebrow": "501(c)(3) | EIN 81-4413792",
+            "headline": "Shelter for 200 families this year.",
+            "imageUrl": "https://images.unsplash.com/photo-1593113598332-cd288d649433?w=1200&q=80",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Donate $25"
+            },
+            "subheadline": "Hands Together is a community-supported shelter and food pantry in West Baltimore. Your gift today funds a full week of meals for a family of four.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "Volunteer"
+            }
+          },
+          "visible": true
+        },
+        {
+          "id": "d3991f42-7670-4538-aa02-a1d77311fa90",
+          "type": "stats",
+          "props": {
+            "items": [
+              {
+                "label": "Meals served in 2025",
+                "value": "12K",
+                "suffix": "+"
+              },
+              {
+                "label": "Families housed",
+                "value": "184",
+                "suffix": ""
+              },
+              {
+                "label": "Of every dollar to programs",
+                "value": "93",
+                "suffix": "¢"
+              },
+              {
+                "label": "Serving West Baltimore",
+                "value": "12",
+                "suffix": "yrs"
+              }
+            ],
+            "layout": "inline-strip"
+          },
+          "visible": true
+        },
+        {
+          "id": "3ec0c530-ed94-4934-9c02-c7ce24803c09",
+          "type": "logoCloud",
+          "props": {
+            "logos": [
+              {
+                "alt": "United+Way",
+                "src": "https://placehold.co/140x40/5c2018/fffaf5/png?text=United+Way&font=montserrat"
+              },
+              {
+                "alt": "Casey+Foundation",
+                "src": "https://placehold.co/140x40/5c2018/fffaf5/png?text=Casey+Foundation&font=montserrat"
+              },
+              {
+                "alt": "Open+Society",
+                "src": "https://placehold.co/140x40/5c2018/fffaf5/png?text=Open+Society&font=montserrat"
+              },
+              {
+                "alt": "City+of+BMR",
+                "src": "https://placehold.co/140x40/5c2018/fffaf5/png?text=City+of+BMR&font=montserrat"
+              },
+              {
+                "alt": "Whole+Foods",
+                "src": "https://placehold.co/140x40/5c2018/fffaf5/png?text=Whole+Foods&font=montserrat"
+              },
+              {
+                "alt": "Local+24",
+                "src": "https://placehold.co/140x40/5c2018/fffaf5/png?text=Local+24&font=montserrat"
+              }
+            ],
+            "layout": "marquee",
+            "heading": "PARTNERS & FUNDERS"
+          },
+          "visible": true
+        },
+        {
+          "id": "4fe2d811-a5ef-4748-bcaf-462223846680",
+          "type": "testimonials",
+          "props": {
+            "items": [
+              {
+                "role": "Family in transition, 2024",
+                "quote": "Hands Together was the first place that didn't make me feel like a problem.",
+                "author": "Tasha M.",
+                "rating": 5
+              },
+              {
+                "role": "Volunteer since 2019",
+                "quote": "Volunteering here gave my retirement purpose.",
+                "author": "Frank D.",
+                "rating": 5
+              },
+              {
+                "role": "Community partner",
+                "quote": "They show up every single day. That matters.",
+                "author": "Rev. L. Carter",
+                "rating": 5
+              }
+            ],
+            "layout": "grid",
+            "heading": "Stories from the program"
+          },
+          "visible": true
+        },
+        {
+          "id": "9243d64e-0fcb-4eda-b487-ae3ffd22b46e",
+          "type": "faq",
+          "props": {
+            "items": [
+              {
+                "answer": "Yes | we are a 501(c)(3). You will receive a written receipt within 24 hours.",
+                "question": "Is my gift tax-deductible?"
+              },
+              {
+                "answer": "Yes | monthly donors fund 64% of our operating budget. Cancel anytime.",
+                "question": "Can I give monthly?"
+              },
+              {
+                "answer": "93¢ of every dollar funds direct programs. See our annual report for full breakdown.",
+                "question": "Where does my money go?"
+              }
+            ],
+            "layout": "accordion-single",
+            "heading": "Donor questions"
+          },
+          "visible": true
+        },
+        {
+          "id": "4dfcb7d8-84b7-47de-95cf-d82b8f6da7cc",
+          "type": "cta",
+          "props": {
+            "style": "solid",
+            "layout": "banner-strip",
+            "heading": "$25 = one week of meals for a family.",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Donate now"
+            },
+            "subheading": "Make a one-time or monthly gift in under a minute.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "Volunteer"
+            }
+          },
+          "visible": true
+        },
+        {
+          "id": "b69c9f9e-171c-4ca8-a56f-93b0ce9f3f0a",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Make a donation",
+            "description": "Secure payment via Stripe. 100% tax-deductible."
+          },
+          "visible": true
+        },
+        {
+          "id": "9824c533-672a-47af-94bc-c1904331be6d",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Hands Together. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Hands Together"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": null,
+      "seo_config": {},
+      "typography": {
+        "body": "Nunito Sans",
+        "heading": "Lora"
+      },
+      "hero_config": {},
+      "accent_color": "#e85d3a",
+      "heading_text": "Hands Together: shelter for 200 families this year.",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#5c2018",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#fffaf5",
+      "description_text": "A community-supported shelter and food-pantry in West Baltimore.",
+      "firm_display_name": "Hands Together"
+    },
+    "created_at": "2026-05-19T09:31:32.801799+00:00",
+    "updated_at": "2026-05-19T09:33:28.489957+00:00",
+    "vertical_slug": null,
+    "is_starter": true
+  },
+  {
+    "id": "e8cd7b21-96d6-4b2b-af2a-44e13f523ecb",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Forest Fund",
+    "description": "Forest & moss conservation nonprofit with photo hero and split-image CTA.",
+    "category": "general",
+    "tags": [
+      "nonprofit",
+      "environment",
+      "donate"
+    ],
+    "thumbnail_url": "/landing-covers/forest-fund.jpg",
+    "is_public": true,
+    "snapshot": {
+      "slug": "forest-fund",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "371bff62-4833-4e86-8af7-be7c44cb43cd",
+          "type": "hero",
+          "props": {
+            "align": "center",
+            "layout": "full-bleed-image",
+            "eyebrow": "Conservation that compounds",
+            "headline": "Plant a forest. Heal a watershed.",
+            "imageUrl": "https://images.unsplash.com/photo-1448375240586-882707db888b?w=1600&q=80",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Plant 10 trees — $40"
+            },
+            "subheadline": "Forest Fund restores native woodland across the Pacific Northwest | one tree at a time, one watershed at a time.",
+            "secondaryCta": {
+              "href": "#features",
+              "label": "Our impact"
+            }
+          },
+          "visible": true
+        },
+        {
+          "id": "ab00b817-a676-45e6-a212-cf53161d8762",
+          "type": "features",
+          "props": {
+            "items": [
+              {
+                "icon": "MapPin",
+                "title": "Watershed assessment",
+                "description": "Foresters identify high-priority restoration sites with local conservation districts."
+              },
+              {
+                "icon": "Sprout",
+                "title": "Native species sourcing",
+                "description": "Seedlings are grown in regional nurseries from genetically appropriate seed stock."
+              },
+              {
+                "icon": "Users",
+                "title": "Community planting days",
+                "description": "Volunteers from nearby towns plant alongside our crews each spring."
+              },
+              {
+                "icon": "Activity",
+                "title": "5-year monitoring",
+                "description": "Every site is tracked for survival, growth and ecological recovery for 5 years."
+              }
+            ],
+            "layout": "two-col-large",
+            "columns": 2,
+            "heading": "How a tree gets planted"
+          },
+          "visible": true
+        },
+        {
+          "id": "cbe9c56c-08cd-46ed-93f3-a9dac53954a6",
+          "type": "testimonials",
+          "props": {
+            "items": [
+              {
+                "role": "Director, Salmon Coast Watershed Council",
+                "quote": "Forest Fund's plantings are the most rigorously monitored I've seen in 20 years of restoration work.",
+                "author": "Dr. Emily Tanaka",
+                "rating": 5
+              }
+            ],
+            "layout": "big-quote",
+            "heading": ""
+          },
+          "visible": true
+        },
+        {
+          "id": "a0d9aab8-e65c-4992-a9e4-30086d98aa81",
+          "type": "stats",
+          "props": {
+            "items": [
+              {
+                "label": "Trees planted",
+                "value": "1.4",
+                "suffix": "M"
+              },
+              {
+                "label": "5-year survival rate",
+                "value": "82",
+                "suffix": "%"
+              },
+              {
+                "label": "Restoration sites",
+                "value": "164",
+                "suffix": ""
+              },
+              {
+                "label": "Watersheds healing",
+                "value": "9",
+                "suffix": ""
+              }
+            ],
+            "layout": "cards-large",
+            "heading": "Since 2018"
+          },
+          "visible": true
+        },
+        {
+          "id": "5bfaf233-e2e8-4ba3-8101-7ca6bf5a39d6",
+          "type": "cta",
+          "props": {
+            "style": "solid",
+            "layout": "split-image",
+            "heading": "$4 plants one tree.",
+            "imageUrl": "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=900&q=80",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Plant 10 trees"
+            },
+            "subheading": "Or pick a forest to fund | full restoration packages from $1,000.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "Fund a forest"
+            }
+          },
+          "visible": true
+        },
+        {
+          "id": "bfcbbe4c-1c6a-4254-8690-aeef83cf9772",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Plant your first trees",
+            "description": "Choose a one-time or monthly contribution."
+          },
+          "visible": true
+        },
+        {
+          "id": "837ae8ed-b5df-4e00-9c7e-bb6fbfc965d8",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Forest Fund. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Forest Fund"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": null,
+      "seo_config": {},
+      "typography": {
+        "body": "Karla",
+        "heading": "Cormorant Garamond"
+      },
+      "hero_config": {},
+      "accent_color": "#5a8a5c",
+      "heading_text": "Plant a forest. Heal a watershed.",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#1a3c2a",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#f5f0e8",
+      "description_text": "Forest Fund restores native woodland across the Pacific Northwest.",
+      "firm_display_name": "Forest Fund"
+    },
+    "created_at": "2026-05-19T09:31:32.801799+00:00",
+    "updated_at": "2026-05-19T09:33:28.489957+00:00",
+    "vertical_slug": null,
+    "is_starter": true
+  },
+  {
+    "id": "c5b2dddb-e0f4-48eb-958a-d4d80b545a3d",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "SaaS Launch",
+    "description": "Modern split-screen SaaS launch site with bento, pricing and card-grid FAQ.",
+    "category": "saas",
+    "tags": [
+      "saas",
+      "startup",
+      "modern"
+    ],
+    "thumbnail_url": "/landing-covers/saas-launch.jpg",
+    "is_public": true,
+    "snapshot": {
+      "slug": "saas-launch",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "5eb718ad-0377-424b-8a7f-2cb91b3b89ff",
+          "type": "hero",
+          "props": {
+            "align": "left",
+            "layout": "split-form-right",
+            "eyebrow": "v3 just shipped",
+            "headline": "Ship your SaaS in a weekend.",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Buy lifetime — $199"
+            },
+            "subheadline": "Production-ready starter with auth, payments, dashboards and a CMS. Own the code, skip the plumbing.",
+            "secondaryCta": {
+              "href": "#",
+              "label": "Live demo"
+            },
+            "formCardStyle": "glass",
+            "formCardTitle": "Try the live demo",
+            "formCardSubtitle": "We'll email you a sandbox login."
+          },
+          "visible": true
+        },
+        {
+          "id": "ee03c3d2-06c8-4888-bb05-b34b7e763f91",
+          "type": "bento",
+          "props": {
+            "items": [
+              {
+                "icon": "Users",
+                "size": "lg",
+                "title": "Auth & teams",
+                "description": "Email + OAuth + RBAC"
+              },
+              {
+                "icon": "CreditCard",
+                "size": "md",
+                "title": "Payments",
+                "description": "Stripe subscriptions + portal"
+              },
+              {
+                "icon": "BarChart3",
+                "size": "md",
+                "title": "Dashboards",
+                "description": "60+ chart components"
+              },
+              {
+                "icon": "Zap",
+                "size": "sm",
+                "title": "Edge functions",
+                "description": "Type-safe, zero config"
+              },
+              {
+                "icon": "Mail",
+                "size": "sm",
+                "title": "Email & docs",
+                "description": "Resend + MDX built-in"
+              }
+            ],
+            "heading": "Everything wired in"
+          },
+          "visible": true
+        },
+        {
+          "id": "66a705ed-4b64-49f6-886e-07e240291212",
+          "type": "pricing",
+          "props": {
+            "items": [
+              {
+                "name": "Solo",
+                "price": "$199",
+                "period": "once",
+                "features": [
+                  "1 project",
+                  "Lifetime updates",
+                  "Community support"
+                ]
+              },
+              {
+                "name": "Team",
+                "price": "$499",
+                "period": "once",
+                "features": [
+                  "Unlimited projects",
+                  "Lifetime updates",
+                  "Private Slack",
+                  "1:1 onboarding"
+                ],
+                "highlighted": true
+              },
+              {
+                "name": "Agency",
+                "price": "$1,499",
+                "period": "once",
+                "features": [
+                  "White-label rights",
+                  "Client repos",
+                  "Priority support"
+                ]
+              }
+            ],
+            "heading": "One price. Lifetime updates."
+          },
+          "visible": true
+        },
+        {
+          "id": "43a427e8-a269-4b46-859e-94920bb17489",
+          "type": "faq",
+          "props": {
+            "items": [
+              {
+                "answer": "Next.js 15, TypeScript, Tailwind, Supabase, Stripe, Resend, shadcn/ui.",
+                "question": "What's the stack?"
+              },
+              {
+                "answer": "Solo and Team licenses cover unlimited personal/internal projects. Agency unlocks reseller rights.",
+                "question": "Can I use it for client work?"
+              },
+              {
+                "answer": "Yes, every license includes lifetime updates and access to the private repo.",
+                "question": "Do I get updates forever?"
+              },
+              {
+                "answer": "14 days, no questions asked.",
+                "question": "Refund policy?"
+              }
+            ],
+            "layout": "card-grid",
+            "heading": "Pre-purchase questions"
+          },
+          "visible": true
+        },
+        {
+          "id": "6ffcf555-5611-48f1-a433-ae81d1ce1192",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Try the live demo",
+            "description": "We'll send you a sandbox login in under 60 seconds."
+          },
+          "visible": true
+        },
+        {
+          "id": "e50affe3-92c4-41d4-9ad9-3dd11377cefa",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 SaaS Launch. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "SaaS Launch"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": null,
+      "seo_config": {},
+      "typography": {
+        "body": "Manrope",
+        "heading": "Sora"
+      },
+      "hero_config": {},
+      "accent_color": "#4f46e5",
+      "heading_text": "Ship your SaaS in a weekend.",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#141432",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#ffffff",
+      "description_text": "Auth, payments and dashboards | fully baked, fully yours.",
+      "firm_display_name": "SaaS Launch"
+    },
+    "created_at": "2026-05-19T09:31:32.801799+00:00",
+    "updated_at": "2026-05-19T09:33:28.489957+00:00",
+    "vertical_slug": null,
+    "is_starter": true
+  },
+  {
+    "id": "5df7a5e5-0991-4eaa-8ad5-e214bc43a1bf",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Event Page",
+    "description": "Bold dark conference page with timeline schedule, marquee speakers and banner CTA.",
+    "category": "event",
+    "tags": [
+      "event",
+      "conference",
+      "dark"
+    ],
+    "thumbnail_url": "/landing-covers/event-page.jpg",
+    "is_public": true,
+    "snapshot": {
+      "slug": "event-page",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "77109f41-7d48-4a25-b723-09a2dec821a0",
+          "type": "hero",
+          "props": {
+            "align": "center",
+            "layout": "full-bleed-image",
+            "eyebrow": "SEPT 12-14 | BERLIN",
+            "headline": "FUTURE:BUILT 2026",
+            "imageUrl": "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1600&q=80",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Get your ticket"
+            },
+            "subheadline": "Three days of talks, workshops and after-hours for the people building what comes next.",
+            "secondaryCta": {
+              "href": "#features",
+              "label": "View speakers"
+            }
+          },
+          "visible": true
+        },
+        {
+          "id": "5a4cef17-ae14-46a6-9a02-c5ea29814d0a",
+          "type": "timeline",
+          "props": {
+            "items": [
+              {
+                "title": "DAY 1 — KICKOFF",
+                "description": "Opening keynote, founder track, welcome dinner at Berlin Modern."
+              },
+              {
+                "title": "DAY 2 — DEEP WORK",
+                "description": "Workshops with operators from Linear, Vercel, Supabase and Figma."
+              },
+              {
+                "title": "DAY 3 — SHIP DAY",
+                "description": "Hackathon with $30K in prizes, closing fireside, late-night roof party."
+              }
+            ],
+            "heading": "THE SCHEDULE"
+          },
+          "visible": true
+        },
+        {
+          "id": "2902fe03-1840-4020-adfa-5cd768f06e15",
+          "type": "logoCloud",
+          "props": {
+            "logos": [
+              {
+                "alt": "Linear",
+                "src": "https://placehold.co/140x40/0a0a0a/ffeb3b/png?text=Linear&font=montserrat"
+              },
+              {
+                "alt": "Vercel",
+                "src": "https://placehold.co/140x40/0a0a0a/ffeb3b/png?text=Vercel&font=montserrat"
+              },
+              {
+                "alt": "Supabase",
+                "src": "https://placehold.co/140x40/0a0a0a/ffeb3b/png?text=Supabase&font=montserrat"
+              },
+              {
+                "alt": "Figma",
+                "src": "https://placehold.co/140x40/0a0a0a/ffeb3b/png?text=Figma&font=montserrat"
+              },
+              {
+                "alt": "Notion",
+                "src": "https://placehold.co/140x40/0a0a0a/ffeb3b/png?text=Notion&font=montserrat"
+              },
+              {
+                "alt": "Loom",
+                "src": "https://placehold.co/140x40/0a0a0a/ffeb3b/png?text=Loom&font=montserrat"
+              },
+              {
+                "alt": "Anthropic",
+                "src": "https://placehold.co/140x40/0a0a0a/ffeb3b/png?text=Anthropic&font=montserrat"
+              },
+              {
+                "alt": "Stripe",
+                "src": "https://placehold.co/140x40/0a0a0a/ffeb3b/png?text=Stripe&font=montserrat"
+              }
+            ],
+            "layout": "marquee",
+            "heading": "SPEAKERS FROM"
+          },
+          "visible": true
+        },
+        {
+          "id": "b06d8357-a84a-4e50-a7ff-2aab630cb33e",
+          "type": "pricing",
+          "props": {
+            "items": [
+              {
+                "name": "Day Pass",
+                "price": "€199",
+                "period": "",
+                "features": [
+                  "Any single day",
+                  "Talks + workshops",
+                  "Lunch & coffee"
+                ]
+              },
+              {
+                "name": "Full Pass",
+                "price": "€499",
+                "period": "",
+                "features": [
+                  "All three days",
+                  "Welcome dinner",
+                  "Hackathon entry",
+                  "After-parties"
+                ],
+                "highlighted": true
+              },
+              {
+                "name": "Team (5)",
+                "price": "€1,999",
+                "period": "",
+                "features": [
+                  "5 full passes",
+                  "Reserved seating",
+                  "Private dinner option"
+                ]
+              }
+            ],
+            "heading": "PICK YOUR PASS"
+          },
+          "visible": true
+        },
+        {
+          "id": "07f85f33-0320-42d4-92ea-85332bf63cff",
+          "type": "cta",
+          "props": {
+            "style": "solid",
+            "layout": "banner-strip",
+            "heading": "EARLY BIRD ENDS JUNE 30.",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Get your ticket"
+            },
+            "subheading": "Save €100 on every pass tier."
+          },
+          "visible": true
+        },
+        {
+          "id": "a161cb45-638c-411a-b7a2-cd142de86d86",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Reserve your seat",
+            "description": "Tickets are non-refundable but transferable."
+          },
+          "visible": true
+        },
+        {
+          "id": "cfec275f-8548-4893-9f67-0f5f7496a969",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Event Page. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Event Page"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": null,
+      "seo_config": {},
+      "typography": {
+        "body": "Barlow",
+        "heading": "Bebas Neue"
+      },
+      "hero_config": {},
+      "accent_color": "#ffeb3b",
+      "heading_text": "Future:Built | Sept 12-14, Berlin",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#0a0a0a",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#0a0a0a",
+      "description_text": "Three days of talks, workshops and after-hours for builders.",
+      "firm_display_name": "Event Page"
+    },
+    "created_at": "2026-05-19T09:31:32.801799+00:00",
+    "updated_at": "2026-05-19T09:33:28.489957+00:00",
+    "vertical_slug": null,
+    "is_starter": true
+  },
+  {
+    "id": "22331eba-39b1-47d8-85d0-3f75b2b54f95",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Restaurant",
+    "description": "Luxury serif restaurant page with menu features, masonry gallery and two-col FAQ.",
+    "category": "general",
+    "tags": [
+      "restaurant",
+      "hospitality",
+      "luxury"
+    ],
+    "thumbnail_url": "/landing-covers/restaurant.jpg",
+    "is_public": true,
+    "snapshot": {
+      "slug": "restaurant",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "08578040-4fb0-4887-9516-6a9ef0840cc8",
+          "type": "hero",
+          "props": {
+            "align": "left",
+            "layout": "split-image-right",
+            "eyebrow": "BROOKLYN | SINCE 2019",
+            "headline": "Olea.",
+            "imageUrl": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=80",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Reserve a table"
+            },
+            "subheadline": "A neighborhood table set with what's in season. Wood-fire, olive oil, slow afternoons.",
+            "secondaryCta": {
+              "href": "#features",
+              "label": "View menu"
+            }
+          },
+          "visible": true
+        },
+        {
+          "id": "e0e50201-f801-480b-8b97-ba682ff5d16f",
+          "type": "features",
+          "props": {
+            "items": [
+              {
+                "icon": "Flame",
+                "title": "From the wood fire",
+                "description": "Whole branzino, lamb shoulder, charred cabbage with anchovy butter."
+              },
+              {
+                "icon": "Wheat",
+                "title": "Pasta of the day",
+                "description": "Hand-rolled mafaldine with brown butter, sage and aged pecorino."
+              },
+              {
+                "icon": "Wine",
+                "title": "Natural wine list",
+                "description": "70+ bottles, focused on small Mediterranean producers."
+              }
+            ],
+            "layout": "icon-row",
+            "columns": 3,
+            "heading": "Tonight on the menu"
+          },
+          "visible": true
+        },
+        {
+          "id": "3d69625a-619b-4c4f-a073-de367704f628",
+          "type": "gallery",
+          "props": {
+            "items": [
+              {
+                "title": "The bar",
+                "imageUrl": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80"
+              },
+              {
+                "title": "Wood-fire kitchen",
+                "imageUrl": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80"
+              },
+              {
+                "title": "Sunday lunch",
+                "imageUrl": "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80"
+              },
+              {
+                "title": "Late evening",
+                "imageUrl": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80"
+              }
+            ],
+            "layout": "masonry",
+            "heading": "The room"
+          },
+          "visible": true
+        },
+        {
+          "id": "2c93a8bf-d4d6-48af-bbfc-b39c15363401",
+          "type": "faq",
+          "props": {
+            "items": [
+              {
+                "answer": "Yes, the bar and counter are always first-come, first-served. Tables are by reservation.",
+                "question": "Are walk-ins welcome?"
+              },
+              {
+                "answer": "We host buyouts on Mondays for 30-60 guests. Email events@olea.nyc.",
+                "question": "Private events?"
+              },
+              {
+                "answer": "Tell us when you book and the kitchen will plan around any allergy or preference.",
+                "question": "Dietary needs?"
+              }
+            ],
+            "layout": "two-col",
+            "heading": "Before you visit"
+          },
+          "visible": true
+        },
+        {
+          "id": "7fe53cfc-873d-4a58-b9cf-3feee0a3be9d",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Reserve a table",
+            "description": "Parties up to 6 | for larger groups, email us."
+          },
+          "visible": true
+        },
+        {
+          "id": "3a1d83d0-8e7a-4f47-8e1e-b2ef01643a46",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 Olea. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "Olea"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": null,
+      "seo_config": {},
+      "typography": {
+        "body": "Karla",
+        "heading": "Cormorant Garamond"
+      },
+      "hero_config": {},
+      "accent_color": "#c9a84c",
+      "heading_text": "Olea | seasonal Mediterranean, since 2019.",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#2d2d2d",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#f5f0e0",
+      "description_text": "A neighborhood table in Brooklyn, set with what's in season.",
+      "firm_display_name": "Olea"
+    },
+    "created_at": "2026-05-19T09:31:32.801799+00:00",
+    "updated_at": "2026-05-19T09:33:28.489957+00:00",
+    "vertical_slug": null,
+    "is_starter": true
+  },
+  {
+    "id": "0cdc025d-9669-42b6-8604-87fa6aaaf917",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "firm_id": null,
+    "name": "Local Service",
+    "description": "Emerald prestige local service site with split hero, icon-row services and stat strip.",
+    "category": "general",
+    "tags": [
+      "local",
+      "service",
+      "business"
+    ],
+    "thumbnail_url": "/landing-covers/local-service.jpg",
+    "is_public": true,
+    "snapshot": {
+      "slug": "local-service",
+      "logo_url": null,
+      "sections": [
+        {
+          "id": "17557d5d-4a26-47a5-9bd9-257dfde5a97a",
+          "type": "hero",
+          "props": {
+            "align": "left",
+            "layout": "split-form-right",
+            "eyebrow": "Serving Boston's North Shore",
+            "headline": "Lawns the whole street notices.",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Get free quote"
+            },
+            "subheadline": "Weekly mowing, seasonal treatments and a real human who knows your name. Free quote in under 2 minutes.",
+            "secondaryCta": {
+              "href": "#features",
+              "label": "Our services"
+            },
+            "formCardStyle": "card",
+            "formCardTitle": "Get your free quote",
+            "formCardSubtitle": "We'll text you back within the hour."
+          },
+          "visible": true
+        },
+        {
+          "id": "eac2a137-3281-409e-9851-3e63f37a0ef9",
+          "type": "features",
+          "props": {
+            "items": [
+              {
+                "icon": "Scissors",
+                "title": "Weekly mowing",
+                "description": "Clean lines, every visit."
+              },
+              {
+                "icon": "Sprout",
+                "title": "Lawn treatments",
+                "description": "Fertilize, aerate, overseed."
+              },
+              {
+                "icon": "Trees",
+                "title": "Tree & shrub care",
+                "description": "Prune, mulch, fall cleanup."
+              },
+              {
+                "icon": "Snowflake",
+                "title": "Winter plowing",
+                "description": "Driveway + walkway, dawn-ready."
+              }
+            ],
+            "layout": "icon-row",
+            "columns": 4,
+            "heading": "Everything we do"
+          },
+          "visible": true
+        },
+        {
+          "id": "5a6af09a-6209-4b89-9c1c-3140a5b74797",
+          "type": "trustBadges",
+          "props": {
+            "items": [
+              {
+                "icon": "Shield",
+                "label": "Licensed & insured"
+              },
+              {
+                "icon": "Star",
+                "label": "4.9★ on Google (240+)"
+              },
+              {
+                "icon": "BadgeCheck",
+                "label": "Family-owned since 2011"
+              },
+              {
+                "icon": "Award",
+                "label": "Free estimates"
+              }
+            ],
+            "layout": "stat-strip"
+          },
+          "visible": true
+        },
+        {
+          "id": "6df91ca7-b514-4605-aa4d-0767b9cd0382",
+          "type": "testimonials",
+          "props": {
+            "items": [
+              {
+                "role": "Beverly, MA",
+                "quote": "Best my lawn has ever looked. Worth every penny.",
+                "author": "Susan W.",
+                "rating": 5
+              },
+              {
+                "role": "Manchester, MA",
+                "quote": "Showed up on time, every week, all summer.",
+                "author": "Mark T.",
+                "rating": 5
+              },
+              {
+                "role": "Marblehead, MA",
+                "quote": "They saved a tree the prior company killed.",
+                "author": "Renée P.",
+                "rating": 5
+              }
+            ],
+            "layout": "grid",
+            "heading": "Neighbors on GreenPro"
+          },
+          "visible": true
+        },
+        {
+          "id": "b82dae8e-c6fb-4b02-a7ff-44747146dd7f",
+          "type": "cta",
+          "props": {
+            "style": "solid",
+            "layout": "centered",
+            "heading": "Free quote in under 2 minutes.",
+            "primaryCta": {
+              "href": "#lead-form",
+              "label": "Get free quote"
+            },
+            "subheading": "No phone tag. No upsells."
+          },
+          "visible": true
+        },
+        {
+          "id": "7cf8e366-f4aa-4f4a-9224-5cb97fe84c8f",
+          "type": "form",
+          "props": {
+            "sticky": false,
+            "heading": "Get your free quote",
+            "description": "We'll text you back within the hour."
+          },
+          "visible": true
+        },
+        {
+          "id": "9236d3ec-ac31-4432-ba95-41cbdd03c8d8",
+          "type": "footer",
+          "props": {
+            "legal": "© 2026 GreenPro Lawn Care. All rights reserved.",
+            "links": [
+              {
+                "href": "#",
+                "label": "Privacy"
+              },
+              {
+                "href": "#",
+                "label": "Terms"
+              },
+              {
+                "href": "#lead-form",
+                "label": "Contact"
+              }
+            ],
+            "layout": "simple",
+            "social": [],
+            "tagline": "",
+            "firmName": "GreenPro Lawn Care"
+          },
+          "visible": true
+        }
+      ],
+      "theme_key": null,
+      "seo_config": {},
+      "typography": {
+        "body": "Epilogue",
+        "heading": "Urbanist"
+      },
+      "hero_config": {},
+      "accent_color": "#c9a84c",
+      "heading_text": "Lawns the whole street notices.",
+      "custom_fields": [],
+      "layout_config": {},
+      "primary_color": "#064e3b",
+      "visible_fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "background_color": "#ffffff",
+      "description_text": "Five-star lawn care across the North Shore | satisfaction guaranteed.",
+      "firm_display_name": "GreenPro Lawn Care"
+    },
+    "created_at": "2026-05-19T09:31:32.801799+00:00",
+    "updated_at": "2026-05-19T09:33:28.489957+00:00",
+    "vertical_slug": null,
+    "is_starter": true
+  }
+]

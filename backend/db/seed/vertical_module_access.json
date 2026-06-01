@@ -1,0 +1,1919 @@
+[
+  {
+    "id": "52713b03-bc27-45a9-8c3b-ec03c0c27e4d",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "lead_scoring",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "881e7113-9f14-438f-8d4c-42478bc89e55",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "case_evaluator",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "a7c99794-207b-4e67-a0a4-706fb334bb4b",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "document_analyzer",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "915c2067-e041-4af6-a59b-d95afc399f39",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "intake_chatbot",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "0765624c-daee-489c-b69d-8a95496ac174",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "background_check",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "bf47f671-a846-43d9-9cd8-1c25c947c21b",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "settlement_predictor",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "c4bab578-1851-4da7-b493-1ae164676fa9",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "judge_intelligence",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "be7a236f-c671-4347-b5f4-8b70d680de9b",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "predictive_leads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "89ff098f-7243-49ee-ae31-a1280459bbb5",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "creative_studio",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "383725cd-ebac-48f4-bc2c-ae3bbf572fed",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "viral_content",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "a4abdf91-5013-4095-bc55-a97132e0d651",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "video_ads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "6851c610-c90d-45af-8e09-a4dd2fd2c1fa",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "social_calendar",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "5b36a4a8-7132-4fd6-a090-76433a22b547",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "competitor_intel",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "c89c17d9-e791-455a-91a6-b67e09adf37f",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "market_pulse",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "af1a6ebe-8b1c-4699-ab25-20885aa05c96",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "intent_signals",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "133935d9-c8dd-427a-823b-b0f6175273c5",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "dark_funnel",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "3ecd71d2-3ed8-4b93-8344-2c9dc8976a1b",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "lookalike",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "28f37add-19a2-4919-8a40-db0c6c4fe033",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "geofence",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "c3feca1b-63e8-46e9-9042-04232b299d9f",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "fraud_detection",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "52cc6a34-d068-453a-8c11-6fac0b8fd519",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "meta_ads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "93961482-664d-4c9b-b858-dadc45dd757f",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "google_ads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "4db1f05e-fcf5-43f9-8c94-7137b4f2e24d",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "cross_platform_autopilot",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "57afdc96-f71d-482f-ba33-27625084641f",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "evidence_vault",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "82785c9b-6b77-400e-adbb-8ee6cdba9855",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "benchmarks",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "20611f9d-abc2-4067-8be0-20ed02d0d82d",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "lead_scoring",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "981abdb9-909f-4d5b-8408-e889ae276110",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "case_evaluator",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "e0925722-19dd-40f7-8d39-bb638cfea0fc",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "document_analyzer",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "20674a39-19e1-4ab5-8d5b-434572bd628e",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "intake_chatbot",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "6c78f637-b274-4a04-835f-6c87a13baced",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "creative_studio",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "98ddf58e-24b0-42d8-941a-1c97ef7ccbf4",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "viral_content",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "f74fc4ec-4e37-44f1-9d70-70cdf98ae21e",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "video_ads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "fbaf7948-8dbf-4b48-8eb3-f09aeeeab01b",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "social_calendar",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "45a6cb80-207e-4b73-bf6a-63dbd669a736",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "competitor_intel",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "8a5a336b-e08f-4bde-8a9f-b1d6a8d24f53",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "lookalike",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "f06ecbb2-7a06-4719-b6d8-616814c859f5",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "meta_ads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "52f34752-aaee-4e60-b567-09c1a8f9f6be",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "google_ads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "7d6e3f10-d4cb-49ad-8f4c-0676d5527afe",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "cross_platform_autopilot",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "af66609d-9486-40a3-822e-9b41391b7666",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "benchmarks",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "9b2e99dc-3298-4bff-b05f-aeffdefa519f",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "fraud_detection",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "8a93e11b-9199-423f-959c-09bdf6cbb37f",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "lead_scoring",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "c4fbac3a-b527-4b5d-96ad-0430732ac39f",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "case_evaluator",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "a5ec5299-0d4a-499c-8f6f-05522dc11db0",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "document_analyzer",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "1dd0fdec-9a1e-4365-b8ed-11b2fa7b5e2c",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "intake_chatbot",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "0e8aa5d7-fd32-4dfc-980c-dee42f884786",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "background_check",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "715a3e5f-5730-4b85-83c2-867306afcb80",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "predictive_leads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "115fa5f5-2b03-4845-a027-36ed19ad234b",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "creative_studio",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "26e7efc3-fd6d-4a6e-b51f-e13c5759797f",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "viral_content",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "80f40edf-9e6e-4f3f-b402-8641e4af2649",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "video_ads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "0dd7d1ec-b0c6-4329-a2de-209306ad2f0b",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "social_calendar",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "fb468763-283c-472b-8020-da6b956c9c89",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "competitor_intel",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "84453c3f-33bf-4f8a-aa87-6092045bae23",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "market_pulse",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "8f6d80e2-76ac-4b70-98bb-0f23982c62f7",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "intent_signals",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "c0465630-de79-43e1-a15f-91fb9527931a",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "dark_funnel",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "e3ca48d5-39e4-4e36-8b0d-1ef43b1182eb",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "lookalike",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "ed415757-ae3a-4393-892d-4b8e672eb3bf",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "geofence",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "2dfc3b5e-c6c1-4627-9ad2-918fc6938947",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "fraud_detection",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "b2aac02f-ab0e-4e9e-b909-ca3e0a871ca9",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "meta_ads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "43c39201-9553-45f6-a2b9-4c612d4aa848",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "google_ads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "13dd7a0e-5d88-435d-ac7e-56e258859018",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "cross_platform_autopilot",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "511d507b-7455-4b1a-87f8-3049eac31fa0",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "benchmarks",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "d3874844-4a86-4138-9cb2-1c1956109378",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "lead_scoring",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "3188e8c4-0d54-4908-a5bd-578eb656868e",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "case_evaluator",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "579fff36-b488-423c-bcd6-4c66ca137d50",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "document_analyzer",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "7b4875f6-0af5-419c-8d0d-66ead14203f8",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "intake_chatbot",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "20b8811b-5e66-4cb8-b509-0bfebed9784a",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "creative_studio",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "2dc23ed6-3ffe-4ee0-96a3-eee6a9abf001",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "viral_content",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "107cce39-47de-4ab6-94e2-5d8e1d402fae",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "video_ads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "169b51ca-c992-48cc-ac87-612ee8a34fb4",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "social_calendar",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "a64e9de5-bf78-4e9e-bf6b-491284664d97",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "competitor_intel",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "63cba391-2a68-4037-a912-2c04dd077087",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "intent_signals",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "55a340ca-176f-4a3b-8fbc-aec30d6d50fd",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "geofence",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "cc757004-0a75-484b-8d5e-32a9b29acba7",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "fraud_detection",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "79714919-8b2a-4f56-be2e-3f8c68a4eb69",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "meta_ads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "a36bf73b-43f4-4665-816a-08dd69d75e10",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "google_ads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "9c6f8ab3-eea9-4946-a329-462c7059ad81",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "cross_platform_autopilot",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "343461f5-f525-444c-baed-6fb84f03317c",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "benchmarks",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "e1a08224-6fbf-4290-a728-94039866d993",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "lead_scoring",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "2f2b6a78-dd3f-446e-996d-3169f2558e56",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "case_evaluator",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "894d5472-193a-4e41-a6ae-34f43bbd9252",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "document_analyzer",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "6e88d278-57b4-470b-ada7-d88d456c4cca",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "intake_chatbot",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "e60c1c13-bff1-4c24-8293-1a0c1e17e82b",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "creative_studio",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "fc19ad58-e280-4934-b04d-68bcea82fca5",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "viral_content",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "0769f2dc-4837-415d-b7ba-0536efaf5485",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "video_ads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "08ac9c09-646b-4033-957d-1dd3b21bb4ba",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "social_calendar",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "1df74717-2bd2-4baa-b07b-201c05156ab4",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "competitor_intel",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "b948e748-ca29-4a31-b71b-6f1e79339427",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "lookalike",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "89b76eef-3d00-4fe3-beee-70556ddcd0f3",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "meta_ads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "19d4637b-c6f2-472b-8d74-242fd9f019f3",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "google_ads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "f8bc0bb5-af88-4bd0-8515-5ccc4df0a58e",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "cross_platform_autopilot",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "5a7670f9-ea44-44f7-af80-73eb3120edb1",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "benchmarks",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "aad92327-d5ba-490d-a0db-b1558fac9f89",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "fraud_detection",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "dc32ea35-c5d3-4924-bf65-c5c1a4f4c6e5",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "lead_scoring",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "52e8c2bf-887a-45f9-9cde-08438b195237",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "case_evaluator",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "c1b5ef3f-0a48-4629-a92c-329136d82d19",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "document_analyzer",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "5327274a-7b3c-42a3-aeff-1b54657cb431",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "intake_chatbot",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "843d744a-2091-4e95-bf7a-63bf47ba443e",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "creative_studio",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "4a757970-34f4-4a15-ac08-022ca0ceaf1a",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "viral_content",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "ff082c6b-eb82-4234-b1de-a1dc46877d23",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "video_ads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "39b90aca-ed7a-4c6d-8d2f-8cf4017c5222",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "social_calendar",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "52ef01ed-9aae-4de7-825e-abdd25c611fc",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "competitor_intel",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "ff918725-a9b4-4f59-92ac-8e60af60975c",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "intent_signals",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "ca9ef90a-06ff-44df-8741-71e8b70b8903",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "geofence",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "cd0fc542-b41a-4cf1-b753-ed388638d075",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "fraud_detection",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "2cedf381-894a-493c-b7ab-1e6c5356634b",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "meta_ads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "e9d74d15-d485-451a-9ca9-60784f7b6677",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "google_ads",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "6b6f1cbe-f989-4ad4-94ef-2d450e7f7cd4",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "cross_platform_autopilot",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "72b65af6-584c-4a96-a368-332b95f8af63",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "benchmarks",
+    "is_enabled": true,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-21T23:20:55.075508+00:00"
+  },
+  {
+    "id": "a6d25039-f396-4943-9e0f-f1f76703cacc",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "background_check",
+    "is_enabled": false,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-22T22:57:37.876817+00:00"
+  },
+  {
+    "id": "39db524d-5119-43e3-801b-f4081d4fcbe1",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "background_check",
+    "is_enabled": false,
+    "created_at": "2026-04-21T23:20:55.075508+00:00",
+    "updated_at": "2026-04-22T22:57:37.876817+00:00"
+  },
+  {
+    "id": "5bc59dc8-6dcc-4c71-8068-1282725bc394",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "tool_compliance_auditor",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "419772bd-a00d-4bd5-aaab-b1dc3a56437d",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "tool_email_sequence",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "30bbc1ae-6e1a-4eb8-9cca-98556463aedb",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "tool_crm_hygiene",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "a8c83fb2-54e7-489c-b0f1-2d11567a6790",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "tool_sms_conversational",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "e40b2b9a-3b2c-49bd-a1b5-684a4ff540c9",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "tool_voice_receptionist",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "03861b6c-3f94-4899-97de-4757811718f5",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "tool_demand_letter_drafter",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "22086f69-e7e4-4ed9-947d-719cde6ea5d6",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "tool_mdl_bellwether_tracker",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "6a862c85-cfe2-49b4-b85a-56f0f3682f9c",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "tool_co_counsel_referral",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "200e60ce-8205-4280-b7eb-fd9c36bab4a8",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "tool_medical_records_summarizer",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "f0dbdf4c-dfbd-4d64-9fe4-341f108e66a8",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "tool_sol_calculator",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "00e63656-3858-4635-a60e-c85b69748eaa",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "tool_compliance_auditor",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "dad1e858-e1cd-4089-a855-96cf786777cb",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "tool_email_sequence",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "617fbd2c-bebb-43a7-8af8-a222abb5acab",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "tool_crm_hygiene",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "35a5a528-dc3c-4e46-a008-da0b6a3cc68d",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "tool_sms_conversational",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "f9220604-5a58-4b91-a5fd-812f615f34c2",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "tool_voice_receptionist",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "52501402-7b5f-4e7a-bcbe-80c69ce2cf30",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "tool_influencer_matcher",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "64c35132-394e-41db-99aa-dabb89970401",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "tool_treatment_package_recommender",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "d51c2879-50f4-46d3-9f4f-25354db2d8ba",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "tool_skin_concern_triage",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "cb9b26ef-8987-4125-9763-228793d09ea7",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "tool_before_after_analyzer",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "00cfe823-3bcc-43a2-9f97-e7c8ca3208f8",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "tool_compliance_auditor",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "fb1f679d-060e-432c-83ea-ee4d7b289cdb",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "tool_email_sequence",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "23f5baee-2130-457c-a867-ee4037c3b4a7",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "tool_crm_hygiene",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "b0f06e17-706d-4402-acd3-8d4739339d39",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "tool_sms_conversational",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "ad44a497-011b-4e0c-8ef0-402bd9839137",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "tool_voice_receptionist",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "4c1c1dad-aa4a-4b0f-a5b8-97503385008d",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "tool_neighborhood_insights",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "622bdb44-de55-41d6-8882-21cabfe1e3e5",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "tool_mortgage_prequal",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "c386f8c7-c58b-4cf5-ba43-1bcf253128d0",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "tool_buyer_property_matcher",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "b0cfd59c-159e-4f61-be1f-9dfaa6e128c2",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "tool_listing_description",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "fc79b3a1-149c-4b9f-b9f8-447638400286",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "tool_property_valuation",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "41413b76-28c0-4ae1-9916-ed22c36e9a2c",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "tool_compliance_auditor",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "e421f8e3-e120-42a8-abd8-8d54aa6bad41",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "tool_email_sequence",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "e40c7d9c-10e6-4fc1-a16a-14a9c9c21c90",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "tool_crm_hygiene",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "4bc48a54-9fda-4ce5-a246-1744d4a10ce4",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "tool_sms_conversational",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "b8281a77-481e-4ecd-ac62-dabbb7170ccf",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "tool_voice_receptionist",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "ba335e21-0ac3-4e4a-a86e-d198fa840634",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "tool_permit_tracker",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "0954caca-9a45-4ee0-89b6-7bf40035a35a",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "tool_financing_optimizer",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "fe646656-7c83-40b4-bdf9-78edb3844eda",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "tool_incentive_finder",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "cbdd5452-38c9-4d57-b4eb-b50126af8107",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "tool_utility_bill_parser",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "fbe851a3-552d-44bd-82d9-75db219c081d",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "tool_roof_suitability",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "0f1415c1-af0d-4dec-bbc6-b5bdb183ffd9",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "tool_compliance_auditor",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "6c1b5763-3fbd-4b59-a5f3-c7c6f7962ce0",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "tool_email_sequence",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "bd3ef16d-0955-4194-962e-befe8d629233",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "tool_crm_hygiene",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "aaf9ab30-8152-46f0-89dd-7e9acf337cd0",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "tool_sms_conversational",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "433d0072-6679-4c27-9c80-b76c9b673126",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "tool_voice_receptionist",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "8a0a47f8-b007-40f1-aac2-18fc74f2333a",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "tool_recall_recare",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "e853dec0-478a-42b6-b747-b31119cb4215",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "tool_no_show_predictor",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "a6944150-3a7b-403b-bfe8-7ed015b50e00",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "tool_treatment_plan_estimator",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "cec011eb-c078-493f-a544-b4c4702a9ca2",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "tool_insurance_verifier",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "d0bb5063-e682-49c1-a1cc-14f460c3ee0c",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "tool_compliance_auditor",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "76a31115-d0f6-48d4-bd7c-01ea0374a4a4",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "tool_email_sequence",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "a1d7c1ef-357c-4afb-806d-49e40deac860",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "tool_crm_hygiene",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "ebc59730-e999-4e22-bb5b-682a732045e4",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "tool_sms_conversational",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "b3bde971-05ae-4f32-98c7-e6f3a60d78b8",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "tool_voice_receptionist",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "2b1747bd-704f-436c-b64c-27d1519b7029",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "tool_upsell_recommender",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "310adfe3-aba8-4ab9-9418-4ff90e78a340",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "tool_review_response",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "c11b5437-e41f-4bf4-a531-3bd389c298a5",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "tool_seasonal_demand_forecaster",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "e8362e84-61bd-4765-a9cd-ad6396278c55",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "tool_service_area_optimizer",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "4f4e8eec-2a01-4f82-a8a8-f8250bd942aa",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "tool_photo_estimate",
+    "is_enabled": true,
+    "created_at": "2026-04-22T23:08:59.118679+00:00",
+    "updated_at": "2026-04-22T23:08:59.118679+00:00"
+  },
+  {
+    "id": "690e507b-6b35-49ab-a699-890494e06043",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "gmb_manager",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "14880d7b-0d74-425e-9634-0426501bf225",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "seo_suite",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "e696c159-45c9-42e3-a9e4-edb3deccfe5c",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "tool_seo_deep_scan",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "64dc59fc-d28f-4fc6-b556-1e20c837abd7",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "tool_keyword_research",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "8d75627d-8496-441a-a60a-f4de2e9821cf",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "tool_backlink_audit",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "87313399-035a-4d62-ab01-6caacfe29274",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "tool_local_citations",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "1a3347f6-f865-40e0-b536-152cf97b6cea",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "tool_review_manager",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "8d5cbce3-59cc-4515-a28e-b36f00d528be",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "tool_gmb_post_scheduler",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "69d9d8f2-3b4f-4cc4-beef-7b68cfa3e33e",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "gmb_manager",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "70e2c223-fc23-4dcf-a5a8-7d13d82ad06a",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "seo_suite",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "cf967fe6-0f20-46f5-9a83-60cabb500a03",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "tool_seo_deep_scan",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "cf73d627-9458-4e9f-8cf6-fce631312c27",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "tool_keyword_research",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "24883273-d3eb-41ef-a846-dd970a383407",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "tool_backlink_audit",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "f9b7f7b8-2f01-4dd1-9261-3bb195fb17b8",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "tool_local_citations",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "775aedfd-2b71-46e5-9d18-2a10a448b636",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "tool_review_manager",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "cced490c-cf5a-4766-979f-96f66977a901",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "tool_gmb_post_scheduler",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "b245d045-eabc-40e5-a722-26a411814c00",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "gmb_manager",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "a651fa3f-7ad0-4759-96bd-996e3c588f60",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "seo_suite",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "93af45fb-088f-45fe-a661-2bf9d1c12405",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "tool_seo_deep_scan",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "9758c5df-99f8-4329-b59e-2a404c20832f",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "tool_keyword_research",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "14827c46-8701-4f3d-9794-0279560cb623",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "tool_backlink_audit",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "843eeaf5-a869-42d4-adac-90c0cb3ac5e4",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "tool_local_citations",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "3a27d699-8117-4635-9f7b-9f0295b6b357",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "tool_review_manager",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "070fd1ac-a83a-43e5-b27d-d6382fe038a5",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "tool_gmb_post_scheduler",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "f783bd03-de21-4950-a421-24e1ff935602",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "gmb_manager",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "3f97bd1e-979c-405d-9718-114229ca69d3",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "seo_suite",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "01a4be59-afe9-4ddf-b9ea-8500615357d6",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "tool_seo_deep_scan",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "f540dbac-748a-472b-8fd6-41e26e56eccd",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "tool_keyword_research",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "8c2d9003-5260-434e-99c2-b4976ec6fc39",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "tool_backlink_audit",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "a682a090-4cf5-4460-975b-74b7bfb5109b",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "tool_local_citations",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "784592d9-596a-423f-a8cf-447978b8ae1f",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "tool_review_manager",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "b1e4edb3-c2f7-4ddb-a04b-f9b79b3cf0d1",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "tool_gmb_post_scheduler",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "96de31a5-3a5b-4f10-b2bb-ddcb27c9079a",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "gmb_manager",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "1a8bddf5-5a88-490d-bcbc-5c920ec03702",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "seo_suite",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "e49f5f9c-afa9-4171-8cb8-1ea027be9c62",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "tool_seo_deep_scan",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "e318a7fc-6084-42df-998e-763ea4d270f3",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "tool_keyword_research",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "cc36b101-a9c6-4b00-892d-62a558e297c1",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "tool_backlink_audit",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "5ef1fb69-594d-4a4e-b29f-711ba628d1f1",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "tool_local_citations",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "87acbfe2-161c-48a2-951a-53aa6a4ea969",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "tool_review_manager",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "ac5675a6-921a-4abc-9796-c2e8ea08a24a",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "tool_gmb_post_scheduler",
+    "is_enabled": true,
+    "created_at": "2026-05-04T19:56:33.915172+00:00",
+    "updated_at": "2026-05-04T19:56:33.915172+00:00"
+  },
+  {
+    "id": "4b42f543-1127-4419-8feb-6f5a8e7cf7bb",
+    "vertical_id": "4e45ffe2-5bf5-495c-a460-fcca961ce4a3",
+    "firm_id": null,
+    "module_key": "website_doctor",
+    "is_enabled": true,
+    "created_at": "2026-05-27T21:16:37.712992+00:00",
+    "updated_at": "2026-05-27T21:16:37.712992+00:00"
+  },
+  {
+    "id": "449038b7-0116-493b-9ccf-1b7d3259684c",
+    "vertical_id": "384fe00f-b73b-44f0-bd56-90f7d488fe75",
+    "firm_id": null,
+    "module_key": "website_doctor",
+    "is_enabled": true,
+    "created_at": "2026-05-27T21:16:37.712992+00:00",
+    "updated_at": "2026-05-27T21:16:37.712992+00:00"
+  },
+  {
+    "id": "b757cadd-7d22-4cdc-8996-464bedfb26ac",
+    "vertical_id": "96a84e37-b2d9-466e-a7be-94554a0c225b",
+    "firm_id": null,
+    "module_key": "website_doctor",
+    "is_enabled": true,
+    "created_at": "2026-05-27T21:16:37.712992+00:00",
+    "updated_at": "2026-05-27T21:16:37.712992+00:00"
+  },
+  {
+    "id": "0607c79f-f6a4-4e05-85f2-425df5ca31d1",
+    "vertical_id": "4c8f1580-8912-45e2-978d-774170b4cc1f",
+    "firm_id": null,
+    "module_key": "website_doctor",
+    "is_enabled": true,
+    "created_at": "2026-05-27T21:16:37.712992+00:00",
+    "updated_at": "2026-05-27T21:16:37.712992+00:00"
+  },
+  {
+    "id": "06312217-a79e-4acf-b06a-5ae1ccaf8452",
+    "vertical_id": "45f61244-ace1-4948-9744-e5db3438ee03",
+    "firm_id": null,
+    "module_key": "website_doctor",
+    "is_enabled": true,
+    "created_at": "2026-05-27T21:16:37.712992+00:00",
+    "updated_at": "2026-05-27T21:16:37.712992+00:00"
+  },
+  {
+    "id": "5bb158a4-17ac-42c6-a509-f5590d5ccdb4",
+    "vertical_id": "390156d6-714e-46b2-9e9d-24dca28413a9",
+    "firm_id": null,
+    "module_key": "website_doctor",
+    "is_enabled": true,
+    "created_at": "2026-05-27T21:16:37.712992+00:00",
+    "updated_at": "2026-05-27T21:16:37.712992+00:00"
+  }
+]
