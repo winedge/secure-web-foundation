@@ -49,7 +49,7 @@ export function AdsTable({ initialAdSetId = null, initialCampaignId = null }: Pr
     { key: 'eff', label: 'Delivery', sortable: true, sortKey: 'effective_status', render: (r) => <span className="text-xs">{r.effective_status || '|'}</span> },
     { key: 'meta', label: 'Meta ID', sortable: true, sortKey: 'meta_ad_id', render: (r) => <span className="font-mono text-[10px] text-muted-foreground">{r.meta_ad_id || 'unpublished'}</span> },
     { key: 'preview', label: '', align: 'right', render: (r) => r.preview_shareable_link ? (
-      <Button asChild variant="ghost" size="sm" className="h-7">
+      <Button asChild variant="ghost" size="sm" className="h-7" onClick={(e) => e.stopPropagation()}>
         <a href={r.preview_shareable_link} target="_blank" rel="noreferrer">
           <ExternalLink className="h-3.5 w-3.5" />
         </a>
