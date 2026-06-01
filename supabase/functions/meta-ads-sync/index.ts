@@ -462,7 +462,42 @@ serve(async (req) => {
 
     // ─── SYNC ALL  |  pull campaigns from Meta into local DB ───
     if (action === "sync_from_meta") {
-      const { firm_id } = params;
+      const { firm_id, ad_account_row_id } = params;
+      if (!firm_id) return errorResponse("firm_id is required");
+
+      let localAdAccountId = ad_account_row_id;
+      if (!localAdAccountId) {
+        const { data: existingAccount } = await supabase
+          .from("meta_ad_accounts")
+          .select("id")
+          .eq("firm_id", firm_id)
+          .eq("meta_ad_account_id", adAccountId)
+          .maybeSingle();
+
+        if (existingAccount?.id) {
+          localAdAccountId = existingAccount.id;
+        } else {
+          const accountResp = await fetch(
+            `${META_API}/${adAccountId}?fields=id,name,account_status,currency,timezone_name&access_token=${token}`
+          );
+          const accountData = await accountResp.json();
+          const { data: insertedAccount, error: accountInsertError } = await supabase
+            .from("meta_ad_accounts")
+            .upsert({
+              firm_id,
+              meta_ad_account_id: adAccountId,
+              name: accountData.name || fbConn.metadata?.ad_account_name || adAccountId,
+              currency: accountData.currency || fbConn.metadata?.ad_account_currency || null,
+              timezone_name: accountData.timezone_name || null,
+              account_status: accountData.account_status || null,
+              raw: accountData.error ? { id: adAccountId } : accountData,
+            }, { onConflict: "firm_id,meta_ad_account_id" })
+            .select("id")
+            .single();
+          if (accountInsertError) return errorResponse(accountInsertError.message);
+          localAdAccountId = insertedAccount?.id;
+        }
+      }
 
       const resp = await fetch(
         `${META_API}/${adAccountId}/campaigns?fields=id,name,objective,status,daily_budget,lifetime_budget,bid_strategy,start_time,stop_time&limit=100&access_token=${token}`
@@ -472,36 +507,44 @@ serve(async (req) => {
 
       const synced = [];
       for (const mc of data.data || []) {
-        const { data: existing } = await supabase.from("meta_campaigns").select("id").eq("meta_campaign_id", mc.id).single();
+        const campaignPayload = {
+          firm_id,
+          ad_account_id: localAdAccountId,
+          name: mc.name,
+          objective: normalizeMetaObjective(mc.objective),
+          status: normalizeMetaStatus(mc.status),
+          daily_budget: mc.daily_budget ? Number(mc.daily_budget) / 100 : 0,
+          lifetime_budget: mc.lifetime_budget ? Number(mc.lifetime_budget) / 100 : 0,
+          bid_strategy: normalizeMetaBidStrategy(mc.bid_strategy),
+          meta_campaign_id: mc.id,
+          start_time: mc.start_time || null,
+          stop_time: mc.stop_time || null,
+          review_status: "published",
+          published_at: new Date().toISOString(),
+          raw: mc,
+        };
+
+        const { data: existing } = await supabase
+          .from("meta_campaigns")
+          .select("id")
+          .eq("firm_id", firm_id)
+          .eq("meta_campaign_id", mc.id)
+          .maybeSingle();
 
         if (existing) {
-          await supabase
+          const { error: updateError } = await supabase
             .from("meta_campaigns")
-            .update({
-              name: mc.name,
-              status: mc.status?.toLowerCase() || "paused",
-              daily_budget: mc.daily_budget ? mc.daily_budget / 100 : 0,
-              lifetime_budget: mc.lifetime_budget ? mc.lifetime_budget / 100 : 0,
-            })
+            .update(campaignPayload)
             .eq("id", existing.id);
+          if (updateError) return errorResponse(updateError.message);
           synced.push({ id: existing.id, name: mc.name, action: "updated" });
         } else {
-          const { data: newCampaign } = await supabase
+          const { data: newCampaign, error: insertError } = await supabase
             .from("meta_campaigns")
-            .insert({
-              firm_id,
-              name: mc.name,
-              objective: mc.objective || "LEAD_GENERATION",
-              status: mc.status?.toLowerCase() || "paused",
-              daily_budget: mc.daily_budget ? mc.daily_budget / 100 : 0,
-              lifetime_budget: mc.lifetime_budget ? mc.lifetime_budget / 100 : 0,
-              bid_strategy: mc.bid_strategy || "LOWEST_COST",
-              meta_campaign_id: mc.id,
-              start_date: mc.start_time || null,
-              end_date: mc.stop_time || null,
-            })
+            .insert(campaignPayload)
             .select()
             .single();
+          if (insertError) return errorResponse(insertError.message);
           synced.push({ id: newCampaign?.id, name: mc.name, action: "created" });
         }
       }
