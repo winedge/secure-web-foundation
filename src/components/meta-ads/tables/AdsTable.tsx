@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ExternalLink } from 'lucide-react';
 import { MetaTableShell, MetaStatusBadge, type MetaTableColumn } from './MetaTableShell';
 import { useMetaAdsTable, useMetaAdSetsLookup, useMetaCampaignsLookup, type AdRow } from '@/hooks/use-meta-tables';
+import { useSyncFromMeta } from '@/hooks/use-meta-campaigns';
 import { AdDetailDialog } from '../AdDetailDialog';
 
 const STATUS_OPTIONS = [
@@ -28,6 +29,7 @@ export function AdsTable({ initialAdSetId = null, initialCampaignId = null }: Pr
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
+  const syncFromMeta = useSyncFromMeta();
 
   const { data: campaigns } = useMetaCampaignsLookup();
   const { data: adSets } = useMetaAdSetsLookup(campaignId === 'all' ? null : campaignId);
@@ -37,6 +39,11 @@ export function AdsTable({ initialAdSetId = null, initialCampaignId = null }: Pr
     campaignId: campaignId === 'all' ? null : campaignId,
     sortColumn, sortDirection,
   });
+
+  const handleRefresh = async () => {
+    await syncFromMeta.mutateAsync();
+    await refetch();
+  };
 
   const columns: MetaTableColumn<AdRow>[] = [
     { key: 'name', label: 'Ad', sortable: true, render: (r) => (
@@ -64,13 +71,13 @@ export function AdsTable({ initialAdSetId = null, initialCampaignId = null }: Pr
         columns={columns}
         rows={data?.rows}
         total={data?.total ?? 0}
-        isLoading={isLoading || isFetching}
+        isLoading={isLoading || isFetching || syncFromMeta.isPending}
         page={page} pageSize={pageSize}
         onPageChange={setPage} onPageSizeChange={setPageSize}
         search={search} onSearchChange={setSearch}
         searchPlaceholder="Search ads by name…"
         statusValue={status} onStatusChange={setStatus} statusOptions={STATUS_OPTIONS}
-        onRefresh={() => refetch()}
+        onRefresh={handleRefresh}
         sortColumn={sortColumn} sortDirection={sortDirection}
         onSortChange={(col, dir) => { setPage(0); setSortColumn(col); setSortDirection(dir); }}
         onRowClick={(row) => setSelectedAdId(row.id)}
