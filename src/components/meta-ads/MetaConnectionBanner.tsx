@@ -4,7 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Facebook, AlertCircle, CheckCircle2, RefreshCw, Settings as SettingsIcon } from 'lucide-react';
-import { usePlatformConnections } from '@/hooks/use-platform-connections';
+
 import { supabase } from '@/integrations/supabase/client';
 import { useFirm } from '@/hooks/use-firm';
 import { useToast } from '@/hooks/use-toast';
