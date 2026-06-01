@@ -13,7 +13,7 @@ export function MetaAdAccountBar() {
       if (!firm?.id) return null;
       const { data } = await (supabase as any)
         .from('platform_connections')
-        .select('id, platform, platform_username, metadata, is_active, firm_id')
+        .select('id, platform, platform_username, metadata, is_active, firm_id, ad_account_id')
         .eq('firm_id', firm.id)
         .eq('platform', 'facebook')
         .eq('is_active', true)
@@ -33,7 +33,7 @@ export function MetaAdAccountBar() {
       <MetaAdAccountSelector
         connectionId={conn.id}
         firmId={firm?.id}
-        currentAdAccountId={conn.metadata?.ad_account_id}
+        currentAdAccountId={conn.ad_account_id || conn.metadata?.ad_account_id}
         currentMetadata={conn.metadata}
         compact
         onSaved={() => qc.invalidateQueries({ predicate: (q) => String(q.queryKey[0] || '').startsWith('meta') })}
