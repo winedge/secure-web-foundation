@@ -790,7 +790,7 @@ serve(async (req) => {
       }
 
       // ── 4) Custom audiences ──
-      const caData = await fetchMetaWithRetry(`${META_API}/${adAccountId}/customaudiences?fields=id,name,description,subtype,approximate_count,retention_days,rule,operation_status&limit=200&access_token=${token}`);
+        const caData = await fetchMetaWithRetry(`${META_API}/${adAccountId}/customaudiences?fields=id,name,description,subtype,retention_days,rule,operation_status&limit=200&access_token=${token}`);
       if (caData.error) {
         errors.push(`audiences: ${caData.error.message}`);
       } else {
@@ -799,7 +799,7 @@ serve(async (req) => {
             firm_id, ad_account_id: localAdAccountId,
             meta_audience_id: ca.id, name: ca.name || null,
             description: ca.description || null, subtype: ca.subtype || null,
-            approximate_count: ca.approximate_count ?? null,
+            approximate_count: null,
             retention_days: ca.retention_days ?? null,
             rule: ca.rule || {}, operation_status: ca.operation_status || {},
             raw: ca,
