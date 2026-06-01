@@ -88,7 +88,7 @@ const INITIAL: FormState = {
   positions: {},
 };
 
-export function AdSetFormDialog({ open, onOpenChange, campaignId, editAdSet }: Props) {
+export function AdSetFormDialog({ open, onOpenChange, campaignId, editAdSet, onSaved, saveLabel }: Props) {
   const create = useCreateMetaAdSet();
   const update = useUpdateMetaAdSet();
   const [form, setForm] = useState<FormState>(INITIAL);
