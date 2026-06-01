@@ -600,7 +600,13 @@ export default function Settings() {
                                     {metaVerification.connected ? '✓ Token verified and active' : '✗ Token expired - please reconnect'}
                                   </div>
                                 )}
+                                <MetaAdAccountSelector
+                                  connectionId={fbConn.id}
+                                  currentAdAccountId={(fbConn as any).metadata?.ad_account_id}
+                                  currentMetadata={(fbConn as any).metadata}
+                                />
                               </div>
+
                             );
                           }
                           return null;
