@@ -39,6 +39,7 @@ type FormState = {
   spend_cap: number;
   bid_strategy: string;
   tort_type: string;
+  target_country: string;
   target_states: string[];
 };
 
@@ -54,8 +55,33 @@ const INITIAL: FormState = {
   spend_cap: 0,
   bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
   tort_type: '',
+  target_country: 'WORLDWIDE',
   target_states: [],
 };
+
+const COUNTRY_OPTIONS: { value: string; label: string }[] = [
+  { value: 'WORLDWIDE', label: 'Worldwide / Custom' },
+  { value: 'US', label: 'United States' },
+  { value: 'CA', label: 'Canada' },
+  { value: 'GB', label: 'United Kingdom' },
+  { value: 'IE', label: 'Ireland' },
+  { value: 'AU', label: 'Australia' },
+  { value: 'NZ', label: 'New Zealand' },
+  { value: 'IN', label: 'India' },
+  { value: 'AE', label: 'United Arab Emirates' },
+  { value: 'SG', label: 'Singapore' },
+  { value: 'DE', label: 'Germany' },
+  { value: 'FR', label: 'France' },
+  { value: 'ES', label: 'Spain' },
+  { value: 'IT', label: 'Italy' },
+  { value: 'NL', label: 'Netherlands' },
+  { value: 'SE', label: 'Sweden' },
+  { value: 'BR', label: 'Brazil' },
+  { value: 'MX', label: 'Mexico' },
+  { value: 'ZA', label: 'South Africa' },
+  { value: 'JP', label: 'Japan' },
+  { value: 'EU', label: 'European Union' },
+];
 
 export function CampaignFormDialog({ open, onOpenChange, editCampaign }: Props) {
   const create = useCreateMetaCampaign();
@@ -80,6 +106,7 @@ export function CampaignFormDialog({ open, onOpenChange, editCampaign }: Props) 
         spend_cap: 0,
         bid_strategy: editCampaign.bid_strategy || 'LOWEST_COST_WITHOUT_CAP',
         tort_type: editCampaign.tort_type || '',
+        target_country: (editCampaign as any).target_country || 'WORLDWIDE',
         target_states: editCampaign.target_states || [],
       });
     } else {
@@ -110,6 +137,7 @@ export function CampaignFormDialog({ open, onOpenChange, editCampaign }: Props) 
       daily_budget: form.budget_type === 'daily' ? form.daily_budget : 0,
       lifetime_budget: form.budget_type === 'lifetime' ? form.lifetime_budget : 0,
       tort_type: form.tort_type || null,
+      target_country: form.target_country,
       target_states: form.target_states,
       special_ad_categories: form.special_ad_categories,
     };
@@ -320,10 +348,10 @@ export function CampaignFormDialog({ open, onOpenChange, editCampaign }: Props) 
 
           <Separator />
 
-          {/* ─── Section C | LeadThru routing ─── */}
+          {/* ─── Section C | Routing & geo ─── */}
           <section className="space-y-4">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              LeadThru routing
+              Routing & geo targeting
             </h3>
 
             <div>
@@ -339,19 +367,42 @@ export function CampaignFormDialog({ open, onOpenChange, editCampaign }: Props) 
                 <Input value={form.tort_type} onChange={(e) => set('tort_type', e.target.value)} placeholder={`e.g., ${categoryLabel}`} />
               )}
               <p className="text-xs text-muted-foreground mt-1">
-                Used by the LeadThru matching engine. Not sent to Meta.
+                Used by the matching engine. Not sent to Meta.
               </p>
             </div>
 
-            <div>
-              <Label>Target States</Label>
-              <StatesChipsInput
-                value={form.target_states}
-                onChange={(v) => set('target_states', v)}
-              />
-              <p className="text-xs text-muted-foreground mt-1">Defaults pushed down to ad set geo targeting.</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Primary country / region</Label>
+                <Select value={form.target_country} onValueChange={(v) => set('target_country', v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {COUNTRY_OPTIONS.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Sets the default country for ad set geo targeting.
+                </p>
+              </div>
+
+              <div>
+                <Label>Target locations</Label>
+                <LocationChipsInput
+                  country={form.target_country}
+                  value={form.target_states}
+                  onChange={(v) => set('target_states', v)}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {form.target_country === 'US'
+                    ? 'US state codes (e.g. FL, TX, CA).'
+                    : 'Free-form regions, states, provinces, or cities.'}
+                </p>
+              </div>
             </div>
           </section>
+
 
           {errors.length > 0 && (
             <Alert variant="destructive">
@@ -376,14 +427,20 @@ export function CampaignFormDialog({ open, onOpenChange, editCampaign }: Props) 
   );
 }
 
-// ───── Small reusable: chip input for US states ─────
-function StatesChipsInput({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+// ───── Reusable: generic location chip input ─────
+function LocationChipsInput({
+  country, value, onChange,
+}: { country: string; value: string[]; onChange: (v: string[]) => void }) {
   const [input, setInput] = useState('');
+  const isUS = country === 'US';
   const add = (raw: string) => {
-    const v = raw.trim().toUpperCase();
+    let v = raw.trim();
     if (!v) return;
-    if (!US_STATES.includes(v)) return;
-    if (value.includes(v)) return;
+    if (isUS) {
+      v = v.toUpperCase();
+      if (!US_STATES.includes(v)) return;
+    }
+    if (value.some((x) => x.toLowerCase() === v.toLowerCase())) return;
     onChange([...value, v]);
     setInput('');
   };
@@ -396,20 +453,22 @@ function StatesChipsInput({ value, onChange }: { value: string[]; onChange: (v: 
         </Badge>
       ))}
       <input
-        list="us-states-list"
+        list={isUS ? 'us-states-list' : undefined}
         className="flex-1 min-w-[80px] bg-transparent outline-none text-sm"
         value={input}
-        placeholder={value.length ? '' : 'FL, TX, CA…'}
+        placeholder={value.length ? '' : isUS ? 'FL, TX, CA…' : 'London, Bavaria, Mumbai…'}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ',' || e.key === ' ') { e.preventDefault(); add(input); }
+          if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(input); }
           else if (e.key === 'Backspace' && !input && value.length) onChange(value.slice(0, -1));
         }}
         onBlur={() => add(input)}
       />
-      <datalist id="us-states-list">
-        {US_STATES.map((s) => <option key={s} value={s} />)}
-      </datalist>
+      {isUS && (
+        <datalist id="us-states-list">
+          {US_STATES.map((s) => <option key={s} value={s} />)}
+        </datalist>
+      )}
     </div>
   );
 }
