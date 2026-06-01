@@ -563,6 +563,47 @@ serve(async (req) => {
       return jsonResponse({ ad_accounts: data.data || [] });
     }
 
+    // ─── SET ACTIVE AD ACCOUNT ───
+    if (action === "set_ad_account") {
+      const { firm_id, connection_id, ad_account_id, ad_account } = params;
+      if (!firm_id) return errorResponse("firm_id is required");
+      if (!connection_id) return errorResponse("connection_id is required");
+      if (!ad_account_id) return errorResponse("ad_account_id is required");
+
+      const account = ad_account || { id: ad_account_id };
+      const { data: localAccount, error: accountError } = await supabase
+        .from("meta_ad_accounts")
+        .upsert({
+          firm_id,
+          meta_ad_account_id: ad_account_id,
+          name: account.name || ad_account_id,
+          currency: account.currency || null,
+          timezone_name: account.timezone_name || null,
+          account_status: account.account_status || null,
+          raw: account,
+        }, { onConflict: "firm_id,meta_ad_account_id" })
+        .select("id")
+        .single();
+      if (accountError) return errorResponse(accountError.message);
+
+      const metadata = {
+        ...(fbConn.metadata || {}),
+        ad_account_id,
+        ad_account_row_id: localAccount.id,
+        ad_account_name: account.name || ad_account_id,
+        ad_account_currency: account.currency || null,
+      };
+
+      const { error: updateError } = await supabase
+        .from("platform_connections")
+        .update({ ad_account_id, metadata })
+        .eq("id", connection_id)
+        .eq("firm_id", firm_id);
+      if (updateError) return errorResponse(updateError.message);
+
+      return jsonResponse({ success: true, ad_account_id, ad_account_row_id: localAccount.id });
+    }
+
     // ─── PUBLISH AN AI/MANUAL DRAFT TO META (atomic create-tree + activate) ───
     if (action === "publish_campaign") {
       const { campaign_id, firm_id } = params;
