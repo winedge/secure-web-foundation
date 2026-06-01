@@ -430,13 +430,28 @@ export function AdSetFormDialog({
                   </div>
                   <div className="flex gap-3">
                     <div className="flex-1">
-                      <Slider min={13} max={65} step={1} value={[form.age_min]} onValueChange={([v]) => set('age_min', v)} />
+                      <Slider
+                        min={13}
+                        max={65}
+                        step={1}
+                        value={[form.age_min]}
+                        onValueChange={([v]) => set('age_min', v)}
+                        className="[&_[data-orientation=horizontal]]:bg-emerald-500/30 [&_[role=slider]]:border-emerald-500 [&_[role=slider]]:bg-emerald-500 [&>span>span]:bg-emerald-500"
+                      />
                     </div>
                     <div className="flex-1">
-                      <Slider min={13} max={65} step={1} value={[form.age_max]} onValueChange={([v]) => set('age_max', v)} />
+                      <Slider
+                        min={13}
+                        max={65}
+                        step={1}
+                        value={[form.age_max]}
+                        onValueChange={([v]) => set('age_max', v)}
+                        className="[&_[data-orientation=horizontal]]:bg-emerald-500/30 [&_[role=slider]]:border-emerald-500 [&_[role=slider]]:bg-emerald-500 [&>span>span]:bg-emerald-500"
+                      />
                     </div>
                   </div>
                 </div>
+
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
