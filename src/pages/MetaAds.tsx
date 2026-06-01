@@ -35,7 +35,10 @@ export default function MetaAds() {
             </p>
           </div>
 
+          <MetaConnectionBanner />
+
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+
             <TabsList className="flex flex-wrap w-full h-auto gap-1">
               <TabsTrigger value="campaigns" className="gap-1.5 text-xs sm:text-sm py-2">
                 <LayoutDashboard className="h-4 w-4 hidden sm:block" />
