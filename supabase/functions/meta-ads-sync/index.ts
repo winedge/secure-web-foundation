@@ -22,7 +22,7 @@ async function fetchMetaWithRetry(url: string, maxAttempts = 5): Promise<any> {
       lastErr = data;
       // Exponential backoff: 2s, 4s, 8s, 16s, 32s (+jitter), capped
       const delayMs = Math.min(32000, 2000 * Math.pow(2, attempt)) + Math.floor(Math.random() * 500);
-      console.log(`[meta-retry] code=${code} attempt=${attempt + 1}/${maxAttempts} waiting ${delayMs}ms — ${data.error.message}`);
+      console.log(`[meta-retry] code=${code} attempt=${attempt + 1}/${maxAttempts} waiting ${delayMs}ms | ${data.error.message}`);
       await new Promise((r) => setTimeout(r, delayMs));
     } catch (e) {
       lastErr = { error: { message: String(e) } };
@@ -31,6 +31,78 @@ async function fetchMetaWithRetry(url: string, maxAttempts = 5): Promise<any> {
     }
   }
   return lastErr ?? { error: { message: "Meta API failed after retries" } };
+}
+
+const AD_CREATIVE_FIELDS = "id,name,adset_id,status,effective_status,tracking_specs,conversion_specs,preview_shareable_link,created_time,creative{id,title,body,name,image_url,thumbnail_url,video_id,call_to_action_type,object_story_id,effective_object_story_id,object_story_spec,asset_feed_spec,link_url,template_url}";
+
+function firstCreativeValue(arr: any): string | null {
+  if (!Array.isArray(arr) || !arr.length) return null;
+  const first = arr[0];
+  if (!first) return null;
+  if (typeof first === "string") return first;
+  return first.text ?? first.url ?? first.website_url ?? first.link ?? null;
+}
+
+function extractAdCreativeFields(ad: any) {
+  const cr = ad?.creative || {};
+  const oss = cr.object_story_spec || {};
+  const ld = oss.link_data || oss.video_data || oss.template_data || {};
+  const afs = cr.asset_feed_spec || {};
+  const image = firstCreativeValue(afs.images);
+  const link = firstCreativeValue(afs.link_urls);
+
+  return {
+    meta_creative_id: cr.id || null,
+    headline: cr.title || ld.name || firstCreativeValue(afs.titles) || null,
+    body_text: cr.body || ld.message || firstCreativeValue(afs.bodies) || null,
+    description: ld.description || firstCreativeValue(afs.descriptions) || null,
+    link_url: cr.link_url || ld.link || link || null,
+    image_url: cr.image_url || cr.thumbnail_url || ld.picture || image || null,
+    video_url: ld.video_id || cr.video_id ? `https://www.facebook.com/watch/?v=${ld.video_id || cr.video_id}` : null,
+    call_to_action: cr.call_to_action_type || ld.call_to_action?.type || "LEARN_MORE",
+    creative_type: ld.video_id || cr.video_id ? "video"
+      : (Array.isArray(ld.child_attachments) && ld.child_attachments.length ? "carousel" : "image"),
+  };
+}
+
+function getPostObjectId(ad: any): string | null {
+  const cr = ad?.creative || {};
+  if (cr.effective_object_story_id || cr.object_story_id) return cr.effective_object_story_id || cr.object_story_id;
+  const spec = Array.isArray(ad?.tracking_specs) ? ad.tracking_specs.find((s: any) => s?.post?.[0] && s?.["post.wall"]?.[0]) : null;
+  return spec ? `${spec["post.wall"][0]}_${spec.post[0]}` : null;
+}
+
+async function enrichAdCreativeFields(ad: any, token: string) {
+  const fields = extractAdCreativeFields(ad);
+  const cr = ad?.creative || {};
+
+  if ((!fields.headline || !fields.body_text || !fields.link_url) && cr.video_id) {
+    const video = await fetchMetaWithRetry(`${META_API}/${cr.video_id}?fields=title,description,picture,permalink_url&access_token=${token}`, 3);
+    if (!video?.error) {
+      fields.headline ||= video.title || null;
+      fields.body_text ||= video.description || null;
+      fields.image_url ||= video.picture || null;
+      fields.link_url ||= video.permalink_url || null;
+    }
+  }
+
+  if (!fields.headline || !fields.body_text || !fields.description || !fields.link_url) {
+    const postId = getPostObjectId(ad);
+    if (postId) {
+      const post = await fetchMetaWithRetry(`${META_API}/${postId}?fields=message,permalink_url,attachments{title,description,url,media,target,subattachments}&access_token=${token}`, 3);
+      const attachment = post?.attachments?.data?.[0];
+      const sub = attachment?.subattachments?.data?.[0];
+      if (!post?.error) {
+        fields.body_text ||= post.message || null;
+        fields.headline ||= attachment?.title || sub?.title || fields.body_text?.split("\n")[0]?.slice(0, 40) || null;
+        fields.description ||= attachment?.description || sub?.description || null;
+        fields.link_url ||= attachment?.target?.url || attachment?.url || sub?.target?.url || post.permalink_url || null;
+        fields.image_url ||= attachment?.media?.image?.src || sub?.media?.image?.src || null;
+      }
+    }
+  }
+
+  return fields;
 }
 
 serve(async (req) => {
@@ -447,6 +519,31 @@ serve(async (req) => {
       return jsonResponse({ success: true, meta_ad_id: adData.id });
     }
 
+    if (action === "refresh_ad_creative") {
+      const { firm_id, ad_id, meta_ad_id } = params;
+      if (!firm_id) return errorResponse("Missing firm_id", 400);
+
+      let query = supabase.from("meta_ads").select("*").eq("firm_id", firm_id).limit(1);
+      query = ad_id ? query.eq("id", ad_id) : query.eq("meta_ad_id", meta_ad_id);
+      const { data: localAd, error: localError } = await query.maybeSingle();
+      if (localError) return errorResponse(localError.message);
+      if (!localAd?.meta_ad_id) return errorResponse("Ad is not synced to Meta yet", 400);
+
+      const metaAd = await fetchMetaWithRetry(`${META_API}/${localAd.meta_ad_id}?fields=${AD_CREATIVE_FIELDS}&access_token=${token}`, 3);
+      if (metaAd.error) return errorResponse(metaAd.error.message);
+
+      const creativeFields = await enrichAdCreativeFields(metaAd, token);
+      const { data: updated, error: updateError } = await supabase
+        .from("meta_ads")
+        .update({ ...creativeFields, raw: metaAd })
+        .eq("id", localAd.id)
+        .select("*")
+        .single();
+      if (updateError) return errorResponse(updateError.message);
+
+      return jsonResponse({ success: true, ad: updated });
+    }
+
     // ─── FETCH REAL ANALYTICS FROM META ───
     if (action === "fetch_analytics") {
       const { campaign_id, meta_campaign_id, date_preset } = params;
@@ -616,31 +713,13 @@ serve(async (req) => {
         }
 
         // ── 3) Ads (account-level bulk) ──
-        const adFields = "id,name,adset_id,status,effective_status,tracking_specs,conversion_specs,preview_shareable_link,created_time,creative{id,title,body,name,image_url,thumbnail_url,video_id,call_to_action_type,object_story_spec,asset_feed_spec,link_url,template_url}";
-        const adData = await fetchMetaWithRetry(`${META_API}/${adAccountId}/ads?fields=${adFields}&limit=200&access_token=${token}`);
+        const adData = await fetchMetaWithRetry(`${META_API}/${adAccountId}/ads?fields=${AD_CREATIVE_FIELDS}&limit=200&access_token=${token}`);
         if (adData.error) {
           errors.push(`ads: ${adData.error.message}`);
         } else {
           for (const ad of adData.data || []) {
             const localAdsetId = adsetIdMap.get(ad.adset_id);
             if (!localAdsetId) continue;
-
-            // ── Extract creative fields (Meta stores these on the creative.object_story_spec) ──
-            const cr = ad.creative || {};
-            const oss = cr.object_story_spec || {};
-            const ld = oss.link_data || oss.video_data || oss.template_data || {};
-            const afs = cr.asset_feed_spec || {};
-            const firstOf = (arr: any) => Array.isArray(arr) && arr.length ? (arr[0]?.text ?? arr[0]?.url ?? arr[0]) : null;
-
-            const headline = cr.title || ld.name || firstOf(afs.titles) || null;
-            const body_text = cr.body || ld.message || firstOf(afs.bodies) || null;
-            const description = ld.description || firstOf(afs.descriptions) || null;
-            const link_url = cr.link_url || ld.link || firstOf(afs.link_urls) || null;
-            const image_url = cr.image_url || cr.thumbnail_url || ld.picture || firstOf(afs.images) || null;
-            const video_url = ld.video_id ? `https://www.facebook.com/watch/?v=${ld.video_id}` : null;
-            const cta = cr.call_to_action_type || ld.call_to_action?.type || null;
-            const creative_type = ld.video_id || cr.video_id ? "video"
-              : (Array.isArray(ld.child_attachments) && ld.child_attachments.length ? "carousel" : "image");
 
             const payload: any = {
               firm_id, ad_set_id: localAdsetId,
@@ -651,14 +730,7 @@ serve(async (req) => {
               conversion_specs: ad.conversion_specs || {},
               preview_shareable_link: ad.preview_shareable_link || null,
               meta_ad_id: ad.id,
-              headline,
-              body_text,
-              description,
-              link_url,
-              image_url,
-              video_url,
-              call_to_action: cta || "LEARN_MORE",
-              creative_type,
+              ...extractAdCreativeFields(ad),
               raw: ad,
             };
             const { data: existing } = await supabase
@@ -718,7 +790,7 @@ serve(async (req) => {
       }
 
       // ── 4) Custom audiences ──
-      const caData = await fetchMetaWithRetry(`${META_API}/${adAccountId}/customaudiences?fields=id,name,description,subtype,approximate_count,retention_days,rule,operation_status&limit=200&access_token=${token}`);
+        const caData = await fetchMetaWithRetry(`${META_API}/${adAccountId}/customaudiences?fields=id,name,description,subtype,retention_days,rule,operation_status&limit=200&access_token=${token}`);
       if (caData.error) {
         errors.push(`audiences: ${caData.error.message}`);
       } else {
@@ -727,7 +799,7 @@ serve(async (req) => {
             firm_id, ad_account_id: localAdAccountId,
             meta_audience_id: ca.id, name: ca.name || null,
             description: ca.description || null, subtype: ca.subtype || null,
-            approximate_count: ca.approximate_count ?? null,
+            approximate_count: null,
             retention_days: ca.retention_days ?? null,
             rule: ca.rule || {}, operation_status: ca.operation_status || {},
             raw: ca,

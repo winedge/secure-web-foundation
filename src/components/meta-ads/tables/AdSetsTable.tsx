@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MetaTableShell, MetaStatusBadge, fmtMoney, type MetaTableColumn } from './MetaTableShell';
 import { useMetaAdSetsTable, useMetaCampaignsLookup, type AdSetRow } from '@/hooks/use-meta-tables';
+import { useSyncFromMeta } from '@/hooks/use-meta-campaigns';
 
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
@@ -23,6 +24,7 @@ export function AdSetsTable({ initialCampaignId = null, onSelectAdSet }: Props) 
   const [campaignId, setCampaignId] = useState<string>(initialCampaignId || 'all');
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const syncFromMeta = useSyncFromMeta();
 
   const { data: campaigns } = useMetaCampaignsLookup();
   const { data, isLoading, refetch, isFetching } = useMetaAdSetsTable({
@@ -30,6 +32,11 @@ export function AdSetsTable({ initialCampaignId = null, onSelectAdSet }: Props) 
     campaignId: campaignId === 'all' ? null : campaignId,
     sortColumn, sortDirection,
   });
+
+  const handleRefresh = async () => {
+    await syncFromMeta.mutateAsync();
+    await refetch();
+  };
 
   const columns: MetaTableColumn<AdSetRow>[] = [
     { key: 'name', label: 'Ad Set', sortable: true, render: (r) => (
@@ -54,13 +61,13 @@ export function AdSetsTable({ initialCampaignId = null, onSelectAdSet }: Props) 
       columns={columns}
       rows={data?.rows}
       total={data?.total ?? 0}
-      isLoading={isLoading || isFetching}
+      isLoading={isLoading || isFetching || syncFromMeta.isPending}
       page={page} pageSize={pageSize}
       onPageChange={setPage} onPageSizeChange={setPageSize}
       search={search} onSearchChange={setSearch}
       searchPlaceholder="Search ad sets by name…"
       statusValue={status} onStatusChange={setStatus} statusOptions={STATUS_OPTIONS}
-      onRefresh={() => refetch()}
+      onRefresh={handleRefresh}
       onRowClick={onSelectAdSet ? (r) => onSelectAdSet(r.id) : undefined}
       sortColumn={sortColumn} sortDirection={sortDirection}
       onSortChange={(col, dir) => { setPage(0); setSortColumn(col); setSortDirection(dir); }}
