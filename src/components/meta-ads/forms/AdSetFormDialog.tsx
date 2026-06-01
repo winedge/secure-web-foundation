@@ -167,10 +167,11 @@ export function AdSetFormDialog({ open, onOpenChange, campaignId, editAdSet, onS
       bid_amount: form.cost_per_result_goal > 0 ? Math.round(form.cost_per_result_goal * 100) : null,
     };
 
+    const done = (d: any) => { if (onSaved) onSaved(d.id); else onOpenChange(false); };
     if (editAdSet) {
-      update.mutate({ id: editAdSet.id, ...payload }, { onSuccess: () => onOpenChange(false) });
+      update.mutate({ id: editAdSet.id, ...payload }, { onSuccess: done });
     } else {
-      create.mutate(payload, { onSuccess: () => onOpenChange(false) });
+      create.mutate(payload, { onSuccess: done });
     }
   };
 
