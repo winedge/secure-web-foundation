@@ -194,10 +194,11 @@ export function AdFormDialog({ open, onOpenChange, adSetId, editAd, onSaved, sav
       image_url: form.image_url || null,
       ai_generated: false,
     };
+    const done = (d: any) => { if (onSaved) onSaved(d.id); else onOpenChange(false); };
     if (editAd) {
-      update.mutate({ id: editAd.id, ...payload }, { onSuccess: () => onOpenChange(false) });
+      update.mutate({ id: editAd.id, ...payload }, { onSuccess: done });
     } else {
-      create.mutate(payload, { onSuccess: () => onOpenChange(false) });
+      create.mutate(payload, { onSuccess: done });
     }
   };
 
