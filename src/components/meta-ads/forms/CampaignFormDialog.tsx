@@ -145,10 +145,11 @@ export function CampaignFormDialog({ open, onOpenChange, editCampaign, onSaved, 
       target_states: form.target_states,
       special_ad_categories: form.special_ad_categories,
     };
+    const done = (d: any) => { if (onSaved) onSaved(d.id); else onOpenChange(false); };
     if (editCampaign) {
-      update.mutate({ id: editCampaign.id, ...payload }, { onSuccess: () => onOpenChange(false) });
+      update.mutate({ id: editCampaign.id, ...payload }, { onSuccess: done });
     } else {
-      create.mutate({ ...payload, status: 'draft' }, { onSuccess: () => onOpenChange(false) });
+      create.mutate({ ...payload, status: 'draft' }, { onSuccess: done });
     }
   };
 
