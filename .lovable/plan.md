@@ -1,98 +1,118 @@
+## Goal
 
-# Meta Ads Manager | Full Rebuild
+Align the three "create/edit" dialogs (Campaign, Ad Set, Ad) in `/meta-ads` with **Meta Ads Manager structure & validation rules**, so drafts created in LeadThru map 1:1 to what Meta accepts at publish time. No backend/schema changes | all fields below already exist on `meta_campaigns`, `meta_ad_sets`, `meta_ads` (verified in `types.ts`).
 
-## 1. UI overhaul (Campaigns tab)
+## What's wrong today
 
-Replace the card grid in `MetaCampaignsList.tsx` with a faithful clone of Meta's Ads Manager table (screenshot #2). Builds three new components:
+Current dialogs are flat forms missing Meta's required structure:
+- **Campaign**: no Special Ad Category, no CBO toggle, no spend cap, no buying type | "Tort Type" is LeadThru-only, not a Meta field.
+- **Ad Set**: no schedule, no detailed targeting (gender, languages, custom audiences), no placements multiselect, no billing event, no bid amount when `COST_CAP`/`BID_CAP`, no attribution window, no promoted object (pixel/page/form).
+- **Ad**: no Facebook Page / Instagram account picker, no creative source (single image, video, carousel, existing post), no primary text vs headline vs description split (treats all as one), no link description, no display link, no UTM builder, no preview by placement.
 
-- `MetaAdsManagerShell.tsx` | wraps the inner sub-tabs (Campaigns / Ad sets / Ads), the top action bar, the AI search/describe input, the All ads / Value reporting / Actions / Active ads / Had delivery quick-filter chips, and the date-range + Create view buttons on the right.
-- `MetaAdsTable.tsx` | shared TanStack-Table built table with sticky header, row checkbox column, Off/On switch column, sortable columns: Campaign, Delivery, Results, Cost per result, Budget, Amount spent, Impressions, Reach, Ends, Attribution setting. Inline editing for Budget. Hover row reveals quick actions.
-- `MetaAdsToolbar.tsx` | green Create, Duplicate, Edit (split button), A/B test, More menu (Rules, Export, Tags, Delete), and right-side Columns / Breakdown / Reports / Export / Charts buttons.
+## Redesigned dialogs
 
-The outer `MetaAds.tsx` keeps the existing top-level tabs (Campaigns, Ad Sets, Ads, Pixel, Lead Forms, Analytics, AI Brain, Autopilot, Self-Learn) per the user's choice; only the Campaigns / Ad Sets / Ads tabs adopt the new Ads-Manager shell.
+### 1. `MetaCampaignsList` | Campaign dialog (`max-w-2xl`, sectioned)
 
-Stat cards (Total / Active / Daily Spend / Total Budget) move to a collapsible row above the table to keep our analytics value without breaking Meta parity.
+**Section A | Campaign setup**
+- Campaign Name (required, max 400 chars, live counter)
+- Buying type: `AUCTION` (default) / `RESERVED` (disabled, tooltip "Contact Meta rep")
+- Objective (Meta ODAX): `OUTCOME_LEADS`, `OUTCOME_SALES`, `OUTCOME_TRAFFIC`, `OUTCOME_AWARENESS`, `OUTCOME_ENGAGEMENT`, `OUTCOME_APP_PROMOTION`
+- **Special Ad Category** (required Meta compliance): None / Credit / Employment / Housing / Social Issues / Financial Products | multiselect | warning banner when set ("Targeting will be restricted")
 
-## 2. AI draft -> user-publish flow
+**Section B | Budget & bidding**
+- **Campaign Budget Optimization** toggle (CBO) | when on, budget moves to campaign level
+- Budget type: Daily / Lifetime (radio, mutually exclusive | clear the other field)
+- Daily Budget ($) min $1, step 1 | Lifetime Budget ($) min $100
+- **Spend cap** ($, optional) | helper "Hard ceiling for total spend"
+- Bid strategy: Highest volume (`LOWEST_COST_WITHOUT_CAP`), Cost per result goal (`COST_CAP`), Bid cap (`LOWEST_COST_WITH_BID_CAP`), ROAS goal (`LOWEST_COST_WITH_MIN_ROAS`)
 
-- New DB column `meta_campaigns.created_by_ai boolean default false` plus `published_at timestamptz` and `published_by uuid`.
-- `meta-ai-assistant` always writes campaigns/ad sets/ads with `status='draft'` and `created_by_ai=true`; never calls the Marketing API.
-- Drafts render in the table with a yellow "AI Draft" pill instead of the Delivery dot, an "Inactive" Off switch that is disabled, and a primary "Review & Publish" button in the row.
-- Clicking Review & Publish opens `PublishCampaignReviewDialog.tsx`:
-  1. Step 1 | Preview: creative thumbnails, headline/body copy, audience summary (states, age, interests), daily budget, est. daily reach pulled live from `/reachestimate`, lead-form preview if attached.
-  2. Step 2 | Confirm: checkbox "I understand this campaign will start spending up to $X/day on Meta", typed confirmation of the campaign name, then **Publish to Meta**.
-- Publish triggers new edge function `meta-publish-campaign` which calls the Marketing API and sets the campaign ACTIVE on Meta. Local row flips to `status='active'`, `meta_campaign_id=<returned id>`, `published_by=auth.uid()`.
-- Edits to any field on a draft are allowed by anyone with Meta Ads access. Edits to a published campaign go through `meta-update-campaign` and respect Meta's edit rules (some fields require pause first).
+**Section C | LeadThru routing** (kept, clearly separated)
+- Tort/Category type (uses vertical categories)
+- Target States (chips input, not comma string) | drives Ad Set default geos
 
-## 3. Meta Marketing API wiring (Graph v22.0)
+**Validation**: name length, mutually exclusive budgets, spend cap ≥ daily budget × 7, special ad category warning.
 
-New edge functions, all using the OAuth token already stored by `meta-oauth` and the firm's selected `ad_account_id`:
+### 2. `MetaAdSetsPanel` | Ad Set dialog (`max-w-3xl`, tabbed)
 
-| Function | Endpoint | Purpose |
-|---|---|---|
-| `meta-publish-campaign` | `POST /act_{id}/campaigns`, `/adsets`, `/ads`, `/adcreatives` | Atomically create the full draft tree, then PATCH each node to `ACTIVE`. Rolls back created ids on partial failure. |
-| `meta-update-campaign` | `POST /{campaign_id}` etc. | Field-level updates, budget changes, schedule edits. |
-| `meta-toggle-status` | `POST /{node_id}` `status=ACTIVE\|PAUSED` | Powers the row Off/On switch at campaign, ad set, and ad level. |
-| `meta-duplicate` | `POST /{campaign_id}/copies` | Duplicate toolbar action. |
-| `meta-delete` | `DELETE /{node_id}` | Hard delete; also soft-deletes the local row. |
-| `meta-ab-test` | `POST /act_{id}/ad_studies` | Real A/B test using Meta's Experiments API. Wizard collects variable (creative, audience, placement), duration, and split %. |
-| `meta-insights` | `GET /{id}/insights` | Hydrates Delivery, Results, Cost/result, Amount spent, Impressions, Reach columns. Polled every 60s while the tab is visible. |
-| `meta-reach-estimate` | `GET /act_{id}/reachestimate` | Used by the review dialog. |
-| Extend `meta-ads-sync` | already exists | Add idempotent upsert keyed on `meta_campaign_id` so manual Meta-side edits flow back. |
+**Tab: Conversion**
+- Conversion location: Website / App / Messenger / Instagram / Calls / On your Ads (Lead form)
+- Performance goal (`optimization_goal`): `LEAD_GENERATION`, `OFFSITE_CONVERSIONS`, `LANDING_PAGE_VIEWS`, `LINK_CLICKS`, `REACH`, `IMPRESSIONS`, `THRUPLAY`
+- Pixel + Conversion event (when website) | Lead Form picker (when lead gen)
+- Cost per result goal ($, only when `COST_CAP`)
+- Attribution setting: 1-day click / 7-day click / 7-day click + 1-day view
 
-All requests use the standard tuple `access_token`, `appsecret_proof`, send `Graph-API-Version: v22.0`, respect rate-limit headers (`X-Business-Use-Case-Usage`) with exponential backoff, and surface Meta error subcodes to the UI verbatim.
+**Tab: Budget & schedule**
+- Daily / Lifetime budget (hidden if CBO on at campaign level)
+- Start date/time, End date/time (lifetime required)
+- Ad scheduling (dayparting) | hours-of-week grid (only available with lifetime)
+- Spend pacing: Standard / Accelerated
 
-## 4. Database migration
+**Tab: Audience**
+- Custom Audiences (multiselect from `meta_custom_audiences`)
+- Excluded audiences (multiselect)
+- **Locations**: chips input (countries/regions/cities/zip) | radius slider for cities; LeadThru default fills from campaign target states
+- Age range slider 13–65+
+- Gender: All / Men / Women
+- Languages (autocomplete)
+- Detailed targeting: Interests / Behaviors / Demographics (autocomplete chips) + Detailed targeting expansion toggle
 
-```sql
-ALTER TABLE meta_campaigns
-  ADD COLUMN created_by_ai boolean NOT NULL DEFAULT false,
-  ADD COLUMN published_at timestamptz,
-  ADD COLUMN published_by uuid,
-  ADD COLUMN meta_adset_id text,
-  ADD COLUMN attribution_setting text DEFAULT '7d_click_1d_view',
-  ADD COLUMN special_ad_categories text[] DEFAULT '{}';
+**Tab: Placements**
+- Advantage+ placements (default) / Manual placements
+- When manual: device platforms (mobile/desktop), platforms (Facebook, Instagram, Audience Network, Messenger), positions (Feeds, Stories, Reels, In-stream, Search results, Marketplace, etc.) | checkbox tree
 
-ALTER TABLE meta_ad_sets ADD COLUMN meta_adset_id text;
-ALTER TABLE meta_ads ADD COLUMN meta_ad_id text, ADD COLUMN meta_creative_id text;
+All maps into the existing `targeting`, `promoted_object`, `attribution_spec`, `pacing_type`, `frequency_control_specs`, `start_time`, `end_time`, `billing_event` JSON/columns.
 
-CREATE TABLE meta_ab_tests (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  firm_id uuid NOT NULL,
-  meta_study_id text,
-  name text NOT NULL,
-  variable text NOT NULL,
-  split_pct int NOT NULL DEFAULT 50,
-  cell_a_campaign_id uuid REFERENCES meta_campaigns(id) ON DELETE CASCADE,
-  cell_b_campaign_id uuid REFERENCES meta_campaigns(id) ON DELETE CASCADE,
-  start_date timestamptz,
-  end_date timestamptz,
-  status text DEFAULT 'draft',
-  result jsonb,
-  created_at timestamptz DEFAULT now()
-);
--- GRANTs + RLS scoped to firm_id, plus admin override via is_admin().
-```
+### 3. `MetaAdsPanel` | Ad dialog (`max-w-5xl`, split form + preview)
 
-A draft-status check trigger blocks any direct UPDATE that flips `status` to `active` unless `published_at IS NOT NULL` | enforcing "only the user can make it live" at the DB level.
+**Section A | Identity**
+- Ad Name (Meta auto-suggests; allow override)
+- Facebook Page (required) | dropdown from `meta_pages`
+- Instagram Account (optional) | dropdown from `meta_ig_accounts`
 
-## 5. Compliance touches
+**Section B | Format**
+- Ad format: Single image or video / Carousel / Collection
+- Creative source: Manual upload / Existing post (paste post URL or pick)
+- Media uploader (image: 1080×1080 recommended, video: ≤4GB, MP4/MOV) | placeholder for now if uploads not wired
 
-- `ai_transparency_logs` entry on every AI-generated draft (action `meta_campaign_drafted`) and on publish (action `meta_campaign_published`).
-- ABA / GDPR / EU AI Act badge in the publish dialog footer (per project Core rules).
+**Section C | Ad creative (Meta limits enforced with live counters)**
+- **Primary text** (required, max 125 recommended | 2200 hard) | textarea, multi-variation chips (Meta supports up to 5)
+- **Headline** (max 27 recommended | 40 hard) | up to 5 variations
+- **Description** (max 27 recommended | 30 hard) | up to 5 variations
+- Call to action: full Meta list (Learn More, Sign Up, Contact Us, Get Quote, Apply Now, Book Now, Get Offer, Download, Subscribe, Shop Now, Send Message, etc.)
 
-## Technical notes (engineer-facing)
+**Section D | Destination**
+- Website URL (required when CTA links out) | URL validation
+- Display link (optional, shown instead of raw URL)
+- **URL parameters** | built-in UTM builder (source/medium/campaign/term/content) appended to `link_url`
+- Lead form (when ad set is Lead Generation) | dropdown from `meta_lead_forms`
 
-- Reuse existing `useMetaCampaigns` hook; add `useMetaInsights(campaignIds, dateRange)` and `usePublishMetaCampaign()`.
-- Table state (column visibility, sort, filters) persisted per user in `localStorage` under `meta-ads-table:v1`.
-- Insights polling uses `react-query` `refetchInterval: 60_000` and pauses when `document.hidden`.
-- Toolbar A/B test button is enabled only when exactly 1 or 2 rows are selected; otherwise tooltip explains why.
-- All Meta API code centralised in `supabase/functions/_shared/meta-api.ts` (token fetch, signed-call helper, retry/backoff, error parser).
-- Keep `MetaCampaignWizard` as the manual "Create" entry point; its output is non-AI and may publish directly through the same review dialog (skips the "AI Draft" pill but still requires the spend-confirm checkbox).
+**Section E | Tracking**
+- Pixel selection (defaults from ad set)
+- Conversion events (multiselect)
 
-## Out of scope for this pass
+**Right pane**: existing `AdPreviewPanel` switched between Feed / Story / Reels / Right column tabs.
 
-- Catalog ads, Advantage+ shopping, branded content tools, Instant Experiences | not currently part of the app.
-- Account-level Billing / Payment methods screens | Meta hosts those.
+## Cross-cutting
 
-Once approved, I'll implement in this order: migration -> shared Meta API helper -> publish/update/toggle/insights edge functions -> table + toolbar UI -> review dialog -> A/B test wizard -> wire AI assistant to draft-only.
+- All dialogs become sectioned with `Accordion`/`Tabs` for density, keep `max-h-[90vh] overflow-y-auto`.
+- Inline helper text under each field (one-liners cribbed from Meta docs).
+- Inline warnings (yellow) for: Special Ad Category restrictions, age < 18 (auto-blocked when category set), budget vs Meta minimums.
+- Validation handled with `zod` + `react-hook-form` (already in project).
+- All net-new fields persist via existing hooks (`useCreateMetaCampaign`, `useCreateMetaAdSet`, `useCreateMetaAd`) | hook signatures extended to pass through new fields into existing JSON columns (`targeting`, `promoted_object`, `attribution_spec`, `raw`, etc.). **No DB migration needed.**
+
+## Out of scope (flagged for later)
+
+- Live media upload to Meta CDN (placeholder UI only, hooks into `meta-publish-campaign` worker)
+- A/B test setup (already lives in `AbTestWizardDialog`)
+- Reserved buying type and Brand Lift studies
+
+## Files to change
+
+- `src/components/meta-ads/MetaCampaignsList.tsx` | swap inline form for new `<CampaignFormDialog />`
+- `src/components/meta-ads/MetaAdSetsPanel.tsx` | swap inline form for new `<AdSetFormDialog />`
+- `src/components/meta-ads/MetaAdsPanel.tsx` | swap inline form for new `<AdFormDialog />` (keep preview pane)
+- New: `src/components/meta-ads/forms/CampaignFormDialog.tsx`
+- New: `src/components/meta-ads/forms/AdSetFormDialog.tsx`
+- New: `src/components/meta-ads/forms/AdFormDialog.tsx`
+- New: `src/components/meta-ads/forms/shared.ts` | zod schemas, Meta enums, char-limit constants, CTA list
+- `src/hooks/use-meta-campaigns.ts` | extend create/update payload shapes to include new fields (passthrough into existing JSON columns)
