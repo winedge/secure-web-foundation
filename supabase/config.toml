@@ -146,3 +146,6 @@ verify_jwt = false
 
 [functions.gmb-generate-reply]
 verify_jwt = false
+
+[functions.meta-targeting-search]
+verify_jwt = false
