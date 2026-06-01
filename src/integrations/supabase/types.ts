@@ -3970,6 +3970,75 @@ export type Database = {
           },
         ]
       }
+      meta_ab_tests: {
+        Row: {
+          cell_a_campaign_id: string | null
+          cell_b_campaign_id: string | null
+          created_at: string
+          created_by: string | null
+          end_date: string | null
+          firm_id: string
+          id: string
+          meta_study_id: string | null
+          name: string
+          result: Json | null
+          split_pct: number
+          start_date: string | null
+          status: string
+          updated_at: string
+          variable: string
+        }
+        Insert: {
+          cell_a_campaign_id?: string | null
+          cell_b_campaign_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          firm_id: string
+          id?: string
+          meta_study_id?: string | null
+          name: string
+          result?: Json | null
+          split_pct?: number
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          variable: string
+        }
+        Update: {
+          cell_a_campaign_id?: string | null
+          cell_b_campaign_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          firm_id?: string
+          id?: string
+          meta_study_id?: string | null
+          name?: string
+          result?: Json | null
+          split_pct?: number
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          variable?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ab_tests_cell_a_campaign_id_fkey"
+            columns: ["cell_a_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "meta_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_ab_tests_cell_b_campaign_id_fkey"
+            columns: ["cell_b_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "meta_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meta_ad_sets: {
         Row: {
           age_max: number | null
@@ -4063,6 +4132,7 @@ export type Database = {
           image_url: string | null
           link_url: string | null
           meta_ad_id: string | null
+          meta_creative_id: string | null
           name: string
           status: string
           updated_at: string
@@ -4083,6 +4153,7 @@ export type Database = {
           image_url?: string | null
           link_url?: string | null
           meta_ad_id?: string | null
+          meta_creative_id?: string | null
           name: string
           status?: string
           updated_at?: string
@@ -4103,6 +4174,7 @@ export type Database = {
           image_url?: string | null
           link_url?: string | null
           meta_ad_id?: string | null
+          meta_creative_id?: string | null
           name?: string
           status?: string
           updated_at?: string
@@ -4244,17 +4316,23 @@ export type Database = {
       meta_campaigns: {
         Row: {
           ai_recommendations: Json | null
+          attribution_setting: string | null
           bid_strategy: string | null
           created_at: string
+          created_by_ai: boolean
           daily_budget: number | null
           end_date: string | null
           firm_id: string
           id: string
           lifetime_budget: number | null
+          meta_ad_account_id: string | null
           meta_campaign_id: string | null
           name: string
           objective: string
           optimization_goal: string | null
+          published_at: string | null
+          published_by: string | null
+          special_ad_categories: string[]
           start_date: string | null
           status: string
           target_states: string[] | null
@@ -4263,17 +4341,23 @@ export type Database = {
         }
         Insert: {
           ai_recommendations?: Json | null
+          attribution_setting?: string | null
           bid_strategy?: string | null
           created_at?: string
+          created_by_ai?: boolean
           daily_budget?: number | null
           end_date?: string | null
           firm_id: string
           id?: string
           lifetime_budget?: number | null
+          meta_ad_account_id?: string | null
           meta_campaign_id?: string | null
           name: string
           objective?: string
           optimization_goal?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          special_ad_categories?: string[]
           start_date?: string | null
           status?: string
           target_states?: string[] | null
@@ -4282,17 +4366,23 @@ export type Database = {
         }
         Update: {
           ai_recommendations?: Json | null
+          attribution_setting?: string | null
           bid_strategy?: string | null
           created_at?: string
+          created_by_ai?: boolean
           daily_budget?: number | null
           end_date?: string | null
           firm_id?: string
           id?: string
           lifetime_budget?: number | null
+          meta_ad_account_id?: string | null
           meta_campaign_id?: string | null
           name?: string
           objective?: string
           optimization_goal?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          special_ad_categories?: string[]
           start_date?: string | null
           status?: string
           target_states?: string[] | null
