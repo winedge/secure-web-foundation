@@ -51,17 +51,22 @@ export function CampaignCreateWizard({
 
   const close = () => onOpenChange(false);
 
+  const wizardStepsForHeader = STEPS.map(({ id, label }) => ({ id, label }));
+
   return (
     <>
-      {/* Stepper header is rendered inside each child dialog via wrapping wizard chrome. */}
-      <WizardStepperOverlay open={open} step={step} />
+      {/* Floating overlay only shown for steps whose dialog doesn't render its own integrated stepper. */}
+      <WizardStepperOverlay open={open && step !== 'campaign'} step={step} />
 
       <CampaignFormDialog
         open={open && step === 'campaign'}
         onOpenChange={(o) => { if (!o) close(); }}
         saveLabel="Save & continue to Ad Set"
         onSaved={(id) => { setCampaignId(id); setStep('adset'); }}
+        wizardSteps={wizardStepsForHeader}
+        wizardActiveStep={step}
       />
+
 
       {campaignId && (
         <AdSetFormDialog
