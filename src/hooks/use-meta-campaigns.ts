@@ -7,6 +7,7 @@ import { useToast } from './use-toast';
 export interface MetaCampaign {
   id: string;
   firm_id: string;
+  ad_account_id?: string | null;
   name: string;
   objective: string;
   status: string;
@@ -28,6 +29,77 @@ export interface MetaCampaign {
   meta_ad_account_id?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface MetaAdAccount {
+  id: string;
+  firm_id: string;
+  meta_ad_account_id: string;
+  name: string | null;
+  currency: string | null;
+  account_status: number | null;
+}
+
+function normalizeCampaign(row: any): MetaCampaign {
+  return {
+    ...row,
+    objective: row.objective || 'OUTCOME_LEADS',
+    status: row.status || 'draft',
+    daily_budget: Number(row.daily_budget || 0),
+    lifetime_budget: Number(row.lifetime_budget || 0),
+    start_date: row.start_date ?? row.start_time ?? null,
+    end_date: row.end_date ?? row.stop_time ?? null,
+    target_states: row.target_states || [],
+  } as MetaCampaign;
+}
+
+export function useSelectedMetaAdAccount() {
+  const { user } = useAuth();
+  const { data: firm } = useFirm();
+
+  return useQuery({
+    queryKey: ['meta-selected-ad-account', firm?.id],
+    queryFn: async () => {
+      if (!firm?.id) return null;
+      const { data: conn, error: connError } = await (supabase as any)
+        .from('platform_connections')
+        .select('id, ad_account_id, metadata')
+        .eq('firm_id', firm.id)
+        .eq('platform', 'facebook')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (connError) throw connError;
+
+      const selectedExternalId = conn?.ad_account_id || conn?.metadata?.ad_account_id;
+      if (!selectedExternalId) return null;
+
+      const { data: existing, error: accountError } = await (supabase as any)
+        .from('meta_ad_accounts')
+        .select('id, firm_id, meta_ad_account_id, name, currency, account_status')
+        .eq('firm_id', firm.id)
+        .eq('meta_ad_account_id', selectedExternalId)
+        .maybeSingle();
+      if (accountError) throw accountError;
+      if (existing) return existing as MetaAdAccount;
+
+      const { data: inserted, error: insertError } = await (supabase as any)
+        .from('meta_ad_accounts')
+        .upsert({
+          firm_id: firm.id,
+          meta_ad_account_id: selectedExternalId,
+          name: conn?.metadata?.ad_account_name || selectedExternalId,
+          currency: conn?.metadata?.ad_account_currency || null,
+          raw: conn?.metadata || {},
+        }, { onConflict: 'firm_id,meta_ad_account_id' })
+        .select('id, firm_id, meta_ad_account_id, name, currency, account_status')
+        .single();
+      if (insertError) throw insertError;
+      return inserted as MetaAdAccount;
+    },
+    enabled: !!user && !!firm?.id,
+  });
 }
 
 export interface MetaAdSet {
@@ -108,18 +180,22 @@ export interface MetaAiLog {
 export function useMetaCampaigns() {
   const { user } = useAuth();
   const { data: firm } = useFirm();
+  const { data: selectedAdAccount, isLoading: selectedLoading } = useSelectedMetaAdAccount();
 
   return useQuery({
-    queryKey: ['meta-campaigns', firm?.id],
+    queryKey: ['meta-campaigns', firm?.id, selectedAdAccount?.id ?? 'all'],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      let query = (supabase as any)
         .from('meta_campaigns')
         .select('*')
+        .eq('firm_id', firm?.id)
         .order('created_at', { ascending: false });
+      if (selectedAdAccount?.id) query = query.eq('ad_account_id', selectedAdAccount.id);
+      const { data, error } = await query;
       if (error) throw error;
-      return data as MetaCampaign[];
+      return (data || []).map(normalizeCampaign);
     },
-    enabled: !!user && !!firm?.id,
+    enabled: !!user && !!firm?.id && !selectedLoading,
   });
 }
 
@@ -128,6 +204,7 @@ export function useCreateMetaCampaign() {
   const { toast } = useToast();
   const { data: firm } = useFirm();
   const { user } = useAuth();
+  const { data: selectedAdAccount } = useSelectedMetaAdAccount();
 
   return useMutation({
     mutationFn: async (input: Partial<MetaCampaign>) => {
@@ -139,6 +216,7 @@ export function useCreateMetaCampaign() {
       const insertPayload: any = {
         firm_id: firm.id,
         ...input,
+        ad_account_id: selectedAdAccount?.id ?? input.ad_account_id ?? null,
         status: isDraft ? 'draft' : input.status,
       };
       const { data, error } = await (supabase as any)
@@ -268,11 +346,19 @@ export function useReachEstimate() {
 export function useMetaLiveInsights(datePreset: string = 'last_30d') {
   const { user } = useAuth();
   const { data: firm } = useFirm();
+  const { data: selectedAdAccount } = useSelectedMetaAdAccount();
   return useQuery({
-    queryKey: ['meta-live-insights', firm?.id, datePreset],
+    queryKey: ['meta-live-insights', firm?.id, selectedAdAccount?.id ?? 'all', datePreset],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
-        body: { action: 'live_insights', user_id: user?.id, firm_id: firm?.id, date_preset: datePreset },
+        body: {
+          action: 'live_insights',
+          user_id: user?.id,
+          firm_id: firm?.id,
+          ad_account_row_id: selectedAdAccount?.id,
+          ad_account_id: selectedAdAccount?.meta_ad_account_id,
+          date_preset: datePreset,
+        },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -554,11 +640,19 @@ export function useSyncFromMeta() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { data: firm } = useFirm();
+  const { data: selectedAdAccount } = useSelectedMetaAdAccount();
 
   return useMutation({
     mutationFn: async () => {
+      if (!selectedAdAccount?.id) throw new Error('Select a Meta ad account first.');
       const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
-        body: { action: 'sync_from_meta', user_id: user?.id, firm_id: firm?.id },
+        body: {
+          action: 'sync_from_meta',
+          user_id: user?.id,
+          firm_id: firm?.id,
+          ad_account_row_id: selectedAdAccount.id,
+          ad_account_id: selectedAdAccount.meta_ad_account_id,
+        },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -566,6 +660,7 @@ export function useSyncFromMeta() {
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['meta-campaigns'] });
+      qc.invalidateQueries({ queryKey: ['meta-live-insights'] });
       toast({ title: `Synced ${data.count} campaigns from Meta` });
     },
     onError: (e: any) => toast({ title: 'Sync Error', description: e.message, variant: 'destructive' }),

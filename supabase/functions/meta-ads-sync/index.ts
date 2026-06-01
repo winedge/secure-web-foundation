@@ -28,14 +28,20 @@ serve(async (req) => {
       return errorResponse("Verification failed", 403);
     }
 
-    // Get user's Facebook connection for access token + ad account
-    const { data: fbConn } = await supabase
+    // Get the firm's Facebook connection first so admins and firm users share the same connection.
+    const firmId = params.firm_id;
+    let connQuery = supabase
       .from("platform_connections")
       .select("*")
-      .eq("user_id", user_id)
       .eq("platform", "facebook")
       .eq("is_active", true)
-      .single();
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (firmId) connQuery = connQuery.eq("firm_id", firmId);
+    else if (user_id) connQuery = connQuery.eq("user_id", user_id);
+
+    const { data: fbConn } = await connQuery.maybeSingle();
 
     if (!fbConn?.access_token) {
       return errorResponse("Facebook not connected. Go to Settings → Connections to connect.");
@@ -44,10 +50,10 @@ serve(async (req) => {
     const token = fbConn.access_token;
 
     // Get ad account ID from metadata or fetch it
-    let adAccountId = fbConn.metadata?.ad_account_id;
+    let adAccountId = params.ad_account_id || fbConn.ad_account_id || fbConn.metadata?.ad_account_id;
     if (!adAccountId) {
       const resp = await fetch(
-        `${META_API}/me/adaccounts?fields=id,name,account_status&access_token=${token}`
+        `${META_API}/me/adaccounts?fields=id,name,account_status,currency,timezone_name&access_token=${token}`
       );
       const data = await resp.json();
       if (data.error) throw new Error(data.error.message);
@@ -55,7 +61,7 @@ serve(async (req) => {
       adAccountId = data.data[0].id;
       await supabase
         .from("platform_connections")
-        .update({ metadata: { ...fbConn.metadata, ad_account_id: adAccountId, ad_accounts: data.data } })
+        .update({ ad_account_id: adAccountId, metadata: { ...fbConn.metadata, ad_account_id: adAccountId, ad_accounts: data.data } })
         .eq("id", fbConn.id);
     }
 
@@ -456,7 +462,42 @@ serve(async (req) => {
 
     // ─── SYNC ALL  |  pull campaigns from Meta into local DB ───
     if (action === "sync_from_meta") {
-      const { firm_id } = params;
+      const { firm_id, ad_account_row_id } = params;
+      if (!firm_id) return errorResponse("firm_id is required");
+
+      let localAdAccountId = ad_account_row_id;
+      if (!localAdAccountId) {
+        const { data: existingAccount } = await supabase
+          .from("meta_ad_accounts")
+          .select("id")
+          .eq("firm_id", firm_id)
+          .eq("meta_ad_account_id", adAccountId)
+          .maybeSingle();
+
+        if (existingAccount?.id) {
+          localAdAccountId = existingAccount.id;
+        } else {
+          const accountResp = await fetch(
+            `${META_API}/${adAccountId}?fields=id,name,account_status,currency,timezone_name&access_token=${token}`
+          );
+          const accountData = await accountResp.json();
+          const { data: insertedAccount, error: accountInsertError } = await supabase
+            .from("meta_ad_accounts")
+            .upsert({
+              firm_id,
+              meta_ad_account_id: adAccountId,
+              name: accountData.name || fbConn.metadata?.ad_account_name || adAccountId,
+              currency: accountData.currency || fbConn.metadata?.ad_account_currency || null,
+              timezone_name: accountData.timezone_name || null,
+              account_status: accountData.account_status || null,
+              raw: accountData.error ? { id: adAccountId } : accountData,
+            }, { onConflict: "firm_id,meta_ad_account_id" })
+            .select("id")
+            .single();
+          if (accountInsertError) return errorResponse(accountInsertError.message);
+          localAdAccountId = insertedAccount?.id;
+        }
+      }
 
       const resp = await fetch(
         `${META_API}/${adAccountId}/campaigns?fields=id,name,objective,status,daily_budget,lifetime_budget,bid_strategy,start_time,stop_time&limit=100&access_token=${token}`
@@ -466,36 +507,44 @@ serve(async (req) => {
 
       const synced = [];
       for (const mc of data.data || []) {
-        const { data: existing } = await supabase.from("meta_campaigns").select("id").eq("meta_campaign_id", mc.id).single();
+        const campaignPayload = {
+          firm_id,
+          ad_account_id: localAdAccountId,
+          name: mc.name,
+          objective: normalizeMetaObjective(mc.objective),
+          status: normalizeMetaStatus(mc.status),
+          daily_budget: mc.daily_budget ? Number(mc.daily_budget) / 100 : 0,
+          lifetime_budget: mc.lifetime_budget ? Number(mc.lifetime_budget) / 100 : 0,
+          bid_strategy: normalizeMetaBidStrategy(mc.bid_strategy),
+          meta_campaign_id: mc.id,
+          start_time: mc.start_time || null,
+          stop_time: mc.stop_time || null,
+          review_status: "published",
+          published_at: new Date().toISOString(),
+          raw: mc,
+        };
+
+        const { data: existing } = await supabase
+          .from("meta_campaigns")
+          .select("id")
+          .eq("firm_id", firm_id)
+          .eq("meta_campaign_id", mc.id)
+          .maybeSingle();
 
         if (existing) {
-          await supabase
+          const { error: updateError } = await supabase
             .from("meta_campaigns")
-            .update({
-              name: mc.name,
-              status: mc.status?.toLowerCase() || "paused",
-              daily_budget: mc.daily_budget ? mc.daily_budget / 100 : 0,
-              lifetime_budget: mc.lifetime_budget ? mc.lifetime_budget / 100 : 0,
-            })
+            .update(campaignPayload)
             .eq("id", existing.id);
+          if (updateError) return errorResponse(updateError.message);
           synced.push({ id: existing.id, name: mc.name, action: "updated" });
         } else {
-          const { data: newCampaign } = await supabase
+          const { data: newCampaign, error: insertError } = await supabase
             .from("meta_campaigns")
-            .insert({
-              firm_id,
-              name: mc.name,
-              objective: mc.objective || "LEAD_GENERATION",
-              status: mc.status?.toLowerCase() || "paused",
-              daily_budget: mc.daily_budget ? mc.daily_budget / 100 : 0,
-              lifetime_budget: mc.lifetime_budget ? mc.lifetime_budget / 100 : 0,
-              bid_strategy: mc.bid_strategy || "LOWEST_COST",
-              meta_campaign_id: mc.id,
-              start_date: mc.start_time || null,
-              end_date: mc.stop_time || null,
-            })
+            .insert(campaignPayload)
             .select()
             .single();
+          if (insertError) return errorResponse(insertError.message);
           synced.push({ id: newCampaign?.id, name: mc.name, action: "created" });
         }
       }
@@ -512,6 +561,47 @@ serve(async (req) => {
       if (data.error) return errorResponse(data.error.message);
 
       return jsonResponse({ ad_accounts: data.data || [] });
+    }
+
+    // ─── SET ACTIVE AD ACCOUNT ───
+    if (action === "set_ad_account") {
+      const { firm_id, connection_id, ad_account_id, ad_account } = params;
+      if (!firm_id) return errorResponse("firm_id is required");
+      if (!connection_id) return errorResponse("connection_id is required");
+      if (!ad_account_id) return errorResponse("ad_account_id is required");
+
+      const account = ad_account || { id: ad_account_id };
+      const { data: localAccount, error: accountError } = await supabase
+        .from("meta_ad_accounts")
+        .upsert({
+          firm_id,
+          meta_ad_account_id: ad_account_id,
+          name: account.name || ad_account_id,
+          currency: account.currency || null,
+          timezone_name: account.timezone_name || null,
+          account_status: account.account_status || null,
+          raw: account,
+        }, { onConflict: "firm_id,meta_ad_account_id" })
+        .select("id")
+        .single();
+      if (accountError) return errorResponse(accountError.message);
+
+      const metadata = {
+        ...(fbConn.metadata || {}),
+        ad_account_id,
+        ad_account_row_id: localAccount.id,
+        ad_account_name: account.name || ad_account_id,
+        ad_account_currency: account.currency || null,
+      };
+
+      const { error: updateError } = await supabase
+        .from("platform_connections")
+        .update({ ad_account_id, metadata })
+        .eq("id", connection_id)
+        .eq("firm_id", firm_id);
+      if (updateError) return errorResponse(updateError.message);
+
+      return jsonResponse({ success: true, ad_account_id, ad_account_row_id: localAccount.id });
     }
 
     // ─── PUBLISH AN AI/MANUAL DRAFT TO META (atomic create-tree + activate) ───
@@ -663,13 +753,19 @@ serve(async (req) => {
           if (rd.error) throw new Error(`Activate ${id}: ${rd.error.message}`);
         }
 
+        const { data: localAccount } = await supabase
+          .from("meta_ad_accounts")
+          .select("id")
+          .eq("firm_id", firm_id)
+          .eq("meta_ad_account_id", adAccountId)
+          .maybeSingle();
+
         // 5) Mark local campaign published
         await supabase.from("meta_campaigns").update({
           meta_campaign_id: metaCampaignId,
           status: "active",
           published_at: new Date().toISOString(),
-          published_by: user_id,
-          meta_ad_account_id: adAccountId,
+          ad_account_id: localAccount?.id || camp.ad_account_id,
         }).eq("id", campaign_id);
 
         return jsonResponse({ success: true, meta_campaign_id: metaCampaignId, created: createdIds.length });
@@ -743,10 +839,12 @@ serve(async (req) => {
 
     // ─── LIVE INSIGHTS for the Ads-Manager table ───
     if (action === "live_insights") {
-      const { firm_id, date_preset } = params;
-      const { data: camps } = await supabase
+      const { firm_id, ad_account_row_id, date_preset } = params;
+      let campsQuery = supabase
         .from("meta_campaigns").select("id, meta_campaign_id")
         .eq("firm_id", firm_id).not("meta_campaign_id", "is", null);
+      if (ad_account_row_id) campsQuery = campsQuery.eq("ad_account_id", ad_account_row_id);
+      const { data: camps } = await campsQuery;
       const insights: Record<string, any> = {};
       for (const c of camps || []) {
         const fields = "impressions,clicks,spend,actions,reach,cost_per_action_type,delivery_info";
@@ -776,11 +874,11 @@ serve(async (req) => {
       const { campaign_id, firm_id } = params;
       const { data: src } = await supabase.from("meta_campaigns").select("*").eq("id", campaign_id).single();
       if (!src) return errorResponse("Campaign not found");
-      const { id: _omit, created_at, updated_at, meta_campaign_id, published_at, published_by, ...rest } = src;
+      const { id: _omit, created_at, updated_at, meta_campaign_id, published_at, ...rest } = src;
       const { data: copy, error: copyErr } = await supabase.from("meta_campaigns").insert({
         ...rest, firm_id: firm_id || rest.firm_id,
         name: `${src.name} (Copy)`, status: "draft",
-        meta_campaign_id: null, published_at: null, published_by: null,
+        meta_campaign_id: null, published_at: null,
       }).select().single();
       if (copyErr) return errorResponse(copyErr.message);
       return jsonResponse({ success: true, id: copy.id });
@@ -933,4 +1031,30 @@ function mapOptimizationGoal(event: string): string {
     LINK_CLICK: "LINK_CLICKS",
   };
   return map[event] || "LEAD_GENERATION";
+}
+
+function normalizeMetaObjective(obj?: string): string {
+  const allowed = new Set(["OUTCOME_AWARENESS", "OUTCOME_TRAFFIC", "OUTCOME_ENGAGEMENT", "OUTCOME_LEADS", "OUTCOME_APP_PROMOTION", "OUTCOME_SALES"]);
+  if (obj && allowed.has(obj)) return obj;
+  const legacy: Record<string, string> = {
+    BRAND_AWARENESS: "OUTCOME_AWARENESS",
+    REACH: "OUTCOME_AWARENESS",
+    LINK_CLICKS: "OUTCOME_TRAFFIC",
+    TRAFFIC: "OUTCOME_TRAFFIC",
+    POST_ENGAGEMENT: "OUTCOME_ENGAGEMENT",
+    LEAD_GENERATION: "OUTCOME_LEADS",
+    CONVERSIONS: "OUTCOME_SALES",
+  };
+  return obj ? (legacy[obj] || "OUTCOME_LEADS") : "OUTCOME_LEADS";
+}
+
+function normalizeMetaStatus(status?: string): string {
+  const normalized = (status || "paused").toLowerCase();
+  const allowed = new Set(["active", "paused", "deleted", "archived", "draft", "pending_review", "disapproved", "preapproved", "pending_billing_info", "campaign_paused", "adset_paused", "with_issues"]);
+  return allowed.has(normalized) ? normalized : "paused";
+}
+
+function normalizeMetaBidStrategy(strategy?: string): string | null {
+  const allowed = new Set(["LOWEST_COST_WITHOUT_CAP", "LOWEST_COST_WITH_BID_CAP", "COST_CAP", "LOWEST_COST_WITH_MIN_ROAS"]);
+  return strategy && allowed.has(strategy) ? strategy : null;
 }
