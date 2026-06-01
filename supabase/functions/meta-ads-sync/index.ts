@@ -705,7 +705,7 @@ serve(async (req) => {
               conversion_specs: ad.conversion_specs || {},
               preview_shareable_link: ad.preview_shareable_link || null,
               meta_ad_id: ad.id,
-              ...extractAdCreativeFields(ad),
+              ...await enrichAdCreativeFields(ad, token),
               raw: ad,
             };
             const { data: existing } = await supabase
