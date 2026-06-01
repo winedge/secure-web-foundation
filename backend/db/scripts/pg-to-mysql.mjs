@@ -200,8 +200,9 @@ function enumNameFor(col) {
     const lines = [];
     for (const c of cols) {
       const type = mapType(c.dtype, c.udt);
-      const def = mapDefault(c.default, c.dtype);
+      const def = mapDefault(c.default, type);
       let line = `  \`${c.name}\` ${type}`;
+
       if (!c.nullable) line += ' NOT NULL';
       if (def != null) line += ` DEFAULT ${def}`;
       const en = enumNameFor(c);
