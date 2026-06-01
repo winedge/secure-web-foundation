@@ -4,6 +4,35 @@ import { createSupabaseClient } from "../_shared/auth.ts";
 
 const META_API = "https://graph.facebook.com/v21.0";
 
+// Meta rate-limit error codes that warrant retry with exponential backoff.
+// 4 = app-level rate limit, 17 = user/account request limit, 32 = page-level rate limit,
+// 613 = custom audience rate limit, 80000-80014 = ads-management rate limits, 2 = transient.
+const RATE_LIMIT_CODES = new Set([2, 4, 17, 32, 613, 80000, 80001, 80002, 80003, 80004, 80008, 80014]);
+
+async function fetchMetaWithRetry(url: string, maxAttempts = 5): Promise<any> {
+  let lastErr: any = null;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const resp = await fetch(url);
+      const data = await resp.json();
+      if (!data?.error) return data;
+      const code = Number(data.error.code);
+      const isTransient = data.error.is_transient === true;
+      if (!RATE_LIMIT_CODES.has(code) && !isTransient) return data; // non-retryable, return as-is
+      lastErr = data;
+      // Exponential backoff: 2s, 4s, 8s, 16s, 32s (+jitter), capped
+      const delayMs = Math.min(32000, 2000 * Math.pow(2, attempt)) + Math.floor(Math.random() * 500);
+      console.log(`[meta-retry] code=${code} attempt=${attempt + 1}/${maxAttempts} waiting ${delayMs}ms — ${data.error.message}`);
+      await new Promise((r) => setTimeout(r, delayMs));
+    } catch (e) {
+      lastErr = { error: { message: String(e) } };
+      const delayMs = Math.min(32000, 2000 * Math.pow(2, attempt));
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+  return lastErr ?? { error: { message: "Meta API failed after retries" } };
+}
+
 serve(async (req) => {
   const corsResp = handleCors(req);
   if (corsResp) return corsResp;
@@ -502,8 +531,7 @@ serve(async (req) => {
 
       // ── 1) Campaigns ──
       const campFields = "id,name,objective,status,effective_status,daily_budget,lifetime_budget,budget_remaining,bid_strategy,buying_type,start_time,stop_time,special_ad_categories,attribution_setting,created_time,updated_time";
-      const campResp = await fetch(`${META_API}/${adAccountId}/campaigns?fields=${campFields}&limit=200&access_token=${token}`);
-      const campData = await campResp.json();
+      const campData = await fetchMetaWithRetry(`${META_API}/${adAccountId}/campaigns?fields=${campFields}&limit=200&access_token=${token}`);
       if (campData.error) return errorResponse(campData.error.message);
 
       const campaignIdMap = new Map<string, string>(); // metaId → localId
@@ -544,8 +572,7 @@ serve(async (req) => {
 
       // ── 2) Ad sets (account-level bulk) ──
       const adsetFields = "id,name,campaign_id,status,effective_status,daily_budget,lifetime_budget,optimization_goal,billing_event,bid_strategy,bid_amount,targeting,promoted_object,attribution_spec,destination_type,pacing_type,start_time,end_time,created_time";
-      const asResp = await fetch(`${META_API}/${adAccountId}/adsets?fields=${adsetFields}&limit=200&access_token=${token}`);
-      const asData = await asResp.json();
+      const asData = await fetchMetaWithRetry(`${META_API}/${adAccountId}/adsets?fields=${adsetFields}&limit=200&access_token=${token}`);
       if (asData.error) {
         errors.push(`adsets: ${asData.error.message}`);
       } else {
@@ -590,8 +617,7 @@ serve(async (req) => {
 
         // ── 3) Ads (account-level bulk) ──
         const adFields = "id,name,adset_id,status,effective_status,tracking_specs,conversion_specs,preview_shareable_link,created_time";
-        const adResp = await fetch(`${META_API}/${adAccountId}/ads?fields=${adFields}&limit=200&access_token=${token}`);
-        const adData = await adResp.json();
+        const adData = await fetchMetaWithRetry(`${META_API}/${adAccountId}/ads?fields=${adFields}&limit=200&access_token=${token}`);
         if (adData.error) {
           errors.push(`ads: ${adData.error.message}`);
         } else {
@@ -622,8 +648,7 @@ serve(async (req) => {
           }
 
           // ── 5) Ad-level insights (account bulk, aggregate per ad) ──
-          const adInsResp = await fetch(`${META_API}/${adAccountId}/insights?level=ad&fields=ad_id,impressions,reach,frequency,clicks,ctr,cpc,cpm,spend,actions,action_values&date_preset=last_30d&limit=500&access_token=${token}`);
-          const adIns = await adInsResp.json();
+          const adIns = await fetchMetaWithRetry(`${META_API}/${adAccountId}/insights?level=ad&fields=ad_id,impressions,reach,frequency,clicks,ctr,cpc,cpm,spend,actions,action_values&date_preset=last_30d&limit=500&access_token=${token}`);
           if (!adIns.error) {
             const today = new Date().toISOString().slice(0, 10);
             for (const r of adIns.data || []) {
@@ -645,8 +670,7 @@ serve(async (req) => {
         }
 
         // ── 4b) Adset-level insights (account bulk) ──
-        const asInsResp = await fetch(`${META_API}/${adAccountId}/insights?level=adset&fields=adset_id,impressions,reach,frequency,clicks,ctr,cpc,cpm,spend,actions,action_values&date_preset=last_30d&limit=500&access_token=${token}`);
-        const asIns = await asInsResp.json();
+        const asIns = await fetchMetaWithRetry(`${META_API}/${adAccountId}/insights?level=adset&fields=adset_id,impressions,reach,frequency,clicks,ctr,cpc,cpm,spend,actions,action_values&date_preset=last_30d&limit=500&access_token=${token}`);
         if (!asIns.error) {
           const today = new Date().toISOString().slice(0, 10);
           for (const r of asIns.data || []) {
@@ -668,8 +692,7 @@ serve(async (req) => {
       }
 
       // ── 4) Custom audiences ──
-      const caResp = await fetch(`${META_API}/${adAccountId}/customaudiences?fields=id,name,description,subtype,approximate_count,retention_days,rule,operation_status&limit=200&access_token=${token}`);
-      const caData = await caResp.json();
+      const caData = await fetchMetaWithRetry(`${META_API}/${adAccountId}/customaudiences?fields=id,name,description,subtype,approximate_count,retention_days,rule,operation_status&limit=200&access_token=${token}`);
       if (caData.error) {
         errors.push(`audiences: ${caData.error.message}`);
       } else {
@@ -688,8 +711,7 @@ serve(async (req) => {
       }
 
       // ── 6) Campaign-level insights (account bulk, aggregate per campaign for "today" snapshot) ──
-      const cInsResp = await fetch(`${META_API}/${adAccountId}/insights?level=campaign&fields=campaign_id,impressions,reach,frequency,clicks,ctr,cpc,cpm,spend,actions,action_values&date_preset=last_30d&limit=500&access_token=${token}`);
-      const cIns = await cInsResp.json();
+      const cIns = await fetchMetaWithRetry(`${META_API}/${adAccountId}/insights?level=campaign&fields=campaign_id,impressions,reach,frequency,clicks,ctr,cpc,cpm,spend,actions,action_values&date_preset=last_30d&limit=500&access_token=${token}`);
       if (!cIns.error) {
         const today = new Date().toISOString().slice(0, 10);
         for (const r of cIns.data || []) {
