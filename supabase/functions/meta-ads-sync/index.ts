@@ -985,3 +985,29 @@ function mapOptimizationGoal(event: string): string {
   };
   return map[event] || "LEAD_GENERATION";
 }
+
+function normalizeMetaObjective(obj?: string): string {
+  const allowed = new Set(["OUTCOME_AWARENESS", "OUTCOME_TRAFFIC", "OUTCOME_ENGAGEMENT", "OUTCOME_LEADS", "OUTCOME_APP_PROMOTION", "OUTCOME_SALES"]);
+  if (obj && allowed.has(obj)) return obj;
+  const legacy: Record<string, string> = {
+    BRAND_AWARENESS: "OUTCOME_AWARENESS",
+    REACH: "OUTCOME_AWARENESS",
+    LINK_CLICKS: "OUTCOME_TRAFFIC",
+    TRAFFIC: "OUTCOME_TRAFFIC",
+    POST_ENGAGEMENT: "OUTCOME_ENGAGEMENT",
+    LEAD_GENERATION: "OUTCOME_LEADS",
+    CONVERSIONS: "OUTCOME_SALES",
+  };
+  return obj ? (legacy[obj] || "OUTCOME_LEADS") : "OUTCOME_LEADS";
+}
+
+function normalizeMetaStatus(status?: string): string {
+  const normalized = (status || "paused").toLowerCase();
+  const allowed = new Set(["active", "paused", "deleted", "archived", "draft", "pending_review", "disapproved", "preapproved", "pending_billing_info", "campaign_paused", "adset_paused", "with_issues"]);
+  return allowed.has(normalized) ? normalized : "paused";
+}
+
+function normalizeMetaBidStrategy(strategy?: string): string | null {
+  const allowed = new Set(["LOWEST_COST_WITHOUT_CAP", "LOWEST_COST_WITH_BID_CAP", "COST_CAP", "LOWEST_COST_WITH_MIN_ROAS"]);
+  return strategy && allowed.has(strategy) ? strategy : null;
+}
