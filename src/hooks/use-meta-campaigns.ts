@@ -132,41 +132,181 @@ export function useCreateMetaCampaign() {
   return useMutation({
     mutationFn: async (input: Partial<MetaCampaign>) => {
       if (!firm?.id) throw new Error('No firm found');
+      // Drafts (AI-generated or manual) are NEVER pushed to Meta until the
+      // user clicks "Review & Publish".
+      const isDraft =
+        !input.status || input.status === 'draft' || input.created_by_ai === true;
+      const insertPayload: any = {
+        firm_id: firm.id,
+        ...input,
+        status: isDraft ? 'draft' : input.status,
+      };
       const { data, error } = await (supabase as any)
         .from('meta_campaigns')
-        .insert({ firm_id: firm.id, ...input })
+        .insert(insertPayload)
         .select()
         .single();
       if (error) throw error;
 
-      // Sync to Meta Graph API
-      try {
-        await supabase.functions.invoke('meta-ads-sync', {
-          body: {
-            action: 'create_campaign',
-            user_id: user?.id,
-            firm_id: firm.id,
-            campaign_id: data.id,
-            name: data.name,
-            objective: data.objective,
-            daily_budget: data.daily_budget,
-            bid_strategy: data.bid_strategy,
-            status: data.status,
-            tort_type: data.tort_type,
-            category: data.tort_type,
-          },
-        });
-      } catch (syncErr) {
-        console.warn('Meta sync failed (campaign still saved locally):', syncErr);
+      // Only auto-sync non-draft campaigns (legacy direct-publish flow).
+      if (!isDraft) {
+        try {
+          await supabase.functions.invoke('meta-ads-sync', {
+            body: {
+              action: 'create_campaign',
+              user_id: user?.id,
+              firm_id: firm.id,
+              campaign_id: data.id,
+              name: data.name,
+              objective: data.objective,
+              daily_budget: data.daily_budget,
+              bid_strategy: data.bid_strategy,
+              status: data.status,
+              tort_type: data.tort_type,
+              category: data.tort_type,
+            },
+          });
+        } catch (syncErr) {
+          console.warn('Meta sync failed (campaign still saved locally):', syncErr);
+        }
       }
 
       return data as MetaCampaign;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['meta-campaigns'] });
-      toast({ title: 'Campaign created & synced to Meta' });
+      toast({
+        title: data.status === 'draft' ? 'Draft saved' : 'Campaign created & synced to Meta',
+        description: data.status === 'draft' ? 'Open Review & Publish to push it live on Meta.' : undefined,
+      });
     },
     onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+}
+
+// ─── Publish an AI / manual draft to Meta ───
+export function usePublishMetaCampaign() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const { data: firm } = useFirm();
+
+  return useMutation({
+    mutationFn: async (campaignId: string) => {
+      const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
+        body: {
+          action: 'publish_campaign',
+          user_id: user?.id,
+          firm_id: firm?.id,
+          campaign_id: campaignId,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['meta-campaigns'] });
+      qc.invalidateQueries({ queryKey: ['meta-ad-sets'] });
+      qc.invalidateQueries({ queryKey: ['meta-ads'] });
+      toast({ title: 'Campaign published to Meta', description: 'It is now live and spending budget.' });
+    },
+    onError: (e: any) =>
+      toast({ title: 'Publish failed', description: e.message, variant: 'destructive' }),
+  });
+}
+
+// ─── Toggle ACTIVE/PAUSED at campaign/adset/ad level ───
+export function useToggleMetaStatus() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const { data: firm } = useFirm();
+
+  return useMutation({
+    mutationFn: async ({ level, id, active }: { level: 'campaign' | 'adset' | 'ad'; id: string; active: boolean }) => {
+      const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
+        body: {
+          action: 'toggle_status',
+          user_id: user?.id,
+          firm_id: firm?.id,
+          level,
+          id,
+          status: active ? 'active' : 'paused',
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['meta-campaigns'] });
+      qc.invalidateQueries({ queryKey: ['meta-ad-sets'] });
+      qc.invalidateQueries({ queryKey: ['meta-ads'] });
+    },
+    onError: (e: any) => toast({ title: 'Status change failed', description: e.message, variant: 'destructive' }),
+  });
+}
+
+// ─── Reach estimate for the publish review dialog ───
+export function useReachEstimate() {
+  const { user } = useAuth();
+  const { data: firm } = useFirm();
+  return useMutation({
+    mutationFn: async (campaignId: string) => {
+      const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
+        body: { action: 'reach_estimate', user_id: user?.id, firm_id: firm?.id, campaign_id: campaignId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+  });
+}
+
+// ─── Live insights (Delivery/Results/Spend) for the table ───
+export function useMetaLiveInsights(datePreset: string = 'last_30d') {
+  const { user } = useAuth();
+  const { data: firm } = useFirm();
+  return useQuery({
+    queryKey: ['meta-live-insights', firm?.id, datePreset],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
+        body: { action: 'live_insights', user_id: user?.id, firm_id: firm?.id, date_preset: datePreset },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return (data?.insights || {}) as Record<string, {
+        impressions: number; reach: number; spend: number;
+        results: number; cost_per_result: number; delivery: string;
+      }>;
+    },
+    enabled: !!user && !!firm?.id,
+    refetchInterval: typeof document !== 'undefined' && document.hidden ? false : 60_000,
+    retry: 0,
+  });
+}
+
+// ─── Duplicate a campaign locally + on Meta ───
+export function useDuplicateMetaCampaign() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const { data: firm } = useFirm();
+  return useMutation({
+    mutationFn: async (campaignId: string) => {
+      const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
+        body: { action: 'duplicate_campaign', user_id: user?.id, firm_id: firm?.id, campaign_id: campaignId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['meta-campaigns'] });
+      toast({ title: 'Campaign duplicated' });
+    },
+    onError: (e: any) => toast({ title: 'Duplicate failed', description: e.message, variant: 'destructive' }),
   });
 }
 
