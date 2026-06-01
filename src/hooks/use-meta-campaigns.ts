@@ -630,11 +630,19 @@ export function useSyncFromMeta() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { data: firm } = useFirm();
+  const { data: selectedAdAccount } = useSelectedMetaAdAccount();
 
   return useMutation({
     mutationFn: async () => {
+      if (!selectedAdAccount?.id) throw new Error('Select a Meta ad account first.');
       const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
-        body: { action: 'sync_from_meta', user_id: user?.id, firm_id: firm?.id },
+        body: {
+          action: 'sync_from_meta',
+          user_id: user?.id,
+          firm_id: firm?.id,
+          ad_account_row_id: selectedAdAccount.id,
+          ad_account_id: selectedAdAccount.meta_ad_account_id,
+        },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -642,6 +650,7 @@ export function useSyncFromMeta() {
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['meta-campaigns'] });
+      qc.invalidateQueries({ queryKey: ['meta-live-insights'] });
       toast({ title: `Synced ${data.count} campaigns from Meta` });
     },
     onError: (e: any) => toast({ title: 'Sync Error', description: e.message, variant: 'destructive' }),
