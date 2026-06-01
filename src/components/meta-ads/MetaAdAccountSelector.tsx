@@ -19,9 +19,11 @@ interface Props {
   connectionId: string;
   currentAdAccountId?: string | null;
   currentMetadata?: any;
+  onSaved?: () => void;
 }
 
-export function MetaAdAccountSelector({ connectionId, currentAdAccountId, currentMetadata }: Props) {
+export function MetaAdAccountSelector({ connectionId, currentAdAccountId, currentMetadata, onSaved }: Props) {
+
   const { user } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
