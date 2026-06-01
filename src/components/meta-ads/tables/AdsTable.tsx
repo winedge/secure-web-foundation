@@ -27,6 +27,7 @@ export function AdsTable({ initialAdSetId = null, initialCampaignId = null }: Pr
   const [adSetId, setAdSetId] = useState<string>(initialAdSetId || 'all');
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
 
   const { data: campaigns } = useMetaCampaignsLookup();
   const { data: adSets } = useMetaAdSetsLookup(campaignId === 'all' ? null : campaignId);
