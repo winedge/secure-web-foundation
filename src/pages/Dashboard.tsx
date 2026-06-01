@@ -63,71 +63,20 @@ export default function Dashboard() {
     enabled: !!firm,
   });
 
-  // Active Meta campaigns count
+  // Active Meta campaigns count (rebuilt schema in progress | returns 0 until part 2 migration runs)
   const { data: activeMetaCampaigns } = useQuery({
     queryKey: ['active-meta-campaigns-count', firm?.id],
-    queryFn: async () => {
-      if (!firm) return 0;
-      const { count, error } = await supabase
-        .from('meta_campaigns')
-        .select('id', { count: 'exact', head: true })
-        .eq('firm_id', firm.id)
-        .eq('status', 'active');
-      if (error) throw error;
-      return count ?? 0;
-    },
+    queryFn: async () => 0,
     enabled: !!firm,
   });
 
-  // Spend summary - last 30 days from meta_campaign_analytics
+  // Spend summary (rebuilt schema in progress)
   const { data: spendData } = useQuery({
     queryKey: ['spend-summary', firm?.id],
-    queryFn: async () => {
-      if (!firm) return { totalSpend: 0, totalLeads: 0, campaigns: [] };
-      
-      // Get firm's meta campaigns
-      const { data: campaigns } = await supabase
-        .from('meta_campaigns')
-        .select('id, name')
-        .eq('firm_id', firm.id);
-      
-      if (!campaigns?.length) return { totalSpend: 0, totalLeads: 0, campaigns: [] };
-
-      const campaignIds = campaigns.map(c => c.id);
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      const { data: analytics } = await supabase
-        .from('meta_campaign_analytics')
-        .select('campaign_id, spend, leads')
-        .in('campaign_id', campaignIds)
-        .gte('date', thirtyDaysAgo.toISOString().split('T')[0]);
-
-      const campaignSpend: Record<string, { spend: number; leads: number }> = {};
-      let totalSpend = 0;
-      let totalLeads = 0;
-
-      (analytics || []).forEach(a => {
-        const spend = Number(a.spend) || 0;
-        const leads = Number(a.leads) || 0;
-        totalSpend += spend;
-        totalLeads += leads;
-        if (!campaignSpend[a.campaign_id]) campaignSpend[a.campaign_id] = { spend: 0, leads: 0 };
-        campaignSpend[a.campaign_id].spend += spend;
-        campaignSpend[a.campaign_id].leads += leads;
-      });
-
-      const campaignBreakdown = campaigns.map(c => ({
-        id: c.id,
-        name: c.name,
-        spend: campaignSpend[c.id]?.spend || 0,
-        leads: campaignSpend[c.id]?.leads || 0,
-      })).filter(c => c.spend > 0).sort((a, b) => b.spend - a.spend);
-
-      return { totalSpend, totalLeads, campaigns: campaignBreakdown };
-    },
+    queryFn: async () => ({ totalSpend: 0, totalLeads: 0, campaigns: [] as Array<{ id: string; name: string; spend: number; leads: number }> }),
     enabled: !!firm,
   });
+
 
   // Recent audit log activity
   const { data: recentActivity } = useQuery({
