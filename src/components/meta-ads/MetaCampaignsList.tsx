@@ -86,7 +86,7 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
     totalBudget: allCampaigns.reduce((s, c) => s + (c.lifetime_budget || 0), 0),
   };
 
-  const openCreate = () => { setEditCampaign(null); setFormOpen(true); };
+  const openCreate = () => { setEditCampaign(null); setWizardOpen(true); };
   const openEdit = (c: MetaCampaign) => { setEditCampaign(c); setFormOpen(true); };
 
   const handleBulkDelete = () => {
