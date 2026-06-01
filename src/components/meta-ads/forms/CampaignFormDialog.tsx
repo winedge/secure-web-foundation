@@ -423,7 +423,7 @@ export function CampaignFormDialog({ open, onOpenChange, editCampaign, onSaved, 
           <div className="flex gap-2 pt-2">
             <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1">Cancel</Button>
             <Button onClick={handleSave} disabled={!canSave} className="flex-1">
-              {editCampaign ? 'Update Campaign' : 'Save Draft'}
+              {saveLabel ?? (editCampaign ? 'Update Campaign' : 'Save Draft')}
             </Button>
           </div>
         </div>
