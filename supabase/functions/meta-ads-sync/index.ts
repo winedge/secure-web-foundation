@@ -648,31 +648,13 @@ serve(async (req) => {
         }
 
         // ── 3) Ads (account-level bulk) ──
-        const adFields = "id,name,adset_id,status,effective_status,tracking_specs,conversion_specs,preview_shareable_link,created_time,creative{id,title,body,name,image_url,thumbnail_url,video_id,call_to_action_type,object_story_spec,asset_feed_spec,link_url,template_url}";
-        const adData = await fetchMetaWithRetry(`${META_API}/${adAccountId}/ads?fields=${adFields}&limit=200&access_token=${token}`);
+        const adData = await fetchMetaWithRetry(`${META_API}/${adAccountId}/ads?fields=${AD_CREATIVE_FIELDS}&limit=200&access_token=${token}`);
         if (adData.error) {
           errors.push(`ads: ${adData.error.message}`);
         } else {
           for (const ad of adData.data || []) {
             const localAdsetId = adsetIdMap.get(ad.adset_id);
             if (!localAdsetId) continue;
-
-            // ── Extract creative fields (Meta stores these on the creative.object_story_spec) ──
-            const cr = ad.creative || {};
-            const oss = cr.object_story_spec || {};
-            const ld = oss.link_data || oss.video_data || oss.template_data || {};
-            const afs = cr.asset_feed_spec || {};
-            const firstOf = (arr: any) => Array.isArray(arr) && arr.length ? (arr[0]?.text ?? arr[0]?.url ?? arr[0]) : null;
-
-            const headline = cr.title || ld.name || firstOf(afs.titles) || null;
-            const body_text = cr.body || ld.message || firstOf(afs.bodies) || null;
-            const description = ld.description || firstOf(afs.descriptions) || null;
-            const link_url = cr.link_url || ld.link || firstOf(afs.link_urls) || null;
-            const image_url = cr.image_url || cr.thumbnail_url || ld.picture || firstOf(afs.images) || null;
-            const video_url = ld.video_id ? `https://www.facebook.com/watch/?v=${ld.video_id}` : null;
-            const cta = cr.call_to_action_type || ld.call_to_action?.type || null;
-            const creative_type = ld.video_id || cr.video_id ? "video"
-              : (Array.isArray(ld.child_attachments) && ld.child_attachments.length ? "carousel" : "image");
 
             const payload: any = {
               firm_id, ad_set_id: localAdsetId,
@@ -683,14 +665,7 @@ serve(async (req) => {
               conversion_specs: ad.conversion_specs || {},
               preview_shareable_link: ad.preview_shareable_link || null,
               meta_ad_id: ad.id,
-              headline,
-              body_text,
-              description,
-              link_url,
-              image_url,
-              video_url,
-              call_to_action: cta || "LEARN_MORE",
-              creative_type,
+              ...extractAdCreativeFields(ad),
               raw: ad,
             };
             const { data: existing } = await supabase
