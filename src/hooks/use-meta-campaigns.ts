@@ -660,8 +660,20 @@ export function useSyncFromMeta() {
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['meta-campaigns'] });
+      qc.invalidateQueries({ queryKey: ['meta-campaigns-lookup'] });
+      qc.invalidateQueries({ queryKey: ['meta-ad-sets'] });
+      qc.invalidateQueries({ queryKey: ['meta-adsets-table'] });
+      qc.invalidateQueries({ queryKey: ['meta-adsets-lookup'] });
+      qc.invalidateQueries({ queryKey: ['meta-ads'] });
+      qc.invalidateQueries({ queryKey: ['meta-ads-table'] });
+      qc.invalidateQueries({ queryKey: ['meta-audiences-table'] });
       qc.invalidateQueries({ queryKey: ['meta-live-insights'] });
-      toast({ title: `Synced ${data.count} campaigns from Meta` });
+      qc.invalidateQueries({ queryKey: ['meta-analytics'] });
+      const s = data?.synced || {};
+      toast({
+        title: 'Sync from Meta complete',
+        description: `${s.campaigns ?? 0} campaigns · ${s.adsets ?? 0} ad sets · ${s.ads ?? 0} ads · ${s.audiences ?? 0} audiences`,
+      });
     },
     onError: (e: any) => toast({ title: 'Sync Error', description: e.message, variant: 'destructive' }),
   });
