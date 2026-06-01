@@ -711,8 +711,7 @@ serve(async (req) => {
       }
 
       // ── 6) Campaign-level insights (account bulk, aggregate per campaign for "today" snapshot) ──
-      const cInsResp = await fetch(`${META_API}/${adAccountId}/insights?level=campaign&fields=campaign_id,impressions,reach,frequency,clicks,ctr,cpc,cpm,spend,actions,action_values&date_preset=last_30d&limit=500&access_token=${token}`);
-      const cIns = await cInsResp.json();
+      const cIns = await fetchMetaWithRetry(`${META_API}/${adAccountId}/insights?level=campaign&fields=campaign_id,impressions,reach,frequency,clicks,ctr,cpc,cpm,spend,actions,action_values&date_preset=last_30d&limit=500&access_token=${token}`);
       if (!cIns.error) {
         const today = new Date().toISOString().slice(0, 10);
         for (const r of cIns.data || []) {
