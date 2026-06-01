@@ -3,7 +3,6 @@ import {
   useMetaCampaigns, useDeleteMetaCampaign, useSyncFromMeta,
   useDuplicateMetaCampaign, MetaCampaign,
 } from '@/hooks/use-meta-campaigns';
-import { useMetaAdSets, useMetaAds } from '@/hooks/use-meta-campaigns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +18,8 @@ import { PublishCampaignReviewDialog } from './PublishCampaignReviewDialog';
 import { AbTestWizardDialog } from './AbTestWizardDialog';
 import { CampaignFormDialog } from './forms/CampaignFormDialog';
 import { CampaignCreateWizard } from './forms/CampaignCreateWizard';
+import { AdSetsTable } from './tables/AdSetsTable';
+import { AdsTable } from './tables/AdsTable';
 
 const COL_STORAGE_KEY = 'meta-ads-visible-cols-v1';
 const DEFAULT_COLS: ColumnId[] = ['delivery', 'results', 'cost_per_result', 'budget', 'spent', 'impressions', 'reach', 'ends'];
@@ -29,8 +30,6 @@ interface Props {
 
 export function MetaCampaignsList({ onSelectCampaign }: Props) {
   const { data: campaigns, isLoading } = useMetaCampaigns();
-  const { data: allAdSets } = useMetaAdSets();
-  const { data: allAds } = useMetaAds();
   const deleteCampaign = useDeleteMetaCampaign();
   const duplicateCampaign = useDuplicateMetaCampaign();
   const syncFromMeta = useSyncFromMeta();
@@ -162,14 +161,13 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
           </>
         }
         adSetsSlot={
-          <div className="p-6 text-sm text-muted-foreground">
-            Open a campaign to inspect and edit its ad sets, or use the existing Ad Sets top tab.
-            {allAdSets?.length ? <span> ({allAdSets.length} total)</span> : null}
+          <div className="p-3">
+            <AdSetsTable onSelectAdSet={() => undefined} />
           </div>
         }
         adsSlot={
-          <div className="p-6 text-sm text-muted-foreground">
-            Open a campaign and ad set to manage its ads. {allAds?.length ? `(${allAds.length} total)` : null}
+          <div className="p-3">
+            <AdsTable />
           </div>
         }
       />
