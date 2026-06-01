@@ -39,6 +39,7 @@ type FormState = {
   spend_cap: number;
   bid_strategy: string;
   tort_type: string;
+  target_country: string;
   target_states: string[];
 };
 
@@ -54,8 +55,33 @@ const INITIAL: FormState = {
   spend_cap: 0,
   bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
   tort_type: '',
+  target_country: 'WORLDWIDE',
   target_states: [],
 };
+
+const COUNTRY_OPTIONS: { value: string; label: string }[] = [
+  { value: 'WORLDWIDE', label: 'Worldwide / Custom' },
+  { value: 'US', label: 'United States' },
+  { value: 'CA', label: 'Canada' },
+  { value: 'GB', label: 'United Kingdom' },
+  { value: 'IE', label: 'Ireland' },
+  { value: 'AU', label: 'Australia' },
+  { value: 'NZ', label: 'New Zealand' },
+  { value: 'IN', label: 'India' },
+  { value: 'AE', label: 'United Arab Emirates' },
+  { value: 'SG', label: 'Singapore' },
+  { value: 'DE', label: 'Germany' },
+  { value: 'FR', label: 'France' },
+  { value: 'ES', label: 'Spain' },
+  { value: 'IT', label: 'Italy' },
+  { value: 'NL', label: 'Netherlands' },
+  { value: 'SE', label: 'Sweden' },
+  { value: 'BR', label: 'Brazil' },
+  { value: 'MX', label: 'Mexico' },
+  { value: 'ZA', label: 'South Africa' },
+  { value: 'JP', label: 'Japan' },
+  { value: 'EU', label: 'European Union' },
+];
 
 export function CampaignFormDialog({ open, onOpenChange, editCampaign }: Props) {
   const create = useCreateMetaCampaign();
