@@ -161,7 +161,9 @@ Deno.serve(async (req) => {
     }
     const conn = userId ? await getFacebookToken(supabase, userId) : null;
     const token = conn?.access_token;
-    const adAccountId = conn?.account_id;
+    // ad_account_id may be stored with or without the "act_" prefix; normalize.
+    const rawAdAcct = conn?.ad_account_id || "";
+    const adAccountId = rawAdAcct.startsWith("act_") ? rawAdAcct.slice(4) : rawAdAcct;
 
     /* ─── 1. Detailed targeting search ─── */
     if (op === "search_targeting") {
