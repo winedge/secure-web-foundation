@@ -233,28 +233,34 @@ function enumNameFor(col) {
 
 // ---------- Emit 0003_init_foreign_keys.sql ----------
 {
-  // collapse multi-column FKs by constraint_name
   const fkMap = new Map();
-  for (const [t, col, rt, rc, del, upd, cn] of fks) {
+  for (const [t, col, rt, rc, del, upd, cn, refSchema] of fks) {
     const k = `${t}::${cn}`;
     if (!fkMap.has(k))
-      fkMap.set(k, { table: t, name: cn, cols: [], refTable: rt, refCols: [], onDelete: del, onUpdate: upd });
+      fkMap.set(k, {
+        table: t, name: cn, cols: [], refTable: rt, refCols: [],
+        onDelete: FK_RULE[del] || 'NO ACTION',
+        onUpdate: FK_RULE[upd] || 'NO ACTION',
+        refSchema,
+      });
     fkMap.get(k).cols.push(col);
     fkMap.get(k).refCols.push(rc);
   }
-  let sql = `-- Auto-generated FK constraints.\n\n`;
+  let sql = `-- Auto-generated FK constraints.\n-- FKs into auth.users (Supabase) are emitted as comments; replace with your app's users table FK if applicable.\n\n`;
   for (const fk of fkMap.values()) {
-    // Skip FKs to auth.users (different schema in Postgres; in MySQL we don't recreate the auth schema)
-    if (fk.refTable === 'users') continue;
-    sql += `ALTER TABLE \`${fk.table}\` ADD CONSTRAINT \`${fk.name}\` `;
-    sql += `FOREIGN KEY (${fk.cols.map((c) => `\`${c}\``).join(', ')}) `;
-    sql += `REFERENCES \`${fk.refTable}\` (${fk.refCols.map((c) => `\`${c}\``).join(', ')})`;
-    if (fk.onDelete && fk.onDelete !== 'NO ACTION') sql += ` ON DELETE ${fk.onDelete}`;
-    if (fk.onUpdate && fk.onUpdate !== 'NO ACTION') sql += ` ON UPDATE ${fk.onUpdate}`;
-    sql += ';\n';
+    const isAuthUsers = fk.refSchema === 'auth' && fk.refTable === 'users';
+    const stmt =
+      `ALTER TABLE \`${fk.table}\` ADD CONSTRAINT \`${fk.name}\` ` +
+      `FOREIGN KEY (${fk.cols.map((c) => `\`${c}\``).join(', ')}) ` +
+      `REFERENCES \`${fk.refTable}\` (${fk.refCols.map((c) => `\`${c}\``).join(', ')})` +
+      (fk.onDelete !== 'NO ACTION' ? ` ON DELETE ${fk.onDelete}` : '') +
+      (fk.onUpdate !== 'NO ACTION' ? ` ON UPDATE ${fk.onUpdate}` : '') +
+      ';';
+    sql += (isAuthUsers ? `-- (auth.users ref) ${stmt}` : stmt) + '\n';
   }
   writeFileSync(`${OUT_DIR}/0003_init_foreign_keys.sql`, sql);
 }
+
 
 // ---------- Emit 0004_init_indexes.sql ----------
 {
