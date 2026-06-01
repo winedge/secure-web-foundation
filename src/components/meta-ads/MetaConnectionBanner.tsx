@@ -4,19 +4,35 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Facebook, AlertCircle, CheckCircle2, RefreshCw, Settings as SettingsIcon } from 'lucide-react';
-import { usePlatformConnections } from '@/hooks/use-platform-connections';
+
 import { supabase } from '@/integrations/supabase/client';
 import { useFirm } from '@/hooks/use-firm';
 import { useToast } from '@/hooks/use-toast';
 
 export function MetaConnectionBanner() {
   const navigate = useNavigate();
-  const { data: connections, isLoading } = usePlatformConnections();
   const { data: firm } = useFirm();
   const { toast } = useToast();
   const qc = useQueryClient();
 
-  const meta = connections?.find((c) => c.platform === 'facebook' && c.is_active);
+  const { data: meta, isLoading } = useQuery({
+    queryKey: ['meta-firm-connection', firm?.id],
+    queryFn: async () => {
+      if (!firm?.id) return null;
+      const { data } = await (supabase as any)
+        .from('platform_connections')
+        .select('id, platform, platform_username, page_name, is_active, firm_id')
+        .eq('firm_id', firm.id)
+        .eq('platform', 'facebook')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!firm?.id,
+  });
+
 
   const lastJob = useQuery({
     queryKey: ['meta-last-sync-job', firm?.id],
