@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ExternalLink } from 'lucide-react';
 import { MetaTableShell, MetaStatusBadge, type MetaTableColumn } from './MetaTableShell';
 import { useMetaAdsTable, useMetaAdSetsLookup, useMetaCampaignsLookup, type AdRow } from '@/hooks/use-meta-tables';
+import { AdDetailDialog } from '../AdDetailDialog';
 
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
@@ -26,6 +27,7 @@ export function AdsTable({ initialAdSetId = null, initialCampaignId = null }: Pr
   const [adSetId, setAdSetId] = useState<string>(initialAdSetId || 'all');
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
 
   const { data: campaigns } = useMetaCampaignsLookup();
   const { data: adSets } = useMetaAdSetsLookup(campaignId === 'all' ? null : campaignId);
@@ -47,7 +49,7 @@ export function AdsTable({ initialAdSetId = null, initialCampaignId = null }: Pr
     { key: 'eff', label: 'Delivery', sortable: true, sortKey: 'effective_status', render: (r) => <span className="text-xs">{r.effective_status || '|'}</span> },
     { key: 'meta', label: 'Meta ID', sortable: true, sortKey: 'meta_ad_id', render: (r) => <span className="font-mono text-[10px] text-muted-foreground">{r.meta_ad_id || 'unpublished'}</span> },
     { key: 'preview', label: '', align: 'right', render: (r) => r.preview_shareable_link ? (
-      <Button asChild variant="ghost" size="sm" className="h-7">
+      <Button asChild variant="ghost" size="sm" className="h-7" onClick={(e) => e.stopPropagation()}>
         <a href={r.preview_shareable_link} target="_blank" rel="noreferrer">
           <ExternalLink className="h-3.5 w-3.5" />
         </a>
@@ -56,39 +58,47 @@ export function AdsTable({ initialAdSetId = null, initialCampaignId = null }: Pr
   ];
 
   return (
-    <MetaTableShell<AdRow>
-      title="Ads"
-      columns={columns}
-      rows={data?.rows}
-      total={data?.total ?? 0}
-      isLoading={isLoading || isFetching}
-      page={page} pageSize={pageSize}
-      onPageChange={setPage} onPageSizeChange={setPageSize}
-      search={search} onSearchChange={setSearch}
-      searchPlaceholder="Search ads by name…"
-      statusValue={status} onStatusChange={setStatus} statusOptions={STATUS_OPTIONS}
-      onRefresh={() => refetch()}
-      sortColumn={sortColumn} sortDirection={sortDirection}
-      onSortChange={(col, dir) => { setPage(0); setSortColumn(col); setSortDirection(dir); }}
-      extraFilters={
-        <>
-          <Select value={campaignId} onValueChange={(v) => { setPage(0); setCampaignId(v); setAdSetId('all'); }}>
-            <SelectTrigger className="w-full sm:w-[200px] h-8 text-sm"><SelectValue placeholder="Campaign" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All campaigns</SelectItem>
-              {(campaigns || []).map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={adSetId} onValueChange={(v) => { setPage(0); setAdSetId(v); }}>
-            <SelectTrigger className="w-full sm:w-[200px] h-8 text-sm"><SelectValue placeholder="Ad set" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All ad sets</SelectItem>
-              {(adSets || []).map((a: any) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </>
-      }
-      emptyMessage="No ads match these filters."
-    />
+    <>
+      <MetaTableShell<AdRow>
+        title="Ads"
+        columns={columns}
+        rows={data?.rows}
+        total={data?.total ?? 0}
+        isLoading={isLoading || isFetching}
+        page={page} pageSize={pageSize}
+        onPageChange={setPage} onPageSizeChange={setPageSize}
+        search={search} onSearchChange={setSearch}
+        searchPlaceholder="Search ads by name…"
+        statusValue={status} onStatusChange={setStatus} statusOptions={STATUS_OPTIONS}
+        onRefresh={() => refetch()}
+        sortColumn={sortColumn} sortDirection={sortDirection}
+        onSortChange={(col, dir) => { setPage(0); setSortColumn(col); setSortDirection(dir); }}
+        onRowClick={(row) => setSelectedAdId(row.id)}
+        extraFilters={
+          <>
+            <Select value={campaignId} onValueChange={(v) => { setPage(0); setCampaignId(v); setAdSetId('all'); }}>
+              <SelectTrigger className="w-full sm:w-[200px] h-8 text-sm"><SelectValue placeholder="Campaign" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All campaigns</SelectItem>
+                {(campaigns || []).map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={adSetId} onValueChange={(v) => { setPage(0); setAdSetId(v); }}>
+              <SelectTrigger className="w-full sm:w-[200px] h-8 text-sm"><SelectValue placeholder="Ad set" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All ad sets</SelectItem>
+                {(adSets || []).map((a: any) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </>
+        }
+        emptyMessage="No ads match these filters."
+      />
+      <AdDetailDialog
+        adId={selectedAdId}
+        open={!!selectedAdId}
+        onOpenChange={(v) => { if (!v) setSelectedAdId(null); }}
+      />
+    </>
   );
 }
