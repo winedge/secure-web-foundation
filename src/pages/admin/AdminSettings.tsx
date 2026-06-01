@@ -458,9 +458,11 @@ function MetaApiConfig() {
               <ul className="ml-8 space-y-1 text-sm text-muted-foreground list-disc list-outside">
                 <li><strong>Facebook Login for Business</strong> - Enables OAuth login for users</li>
                 <li><strong>Marketing API</strong> - Required for campaign management, ad sets, and ads</li>
-                <li><strong>Instagram Graph API</strong> - Required for Instagram posting and insights</li>
-                <li><strong>Pages API</strong> - Required for Facebook Page management and posting</li>
+                <li><strong>Instagram</strong> - Click the Instagram card and click Set up. This gives you Instagram Graph API access for posting and insights (Pages permissions are included via Facebook Login)</li>
               </ul>
+              <p className="ml-8 text-xs text-muted-foreground mt-2">
+                <strong>Note:</strong> Pages API is no longer a standalone product | permissions for Page management are now bundled inside Facebook Login for Business.
+              </p>
             </div>
 
             {/* Step 4 */}
