@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   useMetaCampaigns, useUpdateMetaCampaign, useDeleteMetaCampaign, useSyncFromMeta,
   useCreateMetaCampaign, useDuplicateMetaCampaign, MetaCampaign,
@@ -17,11 +17,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import { DollarSign, TrendingUp, Zap, Target, Cloud, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
-import { MetaAdsManagerShell } from './MetaAdsManagerShell';
-import { MetaAdsToolbar } from './MetaAdsToolbar';
+import { MetaAdsManagerShell, type ChipFilter } from './MetaAdsManagerShell';
+import { MetaAdsToolbar, ALL_COLUMNS, type ColumnId, type Breakdown } from './MetaAdsToolbar';
 import { MetaAdsTable } from './MetaAdsTable';
 import { PublishCampaignReviewDialog } from './PublishCampaignReviewDialog';
 import { AbTestWizardDialog } from './AbTestWizardDialog';
+
+const COL_STORAGE_KEY = 'meta-ads-visible-cols-v1';
+const DEFAULT_COLS: ColumnId[] = ['delivery', 'results', 'cost_per_result', 'budget', 'spent', 'impressions', 'reach', 'ends'];
 
 interface Props {
   onSelectCampaign: (id: string) => void;
@@ -46,17 +49,52 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
   const [publishCampaign, setPublishCampaign] = useState<MetaCampaign | null>(null);
   const [abOpen, setAbOpen] = useState(false);
 
+  // Filter / display state (persisted where helpful)
+  const [search, setSearch] = useState('');
+  const [chip, setChip] = useState<ChipFilter>('all');
+  const [datePreset, setDatePreset] = useState('last_30d');
+  const [breakdown, setBreakdown] = useState<Breakdown>('none');
+  const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(() => {
+    if (typeof window === 'undefined') return new Set(DEFAULT_COLS);
+    try {
+      const raw = localStorage.getItem(COL_STORAGE_KEY);
+      if (raw) return new Set(JSON.parse(raw) as ColumnId[]);
+    } catch { /* noop */ }
+    return new Set(DEFAULT_COLS);
+  });
+  useEffect(() => {
+    try { localStorage.setItem(COL_STORAGE_KEY, JSON.stringify(Array.from(visibleColumns))); } catch { /* noop */ }
+  }, [visibleColumns]);
+  const toggleColumn = (id: ColumnId) => {
+    setVisibleColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
   const [formData, setFormData] = useState({
     name: '', tort_type: '', objective: 'LEAD_GENERATION', daily_budget: 50, lifetime_budget: 0,
     bid_strategy: 'LOWEST_COST', target_states: '',
   });
 
-  const list = campaigns || [];
+  const allCampaigns = campaigns || [];
+  const list = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return allCampaigns.filter((c) => {
+      if (q && !(`${c.name} ${c.tort_type ?? ''} ${c.objective}`.toLowerCase().includes(q))) return false;
+      if (chip === 'active' && c.status !== 'active') return false;
+      if (chip === 'delivery' && c.status !== 'active') return false;
+      if (chip === 'actions' && c.status !== 'draft') return false;
+      return true;
+    });
+  }, [allCampaigns, search, chip]);
+
   const stats = {
-    total: list.length,
-    active: list.filter((c) => c.status === 'active').length,
-    dailySpend: list.filter((c) => c.status === 'active').reduce((s, c) => s + (c.daily_budget || 0), 0),
-    totalBudget: list.reduce((s, c) => s + (c.lifetime_budget || 0), 0),
+    total: allCampaigns.length,
+    active: allCampaigns.filter((c) => c.status === 'active').length,
+    dailySpend: allCampaigns.filter((c) => c.status === 'active').reduce((s, c) => s + (c.daily_budget || 0), 0),
+    totalBudget: allCampaigns.reduce((s, c) => s + (c.lifetime_budget || 0), 0),
   };
 
   const openCreate = () => {
@@ -127,6 +165,12 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
       </div>
 
       <MetaAdsManagerShell
+        search={search}
+        onSearchChange={setSearch}
+        chip={chip}
+        onChipChange={setChip}
+        datePreset={datePreset}
+        onDatePresetChange={setDatePreset}
         campaignsSlot={
           <>
             <MetaAdsToolbar
@@ -137,6 +181,10 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
               onAbTest={() => setAbOpen(true)}
               onDelete={handleBulkDelete}
               onExport={handleExport}
+              visibleColumns={visibleColumns}
+              onToggleColumn={toggleColumn}
+              breakdown={breakdown}
+              onBreakdownChange={setBreakdown}
             />
             <MetaAdsTable
               campaigns={list}
@@ -147,6 +195,9 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
               onEdit={openEdit}
               onDelete={(id) => setDeletingId(id)}
               onPublish={(c) => setPublishCampaign(c)}
+              visibleColumns={visibleColumns}
+              breakdown={breakdown}
+              datePreset={datePreset}
             />
           </>
         }
