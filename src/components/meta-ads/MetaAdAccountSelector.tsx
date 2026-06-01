@@ -17,12 +17,14 @@ interface MetaAdAccount {
 
 interface Props {
   connectionId: string;
+  firmId?: string;
   currentAdAccountId?: string | null;
   currentMetadata?: any;
-  onSaved?: () => void;
+  onSaved?: (adAccountId?: string) => void;
+  compact?: boolean;
 }
 
-export function MetaAdAccountSelector({ connectionId, currentAdAccountId, currentMetadata, onSaved }: Props) {
+export function MetaAdAccountSelector({ connectionId, firmId, currentAdAccountId, currentMetadata, onSaved, compact = false }: Props) {
 
   const { user } = useAuth();
   const { toast } = useToast();
@@ -58,15 +60,32 @@ export function MetaAdAccountSelector({ connectionId, currentAdAccountId, curren
       };
       const { error } = await (supabase as any)
         .from('platform_connections')
-        .update({ metadata: newMeta })
+        .update({ metadata: newMeta, ad_account_id: adAccountId })
         .eq('id', connectionId);
       if (error) throw error;
+
+      if (firmId && acc) {
+        const { error: accountError } = await (supabase as any)
+          .from('meta_ad_accounts')
+          .upsert({
+            firm_id: firmId,
+            meta_ad_account_id: acc.id,
+            name: acc.name,
+            currency: acc.currency,
+            timezone_name: acc.timezone_name,
+            account_status: acc.account_status,
+            raw: acc,
+          }, { onConflict: 'firm_id,meta_ad_account_id' });
+        if (accountError) throw accountError;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (_data, adAccountId) => {
       toast({ title: 'Ad account selected', description: 'Future syncs will use this account.' });
       qc.invalidateQueries({ queryKey: ['platform-connections'] });
       qc.invalidateQueries({ queryKey: ['meta-firm-connection'] });
-      onSaved?.();
+      qc.invalidateQueries({ queryKey: ['meta-selected-ad-account'] });
+      qc.invalidateQueries({ queryKey: ['meta-campaigns'] });
+      onSaved?.(adAccountId);
     },
 
     onError: (e: any) => toast({ title: 'Failed to save', description: e.message, variant: 'destructive' }),
@@ -74,7 +93,7 @@ export function MetaAdAccountSelector({ connectionId, currentAdAccountId, curren
 
   if (isLoading) {
     return (
-      <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+      <div className={`${compact ? '' : 'mt-3'} flex items-center gap-2 text-xs text-muted-foreground`}>
         <Loader2 className="h-3 w-3 animate-spin" /> Loading ad accounts…
       </div>
     );
@@ -82,7 +101,7 @@ export function MetaAdAccountSelector({ connectionId, currentAdAccountId, curren
 
   if (error) {
     return (
-      <p className="mt-3 text-xs text-destructive">
+      <p className={`${compact ? '' : 'mt-3'} text-xs text-destructive`}>
         Could not load ad accounts: {(error as any).message}
       </p>
     );
@@ -90,7 +109,7 @@ export function MetaAdAccountSelector({ connectionId, currentAdAccountId, curren
 
   if (!accounts || accounts.length === 0) {
     return (
-      <p className="mt-3 text-xs text-muted-foreground">
+      <p className={`${compact ? '' : 'mt-3'} text-xs text-muted-foreground`}>
         No ad accounts found on this Facebook account.
       </p>
     );
@@ -99,13 +118,13 @@ export function MetaAdAccountSelector({ connectionId, currentAdAccountId, curren
   const isUnchanged = selected === currentAdAccountId;
 
   return (
-    <div className="mt-3 space-y-2">
-      <p className="text-xs font-medium text-muted-foreground">
+    <div className={compact ? 'flex items-center gap-2' : 'mt-3 space-y-2'}>
+      {!compact && <p className="text-xs font-medium text-muted-foreground">
         Ad Account {accounts.length > 1 ? `(${accounts.length} available)` : ''}
-      </p>
-      <div className="flex flex-col sm:flex-row gap-2">
+      </p>}
+      <div className={compact ? 'flex items-center gap-2' : 'flex flex-col sm:flex-row gap-2'}>
         <Select value={selected} onValueChange={setSelected}>
-          <SelectTrigger className="h-8 text-xs sm:w-[320px]">
+          <SelectTrigger className="h-8 text-xs w-[240px] sm:w-[300px]">
             <SelectValue placeholder="Select an ad account…" />
           </SelectTrigger>
           <SelectContent>
@@ -123,6 +142,7 @@ export function MetaAdAccountSelector({ connectionId, currentAdAccountId, curren
         <Button
           size="sm"
           variant="outline"
+          className="h-8"
           disabled={!selected || isUnchanged || saveMutation.isPending}
           onClick={() => saveMutation.mutate(selected)}
         >
@@ -130,14 +150,14 @@ export function MetaAdAccountSelector({ connectionId, currentAdAccountId, curren
             <Loader2 className="h-3 w-3 animate-spin" />
           ) : isUnchanged && currentAdAccountId ? (
             <>
-              <CheckCircle2 className="h-3 w-3 mr-1 text-emerald-500" /> Selected
+              <CheckCircle2 className="h-3 w-3 mr-1 text-primary" /> Selected
             </>
           ) : (
-            'Use this account'
+            compact ? 'Save' : 'Use this account'
           )}
         </Button>
       </div>
-      {currentAdAccountId && (
+      {!compact && currentAdAccountId && (
         <p className="text-[11px] text-muted-foreground">
           Currently syncing: <span className="font-medium">{currentMetadata?.ad_account_name || currentAdAccountId}</span>
         </p>

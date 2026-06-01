@@ -31,13 +31,15 @@ export default function MetaAds() {
         fallbackDescription="AI-powered campaign management, budget optimization, and real-time analytics - all synced with your Facebook Ads account."
       >
         <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Meta Ads Manager</h1>
-            <p className="text-muted-foreground">AI-powered campaign management for lead generation</p>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Meta Ads Manager</h1>
+              <p className="text-muted-foreground">AI-powered campaign management for lead generation</p>
+            </div>
+            <MetaAdAccountBar />
           </div>
 
           <MetaConnectionBanner />
-          <MetaAdAccountBar />
 
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
