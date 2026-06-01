@@ -7806,6 +7806,7 @@ export type Database = {
         | "failed"
         | "cancelled"
         | "retrying"
+        | "completed"
       meta_object_level: "account" | "campaign" | "adset" | "ad"
       meta_objective:
         | "OUTCOME_AWARENESS"
@@ -8061,6 +8062,7 @@ export const Constants = {
         "failed",
         "cancelled",
         "retrying",
+        "completed",
       ],
       meta_object_level: ["account", "campaign", "adset", "ad"],
       meta_objective: [
