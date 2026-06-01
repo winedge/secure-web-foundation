@@ -347,10 +347,10 @@ export function CampaignFormDialog({ open, onOpenChange, editCampaign }: Props) 
 
           <Separator />
 
-          {/* ─── Section C | LeadThru routing ─── */}
+          {/* ─── Section C | Routing & geo ─── */}
           <section className="space-y-4">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              LeadThru routing
+              Routing & geo targeting
             </h3>
 
             <div>
@@ -366,19 +366,42 @@ export function CampaignFormDialog({ open, onOpenChange, editCampaign }: Props) 
                 <Input value={form.tort_type} onChange={(e) => set('tort_type', e.target.value)} placeholder={`e.g., ${categoryLabel}`} />
               )}
               <p className="text-xs text-muted-foreground mt-1">
-                Used by the LeadThru matching engine. Not sent to Meta.
+                Used by the matching engine. Not sent to Meta.
               </p>
             </div>
 
-            <div>
-              <Label>Target States</Label>
-              <StatesChipsInput
-                value={form.target_states}
-                onChange={(v) => set('target_states', v)}
-              />
-              <p className="text-xs text-muted-foreground mt-1">Defaults pushed down to ad set geo targeting.</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Primary country / region</Label>
+                <Select value={form.target_country} onValueChange={(v) => set('target_country', v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {COUNTRY_OPTIONS.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Sets the default country for ad set geo targeting.
+                </p>
+              </div>
+
+              <div>
+                <Label>Target locations</Label>
+                <LocationChipsInput
+                  country={form.target_country}
+                  value={form.target_states}
+                  onChange={(v) => set('target_states', v)}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {form.target_country === 'US'
+                    ? 'US state codes (e.g. FL, TX, CA).'
+                    : 'Free-form regions, states, provinces, or cities.'}
+                </p>
+              </div>
             </div>
           </section>
+
 
           {errors.length > 0 && (
             <Alert variant="destructive">
