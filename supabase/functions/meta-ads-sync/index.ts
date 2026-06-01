@@ -22,7 +22,7 @@ async function fetchMetaWithRetry(url: string, maxAttempts = 5): Promise<any> {
       lastErr = data;
       // Exponential backoff: 2s, 4s, 8s, 16s, 32s (+jitter), capped
       const delayMs = Math.min(32000, 2000 * Math.pow(2, attempt)) + Math.floor(Math.random() * 500);
-      console.log(`[meta-retry] code=${code} attempt=${attempt + 1}/${maxAttempts} waiting ${delayMs}ms — ${data.error.message}`);
+      console.log(`[meta-retry] code=${code} attempt=${attempt + 1}/${maxAttempts} waiting ${delayMs}ms | ${data.error.message}`);
       await new Promise((r) => setTimeout(r, delayMs));
     } catch (e) {
       lastErr = { error: { message: String(e) } };
@@ -31,6 +31,38 @@ async function fetchMetaWithRetry(url: string, maxAttempts = 5): Promise<any> {
     }
   }
   return lastErr ?? { error: { message: "Meta API failed after retries" } };
+}
+
+const AD_CREATIVE_FIELDS = "id,name,adset_id,status,effective_status,tracking_specs,conversion_specs,preview_shareable_link,created_time,creative{id,title,body,name,image_url,thumbnail_url,video_id,call_to_action_type,object_story_spec,asset_feed_spec,link_url,template_url}";
+
+function firstCreativeValue(arr: any): string | null {
+  if (!Array.isArray(arr) || !arr.length) return null;
+  const first = arr[0];
+  if (!first) return null;
+  if (typeof first === "string") return first;
+  return first.text ?? first.url ?? first.website_url ?? first.link ?? null;
+}
+
+function extractAdCreativeFields(ad: any) {
+  const cr = ad?.creative || {};
+  const oss = cr.object_story_spec || {};
+  const ld = oss.link_data || oss.video_data || oss.template_data || {};
+  const afs = cr.asset_feed_spec || {};
+  const image = firstCreativeValue(afs.images);
+  const link = firstCreativeValue(afs.link_urls);
+
+  return {
+    meta_creative_id: cr.id || null,
+    headline: cr.title || ld.name || firstCreativeValue(afs.titles) || null,
+    body_text: cr.body || ld.message || firstCreativeValue(afs.bodies) || null,
+    description: ld.description || firstCreativeValue(afs.descriptions) || null,
+    link_url: cr.link_url || ld.link || link || null,
+    image_url: cr.image_url || cr.thumbnail_url || ld.picture || image || null,
+    video_url: ld.video_id || cr.video_id ? `https://www.facebook.com/watch/?v=${ld.video_id || cr.video_id}` : null,
+    call_to_action: cr.call_to_action_type || ld.call_to_action?.type || "LEARN_MORE",
+    creative_type: ld.video_id || cr.video_id ? "video"
+      : (Array.isArray(ld.child_attachments) && ld.child_attachments.length ? "carousel" : "image"),
+  };
 }
 
 serve(async (req) => {
