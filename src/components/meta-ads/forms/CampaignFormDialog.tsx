@@ -25,6 +25,10 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editCampaign?: MetaCampaign | null;
+  /** Called with the new/updated row id on save. If provided, dialog won't auto-close. */
+  onSaved?: (id: string) => void;
+  /** Override the primary CTA label (e.g. "Save & continue to Ad Set"). */
+  saveLabel?: string;
 }
 
 type FormState = {
