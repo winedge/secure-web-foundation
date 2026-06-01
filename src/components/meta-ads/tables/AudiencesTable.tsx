@@ -19,20 +19,22 @@ export function AudiencesTable() {
   const [pageSize, setPageSize] = useState(25);
   const [search, setSearch] = useState('');
   const [subtype, setSubtype] = useState('all');
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
-  const { data, isLoading, isFetching, refetch } = useMetaAudiencesTable({ page, pageSize, search, subtype });
+  const { data, isLoading, isFetching, refetch } = useMetaAudiencesTable({ page, pageSize, search, subtype, sortColumn, sortDirection });
 
   const columns: MetaTableColumn<AudienceRow>[] = [
-    { key: 'name', label: 'Audience', render: (r) => (
+    { key: 'name', label: 'Audience', sortable: true, render: (r) => (
       <div className="min-w-0">
         <div className="font-medium truncate">{r.name || '(unnamed)'}</div>
         <div className="text-[10px] text-muted-foreground font-mono">{r.meta_audience_id || (r.source === 'saved' ? 'saved' : '|')}</div>
       </div>
     ) },
-    { key: 'subtype', label: 'Type', render: (r) => <Badge variant="outline" className="text-[10px]">{r.subtype || r.source}</Badge> },
-    { key: 'size', label: 'Approx. size', align: 'right', render: (r) => fmtInt(r.approximate_count) },
-    { key: 'retention', label: 'Retention', align: 'right', render: (r) => r.retention_days ? `${r.retention_days}d` : '|' },
-    { key: 'created', label: 'Created', render: (r) => <span className="text-xs">{new Date(r.created_at).toLocaleDateString()}</span> },
+    { key: 'subtype', label: 'Type', sortable: true, render: (r) => <Badge variant="outline" className="text-[10px]">{r.subtype || r.source}</Badge> },
+    { key: 'size', label: 'Approx. size', align: 'right', sortable: true, sortKey: 'approximate_count', render: (r) => fmtInt(r.approximate_count) },
+    { key: 'retention', label: 'Retention', align: 'right', sortable: true, sortKey: 'retention_days', render: (r) => r.retention_days ? `${r.retention_days}d` : '|' },
+    { key: 'created', label: 'Created', sortable: true, sortKey: 'created_at', render: (r) => <span className="text-xs">{new Date(r.created_at).toLocaleDateString()}</span> },
   ];
 
   return (
@@ -47,6 +49,8 @@ export function AudiencesTable() {
       search={search} onSearchChange={setSearch}
       searchPlaceholder="Search audiences by name…"
       onRefresh={() => refetch()}
+      sortColumn={sortColumn} sortDirection={sortDirection}
+      onSortChange={(col, dir) => { setPage(0); setSortColumn(col); setSortDirection(dir); }}
       extraFilters={
         <Select value={subtype} onValueChange={(v) => { setPage(0); setSubtype(v); }}>
           <SelectTrigger className="w-full sm:w-[200px] h-8 text-sm"><SelectValue /></SelectTrigger>
