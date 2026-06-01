@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -21,6 +19,10 @@ import {
   buildUrlWithUtm,
 } from './shared';
 import { AdPreviewPanel } from '../AdPreviewPanel';
+import {
+  wideDialogContentCls, inputCls, FieldLabel, Section,
+  WizardHeader, WizardFooter, WIZARD_STEPS,
+} from './wizard-ui';
 
 interface Props {
   open: boolean;
@@ -29,6 +31,7 @@ interface Props {
   editAd?: MetaAd | null;
   onSaved?: (id: string) => void;
   saveLabel?: string;
+  wizardActiveStep?: string;
 }
 
 type FormState = {
@@ -81,13 +84,15 @@ function counter(value: string, lim: { recommended: number; hard: number }) {
   const len = value.length;
   const over = len > lim.recommended;
   return (
-    <span className={`text-xs ${over ? 'text-yellow-600' : 'text-muted-foreground'}`}>
-      {len}/{lim.recommended} recommended · max {lim.hard}
+    <span className={`text-[10px] tabular-nums ${over ? 'text-amber-400' : 'text-slate-500'}`}>
+      {len}/{lim.recommended} | max {lim.hard}
     </span>
   );
 }
 
-export function AdFormDialog({ open, onOpenChange, adSetId, editAd, onSaved, saveLabel }: Props) {
+export function AdFormDialog({
+  open, onOpenChange, adSetId, editAd, onSaved, saveLabel, wizardActiveStep,
+}: Props) {
   const create = useCreateMetaAd();
   const update = useUpdateMetaAd();
   const ai = useMetaAiAssistant();
@@ -95,7 +100,6 @@ export function AdFormDialog({ open, onOpenChange, adSetId, editAd, onSaved, sav
   const { data: firm } = useFirm();
   const [form, setForm] = useState<FormState>(INITIAL);
 
-  // Identity resources (Pages, IG, Pixel, Lead forms) loaded on open.
   const [pages, setPages] = useState<{ id: string; name: string }[]>([]);
   const [igAccounts, setIgAccounts] = useState<{ id: string; username: string }[]>([]);
   const [pixels, setPixels] = useState<{ id: string; name: string }[]>([]);
@@ -204,212 +208,268 @@ export function AdFormDialog({ open, onOpenChange, adSetId, editAd, onSaved, sav
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{editAd ? 'Edit Ad' : 'New Ad'}</DialogTitle>
-          <DialogDescription>
-            Build a Meta-compliant ad creative. Live preview shows how it renders in Feed.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className={wideDialogContentCls}>
+        <WizardHeader
+          title={editAd ? 'Edit Ad' : 'New Ad'}
+          draft={!editAd}
+          subtitle="Meta-compliant creative | Live preview on the right shows Feed rendering."
+          steps={wizardActiveStep ? WIZARD_STEPS : undefined}
+          activeStep={wizardActiveStep}
+        />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Form */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <Label>Ad Name <span className="text-destructive">*</span></Label>
-                <Input value={form.name} maxLength={META_LIMITS.ad_name}
-                  onChange={(e) => set('name', e.target.value)} placeholder="e.g. Lead form | Static | Variation A" />
+        <div className="flex-1 overflow-y-auto cmd-scroll">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-0">
+            {/* ─── Form column ─── */}
+            <div className="px-6 py-5 space-y-6 lg:border-r lg:border-slate-800/60">
+              <div className="grid grid-cols-[1fr_auto] gap-3 items-end">
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center">
+                    <FieldLabel required>Ad Name</FieldLabel>
+                    <span className="text-[10px] text-slate-600 tabular-nums">
+                      {form.name.length} / {META_LIMITS.ad_name}
+                    </span>
+                  </div>
+                  <Input
+                    value={form.name}
+                    maxLength={META_LIMITS.ad_name}
+                    onChange={(e) => set('name', e.target.value)}
+                    placeholder="e.g. Lead form | Static | Variation A"
+                    className={inputCls}
+                  />
+                </div>
+                <Button
+                  onClick={generateAi}
+                  disabled={ai.isPending}
+                  className="h-9 px-3 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold gap-2"
+                >
+                  {ai.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                  AI Copy
+                </Button>
               </div>
-              <Button variant="outline" size="sm" onClick={generateAi} disabled={ai.isPending} className="gap-2 ml-3 mt-5">
-                {ai.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                Generate with AI
-              </Button>
-            </div>
 
-            <Accordion type="multiple" defaultValue={['identity', 'format', 'creative', 'destination']} className="w-full">
-              {/* Identity */}
-              <AccordionItem value="identity">
-                <AccordionTrigger className="text-sm font-semibold">Identity</AccordionTrigger>
-                <AccordionContent className="space-y-3 pt-2">
-                  <div>
-                    <Label>Facebook Page <span className="text-destructive">*</span></Label>
+              <Section title="Identity">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <FieldLabel required>Facebook Page</FieldLabel>
                     <Select value={form.page_id} onValueChange={(v) => set('page_id', v)}>
-                      <SelectTrigger><SelectValue placeholder={pages.length ? 'Select Page' : 'No Pages connected yet'} /></SelectTrigger>
+                      <SelectTrigger className={inputCls}>
+                        <SelectValue placeholder={pages.length ? 'Select Page' : 'No Pages connected'} />
+                      </SelectTrigger>
                       <SelectContent>
                         {pages.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label>Instagram Account (optional)</Label>
+                  <div className="space-y-1.5">
+                    <FieldLabel>Instagram Account</FieldLabel>
                     <Select value={form.ig_account_id} onValueChange={(v) => set('ig_account_id', v)}>
-                      <SelectTrigger><SelectValue placeholder={igAccounts.length ? 'Select IG account' : 'No IG accounts'} /></SelectTrigger>
+                      <SelectTrigger className={inputCls}>
+                        <SelectValue placeholder={igAccounts.length ? 'Select IG account' : 'No IG accounts'} />
+                      </SelectTrigger>
                       <SelectContent>
                         {igAccounts.map((i) => <SelectItem key={i.id} value={i.id}>@{i.username}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
-                </AccordionContent>
-              </AccordionItem>
+                </div>
+              </Section>
 
-              {/* Format */}
-              <AccordionItem value="format">
-                <AccordionTrigger className="text-sm font-semibold">Format</AccordionTrigger>
-                <AccordionContent className="space-y-3 pt-2">
-                  <div>
-                    <Label>Ad format</Label>
-                    <RadioGroup value={form.format} onValueChange={(v) => set('format', v)} className="grid grid-cols-3 gap-2 mt-2">
-                      {META_AD_FORMATS.map((f) => (
-                        <label key={f.value} className="flex items-center gap-2 rounded border p-2 cursor-pointer text-sm">
-                          <RadioGroupItem value={f.value} />{f.label}
+              <Section title="Format">
+                <div className="space-y-1.5">
+                  <FieldLabel>Ad format</FieldLabel>
+                  <RadioGroup
+                    value={form.format}
+                    onValueChange={(v) => set('format', v)}
+                    className="grid grid-cols-3 gap-2"
+                  >
+                    {META_AD_FORMATS.map((f) => {
+                      const active = form.format === f.value;
+                      return (
+                        <label
+                          key={f.value}
+                          className={`flex items-center gap-2 rounded-md border px-3 py-2 cursor-pointer text-xs transition-colors ${active
+                            ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-200'
+                            : 'border-slate-800 bg-slate-900/40 text-slate-400 hover:border-slate-700'}`}
+                        >
+                          <RadioGroupItem value={f.value} className="border-emerald-500" />{f.label}
                         </label>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                  <div>
-                    <Label>Creative source</Label>
-                    <RadioGroup value={form.creative_source} onValueChange={(v) => set('creative_source', v)} className="flex gap-3 mt-2">
-                      {META_CREATIVE_SOURCES.map((s) => (
-                        <label key={s.value} className="flex items-center gap-2 text-sm">
-                          <RadioGroupItem value={s.value} />{s.label}
-                        </label>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                  {form.creative_source === 'existing_post' ? (
-                    <div>
-                      <Label>Existing post URL</Label>
-                      <Input value={form.existing_post_url} onChange={(e) => set('existing_post_url', e.target.value)} placeholder="https://facebook.com/.../posts/..." />
-                    </div>
-                  ) : (
-                    <div>
-                      <Label>Image URL</Label>
-                      <Input value={form.image_url} onChange={(e) => set('image_url', e.target.value)} placeholder="https://..." />
-                      <p className="text-xs text-muted-foreground mt-1">Recommended 1080×1080 px for feed; ≤30 MB.</p>
-                    </div>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
+                      );
+                    })}
+                  </RadioGroup>
+                </div>
 
-              {/* Creative copy */}
-              <AccordionItem value="creative">
-                <AccordionTrigger className="text-sm font-semibold">Ad creative</AccordionTrigger>
-                <AccordionContent className="space-y-3 pt-2">
-                  <div>
-                    <Label>Primary text <span className="text-destructive">*</span></Label>
-                    <Textarea rows={3} value={form.primary_text} maxLength={META_LIMITS.primary_text.hard}
-                      onChange={(e) => set('primary_text', e.target.value)} />
+                <div className="space-y-1.5">
+                  <FieldLabel>Creative source</FieldLabel>
+                  <RadioGroup value={form.creative_source} onValueChange={(v) => set('creative_source', v)} className="flex gap-4">
+                    {META_CREATIVE_SOURCES.map((s) => (
+                      <label key={s.value} className="flex items-center gap-1.5 text-xs text-slate-200 cursor-pointer">
+                        <RadioGroupItem value={s.value} className="border-emerald-500" />{s.label}
+                      </label>
+                    ))}
+                  </RadioGroup>
+                </div>
+
+                {form.creative_source === 'existing_post' ? (
+                  <div className="space-y-1.5">
+                    <FieldLabel>Existing post URL</FieldLabel>
+                    <Input value={form.existing_post_url} onChange={(e) => set('existing_post_url', e.target.value)}
+                      placeholder="https://facebook.com/.../posts/..." className={inputCls} />
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <FieldLabel>Image URL</FieldLabel>
+                    <Input value={form.image_url} onChange={(e) => set('image_url', e.target.value)}
+                      placeholder="https://..." className={inputCls} />
+                    <p className="text-[10px] text-slate-500">Recommended 1080×1080 px for feed | ≤30 MB.</p>
+                  </div>
+                )}
+              </Section>
+
+              <Section title="Ad Creative">
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center">
+                    <FieldLabel required>Primary text</FieldLabel>
                     {counter(form.primary_text, META_LIMITS.primary_text)}
                   </div>
-                  <div>
-                    <Label>Headline</Label>
+                  <Textarea
+                    rows={3}
+                    value={form.primary_text}
+                    maxLength={META_LIMITS.primary_text.hard}
+                    onChange={(e) => set('primary_text', e.target.value)}
+                    className={`${inputCls} h-auto py-2`}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <FieldLabel>Headline</FieldLabel>
+                      {counter(form.headline, META_LIMITS.headline)}
+                    </div>
                     <Input value={form.headline} maxLength={META_LIMITS.headline.hard}
-                      onChange={(e) => set('headline', e.target.value)} />
-                    {counter(form.headline, META_LIMITS.headline)}
+                      onChange={(e) => set('headline', e.target.value)} className={inputCls} />
                   </div>
-                  <div>
-                    <Label>Description</Label>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <FieldLabel>Description</FieldLabel>
+                      {counter(form.description, META_LIMITS.description)}
+                    </div>
                     <Input value={form.description} maxLength={META_LIMITS.description.hard}
-                      onChange={(e) => set('description', e.target.value)} />
-                    {counter(form.description, META_LIMITS.description)}
+                      onChange={(e) => set('description', e.target.value)} className={inputCls} />
                   </div>
-                  <div>
-                    <Label>Call to action</Label>
-                    <Select value={form.cta} onValueChange={(v) => set('cta', v)}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent className="max-h-80">
-                        {META_CTA_BUTTONS.map((c) => <SelectItem key={c} value={c}>{ctaLabel(c)}</SelectItem>)}
+                </div>
+
+                <div className="space-y-1.5">
+                  <FieldLabel>Call to action</FieldLabel>
+                  <Select value={form.cta} onValueChange={(v) => set('cta', v)}>
+                    <SelectTrigger className={inputCls}><SelectValue /></SelectTrigger>
+                    <SelectContent className="max-h-80">
+                      {META_CTA_BUTTONS.map((c) => <SelectItem key={c} value={c}>{ctaLabel(c)}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </Section>
+
+              <Section title="Destination & Tracking">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <FieldLabel>Website URL</FieldLabel>
+                    <Input value={form.link_url} onChange={(e) => set('link_url', e.target.value)}
+                      placeholder="https://example.com/landing" className={inputCls} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <FieldLabel>Display link</FieldLabel>
+                    <Input value={form.display_link} onChange={(e) => set('display_link', e.target.value)}
+                      placeholder="example.com" className={inputCls} />
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-bold tracking-widest text-emerald-500/80 uppercase">UTM parameters</span>
+                    {finalUrl && (
+                      <Badge variant="outline" className="gap-1 max-w-[60%] truncate border-slate-700 text-slate-300 text-[10px]">
+                        <LinkIcon className="h-3 w-3 text-emerald-500" />
+                        <span className="truncate">{finalUrl}</span>
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input value={form.utm_source} onChange={(e) => set('utm_source', e.target.value)} placeholder="utm_source" className={inputCls} />
+                    <Input value={form.utm_medium} onChange={(e) => set('utm_medium', e.target.value)} placeholder="utm_medium" className={inputCls} />
+                    <Input value={form.utm_campaign} onChange={(e) => set('utm_campaign', e.target.value)} placeholder="utm_campaign" className={inputCls} />
+                    <Input value={form.utm_term} onChange={(e) => set('utm_term', e.target.value)} placeholder="utm_term" className={inputCls} />
+                    <Input className={`${inputCls} col-span-2`} value={form.utm_content}
+                      onChange={(e) => set('utm_content', e.target.value)} placeholder="utm_content" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <FieldLabel>Lead form</FieldLabel>
+                    <Select value={form.lead_form_id} onValueChange={(v) => set('lead_form_id', v)}>
+                      <SelectTrigger className={inputCls}>
+                        <SelectValue placeholder={leadForms.length ? 'Select form' : 'No lead forms'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {leadForms.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              {/* Destination */}
-              <AccordionItem value="destination">
-                <AccordionTrigger className="text-sm font-semibold">Destination &amp; tracking</AccordionTrigger>
-                <AccordionContent className="space-y-3 pt-2">
-                  <div>
-                    <Label>Website URL</Label>
-                    <Input value={form.link_url} onChange={(e) => set('link_url', e.target.value)} placeholder="https://example.com/landing" />
+                  <div className="space-y-1.5">
+                    <FieldLabel>Pixel</FieldLabel>
+                    <Select value={form.pixel_id} onValueChange={(v) => set('pixel_id', v)}>
+                      <SelectTrigger className={inputCls}>
+                        <SelectValue placeholder={pixels.length ? 'Select pixel' : 'No pixels'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {pixels.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div>
-                    <Label>Display link (optional)</Label>
-                    <Input value={form.display_link} onChange={(e) => set('display_link', e.target.value)} placeholder="example.com" />
-                  </div>
+                </div>
+              </Section>
 
-                  <div className="rounded-md border p-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs uppercase text-muted-foreground">URL parameters (UTM)</Label>
-                      {finalUrl && (
-                        <Badge variant="outline" className="gap-1 max-w-[60%] truncate"><LinkIcon className="h-3 w-3" />{finalUrl}</Badge>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Input value={form.utm_source} onChange={(e) => set('utm_source', e.target.value)} placeholder="utm_source" />
-                      <Input value={form.utm_medium} onChange={(e) => set('utm_medium', e.target.value)} placeholder="utm_medium" />
-                      <Input value={form.utm_campaign} onChange={(e) => set('utm_campaign', e.target.value)} placeholder="utm_campaign" />
-                      <Input value={form.utm_term} onChange={(e) => set('utm_term', e.target.value)} placeholder="utm_term" />
-                      <Input className="col-span-2" value={form.utm_content} onChange={(e) => set('utm_content', e.target.value)} placeholder="utm_content" />
-                    </div>
-                  </div>
+              {errors.length > 0 && (
+                <Alert variant="destructive" className="bg-red-500/10 border-red-500/40 text-red-200 [&>svg]:text-red-400">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    <ul className="list-disc pl-4 text-xs space-y-0.5">
+                      {errors.map((e, i) => <li key={i}>{e}</li>)}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>Lead form</Label>
-                      <Select value={form.lead_form_id} onValueChange={(v) => set('lead_form_id', v)}>
-                        <SelectTrigger><SelectValue placeholder={leadForms.length ? 'Select form' : 'No lead forms'} /></SelectTrigger>
-                        <SelectContent>
-                          {leadForms.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Pixel</Label>
-                      <Select value={form.pixel_id} onValueChange={(v) => set('pixel_id', v)}>
-                        <SelectTrigger><SelectValue placeholder={pixels.length ? 'Select pixel' : 'No pixels'} /></SelectTrigger>
-                        <SelectContent>
-                          {pixels.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-
-            {errors.length > 0 && (
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  <ul className="list-disc pl-4 text-xs space-y-0.5">
-                    {errors.map((e, i) => <li key={i}>{e}</li>)}
-                  </ul>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <div className="flex gap-2 pt-2">
-              <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1">Cancel</Button>
-              <Button onClick={handleSave} disabled={!canSave} className="flex-1">
-                {saveLabel ?? (editAd ? 'Update Ad' : 'Create Ad')}
-              </Button>
+            {/* ─── Live preview column ─── */}
+            <div className="px-6 py-5 bg-slate-950/40 hidden lg:block">
+              <div className="sticky top-0">
+                <div className="text-[10px] font-bold tracking-widest text-emerald-500/80 uppercase mb-3">
+                  Live Preview
+                </div>
+                <AdPreviewPanel
+                  headline={form.headline}
+                  bodyText={form.primary_text}
+                  description={form.description}
+                  callToAction={form.cta}
+                  linkUrl={form.link_url}
+                  imageUrl={form.image_url}
+                />
+              </div>
             </div>
           </div>
-
-          {/* Live preview */}
-          <div className="lg:border-l lg:pl-6">
-            <AdPreviewPanel
-              headline={form.headline}
-              bodyText={form.primary_text}
-              description={form.description}
-              callToAction={form.cta}
-              linkUrl={form.link_url}
-              imageUrl={form.image_url}
-            />
-          </div>
         </div>
+
+        <WizardFooter
+          primaryLabel={saveLabel ?? (editAd ? 'Update Ad' : 'Create Ad')}
+          onPrimary={handleSave}
+          primaryDisabled={!canSave}
+          primaryLoading={create.isPending || update.isPending}
+          onSecondary={() => onOpenChange(false)}
+          secondaryLabel={editAd ? 'Cancel' : 'Discard'}
+          statusLabel={editAd ? 'Editing ad' : 'Unsaved draft'}
+        />
       </DialogContent>
     </Dialog>
   );

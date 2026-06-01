@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -9,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { AlertTriangle, ChevronDown, X, Zap, ChevronRight, Circle } from 'lucide-react';
+import { AlertTriangle, ChevronDown, X, Zap } from 'lucide-react';
 import {
   META_OBJECTIVES, META_SPECIAL_AD_CATEGORIES, META_BID_STRATEGIES, META_BUYING_TYPES,
   META_LIMITS, US_STATES,
@@ -18,6 +17,11 @@ import {
   useCreateMetaCampaign, useUpdateMetaCampaign, MetaCampaign,
 } from '@/hooks/use-meta-campaigns';
 import { useVertical } from '@/hooks/use-vertical';
+import {
+  dialogContentCls, inputCls, FieldLabel, Section,
+  WizardHeader, WizardFooter, WIZARD_STEPS,
+} from './wizard-ui';
+
 
 interface Props {
   open: boolean;
@@ -162,46 +166,16 @@ export function CampaignFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="max-w-4xl p-0 gap-0 overflow-hidden border-slate-800 bg-[#0F172A] text-white sm:rounded-xl max-h-[95vh] flex flex-col"
-      >
-        {/* ─────────── Condensed Header ─────────── */}
-        <header className="px-6 py-4 border-b border-slate-800/60 shrink-0">
-          <div className="flex justify-between items-center mb-3 gap-4">
-            <div className="flex items-baseline gap-2 min-w-0">
-              <h2 className="text-lg font-bold tracking-tight text-white truncate">
-                {editCampaign ? 'Edit Campaign' : 'New Meta Campaign'}
-              </h2>
-              {!editCampaign && (
-                <span className="text-xs text-slate-500 font-normal">(draft)</span>
-              )}
-            </div>
+      <DialogContent className={dialogContentCls}>
+        <WizardHeader
+          title={editCampaign ? 'Edit Campaign' : 'New Meta Campaign'}
+          draft={!editCampaign}
+          subtitle="Configure campaign settings | Nothing is sent to Meta until you click Review & Publish."
+          steps={wizardSteps ?? (wizardActiveStep ? WIZARD_STEPS : undefined)}
+          activeStep={wizardActiveStep}
+        />
 
-            {wizardSteps && (
-              <nav className="hidden md:flex items-center gap-1 bg-slate-900/60 p-1 rounded-lg border border-slate-800">
-                {wizardSteps.map((s) => {
-                  const active = s.id === wizardActiveStep;
-                  return (
-                    <span
-                      key={s.id}
-                      className={[
-                        'px-3 py-1 font-semibold text-[10px] rounded-md uppercase tracking-wider transition-colors',
-                        active
-                          ? 'bg-emerald-500 text-[#0F172A] cursor-default'
-                          : 'text-slate-500',
-                      ].join(' ')}
-                    >
-                      {s.label}
-                    </span>
-                  );
-                })}
-              </nav>
-            )}
-          </div>
-          <p className="text-[11px] text-slate-400">
-            Configure campaign settings | Nothing is sent to Meta until you click Review & Publish.
-          </p>
-        </header>
+
 
         {/* ─────────── Scrollable Body ─────────── */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-7 cmd-scroll">
@@ -458,57 +432,21 @@ export function CampaignFormDialog({
           )}
         </div>
 
-        {/* ─────────── Sticky Footer ─────────── */}
-        <footer className="px-6 py-3 bg-slate-900/60 backdrop-blur-md border-t border-slate-800 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2">
-            <Circle className="w-2 h-2 fill-amber-500 text-amber-500" />
-            <span className="text-[10px] font-medium text-slate-500">Unsaved draft</span>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => onOpenChange(false)}
-              className="px-3 py-1.5 text-[11px] font-bold text-slate-400 hover:text-white transition-colors rounded-md"
-            >
-              {editCampaign ? 'Cancel' : 'Discard'}
-            </button>
-            <Button
-              onClick={handleSave}
-              disabled={!canSave}
-              className="px-6 py-1.5 h-auto bg-emerald-500 hover:bg-emerald-400 text-[#0F172A] text-[11px] font-bold rounded-md transition-all flex items-center gap-2 disabled:opacity-40 disabled:hover:bg-emerald-500"
-            >
-              {saveLabel ?? (editCampaign ? 'Update Campaign' : 'Save Draft')}
-              <ChevronRight className="w-3 h-3" />
-            </Button>
-          </div>
-        </footer>
+        <WizardFooter
+          primaryLabel={saveLabel ?? (editCampaign ? 'Update Campaign' : 'Save Draft')}
+          onPrimary={handleSave}
+          primaryDisabled={!canSave}
+          primaryLoading={create.isPending || update.isPending}
+          onSecondary={() => onOpenChange(false)}
+          secondaryLabel={editCampaign ? 'Cancel' : 'Discard'}
+          statusLabel={editCampaign ? 'Editing draft' : 'Unsaved draft'}
+        />
       </DialogContent>
     </Dialog>
   );
 }
 
-/* ─────────── helpers / sub-components ─────────── */
-const inputCls =
-  'w-full bg-[#1E293B] border-slate-700 text-white placeholder:text-slate-500 rounded-md px-3 py-1.5 h-9 text-sm focus-visible:ring-1 focus-visible:ring-emerald-500 focus-visible:ring-offset-0';
 
-function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
-  return (
-    <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-tighter block">
-      {children}{required && <span className="text-emerald-500 ml-0.5">*</span>}
-    </label>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-4">
-      <div className="flex items-center gap-3">
-        <h3 className="text-[10px] font-bold tracking-widest text-emerald-500/80 uppercase">{title}</h3>
-        <span className="h-px flex-1 bg-slate-800/60" />
-      </div>
-      {children}
-    </section>
-  );
-}
 
 // ───── Reusable: generic location chip input ─────
 function LocationChipsInput({
