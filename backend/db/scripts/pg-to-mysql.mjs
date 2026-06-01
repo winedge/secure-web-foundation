@@ -81,20 +81,22 @@ function mapType(pgType, udtName) {
   return 'TEXT';
 }
 
-function mapDefault(def, dataType) {
-  if (def == null) return null;
+function mapDefault(def, mysqlType) {
+  if (def == null || def === '') return null;
   let d = def;
-  // strip type casts: 'val'::text
   d = d.replace(/::[a-zA-Z_ ]+(\[\])?/g, '');
   if (/^gen_random_uuid\(\)$/i.test(d)) return '(UUID())';
   if (/^now\(\)$/i.test(d) || /^CURRENT_TIMESTAMP/i.test(d)) return 'CURRENT_TIMESTAMP(6)';
   if (/^true$/i.test(d)) return '1';
   if (/^false$/i.test(d)) return '0';
-  if (/^'\{\}'$/.test(d) || /^'\[\]'$/.test(d)) return `(${d})`; // JSON literal default
-  if (/^ARRAY\[/i.test(d)) return null; // skip array defaults
+  if (/^ARRAY\[/i.test(d)) return null;
   if (/nextval\(/i.test(d)) return null;
+  // MySQL requires defaults on TEXT/JSON/BLOB to be expressions (parenthesised).
+  const needsParen = /^(TEXT|JSON|LONGBLOB|MEDIUMTEXT|LONGTEXT)/i.test(mysqlType);
+  if (needsParen && !/^\(/.test(d)) return `(${d})`;
   return d;
 }
+
 
 // ---------- Enums ----------
 const enums = psql(
