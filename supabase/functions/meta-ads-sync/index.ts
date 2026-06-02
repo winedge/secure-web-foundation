@@ -190,6 +190,15 @@ async function enrichAdCreativeFields(ad: any, token: string): Promise<any> {
   // ── Last-resort fallback: use ad name as headline so the editor isn't blank ──
   if (!enriched.headline && ad?.name) enriched.headline = ad.name;
 
+  // ── Fallback page name from object_story_spec.page_id when the organic post lookup didn't yield a name ──
+  if (!enriched.page_name && enriched.page_id) {
+    const page = await fetchMetaWithRetry(`${META_API}/${enriched.page_id}?fields=name,picture.type(large){data{url}}&access_token=${token}`, 2);
+    if (!page?.error) {
+      enriched.page_name = page.name || null;
+      enriched.page_picture_url = enriched.page_picture_url || page.picture?.data?.url || null;
+    }
+  }
+
   // ── Resolve carousel card videos ──
   if (Array.isArray(enriched.carousel_cards) && enriched.carousel_cards.length) {
     for (const card of enriched.carousel_cards) {
