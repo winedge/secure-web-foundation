@@ -31,6 +31,7 @@ interface Props {
 }
 
 export function MetaCampaignsList({ onSelectCampaign }: Props) {
+  useMetaRealtime();
   const { data: campaigns, isLoading } = useMetaCampaigns();
   const deleteCampaign = useDeleteMetaCampaign();
   const duplicateCampaign = useDuplicateMetaCampaign();
