@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -10,11 +10,12 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ExternalLink, Loader2, Sparkles } from 'lucide-react';
+import { ExternalLink, Loader2, Sparkles, RefreshCw, Copy as CopyIcon } from 'lucide-react';
 import { AdPreviewPanel } from './AdPreviewPanel';
 import { useUpdateMetaAd, useToggleMetaStatus, useMetaAiAssistant, type MetaAd } from '@/hooks/use-meta-campaigns';
 import { useAuth } from '@/lib/auth-context';
 import { useFirm } from '@/hooks/use-firm';
+import { useToast } from '@/hooks/use-toast';
 
 interface Props {
   adId: string | null;
@@ -25,17 +26,19 @@ interface Props {
 const CTA_OPTIONS = [
   'LEARN_MORE', 'SIGN_UP', 'CONTACT_US', 'GET_QUOTE', 'APPLY_NOW',
   'BOOK_TRAVEL', 'DOWNLOAD', 'GET_OFFER', 'SUBSCRIBE', 'SHOP_NOW',
+  'GET_DIRECTIONS', 'CALL_NOW', 'MESSAGE_PAGE', 'WATCH_MORE',
 ];
 
 export function AdDetailDialog({ adId, open, onOpenChange }: Props) {
   const qc = useQueryClient();
   const { user } = useAuth();
   const { data: firm } = useFirm();
+  const { toast } = useToast();
   const update = useUpdateMetaAd();
   const toggle = useToggleMetaStatus();
   const ai = useMetaAiAssistant();
   const [refreshedFor, setRefreshedFor] = useState<string | null>(null);
-  const [isRefreshingCreative, setIsRefreshingCreative] = useState(false);
+  const [creativeState, setCreativeState] = useState<'idle' | 'loading' | 'ready' | 'failed'>('idle');
 
   const { data: ad, isLoading } = useQuery({
     queryKey: ['meta-ad-detail', adId],
@@ -47,7 +50,7 @@ export function AdDetailDialog({ adId, open, onOpenChange }: Props) {
         .eq('id', adId)
         .maybeSingle();
       if (error) throw error;
-      return data as MetaAd & { ad_set?: any };
+      return data as MetaAd & { ad_set?: any; [k: string]: any };
     },
     enabled: !!adId && open,
   });
@@ -72,26 +75,40 @@ export function AdDetailDialog({ adId, open, onOpenChange }: Props) {
     }
   }, [ad]);
 
-  useEffect(() => {
-    const needsCreativeRefresh = ad?.meta_ad_id && (!ad.body_text || !ad.headline || !ad.image_url);
-    if (!open || !ad || !firm?.id || !user?.id || !needsCreativeRefresh || refreshedFor === ad.id) return;
-
-    setRefreshedFor(ad.id);
-    setIsRefreshingCreative(true);
-    supabase.functions.invoke('meta-ads-sync', {
-      body: {
-        action: 'refresh_ad_creative',
-        user_id: user.id,
-        firm_id: firm.id,
-        ad_id: ad.id,
-      },
-    }).then(({ data, error }) => {
+  const runRefreshCreative = useCallback(async (force = false) => {
+    if (!ad || !firm?.id || !user?.id || !ad.meta_ad_id) return;
+    setCreativeState('loading');
+    try {
+      const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
+        body: { action: 'refresh_ad_creative', user_id: user.id, firm_id: firm.id, ad_id: ad.id },
+      });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      if (data?.ad) qc.setQueryData(['meta-ad-detail', ad.id], (current: any) => ({ ...current, ...data.ad }));
-    }).catch((err) => console.warn('Meta creative refresh failed:', err))
-      .finally(() => setIsRefreshingCreative(false));
-  }, [ad, firm?.id, open, qc, refreshedFor, user?.id]);
+      if (data?.ad) {
+        qc.setQueryData(['meta-ad-detail', ad.id], (current: any) => ({ ...current, ...data.ad }));
+        qc.invalidateQueries({ queryKey: ['meta-ads'] });
+      }
+      setCreativeState('ready');
+      if (force) toast({ title: 'Creative refreshed from Meta' });
+    } catch (err: any) {
+      console.warn('Meta creative refresh failed:', err);
+      setCreativeState('failed');
+      if (force) toast({ title: 'Failed to refresh from Meta', description: err.message, variant: 'destructive' });
+    }
+  }, [ad, firm?.id, qc, toast, user?.id]);
+
+  // Auto-refresh once per opened ad if data is incomplete.
+  useEffect(() => {
+    if (!open || !ad?.meta_ad_id) return;
+    const incomplete = !ad.body_text || !ad.headline || !ad.image_url || (ad.creative_type === 'video' && !ad.video_source_url);
+    if (incomplete && refreshedFor !== ad.id) {
+      setRefreshedFor(ad.id);
+      runRefreshCreative(false);
+    }
+  }, [ad, open, refreshedFor, runRefreshCreative]);
+
+  // Reset state when dialog closes
+  useEffect(() => { if (!open) { setRefreshedFor(null); setCreativeState('idle'); } }, [open]);
 
   const handleSave = () => {
     if (!ad) return;
@@ -122,19 +139,19 @@ export function AdDetailDialog({ adId, open, onOpenChange }: Props) {
   };
 
   const isActive = ad?.status === 'active';
+  const adsManagerUrl = ad?.meta_ad_id
+    ? `https://business.facebook.com/adsmanager/manage/ads?selected_ad_ids=${ad.meta_ad_id}`
+    : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[92vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 flex-wrap">
             <span>Edit Ad</span>
-            {ad?.status && (
-              <Badge variant={isActive ? 'default' : 'secondary'} className="capitalize">{ad.status}</Badge>
-            )}
-            {ad?.meta_ad_id && (
-              <span className="font-mono text-[10px] text-muted-foreground">{ad.meta_ad_id}</span>
-            )}
+            {ad?.status && <Badge variant={isActive ? 'default' : 'secondary'} className="capitalize">{ad.status}</Badge>}
+            {(ad as any)?.ad_format && <Badge variant="outline" className="capitalize">{(ad as any).ad_format}</Badge>}
+            {ad?.meta_ad_id && <span className="font-mono text-[10px] text-muted-foreground">{ad.meta_ad_id}</span>}
           </DialogTitle>
           {ad?.ad_set && (
             <DialogDescription>
@@ -165,12 +182,27 @@ export function AdDetailDialog({ adId, open, onOpenChange }: Props) {
                 </div>
               </div>
 
-              <div className="flex justify-end">
-                <Button variant="outline" size="sm" onClick={generateWithAi} disabled={ai.isPending} className="gap-2">
-                  {ai.isPending || isRefreshingCreative ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                  {isRefreshingCreative ? 'Loading Meta creative' : 'Generate with AI'}
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <Button variant="outline" size="sm" onClick={() => runRefreshCreative(true)} disabled={creativeState === 'loading'} className="gap-2">
+                  {creativeState === 'loading' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                  Refresh from Meta
                 </Button>
+                <Button variant="outline" size="sm" onClick={generateWithAi} disabled={ai.isPending} className="gap-2">
+                  {ai.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                  Generate with AI
+                </Button>
+                {adsManagerUrl && (
+                  <Button asChild variant="outline" size="sm" className="gap-2">
+                    <a href={adsManagerUrl} target="_blank" rel="noreferrer"><ExternalLink className="h-3.5 w-3.5" /> Ads Manager</a>
+                  </Button>
+                )}
               </div>
+
+              {creativeState === 'failed' && (
+                <div className="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">
+                  Could not fetch creative from Meta. Some fields may be empty.
+                </div>
+              )}
 
               <div>
                 <Label>Ad Name</Label>
@@ -178,11 +210,7 @@ export function AdDetailDialog({ adId, open, onOpenChange }: Props) {
               </div>
               <div>
                 <Label>Primary Text / Body (max 125)</Label>
-                <Textarea
-                  value={form.body_text}
-                  onChange={e => setForm(p => ({ ...p, body_text: e.target.value }))}
-                  maxLength={125} rows={3}
-                />
+                <Textarea value={form.body_text} onChange={e => setForm(p => ({ ...p, body_text: e.target.value }))} maxLength={125} rows={3} />
               </div>
               <div>
                 <Label>Headline (max 40)</Label>
@@ -198,9 +226,7 @@ export function AdDetailDialog({ adId, open, onOpenChange }: Props) {
                   <Select value={form.call_to_action} onValueChange={v => setForm(p => ({ ...p, call_to_action: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {CTA_OPTIONS.map(o => (
-                        <SelectItem key={o} value={o}>{o.replace(/_/g, ' ')}</SelectItem>
-                      ))}
+                      {CTA_OPTIONS.map(o => <SelectItem key={o} value={o}>{o.replace(/_/g, ' ')}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -248,8 +274,23 @@ export function AdDetailDialog({ adId, open, onOpenChange }: Props) {
                 description={form.description}
                 callToAction={form.call_to_action}
                 linkUrl={form.link_url}
-                imageUrl={form.image_url || undefined}
+                imageUrl={form.image_url || (ad as any).video_thumbnail_url || undefined}
+                videoSourceUrl={(ad as any).video_source_url || undefined}
+                videoThumbnailUrl={(ad as any).video_thumbnail_url || undefined}
+                adFormat={(ad as any).ad_format || form.creative_type}
+                carouselCards={(ad as any).carousel_cards || []}
+                pageName={(ad as any).page_name}
+                pagePictureUrl={(ad as any).page_picture_url}
+                postMessage={(ad as any).post_message}
+                postCreatedTime={(ad as any).post_created_time}
+                permalinkUrl={(ad as any).permalink_url}
+                instagramPermalinkUrl={(ad as any).instagram_permalink_url}
               />
+              {creativeState === 'loading' && (
+                <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1.5">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Loading creative from Meta…
+                </p>
+              )}
             </div>
           </div>
         )}

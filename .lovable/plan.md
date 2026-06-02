@@ -1,61 +1,73 @@
 ## Goal
 
-Replicate Meta Ads Manager's create flow: after a Campaign is saved as draft, automatically advance to an Ad Set modal (scoped to that campaign), then to an Ad modal (scoped to that ad set), then to a final Preview / Review modal — all without the user having to manually re-open each dialog from the list views.
+Make the Meta Ads section behave like the real Meta Ads Manager: every ad detail dialog shows the actual creative (video reel plays as a reel, image post renders as a post, carousel as a carousel), every filter on every table works, and every button does what its label says.
 
-## Approach
+## Scope of changes
 
-Introduce a single orchestrator component `CampaignCreateWizard` that owns the step state and the IDs created at each step, and chains the three existing dialogs plus a new review dialog. No business logic changes — only presentation wiring + capturing the returned IDs from the existing mutations.
+### 1. Backend | `meta-ads-sync` edge function
 
-```text
-[Step 1: Campaign]  ──save──▶ campaignId
-       │
-       ▼
-[Step 2: Ad Set]    ──save──▶ adSetId   (campaign_id = campaignId)
-       │
-       ▼
-[Step 3: Ad]        ──save──▶ adId      (adset_id = adSetId)
-       │
-       ▼
-[Step 4: Preview & Review]   (read-only summary + AdPreviewPanel)
-```
+Rewrite the creative extraction + `refresh_ad_creative` action to capture full creative context, not just a thumbnail:
 
-A top "stepper" header (Campaign · Ad Set · Ad · Review) shows progress in every step, matching Meta's left-rail pattern. Back/Next/Skip buttons let the user retreat or exit at any step; closing mid-flow keeps the already-saved drafts intact (same as Meta).
+- Fetch ad with expanded fields:
+  - `creative{...,image_url,thumbnail_url,video_id,instagram_permalink_url,effective_instagram_media_id,effective_object_story_id,object_story_spec{page_id,link_data,video_data,photo_data,template_data},asset_feed_spec,degrees_of_freedom_spec}`
+- Detect ad format from creative payload:
+  - `reel` | `video` | `image` | `carousel` | `collection` | `dynamic`
+  - Reel = Instagram Reels placement OR `video_data` with vertical aspect ratio OR `instagram_actor_id` + `video_id`
+- Resolve the playable video source:
+  - Call `/{video_id}?fields=source,permalink_url,picture,length,format` to get a `source` MP4 URL
+  - Store both `video_url` (mp4 source) and `video_permalink_url`
+- Resolve carousel children from `link_data.child_attachments` → image_url, name, description, link
+- Resolve the underlying organic post (for post ads) via `effective_object_story_id` → `message`, `permalink_url`, `attachments{media,subattachments}`, `full_picture`, `created_time`
+- Resolve Instagram media via `effective_instagram_media_id` → `media_url`, `media_type`, `permalink`, `caption`
+- Persist new columns on `meta_ads`: `ad_format`, `video_source_url`, `permalink_url`, `instagram_permalink_url`, `carousel_cards` (jsonb), `post_message`, `post_created_time`
 
-## Steps
+### 2. Database migration
 
-1. **Expose created IDs from existing dialogs**
-   - `CampaignFormDialog`, `AdSetFormDialog`, `AdFormDialog`: add optional `onSaved?: (id: string) => void` prop, fired from the create/update mutation `onSuccess` with the returned row id. No change to existing call sites (prop is optional).
-   - Make the dialogs render headless when used inside the wizard (hide their own close button via an optional `embedded` prop) so the wizard chrome owns navigation.
+Add the columns above to `meta_ads` (nullable, no RLS change) and reload PostgREST schema.
 
-2. **Create `CampaignCreateWizard.tsx`** in `src/components/meta-ads/forms/`
-   - Props: `open`, `onOpenChange`, optional `startStep`, optional `initialCampaignId`/`initialAdSetId` (so "Add Ad Set" from the campaigns list can jump in at step 2).
-   - Internal state: `step` (`'campaign' | 'adset' | 'ad' | 'review'`), `campaignId`, `adSetId`, `adId`.
-   - Renders a wrapping `Dialog` with a stepper header + footer (`Back`, `Save & Continue`, `Finish later`), and mounts the matching child dialog inline (without its own `Dialog` wrapper — refactor children to export an inner `<...Body>` component so they can be embedded).
+### 3. Frontend | `AdDetailDialog.tsx`
 
-3. **Create `CampaignReviewDialog` content (step 4)**
-   - Shows: campaign summary card, ad set summary card, ad summary card, and the existing `AdPreviewPanel` for the saved ad.
-   - Actions: `Edit campaign` / `Edit ad set` / `Edit ad` (jump back to that step), `Publish to Meta` (calls existing publish path if present, otherwise closes with toast "Draft saved").
+Replace the single Facebook/Instagram tab preview with a Meta-Ads-Manager-style preview chooser:
 
-4. **Wire entry points**
-   - `MetaCampaignsList.tsx`: replace the "New Campaign" button handler to open `CampaignCreateWizard` (starting at step 1) instead of `CampaignFormDialog` directly. Keep `CampaignFormDialog` available for the "Edit" row action (single-step edit).
-   - `MetaAdSetsPanel.tsx` (if it has a "New Ad Set" button): open the wizard at step 2 with `initialCampaignId` preselected.
-   - `MetaAdsPanel.tsx`: open the wizard at step 3 with `initialAdSetId` preselected.
+- Placement tabs: Feed (FB), Feed (IG), Reels (IG/FB), Stories, Right column, Marketplace, Audience Network
+- Show only placements that actually match the resolved `ad_format`
+- Render real media:
+  - Video / Reel → `<video autoplay loop muted playsInline controls>` using `video_source_url`, fallback to thumbnail
+  - Reel aspect ratio 9:16, rounded, vertical action rail (like, comment, share, more) overlaid
+  - Image → `<img>` actual creative image
+  - Carousel → horizontal scroller with each card's image + headline + CTA + link
+  - Post → render the organic post UI: profile header, message, attachment media, like/comment/share strip
+- Show a "Loading creative from Meta…" skeleton only on first open; show "Could not fetch creative from Meta" inline if refresh fails (no infinite spinner).
+- Add explicit buttons:
+  - `Refresh from Meta` (force re-run `refresh_ad_creative`)
+  - `Open in Meta Ads Manager` (deep link `https://business.facebook.com/adsmanager/manage/ads?act=…&selected_ad_ids=…`)
+  - `Preview on Facebook` (uses `preview_shareable_link`)
+  - `Duplicate ad` (create draft copy)
+  - `Save changes` and `Save & sync to Meta` (calls update + push update creative endpoint)
 
-5. **UX polish**
-   - Disable `Save & Continue` until the embedded form's validation passes (children expose `isValid` via a `useImperativeHandle` ref, or via a new `onValidityChange` prop).
-   - Persist in-progress IDs in component state only — no localStorage. Closing the wizard mid-flow shows a confirm "Drafts are saved. Continue later from the Campaigns table?" if at least step 1 succeeded.
-   - Toasts: "Campaign draft saved", "Ad set draft saved", "Ad draft saved" on each transition.
+### 4. Frontend | Tables and filters
 
-## Files
+Audit and fix every filter / button in:
 
-- **New**: `src/components/meta-ads/forms/CampaignCreateWizard.tsx`
-- **New**: `src/components/meta-ads/forms/CampaignReviewDialog.tsx` (or inline inside the wizard)
-- **Edit**: `CampaignFormDialog.tsx`, `AdSetFormDialog.tsx`, `AdFormDialog.tsx` — add `onSaved`, `embedded` props; expose inner body component.
-- **Edit**: `MetaCampaignsList.tsx`, `MetaAdSetsPanel.tsx`, `MetaAdsPanel.tsx` — swap "New" buttons to launch the wizard at the right step.
+- `CampaignsTable`, `AdSetsTable`, `AdsTable`
+- Status filter, Search, Campaign filter, Ad set filter, Date preset, Sort column/direction, Pagination, Refresh, Row click → detail
+- Bulk actions: Activate, Pause, Duplicate, Delete (where Meta allows)
+- Wire each control to the existing `useMetaAdsTable` / `useMetaAdSetsTable` / `useMetaCampaignsTable` hooks and confirm the query keys invalidate on Sync.
+- Ensure changing Campaign filter resets Ad set filter and page index (already partly done — extend to all tables).
+
+### 5. Frontend | Live updates
+
+After `sync_from_meta` or any mutation, invalidate:
+- `['meta-campaigns']`, `['meta-ad-sets']`, `['meta-ads']`, `['meta-ad-detail']`, `['meta-live-insights']`
+
+## Technical details
+
+- New file: `src/components/meta-ads/previews/` with `FeedPreview.tsx`, `ReelPreview.tsx`, `StoryPreview.tsx`, `CarouselPreview.tsx`, `RightColumnPreview.tsx`.
+- `AdPreviewPanel.tsx` becomes a router that picks the correct preview component based on `ad.ad_format` + selected placement.
+- Video element uses Meta-hosted `source` MP4. If CORS-blocked, fall back to embedded `<iframe>` of `permalink_url`.
+- All new DB columns have safe defaults; no breaking change to existing UI.
 
 ## Out of scope
 
-- No new database fields, no edge function changes, no Meta API publish wiring (uses whatever publish path already exists).
-- No changes to validation rules inside the three existing dialogs.
-
-Reply **Approve** to implement, or tell me to tweak (e.g. skip the review step, or also chain on "Edit campaign").
+- Creating new ads from scratch (Meta requires page/IG asset upload flow — call out as a follow-up).
+- Editing video media (Meta does not allow replacing a video on an active ad; only creating a new creative does).

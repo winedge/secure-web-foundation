@@ -4186,11 +4186,13 @@ export type Database = {
       }
       meta_ads: {
         Row: {
+          ad_format: string | null
           ad_set_id: string
           ai_generated: boolean | null
           ai_score: number | null
           body_text: string | null
           call_to_action: string | null
+          carousel_cards: Json | null
           conversion_specs: Json | null
           created_at: string
           creative_id: string | null
@@ -4202,23 +4204,35 @@ export type Database = {
           headline: string | null
           id: string
           image_url: string | null
+          instagram_actor_id: string | null
+          instagram_permalink_url: string | null
           link_url: string | null
           meta_ad_id: string | null
           meta_creative_id: string | null
           name: string
+          page_id: string | null
+          page_name: string | null
+          page_picture_url: string | null
+          permalink_url: string | null
+          post_created_time: string | null
+          post_message: string | null
           preview_shareable_link: string | null
           raw: Json | null
           status: Database["public"]["Enums"]["meta_campaign_status"] | null
           tracking_specs: Json | null
           updated_at: string
+          video_source_url: string | null
+          video_thumbnail_url: string | null
           video_url: string | null
         }
         Insert: {
+          ad_format?: string | null
           ad_set_id: string
           ai_generated?: boolean | null
           ai_score?: number | null
           body_text?: string | null
           call_to_action?: string | null
+          carousel_cards?: Json | null
           conversion_specs?: Json | null
           created_at?: string
           creative_id?: string | null
@@ -4230,23 +4244,35 @@ export type Database = {
           headline?: string | null
           id?: string
           image_url?: string | null
+          instagram_actor_id?: string | null
+          instagram_permalink_url?: string | null
           link_url?: string | null
           meta_ad_id?: string | null
           meta_creative_id?: string | null
           name: string
+          page_id?: string | null
+          page_name?: string | null
+          page_picture_url?: string | null
+          permalink_url?: string | null
+          post_created_time?: string | null
+          post_message?: string | null
           preview_shareable_link?: string | null
           raw?: Json | null
           status?: Database["public"]["Enums"]["meta_campaign_status"] | null
           tracking_specs?: Json | null
           updated_at?: string
+          video_source_url?: string | null
+          video_thumbnail_url?: string | null
           video_url?: string | null
         }
         Update: {
+          ad_format?: string | null
           ad_set_id?: string
           ai_generated?: boolean | null
           ai_score?: number | null
           body_text?: string | null
           call_to_action?: string | null
+          carousel_cards?: Json | null
           conversion_specs?: Json | null
           created_at?: string
           creative_id?: string | null
@@ -4258,15 +4284,25 @@ export type Database = {
           headline?: string | null
           id?: string
           image_url?: string | null
+          instagram_actor_id?: string | null
+          instagram_permalink_url?: string | null
           link_url?: string | null
           meta_ad_id?: string | null
           meta_creative_id?: string | null
           name?: string
+          page_id?: string | null
+          page_name?: string | null
+          page_picture_url?: string | null
+          permalink_url?: string | null
+          post_created_time?: string | null
+          post_message?: string | null
           preview_shareable_link?: string | null
           raw?: Json | null
           status?: Database["public"]["Enums"]["meta_campaign_status"] | null
           tracking_specs?: Json | null
           updated_at?: string
+          video_source_url?: string | null
+          video_thumbnail_url?: string | null
           video_url?: string | null
         }
         Relationships: [

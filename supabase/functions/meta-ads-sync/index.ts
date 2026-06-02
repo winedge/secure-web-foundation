@@ -33,7 +33,7 @@ async function fetchMetaWithRetry(url: string, maxAttempts = 5): Promise<any> {
   return lastErr ?? { error: { message: "Meta API failed after retries" } };
 }
 
-const AD_CREATIVE_FIELDS = "id,name,adset_id,status,effective_status,tracking_specs,conversion_specs,preview_shareable_link,created_time,creative{id,title,body,name,image_url,thumbnail_url,video_id,call_to_action_type,object_story_id,effective_object_story_id,object_story_spec,asset_feed_spec,link_url,template_url}";
+const AD_CREATIVE_FIELDS = "id,name,adset_id,status,effective_status,tracking_specs,conversion_specs,preview_shareable_link,created_time,creative{id,title,body,name,image_url,thumbnail_url,video_id,instagram_actor_id,instagram_permalink_url,effective_instagram_media_id,effective_object_story_id,object_story_id,call_to_action_type,object_story_spec,asset_feed_spec,link_url,template_url,image_hash,product_set_id}";
 
 function firstCreativeValue(arr: any): string | null {
   if (!Array.isArray(arr) || !arr.length) return null;
@@ -43,25 +43,57 @@ function firstCreativeValue(arr: any): string | null {
   return first.text ?? first.url ?? first.website_url ?? first.link ?? null;
 }
 
+function detectAdFormat(cr: any, ld: any, vd: any, pd: any): string {
+  if (Array.isArray(ld?.child_attachments) && ld.child_attachments.length) return "carousel";
+  if (cr?.product_set_id) return "collection";
+  if (vd?.video_id || cr?.video_id || ld?.video_id) return "video";
+  if (pd?.image_hash || pd?.url) return "image";
+  if (cr?.asset_feed_spec?.videos?.length) return "video";
+  if (cr?.image_url || cr?.thumbnail_url) return "image";
+  return "image";
+}
+
 function extractAdCreativeFields(ad: any) {
   const cr = ad?.creative || {};
   const oss = cr.object_story_spec || {};
-  const ld = oss.link_data || oss.video_data || oss.template_data || {};
+  const ld = oss.link_data || {};
+  const vd = oss.video_data || {};
+  const pd = oss.photo_data || {};
+  const td = oss.template_data || {};
   const afs = cr.asset_feed_spec || {};
   const image = firstCreativeValue(afs.images);
   const link = firstCreativeValue(afs.link_urls);
 
+  const ad_format = detectAdFormat(cr, ld, vd, pd);
+  const video_id = vd.video_id || cr.video_id || ld.video_id || null;
+  const carousel_cards = Array.isArray(ld.child_attachments)
+    ? ld.child_attachments.map((c: any) => ({
+        image_url: c.picture || c.image_url || null,
+        image_hash: c.image_hash || null,
+        link: c.link || null,
+        name: c.name || null,
+        description: c.description || null,
+        call_to_action: c.call_to_action?.type || null,
+        video_id: c.video_id || null,
+      }))
+    : [];
+
   return {
     meta_creative_id: cr.id || null,
-    headline: cr.title || ld.name || firstCreativeValue(afs.titles) || null,
-    body_text: cr.body || ld.message || firstCreativeValue(afs.bodies) || null,
-    description: ld.description || firstCreativeValue(afs.descriptions) || null,
-    link_url: cr.link_url || ld.link || link || null,
-    image_url: cr.image_url || cr.thumbnail_url || ld.picture || image || null,
-    video_url: ld.video_id || cr.video_id ? `https://www.facebook.com/watch/?v=${ld.video_id || cr.video_id}` : null,
-    call_to_action: cr.call_to_action_type || ld.call_to_action?.type || "LEARN_MORE",
-    creative_type: ld.video_id || cr.video_id ? "video"
-      : (Array.isArray(ld.child_attachments) && ld.child_attachments.length ? "carousel" : "image"),
+    headline: cr.title || vd.title || ld.name || pd.name || td.name || firstCreativeValue(afs.titles) || null,
+    body_text: cr.body || vd.message || ld.message || pd.message || td.message || firstCreativeValue(afs.bodies) || null,
+    description: vd.link_description || ld.description || pd.caption || firstCreativeValue(afs.descriptions) || null,
+    link_url: cr.link_url || ld.link || vd.call_to_action?.value?.link || pd.url || link || null,
+    image_url: cr.image_url || pd.url || ld.picture || vd.image_url || cr.thumbnail_url || image || null,
+    video_thumbnail_url: vd.image_url || cr.thumbnail_url || null,
+    video_url: video_id ? `https://www.facebook.com/watch/?v=${video_id}` : null,
+    call_to_action: cr.call_to_action_type || ld.call_to_action?.type || vd.call_to_action?.type || "LEARN_MORE",
+    creative_type: ad_format === "carousel" ? "carousel" : (ad_format === "video" ? "video" : "image"),
+    ad_format,
+    carousel_cards,
+    page_id: oss.page_id || null,
+    instagram_actor_id: cr.instagram_actor_id || oss.instagram_actor_id || null,
+    instagram_permalink_url: cr.instagram_permalink_url || null,
   };
 }
 
@@ -72,38 +104,91 @@ function getPostObjectId(ad: any): string | null {
   return spec ? `${spec["post.wall"][0]}_${spec.post[0]}` : null;
 }
 
-async function enrichAdCreativeFields(ad: any, token: string) {
-  const fields = extractAdCreativeFields(ad);
+async function enrichAdCreativeFields(ad: any, token: string): Promise<any> {
+  const enriched: any = { ...extractAdCreativeFields(ad) };
   const cr = ad?.creative || {};
+  const vd = cr.object_story_spec?.video_data || {};
+  const videoId = vd.video_id || cr.video_id || null;
 
-  if ((!fields.headline || !fields.body_text || !fields.link_url) && cr.video_id) {
-    const video = await fetchMetaWithRetry(`${META_API}/${cr.video_id}?fields=title,description,picture,permalink_url&access_token=${token}`, 3);
+  // ── Resolve playable video MP4 source ──
+  if (videoId) {
+    const video = await fetchMetaWithRetry(`${META_API}/${videoId}?fields=source,permalink_url,picture,title,description,length,format&access_token=${token}`, 3);
     if (!video?.error) {
-      fields.headline ||= video.title || null;
-      fields.body_text ||= video.description || null;
-      fields.image_url ||= video.picture || null;
-      fields.link_url ||= video.permalink_url || null;
+      enriched.video_source_url = video.source || null;
+      enriched.permalink_url = enriched.permalink_url || video.permalink_url || null;
+      enriched.video_thumbnail_url = enriched.video_thumbnail_url || video.picture || null;
+      enriched.image_url = enriched.image_url || video.picture || null;
+      enriched.headline ||= video.title || null;
+      enriched.body_text ||= video.description || null;
     }
   }
 
-  if (!fields.headline || !fields.body_text || !fields.description || !fields.link_url) {
-    const postId = getPostObjectId(ad);
-    if (postId) {
-      const post = await fetchMetaWithRetry(`${META_API}/${postId}?fields=message,permalink_url,attachments{title,description,url,media,target,subattachments}&access_token=${token}`, 3);
-      const attachment = post?.attachments?.data?.[0];
+  // ── Resolve organic FB post backing the ad ──
+  const postId = getPostObjectId(ad);
+  if (postId) {
+    const post = await fetchMetaWithRetry(`${META_API}/${postId}?fields=message,permalink_url,created_time,full_picture,picture,from{id,name,picture{data{url}}},attachments{title,description,url,media,media_type,target,subattachments{title,description,url,media,media_type,target}}&access_token=${token}`, 3);
+    if (!post?.error) {
+      enriched.post_message = post.message || null;
+      enriched.post_created_time = post.created_time || null;
+      enriched.permalink_url = enriched.permalink_url || post.permalink_url || null;
+      enriched.page_id = enriched.page_id || post.from?.id || null;
+      enriched.page_name = post.from?.name || null;
+      enriched.page_picture_url = post.from?.picture?.data?.url || null;
+      enriched.body_text ||= post.message || null;
+      enriched.image_url ||= post.full_picture || post.picture || null;
+
+      const attachment = post.attachments?.data?.[0];
       const sub = attachment?.subattachments?.data?.[0];
-      if (!post?.error) {
-        fields.body_text ||= post.message || null;
-        fields.headline ||= attachment?.title || sub?.title || fields.body_text?.split("\n")[0]?.slice(0, 40) || null;
-        fields.description ||= attachment?.description || sub?.description || null;
-        fields.link_url ||= attachment?.target?.url || attachment?.url || sub?.target?.url || post.permalink_url || null;
-        fields.image_url ||= attachment?.media?.image?.src || sub?.media?.image?.src || null;
+      if (attachment) {
+        enriched.headline ||= attachment.title || sub?.title || enriched.body_text?.split("\n")[0]?.slice(0, 40) || null;
+        enriched.description ||= attachment.description || sub?.description || null;
+        enriched.link_url ||= attachment.target?.url || attachment.url || sub?.target?.url || null;
+        enriched.image_url ||= attachment.media?.image?.src || sub?.media?.image?.src || null;
+        if (attachment.media_type === "video" && attachment.media?.source) {
+          enriched.video_source_url ||= attachment.media.source;
+        }
       }
     }
   }
 
-  return fields;
+  // ── Resolve Instagram media (IG-only / reel ads) ──
+  const igMediaId = cr.effective_instagram_media_id;
+  if (igMediaId) {
+    const ig = await fetchMetaWithRetry(`${META_API}/${igMediaId}?fields=media_url,media_type,permalink,caption,thumbnail_url,username&access_token=${token}`, 3);
+    if (!ig?.error) {
+      enriched.instagram_permalink_url = enriched.instagram_permalink_url || ig.permalink || null;
+      enriched.body_text ||= ig.caption || null;
+      if (ig.media_type === "VIDEO" || ig.media_type === "REEL" || ig.media_type === "REELS") {
+        enriched.video_source_url ||= ig.media_url || null;
+        enriched.video_thumbnail_url ||= ig.thumbnail_url || null;
+        enriched.ad_format = "reel";
+      } else if (ig.media_type === "IMAGE") {
+        enriched.image_url ||= ig.media_url || null;
+      }
+    }
+  }
+
+  // ── Mark IG-actor videos as reels ──
+  if (enriched.ad_format === "video" && (cr.instagram_actor_id || enriched.instagram_permalink_url)) {
+    enriched.ad_format = "reel";
+  }
+
+  // ── Resolve carousel card videos ──
+  if (Array.isArray(enriched.carousel_cards) && enriched.carousel_cards.length) {
+    for (const card of enriched.carousel_cards) {
+      if (card.video_id && !card.video_source_url) {
+        const v = await fetchMetaWithRetry(`${META_API}/${card.video_id}?fields=source,picture&access_token=${token}`, 2);
+        if (!v?.error) {
+          card.video_source_url = v.source || null;
+          card.image_url = card.image_url || v.picture || null;
+        }
+      }
+    }
+  }
+
+  return enriched;
 }
+
 
 serve(async (req) => {
   const corsResp = handleCors(req);
