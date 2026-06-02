@@ -6,6 +6,7 @@ import { MetaTableShell, MetaStatusBadge, type MetaTableColumn } from './MetaTab
 import { useMetaAdsTable, useMetaAdSetsLookup, useMetaCampaignsLookup, type AdRow } from '@/hooks/use-meta-tables';
 import { useSyncFromMeta } from '@/hooks/use-meta-campaigns';
 import { AdDetailDialog } from '../AdDetailDialog';
+import { useUrlFilters } from '@/hooks/use-url-filters';
 
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
@@ -20,14 +21,20 @@ interface Props {
 }
 
 export function AdsTable({ initialAdSetId = null, initialCampaignId = null }: Props) {
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(25);
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('all');
-  const [campaignId, setCampaignId] = useState<string>(initialCampaignId || 'all');
-  const [adSetId, setAdSetId] = useState<string>(initialAdSetId || 'all');
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const { values, setFilter, setFilters } = useUrlFilters({
+    prefix: 'ads',
+    defaults: {
+      page: 0,
+      pageSize: 25,
+      search: '',
+      status: 'all',
+      campaignId: initialCampaignId || 'all',
+      adSetId: initialAdSetId || 'all',
+      sortColumn: '',
+      sortDirection: 'desc',
+    },
+  });
+  const { page, pageSize, search, status, campaignId, adSetId, sortColumn, sortDirection } = values;
   const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
   const syncFromMeta = useSyncFromMeta();
 
@@ -37,7 +44,8 @@ export function AdsTable({ initialAdSetId = null, initialCampaignId = null }: Pr
     page, pageSize, search, status,
     adSetId: adSetId === 'all' ? null : adSetId,
     campaignId: campaignId === 'all' ? null : campaignId,
-    sortColumn, sortDirection,
+    sortColumn: sortColumn || null,
+    sortDirection: sortDirection as 'asc' | 'desc',
   });
 
   const handleRefresh = async () => {
@@ -73,24 +81,28 @@ export function AdsTable({ initialAdSetId = null, initialCampaignId = null }: Pr
         total={data?.total ?? 0}
         isLoading={isLoading || isFetching || syncFromMeta.isPending}
         page={page} pageSize={pageSize}
-        onPageChange={setPage} onPageSizeChange={setPageSize}
-        search={search} onSearchChange={setSearch}
+        onPageChange={(p) => setFilter('page', p)}
+        onPageSizeChange={(s) => setFilter('pageSize', s)}
+        search={search} onSearchChange={(v) => setFilter('search', v)}
         searchPlaceholder="Search ads by name…"
-        statusValue={status} onStatusChange={setStatus} statusOptions={STATUS_OPTIONS}
+        statusValue={status}
+        onStatusChange={(v) => setFilter('status', v)}
+        statusOptions={STATUS_OPTIONS}
         onRefresh={handleRefresh}
-        sortColumn={sortColumn} sortDirection={sortDirection}
-        onSortChange={(col, dir) => { setPage(0); setSortColumn(col); setSortDirection(dir); }}
+        sortColumn={sortColumn || null}
+        sortDirection={sortDirection as 'asc' | 'desc'}
+        onSortChange={(col, dir) => setFilters({ sortColumn: col || '', sortDirection: dir })}
         onRowClick={(row) => setSelectedAdId(row.id)}
         extraFilters={
           <>
-            <Select value={campaignId} onValueChange={(v) => { setPage(0); setCampaignId(v); setAdSetId('all'); }}>
+            <Select value={campaignId} onValueChange={(v) => setFilters({ campaignId: v, adSetId: 'all' })}>
               <SelectTrigger className="w-full sm:w-[200px] h-8 text-sm"><SelectValue placeholder="Campaign" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All campaigns</SelectItem>
                 {(campaigns || []).map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={adSetId} onValueChange={(v) => { setPage(0); setAdSetId(v); }}>
+            <Select value={adSetId} onValueChange={(v) => setFilter('adSetId', v)}>
               <SelectTrigger className="w-full sm:w-[200px] h-8 text-sm"><SelectValue placeholder="Ad set" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All ad sets</SelectItem>

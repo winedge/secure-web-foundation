@@ -20,6 +20,7 @@ import { CampaignFormDialog } from './forms/CampaignFormDialog';
 import { CampaignCreateWizard } from './forms/CampaignCreateWizard';
 import { AdSetsTable } from './tables/AdSetsTable';
 import { AdsTable } from './tables/AdsTable';
+import { useUrlFilters } from '@/hooks/use-url-filters';
 
 const COL_STORAGE_KEY = 'meta-ads-visible-cols-v1';
 const DEFAULT_COLS: ColumnId[] = ['delivery', 'results', 'cost_per_result', 'budget', 'spent', 'impressions', 'reach', 'ends'];
@@ -42,10 +43,15 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
   const [publishCampaign, setPublishCampaign] = useState<MetaCampaign | null>(null);
   const [abOpen, setAbOpen] = useState(false);
 
-  // Filter / display state (persisted where helpful)
-  const [search, setSearch] = useState('');
-  const [chip, setChip] = useState<ChipFilter>('all');
-  const [datePreset, setDatePreset] = useState('last_30d');
+  // Filter / display state (persisted in URL)
+  const { values: shellValues, setFilter: setShell } = useUrlFilters({
+    prefix: 'mgr',
+    defaults: { search: '', chip: 'all', datePreset: 'last_30d', tab: 'campaigns' },
+  });
+  const search = shellValues.search;
+  const chip = shellValues.chip as ChipFilter;
+  const datePreset = shellValues.datePreset;
+  const tab = shellValues.tab;
   const [breakdown, setBreakdown] = useState<Breakdown>('none');
   const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(() => {
     if (typeof window === 'undefined') return new Set(DEFAULT_COLS);
@@ -125,11 +131,13 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
 
       <MetaAdsManagerShell
         search={search}
-        onSearchChange={setSearch}
+        onSearchChange={(v) => setShell('search', v)}
         chip={chip}
-        onChipChange={setChip}
+        onChipChange={(v) => setShell('chip', v)}
         datePreset={datePreset}
-        onDatePresetChange={setDatePreset}
+        onDatePresetChange={(v) => setShell('datePreset', v)}
+        tab={tab}
+        onTabChange={(v) => setShell('tab', v)}
         campaignsSlot={
           <>
             <MetaAdsToolbar

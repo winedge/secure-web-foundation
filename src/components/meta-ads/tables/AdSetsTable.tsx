@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MetaTableShell, MetaStatusBadge, fmtMoney, type MetaTableColumn } from './MetaTableShell';
 import { useMetaAdSetsTable, useMetaCampaignsLookup, type AdSetRow } from '@/hooks/use-meta-tables';
 import { useSyncFromMeta } from '@/hooks/use-meta-campaigns';
+import { useUrlFilters } from '@/hooks/use-url-filters';
 
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
@@ -17,20 +17,27 @@ interface Props {
 }
 
 export function AdSetsTable({ initialCampaignId = null, onSelectAdSet }: Props) {
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(25);
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('all');
-  const [campaignId, setCampaignId] = useState<string>(initialCampaignId || 'all');
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const { values, setFilter, setFilters } = useUrlFilters({
+    prefix: 'adset',
+    defaults: {
+      page: 0,
+      pageSize: 25,
+      search: '',
+      status: 'all',
+      campaignId: initialCampaignId || 'all',
+      sortColumn: '',
+      sortDirection: 'desc',
+    },
+  });
+  const { page, pageSize, search, status, campaignId, sortColumn, sortDirection } = values;
   const syncFromMeta = useSyncFromMeta();
 
   const { data: campaigns } = useMetaCampaignsLookup();
   const { data, isLoading, refetch, isFetching } = useMetaAdSetsTable({
     page, pageSize, search, status,
     campaignId: campaignId === 'all' ? null : campaignId,
-    sortColumn, sortDirection,
+    sortColumn: sortColumn || null,
+    sortDirection: sortDirection as 'asc' | 'desc',
   });
 
   const handleRefresh = async () => {
@@ -63,16 +70,20 @@ export function AdSetsTable({ initialCampaignId = null, onSelectAdSet }: Props) 
       total={data?.total ?? 0}
       isLoading={isLoading || isFetching || syncFromMeta.isPending}
       page={page} pageSize={pageSize}
-      onPageChange={setPage} onPageSizeChange={setPageSize}
-      search={search} onSearchChange={setSearch}
+      onPageChange={(p) => setFilter('page', p)}
+      onPageSizeChange={(s) => setFilter('pageSize', s)}
+      search={search} onSearchChange={(v) => setFilter('search', v)}
       searchPlaceholder="Search ad sets by name…"
-      statusValue={status} onStatusChange={setStatus} statusOptions={STATUS_OPTIONS}
+      statusValue={status}
+      onStatusChange={(v) => setFilter('status', v)}
+      statusOptions={STATUS_OPTIONS}
       onRefresh={handleRefresh}
       onRowClick={onSelectAdSet ? (r) => onSelectAdSet(r.id) : undefined}
-      sortColumn={sortColumn} sortDirection={sortDirection}
-      onSortChange={(col, dir) => { setPage(0); setSortColumn(col); setSortDirection(dir); }}
+      sortColumn={sortColumn || null}
+      sortDirection={sortDirection as 'asc' | 'desc'}
+      onSortChange={(col, dir) => setFilters({ sortColumn: col || '', sortDirection: dir })}
       extraFilters={
-        <Select value={campaignId} onValueChange={(v) => { setPage(0); setCampaignId(v); }}>
+        <Select value={campaignId} onValueChange={(v) => setFilter('campaignId', v)}>
           <SelectTrigger className="w-full sm:w-[220px] h-8 text-sm"><SelectValue placeholder="Campaign" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All campaigns</SelectItem>

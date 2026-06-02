@@ -19,6 +19,8 @@ interface Props {
   onChipChange: (v: ChipFilter) => void;
   datePreset: string;
   onDatePresetChange: (v: string) => void;
+  tab: string;
+  onTabChange: (v: string) => void;
 }
 
 const FILTER_CHIPS: { id: ChipFilter; label: string; icon?: any }[] = [
@@ -32,6 +34,7 @@ const FILTER_CHIPS: { id: ChipFilter; label: string; icon?: any }[] = [
 export function MetaAdsManagerShell({
   campaignsSlot, adSetsSlot, adsSlot,
   search, onSearchChange, chip, onChipChange, datePreset, onDatePresetChange,
+  tab, onTabChange,
 }: Props) {
   return (
     <div className="rounded-md border bg-card overflow-hidden">
@@ -87,7 +90,7 @@ export function MetaAdsManagerShell({
         </Select>
       </div>
 
-      <Tabs defaultValue="campaigns">
+      <Tabs value={tab} onValueChange={onTabChange}>
         <TabsList className="rounded-none border-b w-full justify-start bg-transparent h-auto p-0 overflow-x-auto">
           <TabsTrigger
             value="campaigns"
