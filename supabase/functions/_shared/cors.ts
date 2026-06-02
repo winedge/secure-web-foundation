@@ -18,6 +18,25 @@ export function jsonResponse(data: unknown, status = 200): Response {
   });
 }
 
+// Detect upstream rate-limit / transient errors (e.g. Meta Graph API) and
+// return them as HTTP 200 with a structured body so the supabase.functions.invoke
+// client doesn't surface them as a "non-2xx" runtime error and blank the UI.
+// The client can still check `error` / `rate_limited` / `fallback` flags.
+const RATE_LIMIT_PATTERNS = [
+  /too many calls/i,
+  /rate.?limit/i,
+  /request limit reached/i,
+  /user request limit/i,
+  /\(#?(?:4|17|32|613|80000|80001|80002|80003|80004|80008|80014)\)/,
+];
+
 export function errorResponse(message: string, status = 400): Response {
+  const isRateLimit = RATE_LIMIT_PATTERNS.some((re) => re.test(message));
+  if (isRateLimit) {
+    return jsonResponse(
+      { error: message, rate_limited: true, fallback: true },
+      200,
+    );
+  }
   return jsonResponse({ error: message }, status);
 }
