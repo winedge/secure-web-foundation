@@ -90,7 +90,7 @@ export function MetaAdsManagerShell({
         </Select>
       </div>
 
-      <Tabs defaultValue="campaigns">
+      <Tabs value={tab} onValueChange={onTabChange}>
         <TabsList className="rounded-none border-b w-full justify-start bg-transparent h-auto p-0 overflow-x-auto">
           <TabsTrigger
             value="campaigns"
