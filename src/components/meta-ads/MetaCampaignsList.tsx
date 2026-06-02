@@ -131,11 +131,13 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
 
       <MetaAdsManagerShell
         search={search}
-        onSearchChange={setSearch}
+        onSearchChange={(v) => setShell('search', v)}
         chip={chip}
-        onChipChange={setChip}
+        onChipChange={(v) => setShell('chip', v)}
         datePreset={datePreset}
-        onDatePresetChange={setDatePreset}
+        onDatePresetChange={(v) => setShell('datePreset', v)}
+        tab={tab}
+        onTabChange={(v) => setShell('tab', v)}
         campaignsSlot={
           <>
             <MetaAdsToolbar
