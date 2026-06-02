@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   useMetaCampaigns, useDeleteMetaCampaign, useSyncFromMeta,
-  useDuplicateMetaCampaign, MetaCampaign,
+  useDuplicateMetaCampaign, useMetaLiveInsights, MetaCampaign,
 } from '@/hooks/use-meta-campaigns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -87,11 +87,25 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
     });
   }, [allCampaigns, search, chip]);
 
+  const { data: insights } = useMetaLiveInsights(datePreset);
+
+  const PRESET_DAYS: Record<string, number> = {
+    today: 1, yesterday: 1, last_7d: 7, last_14d: 14, last_30d: 30,
+    this_month: new Date().getDate(),
+    last_month: new Date(new Date().getFullYear(), new Date().getMonth(), 0).getDate(),
+    maximum: 90,
+  };
+  const periodDays = PRESET_DAYS[datePreset] || 30;
+
+  const totalSpend = useMemo(
+    () => Object.values(insights || {}).reduce((s, v: any) => s + (Number(v?.spend) || 0), 0),
+    [insights],
+  );
   const stats = {
     total: allCampaigns.length,
     active: allCampaigns.filter((c) => c.status === 'active').length,
-    dailySpend: allCampaigns.filter((c) => c.status === 'active').reduce((s, c) => s + (c.daily_budget || 0), 0),
-    totalBudget: allCampaigns.reduce((s, c) => s + (c.lifetime_budget || 0), 0),
+    dailySpend: totalSpend / Math.max(periodDays, 1),
+    totalSpend,
   };
 
   const openCreate = () => { setEditCampaign(null); setWizardOpen(true); };
@@ -122,7 +136,7 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total</CardTitle><TrendingUp className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{stats.total}</div></CardContent></Card>
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Active</CardTitle><Zap className="h-4 w-4 text-green-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-green-600">{stats.active}</div></CardContent></Card>
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Daily Spend</CardTitle><DollarSign className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{formatCurrency(stats.dailySpend)}</div></CardContent></Card>
-        <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total Budget</CardTitle><Target className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{formatCurrency(stats.totalBudget)}</div></CardContent></Card>
+        <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total Spend</CardTitle><Target className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{formatCurrency(stats.totalSpend)}</div></CardContent></Card>
       </div>
 
       <div className="flex items-center justify-end">
