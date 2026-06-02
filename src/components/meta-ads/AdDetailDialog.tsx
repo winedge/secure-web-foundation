@@ -38,6 +38,8 @@ export function AdDetailDialog({ adId, open, onOpenChange }: Props) {
   const update = useUpdateMetaAd();
   const toggle = useToggleMetaStatus();
   const ai = useMetaAiAssistant();
+  const { data: connections } = usePlatformConnections();
+  const fbConnection = connections?.find((c) => c.platform === 'facebook' && c.is_active);
   const [refreshedFor, setRefreshedFor] = useState<string | null>(null);
   const [creativeState, setCreativeState] = useState<'idle' | 'loading' | 'ready' | 'failed'>('idle');
 
