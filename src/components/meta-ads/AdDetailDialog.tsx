@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ExternalLink, Loader2, Sparkles, RefreshCw, Copy as CopyIcon } from 'lucide-react';
 import { AdPreviewPanel } from './AdPreviewPanel';
 import { useUpdateMetaAd, useToggleMetaStatus, useMetaAiAssistant, type MetaAd } from '@/hooks/use-meta-campaigns';
+import { usePlatformConnections } from '@/hooks/use-platform-connections';
 import { useAuth } from '@/lib/auth-context';
 import { useFirm } from '@/hooks/use-firm';
 import { useToast } from '@/hooks/use-toast';
@@ -37,6 +38,8 @@ export function AdDetailDialog({ adId, open, onOpenChange }: Props) {
   const update = useUpdateMetaAd();
   const toggle = useToggleMetaStatus();
   const ai = useMetaAiAssistant();
+  const { data: connections } = usePlatformConnections();
+  const fbConnection = connections?.find((c) => c.platform === 'facebook' && c.is_active);
   const [refreshedFor, setRefreshedFor] = useState<string | null>(null);
   const [creativeState, setCreativeState] = useState<'idle' | 'loading' | 'ready' | 'failed'>('idle');
 
@@ -279,7 +282,7 @@ export function AdDetailDialog({ adId, open, onOpenChange }: Props) {
                 videoThumbnailUrl={(ad as any).video_thumbnail_url || undefined}
                 adFormat={(ad as any).ad_format || form.creative_type}
                 carouselCards={(ad as any).carousel_cards || []}
-                pageName={(ad as any).page_name}
+                pageName={(ad as any).page_name || fbConnection?.page_name || fbConnection?.platform_username}
                 pagePictureUrl={(ad as any).page_picture_url}
                 postMessage={(ad as any).post_message}
                 postCreatedTime={(ad as any).post_created_time}
