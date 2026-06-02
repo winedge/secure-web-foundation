@@ -81,6 +81,11 @@ export function useMetaAutoSync(datePreset: string) {
   const accountRowId = selectedAdAccount?.id;
   const accountExternalId = selectedAdAccount?.meta_ad_account_id;
 
+  // Invalidate every meta table query on date-preset change so no stale rows remain.
+  useEffect(() => {
+    INVALIDATE_KEYS.forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
+  }, [datePreset, qc]);
+
   useEffect(() => {
     if (!firmId || !accountRowId || !user?.id) return;
     const cacheKey = `${firmId}:${accountRowId}`;
