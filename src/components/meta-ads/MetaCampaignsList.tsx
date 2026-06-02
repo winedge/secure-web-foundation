@@ -87,11 +87,25 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
     });
   }, [allCampaigns, search, chip]);
 
+  const { data: insights } = useMetaLiveInsights(datePreset);
+
+  const PRESET_DAYS: Record<string, number> = {
+    today: 1, yesterday: 1, last_7d: 7, last_14d: 14, last_30d: 30,
+    this_month: new Date().getDate(),
+    last_month: new Date(new Date().getFullYear(), new Date().getMonth(), 0).getDate(),
+    maximum: 90,
+  };
+  const periodDays = PRESET_DAYS[datePreset] || 30;
+
+  const totalSpend = useMemo(
+    () => Object.values(insights || {}).reduce((s, v: any) => s + (Number(v?.spend) || 0), 0),
+    [insights],
+  );
   const stats = {
     total: allCampaigns.length,
     active: allCampaigns.filter((c) => c.status === 'active').length,
-    dailySpend: allCampaigns.filter((c) => c.status === 'active').reduce((s, c) => s + (c.daily_budget || 0), 0),
-    totalBudget: allCampaigns.reduce((s, c) => s + (c.lifetime_budget || 0), 0),
+    dailySpend: totalSpend / Math.max(periodDays, 1),
+    totalSpend,
   };
 
   const openCreate = () => { setEditCampaign(null); setWizardOpen(true); };
