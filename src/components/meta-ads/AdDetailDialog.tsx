@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ExternalLink, Loader2, Sparkles, RefreshCw, Copy as CopyIcon } from 'lucide-react';
 import { AdPreviewPanel } from './AdPreviewPanel';
 import { useUpdateMetaAd, useToggleMetaStatus, useMetaAiAssistant, type MetaAd } from '@/hooks/use-meta-campaigns';
+import { usePlatformConnections } from '@/hooks/use-platform-connections';
 import { useAuth } from '@/lib/auth-context';
 import { useFirm } from '@/hooks/use-firm';
 import { useToast } from '@/hooks/use-toast';
