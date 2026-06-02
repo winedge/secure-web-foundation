@@ -30,6 +30,14 @@ export interface AdPreviewData {
   postCreatedTime?: string | null;
   permalinkUrl?: string | null;
   instagramPermalinkUrl?: string | null;
+  /** Raw `targeting` jsonb from the ad set (used to filter visible placement tabs). */
+  targeting?: {
+    publisher_platforms?: string[] | null;
+    facebook_positions?: string[] | null;
+    instagram_positions?: string[] | null;
+    messenger_positions?: string[] | null;
+    audience_network_positions?: string[] | null;
+  } | null;
 }
 
 interface Props extends AdPreviewData {}
@@ -301,14 +309,35 @@ export function AdPreviewPanel(props: Props) {
   const hasVideo = !!props.videoSourceUrl;
 
   const placements = useMemo(() => {
+    const t = props.targeting || {};
+    const pubs = t.publisher_platforms || null;
+    const fbPos = t.facebook_positions || null;
+    const igPos = t.instagram_positions || null;
+    const hasFb = !pubs || pubs.includes('facebook');
+    const hasIg = !pubs || pubs.includes('instagram');
+    // If no explicit positions, treat all default placements for that platform as enabled.
+    const fbHas = (p: string) => hasFb && (!fbPos || fbPos.includes(p));
+    const igHas = (p: string) => hasIg && (!igPos || igPos.includes(p));
+
     const list: { value: string; label: string; icon: any }[] = [];
-    if (fmt === 'reel' || (hasVideo && fmt !== 'image')) list.push({ value: 'reel', label: 'Reels', icon: Instagram });
-    list.push({ value: 'fb-feed', label: 'Facebook Feed', icon: Facebook });
-    list.push({ value: 'ig-feed', label: 'Instagram Feed', icon: Instagram });
-    list.push({ value: 'story', label: 'Stories', icon: Instagram });
-    list.push({ value: 'right-col', label: 'Right Column', icon: Facebook });
+    const reelEnabled =
+      fmt === 'reel' ||
+      fbHas('facebook_reels') ||
+      igHas('reels') ||
+      (hasVideo && !pubs && !fbPos && !igPos && fmt !== 'image');
+    if (reelEnabled) list.push({ value: 'reel', label: 'Reels', icon: Instagram });
+    if (fbHas('feed')) list.push({ value: 'fb-feed', label: 'Facebook Feed', icon: Facebook });
+    if (igHas('stream')) list.push({ value: 'ig-feed', label: 'Instagram Feed', icon: Instagram });
+    if (fbHas('story') || igHas('story')) list.push({ value: 'story', label: 'Stories', icon: Instagram });
+    if (fbHas('right_hand_column')) list.push({ value: 'right-col', label: 'Right Column', icon: Facebook });
+
+    // Safety net: never show an empty placement bar.
+    if (list.length === 0) {
+      if (hasVideo) list.push({ value: 'reel', label: 'Reels', icon: Instagram });
+      list.push({ value: 'fb-feed', label: 'Facebook Feed', icon: Facebook });
+    }
     return list;
-  }, [fmt, hasVideo]);
+  }, [fmt, hasVideo, props.targeting]);
 
   const defaultTab = placements[0]?.value || 'fb-feed';
 
