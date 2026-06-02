@@ -76,7 +76,7 @@ export function useUrlFilters<T extends Record<string, FilterValue>>({
   );
 
   const setFilter = useCallback(
-    <K extends keyof T>(key: K, value: T[K]) => setFilters({ [key]: value } as Partial<T>),
+    <K extends keyof T>(key: K, value: T[K]) => setFilters({ [key]: value } as unknown as Partial<T>),
     [setFilters],
   );
 
