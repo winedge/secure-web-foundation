@@ -33,7 +33,7 @@ async function fetchMetaWithRetry(url: string, maxAttempts = 5): Promise<any> {
   return lastErr ?? { error: { message: "Meta API failed after retries" } };
 }
 
-const AD_CREATIVE_FIELDS = "id,name,adset_id,status,effective_status,tracking_specs,conversion_specs,preview_shareable_link,created_time,creative{id,title,body,name,image_url,thumbnail_url,video_id,instagram_actor_id,instagram_permalink_url,effective_instagram_media_id,effective_object_story_id,object_story_id,call_to_action_type,object_story_spec,asset_feed_spec,link_url,template_url,image_hash,product_set_id}";
+const AD_CREATIVE_FIELDS = "id,name,adset_id,status,effective_status,tracking_specs,conversion_specs,preview_shareable_link,created_time,creative{id,title,body,name,image_url,thumbnail_url,video_id,instagram_actor_id,instagram_permalink_url,effective_instagram_media_id,source_instagram_media_id,effective_object_story_id,object_story_id,call_to_action_type,object_story_spec,asset_feed_spec,link_url,template_url,image_hash,product_set_id}";
 
 function firstCreativeValue(arr: any): string | null {
   if (!Array.isArray(arr) || !arr.length) return null;
@@ -152,7 +152,7 @@ async function enrichAdCreativeFields(ad: any, token: string): Promise<any> {
   }
 
   // ── Resolve Instagram media (IG-only / reel ads) ──
-  const igMediaId = cr.effective_instagram_media_id;
+  const igMediaId = cr.effective_instagram_media_id || cr.source_instagram_media_id;
   if (igMediaId) {
     const ig = await fetchMetaWithRetry(`${META_API}/${igMediaId}?fields=media_url,media_type,permalink,caption,thumbnail_url,username&access_token=${token}`, 3);
     if (!ig?.error) {
@@ -172,6 +172,23 @@ async function enrichAdCreativeFields(ad: any, token: string): Promise<any> {
   if (enriched.ad_format === "video" && (cr.instagram_actor_id || enriched.instagram_permalink_url)) {
     enriched.ad_format = "reel";
   }
+
+  // ── Final fallback: refetch creative directly when text fields are still empty ──
+  if ((!enriched.body_text || !enriched.headline) && cr.id) {
+    const cfetch = await fetchMetaWithRetry(`${META_API}/${cr.id}?fields=title,body,name,object_story_spec,asset_feed_spec&access_token=${token}`, 2);
+    if (!cfetch?.error) {
+      const oss2 = cfetch.object_story_spec || {};
+      const vd2 = oss2.video_data || {};
+      const ld2 = oss2.link_data || {};
+      const afs2 = cfetch.asset_feed_spec || {};
+      enriched.body_text ||= cfetch.body || vd2.message || ld2.message || firstCreativeValue(afs2.bodies) || null;
+      enriched.headline ||= cfetch.title || vd2.title || ld2.name || firstCreativeValue(afs2.titles) || null;
+      enriched.description ||= vd2.link_description || ld2.description || firstCreativeValue(afs2.descriptions) || null;
+    }
+  }
+
+  // ── Last-resort fallback: use ad name as headline so the editor isn't blank ──
+  if (!enriched.headline && ad?.name) enriched.headline = ad.name;
 
   // ── Resolve carousel card videos ──
   if (Array.isArray(enriched.carousel_cards) && enriched.carousel_cards.length) {
