@@ -21,6 +21,7 @@ import { CampaignCreateWizard } from './forms/CampaignCreateWizard';
 import { AdSetsTable } from './tables/AdSetsTable';
 import { AdsTable } from './tables/AdsTable';
 import { useUrlFilters } from '@/hooks/use-url-filters';
+import { useMetaRealtime, useMetaAutoSync } from '@/hooks/use-meta-realtime';
 
 const COL_STORAGE_KEY = 'meta-ads-visible-cols-v1';
 const DEFAULT_COLS: ColumnId[] = ['delivery', 'results', 'cost_per_result', 'budget', 'spent', 'impressions', 'reach', 'ends'];
