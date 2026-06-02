@@ -54,6 +54,7 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
   const chip = shellValues.chip as ChipFilter;
   const datePreset = shellValues.datePreset;
   const tab = shellValues.tab;
+  useMetaAutoSync(datePreset);
   const [breakdown, setBreakdown] = useState<Breakdown>('none');
   const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(() => {
     if (typeof window === 'undefined') return new Set(DEFAULT_COLS);
