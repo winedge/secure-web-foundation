@@ -46,7 +46,7 @@ export function AdDetailDialog({ adId, open, onOpenChange }: Props) {
       if (!adId) return null;
       const { data, error } = await (supabase as any)
         .from('meta_ads')
-        .select('*, ad_set:meta_ad_sets(id,name,campaign_id, campaign:meta_campaigns(id,name))')
+        .select('*, ad_set:meta_ad_sets(id,name,campaign_id,targeting, campaign:meta_campaigns(id,name))')
         .eq('id', adId)
         .maybeSingle();
       if (error) throw error;
@@ -285,6 +285,7 @@ export function AdDetailDialog({ adId, open, onOpenChange }: Props) {
                 postCreatedTime={(ad as any).post_created_time}
                 permalinkUrl={(ad as any).permalink_url}
                 instagramPermalinkUrl={(ad as any).instagram_permalink_url}
+                targeting={ad?.ad_set?.targeting || null}
               />
               {creativeState === 'loading' && (
                 <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1.5">
