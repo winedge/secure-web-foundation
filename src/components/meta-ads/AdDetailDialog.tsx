@@ -282,7 +282,7 @@ export function AdDetailDialog({ adId, open, onOpenChange }: Props) {
                 videoThumbnailUrl={(ad as any).video_thumbnail_url || undefined}
                 adFormat={(ad as any).ad_format || form.creative_type}
                 carouselCards={(ad as any).carousel_cards || []}
-                pageName={(ad as any).page_name}
+                pageName={(ad as any).page_name || fbConnection?.page_name || fbConnection?.platform_username}
                 pagePictureUrl={(ad as any).page_picture_url}
                 postMessage={(ad as any).post_message}
                 postCreatedTime={(ad as any).post_created_time}
