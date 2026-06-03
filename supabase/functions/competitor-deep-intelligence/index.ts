@@ -39,6 +39,62 @@ async function googleFindAdvertiser(query: string): Promise<{ id: string; name: 
   return null;
 }
 
+function extractGoogleCreativeMedia(row: any): { media_url?: string; format: 'image' | 'video' | 'text' } {
+  const raw = [row?.['3']?.['3']?.['2'], row?.['3']?.['2'], row?.['3']?.['1']?.['4'], row?.['3']?.['4']]
+    .find((v) => typeof v === 'string') as string | undefined;
+  if (!raw) return { format: 'text' };
+  const cleaned = raw.replace(/\\u003d/g, '=').replace(/&amp;/g, '&');
+  const mediaUrl = cleaned.match(/src=["']([^"']+)["']/i)?.[1]
+    || cleaned.match(/["'](https?:\/\/[^"']+)["']/)?.[1]
+    || (cleaned.startsWith('http') ? cleaned : undefined);
+  if (!mediaUrl) return { format: 'text' };
+  return { media_url: mediaUrl, format: /<video|\.(mp4|webm)(\?|$)/i.test(cleaned) ? 'video' : 'image' };
+}
+
+function walkStringsAndUrls(node: any, strings: string[], urls: string[], depth = 0) {
+  if (node == null || depth > 12) return;
+  if (typeof node === 'string') {
+    const s = node.trim();
+    if (!s) return;
+    if (/^https?:\/\//i.test(s)) urls.push(s);
+    else if (s.length >= 3 && s.length <= 400 && !/^[A-Z]{1,3}\d{6,}$/.test(s) && !/^\d+$/.test(s)) strings.push(s);
+    return;
+  }
+  if (Array.isArray(node)) { for (const v of node) walkStringsAndUrls(v, strings, urls, depth + 1); return; }
+  if (typeof node === 'object') for (const v of Object.values(node)) walkStringsAndUrls(v, strings, urls, depth + 1);
+}
+
+async function fetchGoogleCreativeDetails(advertiserId: string, creativeId: string, region: string) {
+  const regionNumber = REGION_NUM[region.toUpperCase()];
+  const payload: Record<string, unknown> = { '1': creativeId, '2': advertiserId };
+  if (regionNumber) payload['5'] = regionNumber;
+  try {
+    const res = await googleRpc('/anji/_/rpc/LookupService/GetCreativeById', payload);
+    const strings: string[] = [];
+    const urls: string[] = [];
+    walkStringsAndUrls(res, strings, urls);
+    const uniqStr = Array.from(new Set(strings));
+    const uniqUrls = Array.from(new Set(urls));
+    const mediaUrl = uniqUrls.find(u => /\.(mp4|webm)(\?|$)/i.test(u))
+      || uniqUrls.find(u => /(simgad|tpc\.googlesyndication|\.(jpe?g|png|gif|webp))(\?|$|\/)/i.test(u));
+    const destinationUrl = uniqUrls.find(u => !/google(?:syndication|usercontent|\.com\/(?:aclk|pagead))/i.test(u) && !u.includes('adstransparency'));
+    const candidates = uniqStr.filter(s =>
+      !s.startsWith('AR') && !s.startsWith('CR') &&
+      !/^(text|image|video|html|en|US|IN|true|false)$/i.test(s) &&
+      !/^[a-z0-9_]+\.(googleapis|googleusercontent|gstatic)/i.test(s)
+    );
+    const headline = candidates.find(s => s.length >= 8 && s.length <= 90);
+    const body = candidates.find(s => s.length > 40 && s !== headline) || candidates.find(s => s !== headline);
+    return {
+      format: mediaUrl ? (/\.(mp4|webm)/i.test(mediaUrl) ? 'video' : 'image') : undefined,
+      media_url: mediaUrl,
+      destination_url: destinationUrl,
+      headline,
+      body,
+    };
+  } catch (_) { return {}; }
+}
+
 async function googleFetchAds(advertiserId: string, region: string, limit = 12) {
   const filters: Record<string, unknown> = { '12': { '1': '', '2': true }, '13': { '1': [advertiserId] } };
   const regionN = REGION_NUM[region.toUpperCase()];
