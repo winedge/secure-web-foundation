@@ -147,7 +147,11 @@ function CompetitorDeepCard({ c }: { c: DeepCompetitor }) {
               ))}
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground italic">No public Meta ads detected. Open the Ad Library link to verify.</p>
+            <p className="text-xs text-muted-foreground italic">
+              {c.meta_ads?.status === 'blocked_or_unavailable'
+                ? 'Meta Ad Library blocked automated extraction or returned no scrapeable content. Open the Ad Library link to verify live ads directly.'
+                : 'No public Meta ads detected for this exact firm name. Open the Ad Library link to verify.'}
+            </p>
           )}
         </div>
 
