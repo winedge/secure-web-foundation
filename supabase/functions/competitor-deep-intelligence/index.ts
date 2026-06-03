@@ -41,7 +41,7 @@ function categorySearchIntent(category: string) {
 
 function domainToBrand(domain: string) {
   const root = domain.replace(/^www\./, '').split('.')[0]
-    .replace(/(lawfirm|lawgroup|lawoffice|attorneys|lawyers|legal|firm)$/i, ' law')
+    .replace(/(legalgroup|lawfirm|lawgroup|lawoffice|attorneys|attorney|lawyers|lawyer|legal|firm|law)$/i, ' law')
     .replace(/[-_]+/g, ' ')
     .replace(/([a-z])([A-Z])/g, '$1 $2')
     .trim();
