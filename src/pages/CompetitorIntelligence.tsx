@@ -169,7 +169,7 @@ export default function CompetitorIntelligence() {
   const [customDomain, setCustomDomain] = useState('');
   const [customName, setCustomName] = useState('');
 
-  const firmDomain = firm?.website || firm?.domain || undefined;
+  const firmDomain = (firm as any)?.website || (firm as any)?.domain || undefined;
 
   const toggle = (d: string) => setSelected(prev => {
     const next = new Set(prev);
