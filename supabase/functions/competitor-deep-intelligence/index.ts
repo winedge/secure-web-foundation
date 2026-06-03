@@ -514,7 +514,9 @@ Deno.serve(async (req) => {
 
     const analyzed = await Promise.all(competitors.map(c => analyzeCompetitor(c, region, category).catch((e) => ({
       name: c.name, domain: c.domain, error: e instanceof Error ? e.message : String(e),
-      website: null, google_ads: { creatives: [] }, meta_ads: { creatives: [] }, semrush: null,
+      website: null, google_ads: { creatives: [] },
+      meta_ads: { library_url: `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${adCountryFromRegion(region)}&q=${encodeURIComponent(c.name)}`, status: 'blocked_or_unavailable', creatives: [] },
+      semrush: null,
     }))));
 
     const synthesis = await aiSynthesize(category, region, analyzed);
