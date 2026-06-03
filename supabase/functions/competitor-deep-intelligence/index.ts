@@ -15,6 +15,13 @@ const GOOGLE_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0.0.0 Safari/537.36',
 };
 const REGION_NUM: Record<string, number> = { IN: 2356, US: 2840, GB: 2826, CA: 2124, AU: 2036, AE: 2784, SG: 2702, DE: 2276 };
+const COUNTRY_CODES = new Set(Object.keys(REGION_NUM));
+
+function adCountryFromRegion(region: string) {
+  const normalized = (region || 'US').toUpperCase();
+  if (normalized.startsWith('US-')) return 'US';
+  return COUNTRY_CODES.has(normalized) ? normalized : 'US';
+}
 
 async function googleRpc(path: string, payload: Record<string, unknown>) {
   const body = new URLSearchParams({ 'f.req': JSON.stringify(payload) });
@@ -96,9 +103,10 @@ async function fetchGoogleCreativeDetails(advertiserId: string, creativeId: stri
 }
 
 async function googleFetchAds(advertiserId: string, region: string, limit = 12) {
+  const adCountry = adCountryFromRegion(region);
   const buildFilters = (includeRegion: boolean) => {
     const filters: Record<string, unknown> = { '12': { '1': '', '2': true }, '13': { '1': [advertiserId] } };
-    const regionN = REGION_NUM[region.toUpperCase()];
+    const regionN = REGION_NUM[adCountry];
     if (includeRegion && regionN) filters['8'] = [regionN];
     return filters;
   };
@@ -109,7 +117,7 @@ async function googleFetchAds(advertiserId: string, region: string, limit = 12) 
       return Array.isArray(res?.['1']) ? res['1'] : [];
     };
     let rows = await fetchRows(true);
-    if (!rows.length && REGION_NUM[region.toUpperCase()]) rows = await fetchRows(false);
+    if (!rows.length && REGION_NUM[adCountry]) rows = await fetchRows(false);
 
     const baseCreatives = rows.slice(0, limit).map((row: any) => {
       const creativeId = row?.['2'];
