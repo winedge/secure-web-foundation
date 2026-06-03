@@ -24,6 +24,10 @@ function adCountryFromRegion(region: string) {
   return COUNTRY_CODES.has(normalized) ? normalized : 'US';
 }
 
+function isEmbeddableGoogleMedia(url?: string) {
+  return !!url && /(\/archive\/simgad\/|tpc\.googlesyndication|\.(jpe?g|png|gif|webp|mp4|webm)(\?|$))/i.test(url);
+}
+
 async function googleRpc(path: string, payload: Record<string, unknown>) {
   const body = new URLSearchParams({ 'f.req': JSON.stringify(payload) });
   const r = await fetch(`${GOOGLE_ADS_BASE}${path}?authuser=`, { method: 'POST', headers: GOOGLE_HEADERS, body });
@@ -66,7 +70,7 @@ function extractGoogleCreativeMedia(row: any): { media_url?: string; format: 'im
   const mediaUrl = cleaned.match(/src=["']([^"']+)["']/i)?.[1]
     || cleaned.match(/["'](https?:\/\/[^"']+)["']/)?.[1]
     || (cleaned.startsWith('http') ? cleaned : undefined);
-  if (!mediaUrl) return { format: 'text' };
+  if (!isEmbeddableGoogleMedia(mediaUrl)) return { format: 'text' };
   return { media_url: mediaUrl, format: /<video|\.(mp4|webm)(\?|$)/i.test(cleaned) ? 'video' : 'image' };
 }
 
@@ -94,8 +98,8 @@ async function fetchGoogleCreativeDetails(advertiserId: string, creativeId: stri
     walkStringsAndUrls(res, strings, urls);
     const uniqStr = Array.from(new Set(strings));
     const uniqUrls = Array.from(new Set(urls));
-    const mediaUrl = uniqUrls.find(u => /\.(mp4|webm)(\?|$)/i.test(u))
-      || uniqUrls.find(u => /(simgad|tpc\.googlesyndication|\.(jpe?g|png|gif|webp))(\?|$|\/)/i.test(u));
+    const mediaUrl = uniqUrls.find(u => isEmbeddableGoogleMedia(u) && /\.(mp4|webm)(\?|$)/i.test(u))
+      || uniqUrls.find(u => isEmbeddableGoogleMedia(u));
     const destinationUrl = uniqUrls.find(u => !/google(?:syndication|usercontent|\.com\/(?:aclk|pagead))/i.test(u) && !u.includes('adstransparency'));
     const candidates = uniqStr.filter(s =>
       !s.startsWith('AR') && !s.startsWith('CR') &&
