@@ -117,8 +117,8 @@ function CompetitorDeepCard({ c }: { c: DeepCompetitor }) {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {c.google_ads.creatives.slice(0, 6).map((ad, i) => (
                 <AdMediaCard key={i} media={ad.media_url} format={ad.format} link={ad.transparency_url}
-                  label={ad.first_seen ? `First seen ${new Date(ad.first_seen).toLocaleDateString()}` : undefined}
-                  sublabel={ad.last_seen ? `Last ${new Date(ad.last_seen).toLocaleDateString()}` : undefined}
+                  label={ad.headline || ad.body || (ad.first_seen ? `First seen ${new Date(ad.first_seen).toLocaleDateString()}` : undefined)}
+                  sublabel={ad.last_seen ? `Last ${new Date(ad.last_seen).toLocaleDateString()}` : ad.destination_url}
                 />
               ))}
             </div>
