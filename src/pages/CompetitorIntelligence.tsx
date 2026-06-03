@@ -23,15 +23,16 @@ const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
 
 function AdMediaCard({ media, format, link, label, sublabel }: { media?: string; format?: string; link?: string; label?: string; sublabel?: string }) {
+  const [mediaOk, setMediaOk] = useState(true);
   const FormatIcon = format === 'video' ? FileVideo : format === 'image' ? ImageIcon : FileText;
   return (
     <a href={link} target="_blank" rel="noreferrer noopener" className="group block rounded-lg border border-border bg-muted/40 overflow-hidden hover:border-primary transition-colors">
       <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
-        {media ? (
+        {media && mediaOk ? (
           format === 'video' ? (
-            <video src={media} className="w-full h-full object-cover" muted />
+            <video src={media} className="w-full h-full object-cover" muted onError={() => setMediaOk(false)} />
           ) : (
-            <img src={media} alt={label || 'ad creative'} className="w-full h-full object-cover" loading="lazy" />
+            <img src={media} alt={label || 'ad creative'} className="w-full h-full object-cover" loading="lazy" referrerPolicy="no-referrer" onError={() => setMediaOk(false)} />
           )
         ) : (
           <FormatIcon className="h-8 w-8 text-muted-foreground/40" />
@@ -50,7 +51,8 @@ function AdMediaCard({ media, format, link, label, sublabel }: { media?: string;
 }
 
 function CompetitorDeepCard({ c }: { c: DeepCompetitor }) {
-  const totalAds = (c.google_ads?.creatives?.length || 0) + (c.meta_ads?.creatives?.length || 0);
+  const googleVisibleAds = Math.max(c.google_ads?.creatives?.length || 0, c.google_ads?.total_ads_running || 0);
+  const totalAds = googleVisibleAds + (c.meta_ads?.creatives?.length || 0);
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-3">
