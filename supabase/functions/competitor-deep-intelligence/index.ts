@@ -83,8 +83,8 @@ function walkStringsAndUrls(node: any, strings: string[], urls: string[], depth 
   if (typeof node === 'object') for (const v of Object.values(node)) walkStringsAndUrls(v, strings, urls, depth + 1);
 }
 
-async function fetchGoogleCreativeDetails(advertiserId: string, creativeId: string, region: string) {
-  const regionNumber = REGION_NUM[region.toUpperCase()];
+async function fetchGoogleCreativeDetails(advertiserId: string, creativeId: string, region: string): Promise<Record<string, any>> {
+  const regionNumber = REGION_NUM[adCountryFromRegion(region)];
   const payload: Record<string, unknown> = { '1': creativeId, '2': advertiserId };
   if (regionNumber) payload['5'] = regionNumber;
   try {
