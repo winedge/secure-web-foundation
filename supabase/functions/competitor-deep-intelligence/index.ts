@@ -56,7 +56,9 @@ function isRelevantCompetitor(category: string, domain: string, title = '', snip
 }
 
 function inferCompetitorName(category: string, domain: string, title = '') {
-  const firstTitlePart = title.split(/[|\-–—]/)[0].trim().slice(0, 80);
+  const titleParts = title.split(/[|\-–—]/).map(p => p.trim()).filter(Boolean);
+  const legalBrandPart = titleParts.find(p => LEGAL_INTENT.test(p) && !/round\s*up|monsanto|glyphosate|lawsuit|settlement|lawyer|attorney/i.test(p));
+  const firstTitlePart = (legalBrandPart || titleParts[0] || '').slice(0, 80);
   if (isRoundupCategory(category) && (!firstTitlePart || /round\s*up|monsanto|glyphosate|lawsuit|settlement|lawyer/i.test(firstTitlePart))) {
     return domainToBrand(domain) || firstTitlePart || domain;
   }
