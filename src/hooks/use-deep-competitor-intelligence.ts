@@ -12,7 +12,10 @@ export interface CompetitorSuggestion {
 export interface GoogleAdCreative {
   creative_id?: string;
   format?: 'image' | 'video' | 'text';
+  headline?: string;
+  body?: string;
   media_url?: string;
+  destination_url?: string;
   first_seen?: string;
   last_seen?: string;
   transparency_url?: string;
