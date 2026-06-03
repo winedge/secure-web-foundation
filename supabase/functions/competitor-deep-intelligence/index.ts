@@ -16,6 +16,8 @@ const GOOGLE_HEADERS = {
 };
 const REGION_NUM: Record<string, number> = { IN: 2356, US: 2840, GB: 2826, CA: 2124, AU: 2036, AE: 2784, SG: 2702, DE: 2276 };
 const COUNTRY_CODES = new Set(Object.keys(REGION_NUM));
+const LEGAL_INTENT = /(law|lawyer|attorney|firm|lawsuit|litigation|settlement|claim|injury|mass tort|product liability|class action|verdict|compensation)/i;
+const ROUNDUP_PRODUCT_FALSE_POSITIVE = /(roundups?\.ai|roundup\.com|roundup\.org|bag|bags|backpack|tote|luggage|handbag|shop|store|coupon|herbicide label|weed control product|scotts miracle-gro)/i;
 
 function adCountryFromRegion(region: string) {
   const normalized = (region || 'US').toUpperCase();
@@ -26,6 +28,39 @@ function adCountryFromRegion(region: string) {
 
 function isEmbeddableGoogleMedia(url?: string) {
   return !!url && /(\/archive\/simgad\/|tpc\.googlesyndication|\.(jpe?g|png|gif|webp|mp4|webm)(\?|$))/i.test(url);
+}
+
+function isRoundupCategory(category: string) {
+  return /\bround\s*up\b/i.test(category);
+}
+
+function categorySearchIntent(category: string) {
+  if (isRoundupCategory(category)) return 'Roundup lawsuit lawyer Monsanto cancer settlement law firm';
+  return category;
+}
+
+function domainToBrand(domain: string) {
+  const root = domain.replace(/^www\./, '').split('.')[0]
+    .replace(/(lawfirm|lawgroup|lawoffice|attorneys|lawyers|legal|firm)$/i, ' law')
+    .replace(/[-_]+/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .trim();
+  return root.split(/\s+/).filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+function isRelevantCompetitor(category: string, domain: string, title = '', snippet = '') {
+  const haystack = `${domain} ${title} ${snippet}`;
+  if (isRoundupCategory(category) && ROUNDUP_PRODUCT_FALSE_POSITIVE.test(haystack)) return false;
+  if (isRoundupCategory(category)) return LEGAL_INTENT.test(haystack) && /round\s*up|monsanto|glyphosate|non-hodgkin|lymphoma|cancer/i.test(haystack);
+  return true;
+}
+
+function inferCompetitorName(category: string, domain: string, title = '') {
+  const firstTitlePart = title.split(/[|\-–—]/)[0].trim().slice(0, 80);
+  if (isRoundupCategory(category) && (!firstTitlePart || /round\s*up|monsanto|glyphosate|lawsuit|settlement|lawyer/i.test(firstTitlePart))) {
+    return domainToBrand(domain) || firstTitlePart || domain;
+  }
+  return firstTitlePart || domainToBrand(domain) || domain;
 }
 
 async function googleRpc(path: string, payload: Record<string, unknown>) {
