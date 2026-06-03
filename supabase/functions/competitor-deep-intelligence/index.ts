@@ -19,6 +19,7 @@ const COUNTRY_CODES = new Set(Object.keys(REGION_NUM));
 
 function adCountryFromRegion(region: string) {
   const normalized = (region || 'US').toUpperCase();
+  if (normalized.startsWith('COUNTRY_')) return normalized.replace('COUNTRY_', '');
   if (normalized.startsWith('US-')) return 'US';
   return COUNTRY_CODES.has(normalized) ? normalized : 'US';
 }
@@ -287,6 +288,7 @@ async function semrushBacklinkOverview(domain: string) {
 
 // ---------- Analysis per competitor ----------
 async function analyzeCompetitor(c: { name: string; domain: string }, region: string) {
+  const adCountry = adCountryFromRegion(region);
   const [advertiser, website, semrushDomain, semrushBacklinks] = await Promise.all([
     googleFindAdvertiser(c.name).then(r => r || googleFindAdvertiser(c.domain)),
     scrapeWebsite(`https://${c.domain}`).catch(() => null),
@@ -295,7 +297,7 @@ async function analyzeCompetitor(c: { name: string; domain: string }, region: st
   ]);
 
   const googleAds = advertiser ? await googleFetchAds(advertiser.id, region, 12) : [];
-  const metaAds = await scrapeMetaAdLibrary(c.name, c.domain, region.toUpperCase() || 'US').catch(() => ({ ads: [], screenshot: null }));
+  const metaAds = await scrapeMetaAdLibrary(c.name, c.domain, adCountry).catch(() => ({ ads: [], screenshot: null }));
 
   return {
     name: c.name,
@@ -305,11 +307,11 @@ async function analyzeCompetitor(c: { name: string; domain: string }, region: st
       advertiser_id: advertiser?.id,
       advertiser_name: advertiser?.name,
       total_ads_running: advertiser?.ad_count,
-      transparency_url: advertiser ? `${GOOGLE_ADS_BASE}/advertiser/${advertiser.id}?region=${region.toUpperCase()}` : null,
+      transparency_url: advertiser ? `${GOOGLE_ADS_BASE}/advertiser/${advertiser.id}?region=${adCountry}` : null,
       creatives: googleAds,
     },
     meta_ads: {
-      library_url: `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${region.toUpperCase() || 'US'}&q=${encodeURIComponent(c.name)}`,
+      library_url: `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${adCountry}&q=${encodeURIComponent(c.name)}`,
       creatives: metaAds.ads,
     },
     semrush: semrushDomain || semrushBacklinks ? { ...(semrushDomain || {}), ...(semrushBacklinks || {}) } : null,
