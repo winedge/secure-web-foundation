@@ -41,7 +41,7 @@ export interface DeepCompetitor {
     transparency_url?: string | null;
     creatives: GoogleAdCreative[];
   };
-  meta_ads: { library_url: string; creatives: MetaAdCreative[] };
+  meta_ads: { library_url: string; status?: 'ok' | 'blocked_or_unavailable' | 'no_public_ads_detected'; creatives: MetaAdCreative[] };
   semrush: null | {
     organic_keywords?: number; organic_traffic?: number; organic_cost?: number;
     paid_keywords?: number; paid_traffic?: number; paid_cost?: number;

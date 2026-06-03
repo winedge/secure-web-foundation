@@ -16,6 +16,8 @@ const GOOGLE_HEADERS = {
 };
 const REGION_NUM: Record<string, number> = { IN: 2356, US: 2840, GB: 2826, CA: 2124, AU: 2036, AE: 2784, SG: 2702, DE: 2276 };
 const COUNTRY_CODES = new Set(Object.keys(REGION_NUM));
+const LEGAL_INTENT = /(law|lawyer|attorney|firm|lawsuit|litigation|settlement|claim|injury|mass tort|product liability|class action|verdict|compensation)/i;
+const ROUNDUP_PRODUCT_FALSE_POSITIVE = /(roundups?\.ai|roundup\.com|roundup\.org|\bbags?\b|\bbackpacks?\b|\btotes?\b|\bluggage\b|\bhandbags?\b|\bshop\b|\bstore\b|\bcoupon\b|herbicide label|weed control product|scotts miracle-gro)/i;
 
 function adCountryFromRegion(region: string) {
   const normalized = (region || 'US').toUpperCase();
@@ -26,6 +28,41 @@ function adCountryFromRegion(region: string) {
 
 function isEmbeddableGoogleMedia(url?: string) {
   return !!url && /(\/archive\/simgad\/|tpc\.googlesyndication|\.(jpe?g|png|gif|webp|mp4|webm)(\?|$))/i.test(url);
+}
+
+function isRoundupCategory(category: string) {
+  return /\bround\s*up\b/i.test(category);
+}
+
+function categorySearchIntent(category: string) {
+  if (isRoundupCategory(category)) return 'Roundup lawsuit lawyer Monsanto cancer settlement law firm';
+  return category;
+}
+
+function domainToBrand(domain: string) {
+  const root = domain.replace(/^www\./, '').split('.')[0]
+    .replace(/(legalgroup|lawfirm|lawgroup|lawoffice|attorneys|attorney|lawyers|lawyer|legal|firm|law)$/i, ' law')
+    .replace(/[-_]+/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .trim();
+  return root.split(/\s+/).filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+function isRelevantCompetitor(category: string, domain: string, title = '', snippet = '') {
+  const haystack = `${domain} ${title} ${snippet}`;
+  if (isRoundupCategory(category) && ROUNDUP_PRODUCT_FALSE_POSITIVE.test(haystack)) return false;
+  if (isRoundupCategory(category)) return LEGAL_INTENT.test(haystack) && /round\s*up|monsanto|glyphosate|non-hodgkin|lymphoma|cancer/i.test(haystack);
+  return true;
+}
+
+function inferCompetitorName(category: string, domain: string, title = '') {
+  const titleParts = title.split(/[|\-–—]/).map(p => p.trim()).filter(Boolean);
+  const legalBrandPart = titleParts.find(p => LEGAL_INTENT.test(p) && !/round\s*up|monsanto|glyphosate|lawsuit|settlement|lawyer|attorney/i.test(p));
+  const firstTitlePart = (legalBrandPart || titleParts[0] || '').slice(0, 80);
+  if (isRoundupCategory(category) && (!firstTitlePart || /round\s*up|monsanto|glyphosate|lawsuit|settlement|lawyer/i.test(firstTitlePart))) {
+    return domainToBrand(domain) || firstTitlePart || domain;
+  }
+  return firstTitlePart || domainToBrand(domain) || domain;
 }
 
 async function googleRpc(path: string, payload: Record<string, unknown>) {
@@ -196,6 +233,24 @@ async function googleAdActiveDomains(query: string, region: string) {
   return out;
 }
 
+async function googleAdActiveLegalDomains(category: string, region: string) {
+  if (!isRoundupCategory(category)) return googleAdActiveDomains(category, region);
+  const queries = ['Roundup lawsuit lawyer', 'Monsanto Roundup cancer attorney', 'glyphosate lymphoma lawsuit law firm'];
+  const out: { name: string; domain: string; snippet?: string }[] = [];
+  const seen = new Set<string>();
+  for (const q of queries) {
+    const rows = await googleAdActiveDomains(q, region).catch(() => []);
+    for (const item of rows) {
+      if (seen.has(item.domain)) continue;
+      if (!isRelevantCompetitor(category, item.domain, item.name, `${item.snippet || ''} ${q}`)) continue;
+      seen.add(item.domain);
+      out.push({ ...item, name: inferCompetitorName(category, item.domain, item.name), snippet: 'Active legal Google Ads detected for Roundup litigation intent' });
+      if (out.length >= 6) return out;
+    }
+  }
+  return out;
+}
+
 // ---------- Firecrawl ----------
 async function fc(path: 'scrape' | 'search', body: Record<string, unknown>) {
   if (!FIRECRAWL_API_KEY) return null;
@@ -222,11 +277,12 @@ async function scrapeWebsite(url: string) {
 
 async function scrapeMetaAdLibrary(brand: string, domain: string, country = 'US') {
   // Public Meta Ad Library search page — Firecrawl renders JS.
-  const query = encodeURIComponent(brand || domain);
+  const cleanBrand = brand && !/round\s*up|monsanto|glyphosate|lawsuit|settlement|lawyer/i.test(brand) ? brand : domainToBrand(domain);
+  const query = encodeURIComponent(cleanBrand || domain);
   const url = `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${query}&search_type=keyword_unordered&media_type=all`;
-  const res = await fc('scrape', { url, formats: ['markdown', 'html', 'links'], onlyMainContent: false, waitFor: 6000 });
+  const res = await fc('scrape', { url, formats: ['markdown', 'html', 'links'], onlyMainContent: false, waitFor: 8000 });
   const d = res?.data ?? res;
-  if (!d) return { ads: [], screenshot: null };
+  if (!d) return { ads: [], status: 'blocked_or_unavailable', library_url: url };
   const html = (d.html || d.rawHtml || '') as string;
   const md = (d.markdown || '') as string;
   const links = (d.links || []) as string[];
@@ -255,14 +311,16 @@ async function scrapeMetaAdLibrary(brand: string, domain: string, country = 'US'
     country,
   }));
 
-  return { ads, screenshot: null };
+  const looksBlocked = !ids.length && (/log in|facebook helps you connect|unsupported browser|temporarily blocked|captcha|not available/i.test(`${html}\n${md}`) || (!html && !md));
+  return { ads, status: ads.length ? 'ok' : looksBlocked ? 'blocked_or_unavailable' : 'no_public_ads_detected', library_url: url };
 }
 
 async function discoverCompetitors(category: string, region: string, excludeDomain?: string) {
   const regionLabel = region || 'United States';
-  const query = `top ${category} firms ${regionLabel} -site:wikipedia.org -site:reddit.com -site:facebook.com -site:linkedin.com`;
+  const intent = categorySearchIntent(category);
+  const query = `top ${intent} ${regionLabel} -site:wikipedia.org -site:reddit.com -site:facebook.com -site:linkedin.com -shopping -bags -backpacks`;
   const [adActive, res] = await Promise.all([
-    googleAdActiveDomains(category, region).catch(() => []),
+    googleAdActiveLegalDomains(category, region).catch(() => []),
     fc('search', { query, limit: 20 }),
   ]);
   const items: any[] = res?.data?.web ?? res?.data ?? res?.web ?? [];
@@ -271,6 +329,7 @@ async function discoverCompetitors(category: string, region: string, excludeDoma
   for (const item of adActive) {
     const host = item.domain.replace(/^www\./, '');
     if (excludeDomain && host.includes(excludeDomain.replace(/^www\./, ''))) continue;
+    if (!isRelevantCompetitor(category, host, item.name, item.snippet || '')) continue;
     seen.add(host);
     domains.push({ ...item, domain: host });
   }
@@ -282,10 +341,12 @@ async function discoverCompetitors(category: string, region: string, excludeDoma
       if (!host || seen.has(host)) continue;
       if (excludeDomain && host.includes(excludeDomain.replace(/^www\./, ''))) continue;
       if (/(wikipedia|reddit|facebook|linkedin|youtube|twitter|x\.com|quora|yelp|bbb|justia|martindale|avvo|lawyers\.com|findlaw|nolo|superlawyers|forbes|nytimes|cnn|bloomberg|google\.com|yahoo\.com|bing\.com|github|medium\.com|substack)/i.test(host)) continue;
-      seen.add(host);
       const title: string = item?.title || item?.metadata?.title || host;
-      const name = title.split(/[|\-–—]/)[0].trim().slice(0, 80);
-      domains.push({ name, domain: host, snippet: item?.description || item?.metadata?.description });
+      const snippet: string = item?.description || item?.metadata?.description || '';
+      if (!isRelevantCompetitor(category, host, title, snippet)) continue;
+      seen.add(host);
+      const name = inferCompetitorName(category, host, title);
+      domains.push({ name, domain: host, snippet });
       if (domains.length >= 10) break;
     } catch { /* skip */ }
   }
@@ -340,17 +401,18 @@ async function semrushBacklinkOverview(domain: string) {
 }
 
 // ---------- Analysis per competitor ----------
-async function analyzeCompetitor(c: { name: string; domain: string }, region: string) {
+async function analyzeCompetitor(c: { name: string; domain: string }, region: string, category: string) {
   const adCountry = adCountryFromRegion(region);
+  const lookupName = isRoundupCategory(category) ? domainToBrand(c.domain) : c.name;
   const [advertiser, website, semrushDomain, semrushBacklinks] = await Promise.all([
-    googleFindAdvertiser(c.name).then(r => r || googleFindAdvertiser(c.domain)),
+    googleFindAdvertiser(lookupName).then(r => r || googleFindAdvertiser(c.domain)),
     scrapeWebsite(`https://${c.domain}`).catch(() => null),
     semrushDomainRanks(c.domain).catch(() => null),
     semrushBacklinkOverview(c.domain).catch(() => null),
   ]);
 
   const googleAds = advertiser ? await googleFetchAds(advertiser.id, region, 12) : [];
-  const metaAds = await scrapeMetaAdLibrary(c.name, c.domain, adCountry).catch(() => ({ ads: [], screenshot: null }));
+  const metaAds = await scrapeMetaAdLibrary(lookupName, c.domain, adCountry).catch(() => ({ ads: [], status: 'blocked_or_unavailable', library_url: `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${adCountry}&q=${encodeURIComponent(lookupName)}` }));
 
   return {
     name: c.name,
@@ -364,7 +426,8 @@ async function analyzeCompetitor(c: { name: string; domain: string }, region: st
       creatives: googleAds,
     },
     meta_ads: {
-      library_url: `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${adCountry}&q=${encodeURIComponent(c.name)}`,
+      library_url: metaAds.library_url,
+      status: metaAds.status,
       creatives: metaAds.ads,
     },
     semrush: semrushDomain || semrushBacklinks ? { ...(semrushDomain || {}), ...(semrushBacklinks || {}) } : null,
@@ -379,6 +442,8 @@ async function aiSynthesize(category: string, region: string, competitors: any[]
     google_ads_running: c.google_ads?.total_ads_running,
     google_ad_count: c.google_ads?.creatives?.length,
     meta_ad_count: c.meta_ads?.creatives?.length,
+    meta_status: c.meta_ads?.status,
+    meta_library_url: c.meta_ads?.library_url,
     semrush: c.semrush,
     site_summary: c.website?.summary?.slice(0, 800),
     sample_ad_copy: [
@@ -387,7 +452,7 @@ async function aiSynthesize(category: string, region: string, competitors: any[]
     ].slice(0, 8),
   }));
 
-  const prompt = `You are a senior competitive intelligence analyst. Analyze the REAL data below for competitors in "${category}" (${region || 'US'}). Do NOT invent numbers. Only use what's provided.
+  const prompt = `You are a senior competitive intelligence analyst. Analyze the REAL data below for competitors in "${category}" (${region || 'US'}). Do NOT invent numbers. Only use what's provided. If meta_status is "blocked_or_unavailable", say Meta Ad Library extraction was blocked/unavailable and do NOT claim the competitor has no Meta activity.
 
 DATA:
 ${JSON.stringify(compact, null, 2)}
@@ -451,9 +516,11 @@ Deno.serve(async (req) => {
     }
     competitors = competitors.slice(0, 8); // cap for cost/time
 
-    const analyzed = await Promise.all(competitors.map(c => analyzeCompetitor(c, region).catch((e) => ({
+    const analyzed = await Promise.all(competitors.map(c => analyzeCompetitor(c, region, category).catch((e) => ({
       name: c.name, domain: c.domain, error: e instanceof Error ? e.message : String(e),
-      website: null, google_ads: { creatives: [] }, meta_ads: { creatives: [] }, semrush: null,
+      website: null, google_ads: { creatives: [] },
+      meta_ads: { library_url: `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${adCountryFromRegion(region)}&q=${encodeURIComponent(c.name)}`, status: 'blocked_or_unavailable', creatives: [] },
+      semrush: null,
     }))));
 
     const synthesis = await aiSynthesize(category, region, analyzed);

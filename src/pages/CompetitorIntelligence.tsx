@@ -59,7 +59,7 @@ function CompetitorDeepCard({ c }: { c: DeepCompetitor }) {
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             {c.website?.logo ? (
-              <img src={c.website.logo} alt={c.name} className="h-10 w-10 rounded object-contain bg-white border" />
+              <img src={c.website.logo} alt={c.name} className="h-10 w-10 rounded object-contain bg-background border" />
             ) : (
               <div className="h-10 w-10 rounded bg-muted flex items-center justify-center">
                 <Globe className="h-5 w-5 text-muted-foreground" />
@@ -103,7 +103,7 @@ function CompetitorDeepCard({ c }: { c: DeepCompetitor }) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-semibold flex items-center gap-1.5">
-              <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
+              <span className="inline-block h-2 w-2 rounded-full bg-primary" />
               Google Ads
               {c.google_ads?.total_ads_running ? <Badge variant="outline" className="text-[10px]">{c.google_ads.total_ads_running}+ active</Badge> : null}
             </p>
@@ -131,7 +131,7 @@ function CompetitorDeepCard({ c }: { c: DeepCompetitor }) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-semibold flex items-center gap-1.5">
-              <span className="inline-block h-2 w-2 rounded-full bg-[#0866ff]" />
+              <span className="inline-block h-2 w-2 rounded-full bg-accent" />
               Meta Ads (Facebook / Instagram)
             </p>
             <a href={c.meta_ads.library_url} target="_blank" rel="noreferrer noopener" className="text-xs text-primary hover:underline inline-flex items-center gap-1">
@@ -147,7 +147,11 @@ function CompetitorDeepCard({ c }: { c: DeepCompetitor }) {
               ))}
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground italic">No public Meta ads detected. Open the Ad Library link to verify.</p>
+            <p className="text-xs text-muted-foreground italic">
+              {c.meta_ads?.status === 'blocked_or_unavailable'
+                ? 'Meta Ad Library blocked automated extraction or returned no scrapeable content. Open the Ad Library link to verify live ads directly.'
+                : 'No public Meta ads detected for this exact firm name. Open the Ad Library link to verify.'}
+            </p>
           )}
         </div>
 
