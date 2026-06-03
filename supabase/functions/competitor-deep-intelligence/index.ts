@@ -399,17 +399,18 @@ async function semrushBacklinkOverview(domain: string) {
 }
 
 // ---------- Analysis per competitor ----------
-async function analyzeCompetitor(c: { name: string; domain: string }, region: string) {
+async function analyzeCompetitor(c: { name: string; domain: string }, region: string, category: string) {
   const adCountry = adCountryFromRegion(region);
+  const lookupName = isRoundupCategory(category) ? domainToBrand(c.domain) : c.name;
   const [advertiser, website, semrushDomain, semrushBacklinks] = await Promise.all([
-    googleFindAdvertiser(c.name).then(r => r || googleFindAdvertiser(c.domain)),
+    googleFindAdvertiser(lookupName).then(r => r || googleFindAdvertiser(c.domain)),
     scrapeWebsite(`https://${c.domain}`).catch(() => null),
     semrushDomainRanks(c.domain).catch(() => null),
     semrushBacklinkOverview(c.domain).catch(() => null),
   ]);
 
   const googleAds = advertiser ? await googleFetchAds(advertiser.id, region, 12) : [];
-  const metaAds = await scrapeMetaAdLibrary(c.name, c.domain, adCountry).catch(() => ({ ads: [], screenshot: null }));
+  const metaAds = await scrapeMetaAdLibrary(lookupName, c.domain, adCountry).catch(() => ({ ads: [], status: 'blocked_or_unavailable', library_url: `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${adCountry}&q=${encodeURIComponent(lookupName)}` }));
 
   return {
     name: c.name,
@@ -423,7 +424,8 @@ async function analyzeCompetitor(c: { name: string; domain: string }, region: st
       creatives: googleAds,
     },
     meta_ads: {
-      library_url: `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${adCountry}&q=${encodeURIComponent(c.name)}`,
+      library_url: metaAds.library_url,
+      status: metaAds.status,
       creatives: metaAds.ads,
     },
     semrush: semrushDomain || semrushBacklinks ? { ...(semrushDomain || {}), ...(semrushBacklinks || {}) } : null,
@@ -510,7 +512,7 @@ Deno.serve(async (req) => {
     }
     competitors = competitors.slice(0, 8); // cap for cost/time
 
-    const analyzed = await Promise.all(competitors.map(c => analyzeCompetitor(c, region).catch((e) => ({
+    const analyzed = await Promise.all(competitors.map(c => analyzeCompetitor(c, region, category).catch((e) => ({
       name: c.name, domain: c.domain, error: e instanceof Error ? e.message : String(e),
       website: null, google_ads: { creatives: [] }, meta_ads: { creatives: [] }, semrush: null,
     }))));
