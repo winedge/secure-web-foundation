@@ -442,6 +442,8 @@ async function aiSynthesize(category: string, region: string, competitors: any[]
     google_ads_running: c.google_ads?.total_ads_running,
     google_ad_count: c.google_ads?.creatives?.length,
     meta_ad_count: c.meta_ads?.creatives?.length,
+    meta_status: c.meta_ads?.status,
+    meta_library_url: c.meta_ads?.library_url,
     semrush: c.semrush,
     site_summary: c.website?.summary?.slice(0, 800),
     sample_ad_copy: [
@@ -450,7 +452,7 @@ async function aiSynthesize(category: string, region: string, competitors: any[]
     ].slice(0, 8),
   }));
 
-  const prompt = `You are a senior competitive intelligence analyst. Analyze the REAL data below for competitors in "${category}" (${region || 'US'}). Do NOT invent numbers. Only use what's provided.
+  const prompt = `You are a senior competitive intelligence analyst. Analyze the REAL data below for competitors in "${category}" (${region || 'US'}). Do NOT invent numbers. Only use what's provided. If meta_status is "blocked_or_unavailable", say Meta Ad Library extraction was blocked/unavailable and do NOT claim the competitor has no Meta activity.
 
 DATA:
 ${JSON.stringify(compact, null, 2)}
