@@ -275,11 +275,12 @@ async function scrapeWebsite(url: string) {
 
 async function scrapeMetaAdLibrary(brand: string, domain: string, country = 'US') {
   // Public Meta Ad Library search page — Firecrawl renders JS.
-  const query = encodeURIComponent(brand || domain);
+  const cleanBrand = brand && !/round\s*up|monsanto|glyphosate|lawsuit|settlement|lawyer/i.test(brand) ? brand : domainToBrand(domain);
+  const query = encodeURIComponent(cleanBrand || domain);
   const url = `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${query}&search_type=keyword_unordered&media_type=all`;
-  const res = await fc('scrape', { url, formats: ['markdown', 'html', 'links'], onlyMainContent: false, waitFor: 6000 });
+  const res = await fc('scrape', { url, formats: ['markdown', 'html', 'links'], onlyMainContent: false, waitFor: 8000 });
   const d = res?.data ?? res;
-  if (!d) return { ads: [], screenshot: null };
+  if (!d) return { ads: [], status: 'blocked_or_unavailable', library_url: url };
   const html = (d.html || d.rawHtml || '') as string;
   const md = (d.markdown || '') as string;
   const links = (d.links || []) as string[];
@@ -308,7 +309,8 @@ async function scrapeMetaAdLibrary(brand: string, domain: string, country = 'US'
     country,
   }));
 
-  return { ads, screenshot: null };
+  const looksBlocked = !ids.length && (/log in|facebook helps you connect|unsupported browser|temporarily blocked|captcha|not available/i.test(`${html}\n${md}`) || (!html && !md));
+  return { ads, status: ads.length ? 'ok' : looksBlocked ? 'blocked_or_unavailable' : 'no_public_ads_detected', library_url: url };
 }
 
 async function discoverCompetitors(category: string, region: string, excludeDomain?: string) {
