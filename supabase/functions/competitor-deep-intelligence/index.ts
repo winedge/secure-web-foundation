@@ -231,6 +231,24 @@ async function googleAdActiveDomains(query: string, region: string) {
   return out;
 }
 
+async function googleAdActiveLegalDomains(category: string, region: string) {
+  if (!isRoundupCategory(category)) return googleAdActiveDomains(category, region);
+  const queries = ['Roundup lawsuit lawyer', 'Monsanto Roundup cancer attorney', 'glyphosate lymphoma lawsuit law firm'];
+  const out: { name: string; domain: string; snippet?: string }[] = [];
+  const seen = new Set<string>();
+  for (const q of queries) {
+    const rows = await googleAdActiveDomains(q, region).catch(() => []);
+    for (const item of rows) {
+      if (seen.has(item.domain)) continue;
+      if (!isRelevantCompetitor(category, item.domain, item.name, item.snippet || q)) continue;
+      seen.add(item.domain);
+      out.push({ ...item, name: inferCompetitorName(category, item.domain, item.name), snippet: 'Active legal Google Ads detected for Roundup litigation intent' });
+      if (out.length >= 6) return out;
+    }
+  }
+  return out;
+}
+
 // ---------- Firecrawl ----------
 async function fc(path: 'scrape' | 'search', body: Record<string, unknown>) {
   if (!FIRECRAWL_API_KEY) return null;
