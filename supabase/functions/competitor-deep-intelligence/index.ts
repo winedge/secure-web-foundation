@@ -17,7 +17,7 @@ const GOOGLE_HEADERS = {
 const REGION_NUM: Record<string, number> = { IN: 2356, US: 2840, GB: 2826, CA: 2124, AU: 2036, AE: 2784, SG: 2702, DE: 2276 };
 const COUNTRY_CODES = new Set(Object.keys(REGION_NUM));
 const LEGAL_INTENT = /(law|lawyer|attorney|firm|lawsuit|litigation|settlement|claim|injury|mass tort|product liability|class action|verdict|compensation)/i;
-const ROUNDUP_PRODUCT_FALSE_POSITIVE = /(roundups?\.ai|roundup\.com|roundup\.org|bag|bags|backpack|tote|luggage|handbag|shop|store|coupon|herbicide label|weed control product|scotts miracle-gro)/i;
+const ROUNDUP_PRODUCT_FALSE_POSITIVE = /(roundups?\.ai|roundup\.com|roundup\.org|\bbags?\b|\bbackpacks?\b|\btotes?\b|\bluggage\b|\bhandbags?\b|\bshop\b|\bstore\b|\bcoupon\b|herbicide label|weed control product|scotts miracle-gro)/i;
 
 function adCountryFromRegion(region: string) {
   const normalized = (region || 'US').toUpperCase();
@@ -240,7 +240,7 @@ async function googleAdActiveLegalDomains(category: string, region: string) {
     const rows = await googleAdActiveDomains(q, region).catch(() => []);
     for (const item of rows) {
       if (seen.has(item.domain)) continue;
-      if (!isRelevantCompetitor(category, item.domain, item.name, item.snippet || q)) continue;
+      if (!isRelevantCompetitor(category, item.domain, item.name, `${item.snippet || ''} ${q}`)) continue;
       seen.add(item.domain);
       out.push({ ...item, name: inferCompetitorName(category, item.domain, item.name), snippet: 'Active legal Google Ads detected for Roundup litigation intent' });
       if (out.length >= 6) return out;
