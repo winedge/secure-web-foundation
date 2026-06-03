@@ -163,6 +163,34 @@ async function googleFetchAds(advertiserId: string, region: string, limit = 12) 
   } catch (_) { return []; }
 }
 
+async function googleAdActiveDomains(query: string, region: string) {
+  const out: { name: string; domain: string; snippet?: string }[] = [];
+  const seen = new Set<string>();
+  const suggestionRes = await googleRpc('/anji/_/rpc/SearchService/SearchSuggestions', { '1': query, '2': 10, '3': 10 }).catch(() => null);
+  const suggestedDomains = (Array.isArray(suggestionRes?.['1']) ? suggestionRes['1'] : [])
+    .map((s: any) => s?.['2']?.['1'])
+    .filter((d: any) => typeof d === 'string' && d.includes('.'));
+  const searchTerms = Array.from(new Set([query, ...suggestedDomains])).slice(0, 8);
+
+  for (const term of searchTerms) {
+    const domain = String(term).replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].trim();
+    const isDomain = domain.includes('.');
+    const filters: Record<string, unknown> = isDomain ? { '12': { '1': domain } } : { '12': { '1': term, '2': true } };
+    const regionN = REGION_NUM[adCountryFromRegion(region)];
+    if (regionN) filters['8'] = [regionN];
+    const res = await googleRpc('/anji/_/rpc/SearchService/SearchCreatives', { '1': term, '2': 5, '3': filters, '7': { '1': 1 } }).catch(() => null);
+    const rows = Array.isArray(res?.['1']) ? res['1'] : [];
+    for (const row of rows) {
+      const host = String(row?.['14'] || domain || '').replace(/^www\./, '').toLowerCase();
+      if (!host || !host.includes('.') || seen.has(host)) continue;
+      seen.add(host);
+      out.push({ name: String(row?.['12'] || host), domain: host, snippet: 'Active Google Ads detected in Transparency Center' });
+      if (out.length >= 6) return out;
+    }
+  }
+  return out;
+}
+
 // ---------- Firecrawl ----------
 async function fc(path: 'scrape' | 'search', body: Record<string, unknown>) {
   if (!FIRECRAWL_API_KEY) return null;
