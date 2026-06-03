@@ -98,7 +98,7 @@ async function scrapeMetaAdLibrary(brand: string, domain: string, country = 'US'
   // Public Meta Ad Library search page — Firecrawl renders JS.
   const query = encodeURIComponent(brand || domain);
   const url = `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${query}&search_type=keyword_unordered&media_type=all`;
-  const res = await fc('scrape', { url, formats: ['markdown', 'html', 'links', 'screenshot'], onlyMainContent: false, waitFor: 6000 });
+  const res = await fc('scrape', { url, formats: ['markdown', 'html', 'links'], onlyMainContent: false, waitFor: 6000 });
   const d = res?.data ?? res;
   if (!d) return { ads: [], screenshot: null };
   const html = (d.html || d.rawHtml || '') as string;
@@ -111,31 +111,25 @@ async function scrapeMetaAdLibrary(brand: string, domain: string, country = 'US'
   let m;
   while ((m = idRe.exec(html + '\n' + links.join('\n'))) !== null) idSet.add(m[1]);
 
-  // Extract creative image URLs Meta serves on the public library
-  const imgRe = /https?:\/\/scontent[^"'\s<>]+\.(?:jpg|jpeg|png|webp)(?:\?[^"'\s<>]*)?/gi;
-  const imgs = Array.from(new Set((html.match(imgRe) || []))).slice(0, 24);
+  // Pull short text snippets that look like ad copy (filter out chrome/country lists/nav)
+  const CHROME = /^(library|ad library|all ads|country|language|see ad details|active|inactive|started running|platforms|sponsored|facebook|instagram|messenger|audience network|reset|search|filters|view all)/i;
+  const snippets = md
+    .split(/\n\s*\n/)
+    .map(s => s.trim())
+    .filter(s => s.length > 40 && s.length < 280 && !s.startsWith('!') && !s.startsWith('[') && !s.startsWith('#') && !CHROME.test(s) && /\s/.test(s) && (s.match(/\s/g) || []).length >= 5)
+    .slice(0, 24);
 
-  // Pull short text snippets that look like ad copy
-  const snippets = md.split(/\n\s*\n/).map(s => s.trim()).filter(s => s.length > 25 && s.length < 280 && !s.startsWith('!') && !s.startsWith('[')).slice(0, 24);
-
+  // Note: do NOT include scontent.* image URLs — Facebook hotlink-protects them so they 404/403 in browsers.
   const ids = Array.from(idSet).slice(0, 24);
   const ads = ids.map((id, i) => ({
     library_id: id,
     snapshot_url: `https://www.facebook.com/ads/library/?id=${id}`,
-    media_url: imgs[i],
+    media_url: undefined as string | undefined,
     body: snippets[i],
     country,
   }));
 
-  // If we got no IDs but did get images/snippets, still surface them as anonymous ad evidence
-  if (!ads.length && (imgs.length || snippets.length)) {
-    const n = Math.max(imgs.length, snippets.length);
-    for (let i = 0; i < Math.min(n, 12); i++) {
-      ads.push({ library_id: '', snapshot_url: url, media_url: imgs[i], body: snippets[i], country });
-    }
-  }
-
-  return { ads, screenshot: d.screenshot || null };
+  return { ads, screenshot: null };
 }
 
 async function discoverCompetitors(category: string, region: string, excludeDomain?: string) {
