@@ -15,6 +15,18 @@ const GOOGLE_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0.0.0 Safari/537.36',
 };
 const REGION_NUM: Record<string, number> = { IN: 2356, US: 2840, GB: 2826, CA: 2124, AU: 2036, AE: 2784, SG: 2702, DE: 2276 };
+const COUNTRY_CODES = new Set(Object.keys(REGION_NUM));
+
+function adCountryFromRegion(region: string) {
+  const normalized = (region || 'US').toUpperCase();
+  if (normalized.startsWith('COUNTRY_')) return normalized.replace('COUNTRY_', '');
+  if (normalized.startsWith('US-')) return 'US';
+  return COUNTRY_CODES.has(normalized) ? normalized : 'US';
+}
+
+function isEmbeddableGoogleMedia(url?: string) {
+  return !!url && /(\/archive\/simgad\/|tpc\.googlesyndication|\.(jpe?g|png|gif|webp|mp4|webm)(\?|$))/i.test(url);
+}
 
 async function googleRpc(path: string, payload: Record<string, unknown>) {
   const body = new URLSearchParams({ 'f.req': JSON.stringify(payload) });
@@ -35,39 +47,153 @@ async function googleFindAdvertiser(query: string): Promise<{ id: string; name: 
         return { id: info['2'], name: String(info['1'] || query), ad_count: adCount };
       }
     }
+    const domain = query.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].trim();
+    if (domain.includes('.')) {
+      const creativeSearch = await googleRpc('/anji/_/rpc/SearchService/SearchCreatives', {
+        '1': domain,
+        '2': 1,
+        '3': { '12': { '1': domain } },
+        '7': { '1': 1 },
+      });
+      const first = Array.isArray(creativeSearch?.['1']) ? creativeSearch['1'][0] : null;
+      if (first?.['1']) return { id: String(first['1']), name: String(first['12'] || query), ad_count: Number(first['13'] || 0) };
+    }
   } catch (_) { /* ignore */ }
   return null;
 }
 
-async function googleFetchAds(advertiserId: string, region: string, limit = 12) {
-  const filters: Record<string, unknown> = { '12': { '1': '', '2': true }, '13': { '1': [advertiserId] } };
-  const regionN = REGION_NUM[region.toUpperCase()];
-  if (regionN) filters['8'] = [regionN];
+function extractGoogleCreativeMedia(row: any): { media_url?: string; format: 'image' | 'video' | 'text' } {
+  const raw = [row?.['3']?.['3']?.['2'], row?.['3']?.['2'], row?.['3']?.['1']?.['4'], row?.['3']?.['4']]
+    .find((v) => typeof v === 'string') as string | undefined;
+  if (!raw) return { format: 'text' };
+  const cleaned = raw.replace(/\\u003d/g, '=').replace(/&amp;/g, '&');
+  const mediaUrl = cleaned.match(/src=["']([^"']+)["']/i)?.[1]
+    || cleaned.match(/["'](https?:\/\/[^"']+)["']/)?.[1]
+    || (cleaned.startsWith('http') ? cleaned : undefined);
+  if (!isEmbeddableGoogleMedia(mediaUrl)) return { format: 'text' };
+  return { media_url: mediaUrl, format: /<video|\.(mp4|webm)(\?|$)/i.test(cleaned) ? 'video' : 'image' };
+}
+
+function walkStringsAndUrls(node: any, strings: string[], urls: string[], depth = 0) {
+  if (node == null || depth > 12) return;
+  if (typeof node === 'string') {
+    const s = node.trim();
+    if (!s) return;
+    if (/^https?:\/\//i.test(s)) urls.push(s);
+    else if (s.length >= 3 && s.length <= 400 && !/^[A-Z]{1,3}\d{6,}$/.test(s) && !/^\d+$/.test(s)) strings.push(s);
+    return;
+  }
+  if (Array.isArray(node)) { for (const v of node) walkStringsAndUrls(v, strings, urls, depth + 1); return; }
+  if (typeof node === 'object') for (const v of Object.values(node)) walkStringsAndUrls(v, strings, urls, depth + 1);
+}
+
+async function fetchGoogleCreativeDetails(advertiserId: string, creativeId: string, region: string): Promise<Record<string, any>> {
+  const regionNumber = REGION_NUM[adCountryFromRegion(region)];
+  const payload: Record<string, unknown> = { '1': creativeId, '2': advertiserId };
+  if (regionNumber) payload['5'] = regionNumber;
   try {
-    const res = await googleRpc('/anji/_/rpc/SearchService/SearchCreatives', { '2': limit, '3': filters, '7': { '1': 1 } });
-    const rows = Array.isArray(res?.['1']) ? res['1'] : [];
-    const FMT: Record<number, string> = { 1: 'image', 2: 'video', 3: 'text' };
-    return rows.slice(0, limit).map((row: any) => {
+    const res = await googleRpc('/anji/_/rpc/LookupService/GetCreativeById', payload);
+    const strings: string[] = [];
+    const urls: string[] = [];
+    walkStringsAndUrls(res, strings, urls);
+    const uniqStr = Array.from(new Set(strings));
+    const uniqUrls = Array.from(new Set(urls));
+    const mediaUrl = uniqUrls.find(u => isEmbeddableGoogleMedia(u) && /\.(mp4|webm)(\?|$)/i.test(u))
+      || uniqUrls.find(u => isEmbeddableGoogleMedia(u));
+    const destinationUrl = uniqUrls.find(u => !/google(?:syndication|usercontent|\.com\/(?:aclk|pagead))/i.test(u) && !u.includes('adstransparency'));
+    const candidates = uniqStr.filter(s =>
+      !s.startsWith('AR') && !s.startsWith('CR') &&
+      !/^(text|image|video|html|en|US|IN|true|false)$/i.test(s) &&
+      !/^[a-z0-9_]+\.(googleapis|googleusercontent|gstatic)/i.test(s)
+    );
+    const headline = candidates.find(s => s.length >= 8 && s.length <= 90);
+    const body = candidates.find(s => s.length > 40 && s !== headline) || candidates.find(s => s !== headline);
+    return {
+      format: mediaUrl ? (/\.(mp4|webm)/i.test(mediaUrl) ? 'video' : 'image') : undefined,
+      media_url: mediaUrl,
+      destination_url: destinationUrl,
+      headline,
+      body,
+    };
+  } catch (_) { return {}; }
+}
+
+async function googleFetchAds(advertiserId: string, region: string, limit = 12) {
+  const adCountry = adCountryFromRegion(region);
+  const buildFilters = (includeRegion: boolean) => {
+    const filters: Record<string, unknown> = { '12': { '1': '', '2': true }, '13': { '1': [advertiserId] } };
+    const regionN = REGION_NUM[adCountry];
+    if (includeRegion && regionN) filters['8'] = [regionN];
+    return filters;
+  };
+
+  try {
+    const fetchRows = async (includeRegion: boolean) => {
+      const res = await googleRpc('/anji/_/rpc/SearchService/SearchCreatives', { '2': limit, '3': buildFilters(includeRegion), '7': { '1': 1 } });
+      return Array.isArray(res?.['1']) ? res['1'] : [];
+    };
+    let rows = await fetchRows(true);
+    if (!rows.length && REGION_NUM[adCountry]) rows = await fetchRows(false);
+
+    const baseCreatives = rows.slice(0, limit).map((row: any) => {
       const creativeId = row?.['2'];
-      const format = FMT[Number(row?.['4'])] || 'text';
-      const raw = row?.['3']?.['2'] || row?.['3']?.['1']?.['4'];
-      let mediaUrl: string | undefined;
-      if (typeof raw === 'string') {
-        const src = raw.match(/src=["']([^"']+)["']/i)?.[1];
-        mediaUrl = (src || raw.match(/["'](https?:\/\/[^"']+)["']/)?.[1] || (raw.startsWith('http') ? raw : undefined))?.replace(/\\u003d/g, '=').replace(/&amp;/g, '&');
-      }
+      const media = extractGoogleCreativeMedia(row);
       const firstSec = Number(row?.['6']?.['1']);
       const lastSec = Number(row?.['7']?.['1']);
       return {
         creative_id: creativeId,
-        format,
-        media_url: format !== 'text' ? mediaUrl : undefined,
+        format: media.format,
+        media_url: media.media_url,
+        headline: undefined as string | undefined,
+        body: undefined as string | undefined,
+        destination_url: undefined as string | undefined,
         first_seen: Number.isFinite(firstSec) && firstSec > 0 ? new Date(firstSec * 1000).toISOString() : undefined,
         last_seen: Number.isFinite(lastSec) && lastSec > 0 ? new Date(lastSec * 1000).toISOString() : undefined,
         transparency_url: creativeId ? `${GOOGLE_ADS_BASE}/advertiser/${advertiserId}/creative/${creativeId}` : undefined,
       };
     }).filter((c: any) => c.creative_id);
+
+    const hydrated = await Promise.all(baseCreatives.map(async (c: any) => {
+      const detail = await fetchGoogleCreativeDetails(advertiserId, c.creative_id, region);
+      return {
+        ...c,
+        format: detail.format || c.format,
+        media_url: detail.media_url || c.media_url,
+        headline: detail.headline,
+        body: detail.body,
+        destination_url: detail.destination_url,
+      };
+    }));
+    return hydrated.sort((a: any, b: any) => Number(!!b.media_url) - Number(!!a.media_url));
   } catch (_) { return []; }
+}
+
+async function googleAdActiveDomains(query: string, region: string) {
+  const out: { name: string; domain: string; snippet?: string }[] = [];
+  const seen = new Set<string>();
+  const suggestionRes = await googleRpc('/anji/_/rpc/SearchService/SearchSuggestions', { '1': query, '2': 10, '3': 10 }).catch(() => null);
+  const suggestedDomains = (Array.isArray(suggestionRes?.['1']) ? suggestionRes['1'] : [])
+    .map((s: any) => s?.['2']?.['1'])
+    .filter((d: any) => typeof d === 'string' && d.includes('.'));
+  const searchTerms = Array.from(new Set([query, ...suggestedDomains])).slice(0, 8);
+
+  for (const term of searchTerms) {
+    const domain = String(term).replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].trim();
+    const isDomain = domain.includes('.');
+    const filters: Record<string, unknown> = isDomain ? { '12': { '1': domain } } : { '12': { '1': term, '2': true } };
+    const regionN = REGION_NUM[adCountryFromRegion(region)];
+    if (regionN) filters['8'] = [regionN];
+    const res = await googleRpc('/anji/_/rpc/SearchService/SearchCreatives', { '1': term, '2': 5, '3': filters, '7': { '1': 1 } }).catch(() => null);
+    const rows = Array.isArray(res?.['1']) ? res['1'] : [];
+    for (const row of rows) {
+      const host = String(row?.['14'] || domain || '').replace(/^www\./, '').toLowerCase();
+      if (!host || !host.includes('.') || seen.has(host)) continue;
+      seen.add(host);
+      out.push({ name: String(row?.['12'] || host), domain: host, snippet: 'Active Google Ads detected in Transparency Center' });
+      if (out.length >= 6) return out;
+    }
+  }
+  return out;
 }
 
 // ---------- Firecrawl ----------
@@ -135,10 +261,19 @@ async function scrapeMetaAdLibrary(brand: string, domain: string, country = 'US'
 async function discoverCompetitors(category: string, region: string, excludeDomain?: string) {
   const regionLabel = region || 'United States';
   const query = `top ${category} firms ${regionLabel} -site:wikipedia.org -site:reddit.com -site:facebook.com -site:linkedin.com`;
-  const res = await fc('search', { query, limit: 20 });
+  const [adActive, res] = await Promise.all([
+    googleAdActiveDomains(category, region).catch(() => []),
+    fc('search', { query, limit: 20 }),
+  ]);
   const items: any[] = res?.data?.web ?? res?.data ?? res?.web ?? [];
   const seen = new Set<string>();
   const domains: { name: string; domain: string; snippet?: string }[] = [];
+  for (const item of adActive) {
+    const host = item.domain.replace(/^www\./, '');
+    if (excludeDomain && host.includes(excludeDomain.replace(/^www\./, ''))) continue;
+    seen.add(host);
+    domains.push({ ...item, domain: host });
+  }
   for (const item of items) {
     const u: string = item?.url || item?.link || '';
     try {
@@ -206,6 +341,7 @@ async function semrushBacklinkOverview(domain: string) {
 
 // ---------- Analysis per competitor ----------
 async function analyzeCompetitor(c: { name: string; domain: string }, region: string) {
+  const adCountry = adCountryFromRegion(region);
   const [advertiser, website, semrushDomain, semrushBacklinks] = await Promise.all([
     googleFindAdvertiser(c.name).then(r => r || googleFindAdvertiser(c.domain)),
     scrapeWebsite(`https://${c.domain}`).catch(() => null),
@@ -214,7 +350,7 @@ async function analyzeCompetitor(c: { name: string; domain: string }, region: st
   ]);
 
   const googleAds = advertiser ? await googleFetchAds(advertiser.id, region, 12) : [];
-  const metaAds = await scrapeMetaAdLibrary(c.name, c.domain, region.toUpperCase() || 'US').catch(() => ({ ads: [], screenshot: null }));
+  const metaAds = await scrapeMetaAdLibrary(c.name, c.domain, adCountry).catch(() => ({ ads: [], screenshot: null }));
 
   return {
     name: c.name,
@@ -224,11 +360,11 @@ async function analyzeCompetitor(c: { name: string; domain: string }, region: st
       advertiser_id: advertiser?.id,
       advertiser_name: advertiser?.name,
       total_ads_running: advertiser?.ad_count,
-      transparency_url: advertiser ? `${GOOGLE_ADS_BASE}/advertiser/${advertiser.id}?region=${region.toUpperCase()}` : null,
+      transparency_url: advertiser ? `${GOOGLE_ADS_BASE}/advertiser/${advertiser.id}?region=${adCountry}` : null,
       creatives: googleAds,
     },
     meta_ads: {
-      library_url: `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${region.toUpperCase() || 'US'}&q=${encodeURIComponent(c.name)}`,
+      library_url: `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${adCountry}&q=${encodeURIComponent(c.name)}`,
       creatives: metaAds.ads,
     },
     semrush: semrushDomain || semrushBacklinks ? { ...(semrushDomain || {}), ...(semrushBacklinks || {}) } : null,
