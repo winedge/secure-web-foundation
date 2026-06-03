@@ -153,7 +153,7 @@ async function googleFetchAds(advertiserId: string, region: string, limit = 12) 
       };
     }).filter((c: any) => c.creative_id);
 
-    return await Promise.all(baseCreatives.map(async (c: any) => {
+    const hydrated = await Promise.all(baseCreatives.map(async (c: any) => {
       const detail = await fetchGoogleCreativeDetails(advertiserId, c.creative_id, region);
       return {
         ...c,
@@ -164,6 +164,7 @@ async function googleFetchAds(advertiserId: string, region: string, limit = 12) 
         destination_url: detail.destination_url,
       };
     }));
+    return hydrated.sort((a: any, b: any) => Number(!!b.media_url) - Number(!!a.media_url));
   } catch (_) { return []; }
 }
 
