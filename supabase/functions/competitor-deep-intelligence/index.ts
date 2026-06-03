@@ -96,33 +96,50 @@ async function fetchGoogleCreativeDetails(advertiserId: string, creativeId: stri
 }
 
 async function googleFetchAds(advertiserId: string, region: string, limit = 12) {
-  const filters: Record<string, unknown> = { '12': { '1': '', '2': true }, '13': { '1': [advertiserId] } };
-  const regionN = REGION_NUM[region.toUpperCase()];
-  if (regionN) filters['8'] = [regionN];
+  const buildFilters = (includeRegion: boolean) => {
+    const filters: Record<string, unknown> = { '12': { '1': '', '2': true }, '13': { '1': [advertiserId] } };
+    const regionN = REGION_NUM[region.toUpperCase()];
+    if (includeRegion && regionN) filters['8'] = [regionN];
+    return filters;
+  };
+
   try {
-    const res = await googleRpc('/anji/_/rpc/SearchService/SearchCreatives', { '2': limit, '3': filters, '7': { '1': 1 } });
-    const rows = Array.isArray(res?.['1']) ? res['1'] : [];
-    const FMT: Record<number, string> = { 1: 'image', 2: 'video', 3: 'text' };
-    return rows.slice(0, limit).map((row: any) => {
+    const fetchRows = async (includeRegion: boolean) => {
+      const res = await googleRpc('/anji/_/rpc/SearchService/SearchCreatives', { '2': limit, '3': buildFilters(includeRegion), '7': { '1': 1 } });
+      return Array.isArray(res?.['1']) ? res['1'] : [];
+    };
+    let rows = await fetchRows(true);
+    if (!rows.length && REGION_NUM[region.toUpperCase()]) rows = await fetchRows(false);
+
+    const baseCreatives = rows.slice(0, limit).map((row: any) => {
       const creativeId = row?.['2'];
-      const format = FMT[Number(row?.['4'])] || 'text';
-      const raw = row?.['3']?.['2'] || row?.['3']?.['1']?.['4'];
-      let mediaUrl: string | undefined;
-      if (typeof raw === 'string') {
-        const src = raw.match(/src=["']([^"']+)["']/i)?.[1];
-        mediaUrl = (src || raw.match(/["'](https?:\/\/[^"']+)["']/)?.[1] || (raw.startsWith('http') ? raw : undefined))?.replace(/\\u003d/g, '=').replace(/&amp;/g, '&');
-      }
+      const media = extractGoogleCreativeMedia(row);
       const firstSec = Number(row?.['6']?.['1']);
       const lastSec = Number(row?.['7']?.['1']);
       return {
         creative_id: creativeId,
-        format,
-        media_url: format !== 'text' ? mediaUrl : undefined,
+        format: media.format,
+        media_url: media.media_url,
+        headline: undefined as string | undefined,
+        body: undefined as string | undefined,
+        destination_url: undefined as string | undefined,
         first_seen: Number.isFinite(firstSec) && firstSec > 0 ? new Date(firstSec * 1000).toISOString() : undefined,
         last_seen: Number.isFinite(lastSec) && lastSec > 0 ? new Date(lastSec * 1000).toISOString() : undefined,
         transparency_url: creativeId ? `${GOOGLE_ADS_BASE}/advertiser/${advertiserId}/creative/${creativeId}` : undefined,
       };
     }).filter((c: any) => c.creative_id);
+
+    return await Promise.all(baseCreatives.map(async (c: any) => {
+      const detail = await fetchGoogleCreativeDetails(advertiserId, c.creative_id, region);
+      return {
+        ...c,
+        format: detail.format || c.format,
+        media_url: detail.media_url || c.media_url,
+        headline: detail.headline,
+        body: detail.body,
+        destination_url: detail.destination_url,
+      };
+    }));
   } catch (_) { return []; }
 }
 
