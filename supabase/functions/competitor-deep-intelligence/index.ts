@@ -337,10 +337,12 @@ async function discoverCompetitors(category: string, region: string, excludeDoma
       if (!host || seen.has(host)) continue;
       if (excludeDomain && host.includes(excludeDomain.replace(/^www\./, ''))) continue;
       if (/(wikipedia|reddit|facebook|linkedin|youtube|twitter|x\.com|quora|yelp|bbb|justia|martindale|avvo|lawyers\.com|findlaw|nolo|superlawyers|forbes|nytimes|cnn|bloomberg|google\.com|yahoo\.com|bing\.com|github|medium\.com|substack)/i.test(host)) continue;
-      seen.add(host);
       const title: string = item?.title || item?.metadata?.title || host;
-      const name = title.split(/[|\-–—]/)[0].trim().slice(0, 80);
-      domains.push({ name, domain: host, snippet: item?.description || item?.metadata?.description });
+      const snippet: string = item?.description || item?.metadata?.description || '';
+      if (!isRelevantCompetitor(category, host, title, snippet)) continue;
+      seen.add(host);
+      const name = inferCompetitorName(category, host, title);
+      domains.push({ name, domain: host, snippet });
       if (domains.length >= 10) break;
     } catch { /* skip */ }
   }
