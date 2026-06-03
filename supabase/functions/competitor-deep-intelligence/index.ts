@@ -313,9 +313,10 @@ async function scrapeMetaAdLibrary(brand: string, domain: string, country = 'US'
 
 async function discoverCompetitors(category: string, region: string, excludeDomain?: string) {
   const regionLabel = region || 'United States';
-  const query = `top ${category} firms ${regionLabel} -site:wikipedia.org -site:reddit.com -site:facebook.com -site:linkedin.com`;
+  const intent = categorySearchIntent(category);
+  const query = `top ${intent} ${regionLabel} -site:wikipedia.org -site:reddit.com -site:facebook.com -site:linkedin.com -shopping -bags -backpacks`;
   const [adActive, res] = await Promise.all([
-    googleAdActiveDomains(category, region).catch(() => []),
+    googleAdActiveLegalDomains(category, region).catch(() => []),
     fc('search', { query, limit: 20 }),
   ]);
   const items: any[] = res?.data?.web ?? res?.data ?? res?.web ?? [];
@@ -324,6 +325,7 @@ async function discoverCompetitors(category: string, region: string, excludeDoma
   for (const item of adActive) {
     const host = item.domain.replace(/^www\./, '');
     if (excludeDomain && host.includes(excludeDomain.replace(/^www\./, ''))) continue;
+    if (!isRelevantCompetitor(category, host, item.name, item.snippet || '')) continue;
     seen.add(host);
     domains.push({ ...item, domain: host });
   }
