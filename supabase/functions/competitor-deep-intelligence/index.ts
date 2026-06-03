@@ -43,6 +43,17 @@ async function googleFindAdvertiser(query: string): Promise<{ id: string; name: 
         return { id: info['2'], name: String(info['1'] || query), ad_count: adCount };
       }
     }
+    const domain = query.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].trim();
+    if (domain.includes('.')) {
+      const creativeSearch = await googleRpc('/anji/_/rpc/SearchService/SearchCreatives', {
+        '1': domain,
+        '2': 1,
+        '3': { '12': { '1': domain } },
+        '7': { '1': 1 },
+      });
+      const first = Array.isArray(creativeSearch?.['1']) ? creativeSearch['1'][0] : null;
+      if (first?.['1']) return { id: String(first['1']), name: String(first['12'] || query), ad_count: Number(first['13'] || 0) };
+    }
   } catch (_) { /* ignore */ }
   return null;
 }
