@@ -256,10 +256,19 @@ async function scrapeMetaAdLibrary(brand: string, domain: string, country = 'US'
 async function discoverCompetitors(category: string, region: string, excludeDomain?: string) {
   const regionLabel = region || 'United States';
   const query = `top ${category} firms ${regionLabel} -site:wikipedia.org -site:reddit.com -site:facebook.com -site:linkedin.com`;
-  const res = await fc('search', { query, limit: 20 });
+  const [adActive, res] = await Promise.all([
+    googleAdActiveDomains(category, region).catch(() => []),
+    fc('search', { query, limit: 20 }),
+  ]);
   const items: any[] = res?.data?.web ?? res?.data ?? res?.web ?? [];
   const seen = new Set<string>();
   const domains: { name: string; domain: string; snippet?: string }[] = [];
+  for (const item of adActive) {
+    const host = item.domain.replace(/^www\./, '');
+    if (excludeDomain && host.includes(excludeDomain.replace(/^www\./, ''))) continue;
+    seen.add(host);
+    domains.push({ ...item, domain: host });
+  }
   for (const item of items) {
     const u: string = item?.url || item?.link || '';
     try {
