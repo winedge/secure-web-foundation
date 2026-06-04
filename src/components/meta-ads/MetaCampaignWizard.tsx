@@ -314,7 +314,14 @@ export function MetaCampaignWizard({ open, onOpenChange, onCreated, prefillData 
   };
 
   const canProceed = () => {
-    if (step === 0) return !!data.goal && !!data.campaignName;
+    if (step === 0) {
+      if (!data.goal || !data.campaignName) return false;
+      const allowed = LOCATIONS_BY_GOAL[data.goal] || [];
+      if (allowed.length && !data.conversionLocation) return false;
+      if (data.conversionLocation === 'INSTANT_FORM' && !data.leadFormId) return false;
+      if (data.conversionLocation === 'PHONE_CALL' && !data.phoneNumber) return false;
+      return true;
+    }
     if (step === 1) return data.dailyBudget > 0 || data.lifetimeBudget > 0;
     if (step === 4) return !!data.headline;
     return true;
