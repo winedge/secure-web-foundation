@@ -33,9 +33,10 @@ const PRESETS = [
 
 
 export function CreativeImagePanel({ variant, firmId, brandColors, defaultAspect = '1:1' }: Props) {
-  const [preset, setPreset] = useState<typeof PRESETS[number]['value']>('lifestyle-hero');
+  const [preset, setPreset] = useState<typeof PRESETS[number]['value']>('ad-poster');
   const [provider, setProvider] = useState<CreativeImageProvider>('openai');
   const [aspect, setAspect] = useState(defaultAspect);
+  const [quality, setQuality] = useState<CreativeImageQuality>('high');
   const [onText, setOnText] = useState(variant.headline || '');
   const [result, setResult] = useState<CreativeImageResult | null>(null);
   const gen = useGenerateCreativeImage();
@@ -52,10 +53,14 @@ export function CreativeImagePanel({ variant, firmId, brandColors, defaultAspect
       provider,
       preset,
       aspect_ratio: aspect,
+      quality,
       firm_id: firmId,
       variant_id: variant.id,
       brand_colors: brandColors,
       on_image_text: onText || undefined,
+      subheadline: variant.subheadline || undefined,
+      cta: variant.cta || undefined,
+      features: Array.isArray(variant.features) ? variant.features : undefined,
     });
     setResult(res);
     if (res.export_only) {
@@ -64,6 +69,7 @@ export function CreativeImagePanel({ variant, firmId, brandColors, defaultAspect
       toast.success(`Generated via ${PROVIDER_LABELS[res.provider]}`);
     }
   };
+
 
   return (
     <Card className="border-dashed">
