@@ -111,18 +111,9 @@ function adminClient() {
   return createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 }
 
-Deno.serve(async (req) => {
-  const cors = handleCors(req);
-  if (cors) return cors;
-
+async function processJob(jobId: string, body: Body) {
   const admin = adminClient();
-  let jobId: string | undefined;
-
   try {
-    const { job_id, body } = (await req.json()) as { job_id: string; body: Body };
-    jobId = job_id;
-    if (!jobId) return jsonResponse({ error: "job_id required" }, 400);
-
     await admin.from("creative_image_jobs").update({ status: "processing", updated_at: new Date().toISOString() }).eq("id", jobId);
 
     const provider: Provider = body.provider ?? "openai";
@@ -139,7 +130,7 @@ Deno.serve(async (req) => {
         final_prompt: finalPrompt,
       };
       await admin.from("creative_image_jobs").update({ status: "completed", result, updated_at: new Date().toISOString() }).eq("id", jobId);
-      return jsonResponse({ ok: true });
+      return;
     }
 
     let b64: string | null = null;
@@ -159,7 +150,7 @@ Deno.serve(async (req) => {
         "gemini-flash": { model: "google/gemini-3.1-flash-image-preview", chat: true },
         "gemini-pro": { model: "google/gemini-3-pro-image-preview", chat: true },
       };
-      const sel = map[provider];
+      const sel = map[provider] ?? map.openai;
       modelUsed = sel.model;
       b64 = await callLovableImage(sel.model, finalPrompt, size, key, sel.chat);
     }
@@ -190,13 +181,33 @@ Deno.serve(async (req) => {
       final_prompt: finalPrompt,
     };
     await admin.from("creative_image_jobs").update({ status: "completed", result, updated_at: new Date().toISOString() }).eq("id", jobId);
-    return jsonResponse({ ok: true });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";
     console.error("ai-creative-image-worker error", msg);
-    if (jobId) {
-      await admin.from("creative_image_jobs").update({ status: "failed", error: msg, updated_at: new Date().toISOString() }).eq("id", jobId);
+    await admin.from("creative_image_jobs").update({ status: "failed", error: msg, updated_at: new Date().toISOString() }).eq("id", jobId);
+  }
+}
+
+Deno.serve(async (req) => {
+  const cors = handleCors(req);
+  if (cors) return cors;
+
+  try {
+    const { job_id, body } = (await req.json()) as { job_id: string; body: Body };
+    if (!job_id) return jsonResponse({ error: "job_id required" }, 400);
+
+    const task = processJob(job_id, body ?? {});
+    try {
+      // @ts-ignore EdgeRuntime is provided in Supabase edge runtime
+      EdgeRuntime?.waitUntil?.(task);
+    } catch {
+      task.catch((e) => console.error("worker background task failed", e));
     }
+
+    return jsonResponse({ ok: true, status: "accepted" }, 202);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    console.error("ai-creative-image-worker request error", msg);
     return jsonResponse({ error: msg }, 500);
   }
 });
