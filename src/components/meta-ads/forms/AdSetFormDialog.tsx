@@ -66,6 +66,9 @@ type FormState = {
   device_platforms: string[];
   platforms: string[];
   positions: Record<string, string[]>;
+  // schedule
+  day_parting_enabled: boolean;
+  adset_schedule: { days: number[]; start_hour: number; end_hour: number }[];
 };
 
 const INITIAL: FormState = {
@@ -95,6 +98,8 @@ const INITIAL: FormState = {
   device_platforms: [...META_DEVICE_PLATFORMS],
   platforms: [...META_PLATFORMS],
   positions: {},
+  day_parting_enabled: false,
+  adset_schedule: [{ days: [1, 2, 3, 4, 5], start_hour: 9, end_hour: 18 }],
 };
 
 export function AdSetFormDialog({
