@@ -2178,6 +2178,65 @@ export type Database = {
           },
         ]
       }
+      firm_brand_kit: {
+        Row: {
+          colors: Json
+          contact: Json
+          created_at: string
+          dark_logo_url: string | null
+          disclaimer: string | null
+          firm_id: string
+          fonts: Json
+          guidelines_md: string | null
+          logo_url: string | null
+          product_images: Json
+          tone_of_voice: string | null
+          trust_badges: Json
+          updated_at: string
+          wordmark_url: string | null
+        }
+        Insert: {
+          colors?: Json
+          contact?: Json
+          created_at?: string
+          dark_logo_url?: string | null
+          disclaimer?: string | null
+          firm_id: string
+          fonts?: Json
+          guidelines_md?: string | null
+          logo_url?: string | null
+          product_images?: Json
+          tone_of_voice?: string | null
+          trust_badges?: Json
+          updated_at?: string
+          wordmark_url?: string | null
+        }
+        Update: {
+          colors?: Json
+          contact?: Json
+          created_at?: string
+          dark_logo_url?: string | null
+          disclaimer?: string | null
+          firm_id?: string
+          fonts?: Json
+          guidelines_md?: string | null
+          logo_url?: string | null
+          product_images?: Json
+          tone_of_voice?: string | null
+          trust_badges?: Json
+          updated_at?: string
+          wordmark_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firm_brand_kit_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: true
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firm_branding: {
         Row: {
           accent_color: string | null
