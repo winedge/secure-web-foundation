@@ -86,11 +86,12 @@ function buildPrompt(b: Body): string {
 }
 
 function resolveModel(provider: Provider): { model: string; isGemini: boolean } {
+  // All providers now route to OpenAI directly using the user's OPENAI_API_KEY.
   const map: Record<string, { model: string; isGemini: boolean }> = {
-    "openai": { model: "openai/gpt-image-2", isGemini: false },
-    "openai-mini": { model: "openai/gpt-image-1-mini", isGemini: false },
-    "gemini-flash": { model: "google/gemini-3.1-flash-image-preview", isGemini: true },
-    "gemini-pro": { model: "google/gemini-3-pro-image-preview", isGemini: true },
+    "openai": { model: "gpt-image-1", isGemini: false },
+    "openai-mini": { model: "gpt-image-1-mini", isGemini: false },
+    "gemini-flash": { model: "gpt-image-1", isGemini: false },
+    "gemini-pro": { model: "gpt-image-1", isGemini: false },
   };
   return map[provider] ?? map["openai"];
 }
@@ -238,27 +239,20 @@ Deno.serve(async (req) => {
     const sel = resolveModel(provider);
     const size = ASPECT_TO_SIZE[aspect] ?? "1024x1024";
 
-    const requestBody = sel.isGemini
-      ? {
-          model: sel.model,
-          messages: [{ role: "user", content: finalPrompt }],
-          modalities: ["image", "text"],
-          stream: true,
-        }
-      : {
-          model: sel.model,
-          prompt: finalPrompt,
-          size,
-          quality: QUALITY_MAP[quality],
-          n: 1,
-          stream: true,
-          partial_images: 2,
-        };
+    const requestBody = {
+      model: sel.model,
+      prompt: finalPrompt,
+      size,
+      quality: QUALITY_MAP[quality],
+      n: 1,
+      stream: true,
+      partial_images: 2,
+    };
 
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) return jsonResponse({ error: "LOVABLE_API_KEY missing" }, 500);
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) return jsonResponse({ error: "OPENAI_API_KEY missing. Add it in Lovable Cloud secrets." }, 500);
 
-    const upstream = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+    const upstream = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify(requestBody),
