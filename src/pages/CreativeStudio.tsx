@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Palette, Sparkles, Copy, Star, Plus, Target } from 'lucide-react';
+import { Loader2, Palette, Sparkles, Copy, Star, Plus, Target, Wand2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCreateCampaign } from '@/hooks/use-campaigns';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { MetaCampaignWizard } from '@/components/meta-ads/MetaCampaignWizard';
 import { useMetaPixel } from '@/hooks/use-meta-pixel';
 import { useFirm } from '@/hooks/use-firm';
@@ -17,6 +17,9 @@ import { useVertical } from '@/hooks/use-vertical';
 import { CategorySelect, validateCategoryValue } from '@/components/verticals/CategorySelect';
 import { QualityControls, DEFAULT_QUALITY, type QualityControlsValue } from '@/components/ai/QualityControls';
 import { ComplianceNotice } from '@/components/ai/ComplianceNotice';
+import { useGenerateStrategy, type CreativeStrategy } from '@/hooks/use-creative-strategy';
+import { useBrandKit } from '@/hooks/use-brand-kit';
+import { StrategyPanel } from '@/components/creative-studio/StrategyPanel';
 
 export default function CreativeStudio() {
   const [brief, setBrief] = useState('');
@@ -34,8 +37,12 @@ export default function CreativeStudio() {
   const navigate = useNavigate();
   const pixel = useMetaPixel();
   const { data: firm } = useFirm();
+  const { data: brandKit } = useBrandKit();
   const { categories, term, vertical } = useVertical();
   const categoryLabel = term('category_label', 'Category');
+  const [strategy, setStrategy] = useState<CreativeStrategy | null>(null);
+  const [brandKitLoaded, setBrandKitLoaded] = useState(false);
+  const genStrategy = useGenerateStrategy();
 
   const generate = async () => {
     if (!brief) { toast.error('Enter a creative brief'); return; }
