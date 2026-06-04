@@ -53,6 +53,20 @@ serve(async (req) => {
       ? "Be honest about incentives; do not promise specific savings."
       : "Be truthful and avoid unverifiable claims.";
 
+    const brandSummary = brandKit ? [
+      brandKit.tone_of_voice ? `Brand tone of voice: ${brandKit.tone_of_voice}` : null,
+      brandKit.guidelines_md ? `Brand guidelines: ${String(brandKit.guidelines_md).slice(0, 600)}` : null,
+      Array.isArray(brandKit.trust_badges) && brandKit.trust_badges.length > 0
+        ? `Trust signals to surface: ${brandKit.trust_badges.map((b: any) => b?.label || b).join(", ")}`
+        : null,
+      brandKit.disclaimer ? `Required disclaimer: ${brandKit.disclaimer}` : null,
+      brandKit.colors?.primary ? `Primary brand color: ${brandKit.colors.primary}` : null,
+    ].filter(Boolean).join("\n") : "No brand kit configured.";
+
+    const strategySummary = strategy ? `STRATEGY CONTEXT:\n${JSON.stringify(strategy).slice(0, 2000)}` : "";
+
+    const ARCHETYPES = ["Emotional", "Promotional", "Urgency", "Problem-Solution", "Social Proof", "Brand Awareness"];
+
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
@@ -61,11 +75,57 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `${overrideSystem}\n\nYou create complete ad campaign variants for the ${verticalName} vertical.\n${complianceNote}\n\nProduction directives for image_prompt fields:\n${qualityDirective}\n\nFor each variant produce: Headline (<40 chars), body_short (<125 chars), body_long (<500 chars), CTA, emotional angle, target hook, image prompt, engagement score 0-100.\n\nReturn JSON:\n{\n  "campaign_name": "string",\n  "variants": [{\n    "id": "v1", "headline": "string", "body_short": "string", "body_long": "string",\n    "cta": "string", "emotional_angle": "string", "target_hook": "string",\n    "image_prompt": "string", "engagement_score": number,\n    "best_for_platform": "meta|google|tiktok|linkedin",\n    "a_b_test_hypothesis": "string"\n  }],\n  "recommended_test_plan": "string",\n  "brand_consistency_score": number\n}`,
+            content: `${overrideSystem}
+
+You are a senior performance-marketing copywriter for the ${verticalName} vertical.
+${complianceNote}
+
+Production directives for image_prompt fields:
+${qualityDirective}
+
+Generate exactly ONE variant per archetype, in this fixed order:
+${ARCHETYPES.map((a, i) => `${i + 1}. ${a}`).join("\n")}
+
+For each variant produce these EXACT fields:
+- id (v1..v6), archetype (one of the 6 above)
+- headline (<40 chars, punchy, no clickbait)
+- subheadline (<60 chars, supports headline)
+- body_short (<125 chars, Meta-feed length)
+- body_long (<500 chars, landing-page length)
+- cta (2-4 word action verb phrase, e.g. "Get Free Case Review")
+- hook (scroll-stopping first line, separate from headline)
+- emotional_angle (1-3 words)
+- target_hook (audience-specific pain or desire being addressed)
+- badge (short trust/proof element, e.g. "Free | No Obligation" or "BBB A+ Rated")
+- disclaimer (legal/compliance fineprint required by vertical; use brand kit disclaimer if provided, else minimal)
+- image_prompt (full creative-director prompt for hero image)
+- engagement_score (0-100)
+- best_for_platform ("meta"|"google"|"tiktok"|"linkedin")
+- a_b_test_hypothesis (what this variant tests vs others)
+
+Return JSON ONLY:
+{
+  "campaign_name": "string",
+  "variants": [{ ...fields above... }],
+  "recommended_test_plan": "string",
+  "brand_consistency_score": number
+}`,
           },
           {
             role: "user",
-            content: `Brief: ${safeBrief}\nVertical: ${verticalName}\nCategory: ${resolved.category}\nAvailable categories for this vertical: ${resolved.allCategories.join(', ') || 'n/a'}\nTarget audience: ${target_audience || 'adults 25-65'}\nBrand tone: ${brand_tone || 'professional, empathetic'}\nGenerate ${num_variants || 5} creative variants tailored to ${verticalSlug.replace('_', ' ')}.`,
+            content: `Brief: ${safeBrief}
+Vertical: ${verticalName}
+Category: ${resolved.category}
+Available categories: ${resolved.allCategories.join(', ') || 'n/a'}
+Target audience: ${target_audience || 'auto from brief'}
+Brand tone override: ${brand_tone || '(use brand kit tone)'}
+
+BRAND KIT:
+${brandSummary}
+
+${strategySummary}
+
+Generate all 6 archetype variants. Each must feel distinct in angle but consistent in brand voice.`,
           },
         ],
         temperature: 0.7,
