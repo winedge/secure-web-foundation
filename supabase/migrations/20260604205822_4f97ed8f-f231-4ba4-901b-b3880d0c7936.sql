@@ -1,0 +1,3 @@
+CREATE POLICY "Authenticated users can read creative assets" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'creative-assets');
+CREATE POLICY "Authenticated users can upload creative assets" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'creative-assets');
+CREATE POLICY "Service role full access creative assets" ON storage.objects FOR ALL TO service_role USING (bucket_id = 'creative-assets') WITH CHECK (bucket_id = 'creative-assets');
