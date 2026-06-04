@@ -384,6 +384,60 @@ export function MetaCampaignWizard({ open, onOpenChange, onCreated, prefillData 
                   );
                 })}
               </div>
+
+              {/* Conversion Location — what people do after they see the ad */}
+              {data.goal && (LOCATIONS_BY_GOAL[data.goal]?.length ?? 0) > 0 && (
+                <div className="mt-2">
+                  <Label className="text-base font-semibold">Conversion Location</Label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Choose where people will go when they engage with your ad.
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3">
+                    {CONVERSION_LOCATIONS
+                      .filter(loc => LOCATIONS_BY_GOAL[data.goal]?.includes(loc.id))
+                      .map(loc => {
+                        const Icon = loc.icon;
+                        const active = data.conversionLocation === loc.id;
+                        return (
+                          <button
+                            key={loc.id}
+                            onClick={() => update({ conversionLocation: loc.id })}
+                            className={`text-left p-3 rounded-xl border-2 transition-all hover:shadow-sm ${
+                              active ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
+                            }`}
+                          >
+                            <div className="inline-flex p-1.5 rounded-lg mb-1.5 bg-muted">
+                              <Icon className="h-4 w-4 text-foreground" />
+                            </div>
+                            <p className="font-semibold text-sm">{loc.label}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{loc.description}</p>
+                          </button>
+                        );
+                      })}
+                  </div>
+
+                  {/* Per-destination follow-up inputs */}
+                  {data.conversionLocation === 'INSTANT_FORM' && (
+                    <div className="mt-3">
+                      <Label>Lead Form *</Label>
+                      <Select value={data.leadFormId} onValueChange={v => update({ leadFormId: v })}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder={leadForms.length ? 'Select a lead form' : 'No lead forms yet — create one in Lead Forms tab'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {leadForms.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {data.conversionLocation === 'PHONE_CALL' && (
+                    <div className="mt-3">
+                      <Label>Phone Number *</Label>
+                      <Input value={data.phoneNumber} onChange={e => update({ phoneNumber: e.target.value })} placeholder="+1 555 123 4567" className="mt-1 max-w-xs" />
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3 mt-4">
                 <div>
                   <Label>Campaign Name *</Label>
