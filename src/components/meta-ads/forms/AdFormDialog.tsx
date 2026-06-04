@@ -360,7 +360,70 @@ export function AdFormDialog({
                     <p className="text-[10px] text-slate-500">Recommended 1080×1080 px for feed | ≤30 MB.</p>
                   </div>
                 )}
+
+                {form.format === 'carousel' && (
+                  <div className="space-y-2 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+                    <div className="flex items-center justify-between">
+                      <FieldLabel>Carousel cards ({form.carousel_cards.length})</FieldLabel>
+                      <Button
+                        type="button" variant="ghost" size="sm" className="h-7 text-[11px]"
+                        onClick={() => set('carousel_cards', [...form.carousel_cards, { ...EMPTY_CARD }])}
+                        disabled={form.carousel_cards.length >= 10}
+                      >
+                        <Plus className="h-3 w-3 mr-1" /> Add card
+                      </Button>
+                    </div>
+                    {form.carousel_cards.map((card, i) => (
+                      <div key={i} className="rounded-md border border-slate-800 bg-slate-950/60 p-2 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] uppercase tracking-wider text-slate-500">Card {i + 1}</span>
+                          {form.carousel_cards.length > 2 && (
+                            <Button type="button" variant="ghost" size="icon" className="h-6 w-6"
+                              onClick={() => set('carousel_cards', form.carousel_cards.filter((_, x) => x !== i))}>
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                        <Input placeholder="Image URL" className={inputCls} value={card.image_url}
+                          onChange={(e) => set('carousel_cards', form.carousel_cards.map((c, x) => x === i ? { ...c, image_url: e.target.value } : c))} />
+                        <Input placeholder="Headline" className={inputCls} value={card.headline}
+                          onChange={(e) => set('carousel_cards', form.carousel_cards.map((c, x) => x === i ? { ...c, headline: e.target.value } : c))} />
+                        <Input placeholder="Description (optional)" className={inputCls} value={card.description}
+                          onChange={(e) => set('carousel_cards', form.carousel_cards.map((c, x) => x === i ? { ...c, description: e.target.value } : c))} />
+                        <Input placeholder="Card link URL (defaults to ad URL)" className={inputCls} value={card.link}
+                          onChange={(e) => set('carousel_cards', form.carousel_cards.map((c, x) => x === i ? { ...c, link: e.target.value } : c))} />
+                      </div>
+                    ))}
+                    <p className="text-[10px] text-slate-500">2–10 cards | each gets its own image, headline and destination.</p>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+                  <div>
+                    <div className="text-xs font-bold text-white">Dynamic creative</div>
+                    <p className="text-[10px] text-slate-500">Meta auto-tests combinations of headlines, descriptions and images.</p>
+                  </div>
+                  <Switch checked={form.dynamic_creative} onCheckedChange={(v) => set('dynamic_creative', v)} />
+                </div>
+
+                {form.dynamic_creative && (
+                  <div className="grid grid-cols-2 gap-3 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+                    <div className="space-y-1.5">
+                      <FieldLabel>Extra headlines (one per line)</FieldLabel>
+                      <Textarea rows={3} value={form.dynamic_headlines}
+                        onChange={(e) => set('dynamic_headlines', e.target.value)}
+                        className={`${inputCls} h-auto py-2`} placeholder="Up to 5 total" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <FieldLabel>Extra descriptions</FieldLabel>
+                      <Textarea rows={3} value={form.dynamic_descriptions}
+                        onChange={(e) => set('dynamic_descriptions', e.target.value)}
+                        className={`${inputCls} h-auto py-2`} placeholder="Up to 5 total" />
+                    </div>
+                  </div>
+                )}
               </Section>
+
 
               <Section title="Ad Creative">
                 <div className="space-y-1.5">
