@@ -8,13 +8,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { Label } from '@/components/ui/label';
 import {
-  FileText, RefreshCw, Loader2, Download, CheckCircle, Users,
-  Calendar, AlertTriangle, Bell, BellRing,
+  FileText, RefreshCw, Loader2, Download, Calendar, BellRing, Plus,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useVertical } from '@/hooks/use-vertical';
 import { useFirm } from '@/hooks/use-firm';
 import { CategorySelect, validateCategoryValue } from '@/components/verticals/CategorySelect';
+import { LeadFormBuilderDialog } from './LeadFormBuilderDialog';
 
 interface LeadForm {
   id: string;
@@ -42,6 +42,13 @@ export function MetaLeadFormsPanel() {
   const [fetchResults, setFetchResults] = useState<Record<string, { total: number; ingested: number }>>({});
   const [categoryError, setCategoryError] = useState<string | undefined>();
   const [categoryValid, setCategoryValid] = useState(true);
+  const [builderOpen, setBuilderOpen] = useState(false);
+
+  const uniquePages = Array.from(
+    new Map(
+      forms.map((f) => [f.page_id, { meta_page_id: f.page_id, name: f.page_name, page_access_token: f.page_access_token }])
+    ).values()
+  );
 
   const loadForms = async () => {
     if (!user) return;
@@ -135,11 +142,17 @@ export function MetaLeadFormsPanel() {
             Import leads from Meta lead form campaigns directly into your pipeline
           </p>
         </div>
-        <Button onClick={loadForms} disabled={isLoading} className="gap-2">
-          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          {hasLoaded ? 'Refresh' : 'Load Forms'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setBuilderOpen(true)} disabled={uniquePages.length === 0} className="gap-2">
+            <Plus className="h-4 w-4" /> Create Form
+          </Button>
+          <Button onClick={loadForms} disabled={isLoading} className="gap-2">
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            {hasLoaded ? 'Refresh' : 'Load Forms'}
+          </Button>
+        </div>
       </div>
+      <LeadFormBuilderDialog open={builderOpen} onOpenChange={setBuilderOpen} pages={uniquePages} />
 
       {/* Default Category Setting */}
       <Card>
