@@ -1,98 +1,61 @@
-# AI Creative Studio | Agency-Grade Build
+## Problem
 
-Goal: replace today's "single AI image + copy" flow with a real creative engine that outputs ads indistinguishable from agency work, across 11 formats, with a brand kit, editor, scoring, and one-click publish.
+Output is "basic" because the worker sends a thin prompt + `quality: "low"` to the gateway. The reference (VitalGlow poster) is a multi-zone ad composition with logo lockup, headline hierarchy, feature icons, product insets, location chip, and CTA bar — none of which our prompt asks for. Gemini/OpenAI will happily render a single portrait when that's all you describe.
 
-## Image model strategy (your new question)
+## Fix
 
-We do **not** pick one model. Each has different strengths, so we route per use case and let the user override. Midjourney has **no public API**, so we use it via prompt export only (copy-to-clipboard for users who want to paste into Discord).
+### 1. Rewrite `buildFinalPrompt` in `ai-creative-image-worker` as a creative-director brief
 
-| Provider | Access | Strength | Role in Studio |
-|---|---|---|---|
-| **OpenAI gpt-image-2** (via Lovable AI Gateway, already wired) | API | Photoreal, strong text inside images, fast | **Default** for product shots, lifestyle hero images, anything with on-image copy |
-| **Google Gemini 3.1 Flash Image (Nano Banana 2)** via Gateway | API | Free-tier on Gateway, fast iteration, great editing/inpainting | **Default for "Draft" mode**, and for image edits / variant remixes in the editor |
-| **Gemini 3 Pro Image Preview** via Gateway | API | Highest Gemini quality | Optional "Premium" tier alongside gpt-image-2 |
-| **Ideogram v3** | Public API (`api.ideogram.ai`, requires `IDEOGRAM_API_KEY` secret) | Best-in-class typography, logos inside images, posters | Style preset "Typography poster / billboard" |
-| **Midjourney v7** | No public API | Most artistic | "Send to Midjourney" button: copies a tuned `/imagine` prompt + style refs to clipboard; user pastes into their Discord. No automated render. |
+Instead of concatenating a one-line preset + user prompt, assemble a structured brief with explicit sections the model can latch onto:
 
-Routing rule in `ai-creative-image`:
-```
-if user picks "Typography Poster" preset → Ideogram (if key) else gpt-image-2
-elif quality.tier === "draft" → gemini-3.1-flash-image (free on Gateway)
-elif quality.tier === "premium" → openai/gpt-image-2
-else → gemini-3-pro-image-preview
-```
-All free-tier traffic goes through the existing `LOVABLE_API_KEY`. Ideogram is opt-in (we'll prompt for its key the first time the user picks that preset). Midjourney is prompt-export only.
+- **Format & canvas**: aspect, "print-ad / social poster composition, edge-to-edge layout, magazine-grade"
+- **Hero subject**: derived from `prompt` (the variant's image_prompt)
+- **Layout zones**: header (logo + tagline), hero headline block, supporting bullets/icons row, product/feature insets (circular crops), trust chip, footer CTA bar — only include zones relevant to the chosen preset
+- **Typography spec**: serif display headline + sans-serif body, kerning, weight contrast, accent color word
+- **Lighting & lens**: 85mm portrait, soft key + warm rim, golden-hour skin tones, shallow DOF
+- **Color system**: explicit hex list from `brand_colors` mapped to roles (primary accent, CTA bar, headline highlight)
+- **On-image text rendering**: render `on_image_text` verbatim, with spec for size/placement
+- **Negative prompt**: no watermarks, no fake logos, no extra fingers, no garbled text, no AI plastic skin
 
-## What we're building
+### 2. Replace preset directives with richer ad-archetype templates
 
-### 1. Brand Kit
-New table `firm_brand_kit` (logo, dark logo, wordmark, colors{primary,secondary,accent,bg,text,cta}, fonts{heading,body}, tone, guidelines, trust_badges[], contact{phone,site,address}, product_images[], disclaimer). New `/settings/brand-kit` page seeded from existing `firm_branding`.
+Add new presets (or rewrite existing):
+- `ad-poster` (matches the VitalGlow reference: multi-zone composition with feature icons + insets)
+- `lifestyle-hero`, `product-shot`, `typography-poster`, `ugc-style`, `minimalist-brand` — each expanded from one sentence to a ~6-line art-direction block.
 
-### 2. Strategy Engine — `ai-creative-strategy` edge fn
-Brief + brand kit + website + vertical → `{objective, persona, pain_points[], desires[], usp, angles[], hooks[], ctas[], keywords[]}`. Model: `google/gemini-3-flash-preview`.
+### 3. Raise quality + pick the right model per preset
 
-### 3. Copy Engine — extend `ai-creative-studio`
-Returns 6 archetypes (Emotional / Promotional / Urgency / Problem-Solution / Social Proof / Brand Awareness), each with headline, subheadline, body_short, body_long, CTA, hook, badge, disclaimer.
+- Change OpenAI default from `quality: "low"` to `quality: "high"` (and route `gpt-image-2` for poster/typography presets — it follows complex layout instructions better than Gemini).
+- Keep Gemini 3 Pro Image as default for `lifestyle-hero` (best skin/photoreal).
+- Auto-route `typography-poster` and `ad-poster` to `openai/gpt-image-2` regardless of UI selection unless user overrides.
+- Pass `size` matching aspect (we already do).
 
-### 4. Image Engine — `ai-creative-image` edge fn
-- Routes to gpt-image-2 / Gemini / Ideogram per rule above.
-- Streams `image_generation.partial_image` events back to the client (blurred previews → sharp final, per Lovable's streaming pattern).
-- Generates **background hero only** — text is composited by us, not baked into the pixels (except for the "Typography Poster" preset via Ideogram).
-- Uploads final PNG to new private bucket `creative-assets`, returns signed URL.
-- Style presets: Photoreal Lifestyle, Studio Product, Abstract Gradient, Editorial, UGC, Typography Poster.
+### 4. Surface a Quality control in `CreativeImagePanel`
 
-### 5. Render Engine (the heart — HTML/SVG, not pixels)
-`src/lib/creative-engine/`:
-- `templates/` — one React/SVG component per ad format (11 total: Meta 1080², 1080×1350, Story 1080×1920, Reel cover; Google 300×250, 728×90, 160×600, 1200×628; LinkedIn 1200×627 + 1200×1200; IG post/story/reel).
-- Layered: bg image → color overlay → logo → headline → subheadline → CTA pill → trust badge → contact strip — all bound to `{brandKit, copy, image, layoutVariant}`.
-- 5 **layout variants** per format (Bold-Type, Split-Photo, Bottom-Bar, Centered-Pill, Editorial-Frame).
-- `renderToPng.ts` exports at exact pixel dimensions using `html-to-image`; server fallback `creative-render-export` uses `satori` + `resvg-wasm` for headless export.
+Add a small Select: `Draft` / `Standard` / `High` that maps to OpenAI `quality` (`low`/`medium`/`high`) and is forwarded through `useGenerateCreativeImage` → orchestrator → worker. Default to `high`.
 
-### 6. One-click Generation Wizard
-Brief → strategy preview → pick formats → generates 5 copy variants × selected formats. Stored as `creative_projects` → `creative_variants` → `creative_renders`.
+### 5. Feed brand kit + strategy into the image brief
 
-### 7. Canva-lite Editor `CreativeEditor.tsx`
-Layers panel | canvas with `react-rnd` drag/resize, inline text edit | properties panel (color, font, size, alignment, replace image — upload OR regenerate via image engine — swap template variant, change format) | toolbar (undo/redo, duplicate, save template, export PNG/JPG, "Publish to Meta"). Edits persisted to `creative_renders.overrides`.
+The worker currently only sees `brand_colors`. Extend the orchestrator (`ai-creative-image`) to also pass:
+- `brand_name`, `tagline`, `logo_description` (from `firm_brand_kit`)
+- `trust_badges` (rendered as the bottom icon row)
+- `disclaimer` (rendered into footer if present)
+- `location` (for the "Serving you in ANDHERI" chip pattern)
 
-### 8. Creative Scoring — `ai-creative-score` edge fn
-Per render returns 0–100 + sub-scores: readability + contrast (client-side heuristic), brand_consistency (color/font match vs brand kit, client-side), CTA visibility (size/contrast), marketing_effectiveness + layout_quality + conversion_optimization (LLM judge using `gemini-3-flash-preview`). Composite score badge on every card.
+Worker stitches these into the brief so the output reads as a real branded ad, not a stock photo.
 
-### 9. Publish
-"Publish to Meta" uploads PNG to `meta_media_assets`, opens `MetaCampaignWizard` pre-filled with headline/body/CTA + image hash. Google/LinkedIn = ZIP download. Midjourney = "Copy MJ prompt" button.
+### 6. Optional: two-pass refinement for `ad-poster`
 
-## Database (one migration)
-```sql
-firm_brand_kit (firm_id pk, logo_url, dark_logo_url, wordmark_url,
-                colors jsonb, fonts jsonb, tone, guidelines,
-                trust_badges jsonb, contact jsonb, products jsonb)
-creative_projects   (id, firm_id, name, brief, strategy jsonb, status)
-creative_variants   (id, project_id, archetype, copy jsonb, hero_image_url,
-                     image_model text, scores jsonb)
-creative_renders    (id, variant_id, format, layout_variant, template_id,
-                     overrides jsonb, png_url, score numeric)
-creative_templates  (id, firm_id nullable, name, formats jsonb, schema jsonb)
-storage: creative-assets (private, signed URLs)
-```
-Full GRANTs + RLS scoped to `get_user_firm_id(auth.uid())`.
+When preset is `ad-poster`, run a second pass that takes the first output as a reference image (Gemini edit endpoint) with a "tighten typography, sharpen layout zones, fix any garbled text" instruction. Behind a `refine: true` flag, default on for poster preset only.
 
-## Secrets
-- `LOVABLE_API_KEY` — already present; covers OpenAI gpt-image-2 + all Gemini image models.
-- `IDEOGRAM_API_KEY` — request only the first time the user picks the "Typography Poster" preset.
-- Midjourney — none (prompt-export only).
+## Files to change
 
-## Phased delivery (each phase shippable on its own)
-1. **Brand Kit** — table, page, hook, seed from `firm_branding`.
-2. **Strategy + extended Copy engine** — edge fn + UI panel.
-3. **Image engine + storage bucket** — gpt-image-2 + Gemini routing, streaming previews, Ideogram opt-in, Midjourney prompt export.
-4. **Render engine v1** — 4 core templates (1080², 1080×1350, 1080×1920, 1200×628) × 2 layout variants, PNG export.
-5. **Wizard end-to-end** — brief → 5 variants × 4 formats rendered + saved.
-6. **Editor** — drag/edit/replace/regen/duplicate/save template.
-7. **Remaining 7 formats** — Google sizes, LinkedIn, Reel cover.
-8. **Scoring + publish to Meta** — scores on cards, one-click Meta launch.
+- `supabase/functions/ai-creative-image-worker/index.ts` — new brief builder, expanded presets, quality param, brand-kit fields, optional refine pass
+- `supabase/functions/ai-creative-image/index.ts` — fetch brand kit, forward quality + brand fields to worker
+- `src/hooks/use-creative-image.ts` — add `quality` + new preset to mutation input
+- `src/components/creative-studio/CreativeImagePanel.tsx` — Quality select, add `ad-poster` to PRESETS, default new preset to `gemini-pro` or `openai`
 
 ## Out of scope
-- Real video/Reel generation (static cover only).
-- Animated HTML5 banners.
-- Multi-page brand-guidelines PDF export.
 
-Reply "go" to start with Phase 1, or pick a phase to begin with.
+- No DB migration needed (job row already stores arbitrary `request`/`result` JSON).
+- No new providers; routing changes only.
