@@ -11,6 +11,7 @@ import {
   PROVIDER_LABELS,
   PROVIDER_RECOMMENDATIONS,
   type CreativeImageProvider,
+  type CreativeImageQuality,
   type CreativeImageResult,
 } from '@/hooks/use-creative-image';
 
@@ -22,12 +23,14 @@ interface Props {
 }
 
 const PRESETS = [
+  { value: 'ad-poster', label: 'Ad Poster (Multi-zone)' },
   { value: 'lifestyle-hero', label: 'Lifestyle Hero' },
   { value: 'product-shot', label: 'Product Shot' },
   { value: 'typography-poster', label: 'Typography Poster' },
   { value: 'ugc-style', label: 'UGC Style' },
   { value: 'minimalist-brand', label: 'Minimalist Brand' },
 ] as const;
+
 
 export function CreativeImagePanel({ variant, firmId, brandColors, defaultAspect = '1:1' }: Props) {
   const [preset, setPreset] = useState<typeof PRESETS[number]['value']>('lifestyle-hero');

@@ -10,16 +10,22 @@ export type CreativeImageProvider =
   | 'ideogram'
   | 'midjourney';
 
+export type CreativeImageQuality = 'draft' | 'standard' | 'high';
+
 export interface CreativeImageRequest {
   prompt: string;
   provider?: CreativeImageProvider;
-  preset?: 'lifestyle-hero' | 'product-shot' | 'typography-poster' | 'ugc-style' | 'minimalist-brand';
+  preset?: 'ad-poster' | 'lifestyle-hero' | 'product-shot' | 'typography-poster' | 'ugc-style' | 'minimalist-brand';
   aspect_ratio?: '1:1' | '9:16' | '16:9' | '4:5';
   firm_id?: string;
   variant_id?: string;
   brand_colors?: string[];
   on_image_text?: string;
   midjourney_style_refs?: string[];
+  quality?: CreativeImageQuality;
+  subheadline?: string;
+  cta?: string;
+  features?: string[];
 }
 
 export interface CreativeImageResult {
@@ -27,6 +33,7 @@ export interface CreativeImageResult {
   model_used?: string;
   preset?: string;
   aspect_ratio?: string;
+  quality?: CreativeImageQuality;
   storage_path?: string;
   signed_url?: string;
   variant_id?: string | null;
@@ -50,12 +57,14 @@ export const PROVIDER_LABELS: Record<CreativeImageProvider, string> = {
 };
 
 export const PROVIDER_RECOMMENDATIONS: Record<string, CreativeImageProvider> = {
-  'lifestyle-hero': 'openai',
+  'ad-poster': 'openai',
+  'lifestyle-hero': 'gemini-pro',
   'product-shot': 'openai',
-  'typography-poster': 'ideogram',
+  'typography-poster': 'openai',
   'ugc-style': 'gemini-flash',
   'minimalist-brand': 'gemini-pro',
 };
+
 
 async function invoke(body: Record<string, unknown>): Promise<CreativeImageResult> {
   const { data, error } = await supabase.functions.invoke('ai-creative-image', { body });
