@@ -11,6 +11,7 @@ import {
   PROVIDER_LABELS,
   PROVIDER_RECOMMENDATIONS,
   type CreativeImageProvider,
+  type CreativeImageQuality,
   type CreativeImageResult,
 } from '@/hooks/use-creative-image';
 
@@ -22,6 +23,7 @@ interface Props {
 }
 
 const PRESETS = [
+  { value: 'ad-poster', label: 'Ad Poster (Multi-zone)' },
   { value: 'lifestyle-hero', label: 'Lifestyle Hero' },
   { value: 'product-shot', label: 'Product Shot' },
   { value: 'typography-poster', label: 'Typography Poster' },
@@ -29,10 +31,12 @@ const PRESETS = [
   { value: 'minimalist-brand', label: 'Minimalist Brand' },
 ] as const;
 
+
 export function CreativeImagePanel({ variant, firmId, brandColors, defaultAspect = '1:1' }: Props) {
-  const [preset, setPreset] = useState<typeof PRESETS[number]['value']>('lifestyle-hero');
+  const [preset, setPreset] = useState<typeof PRESETS[number]['value']>('ad-poster');
   const [provider, setProvider] = useState<CreativeImageProvider>('openai');
   const [aspect, setAspect] = useState(defaultAspect);
+  const [quality, setQuality] = useState<CreativeImageQuality>('high');
   const [onText, setOnText] = useState(variant.headline || '');
   const [result, setResult] = useState<CreativeImageResult | null>(null);
   const gen = useGenerateCreativeImage();
@@ -49,10 +53,14 @@ export function CreativeImagePanel({ variant, firmId, brandColors, defaultAspect
       provider,
       preset,
       aspect_ratio: aspect,
+      quality,
       firm_id: firmId,
       variant_id: variant.id,
       brand_colors: brandColors,
       on_image_text: onText || undefined,
+      subheadline: variant.subheadline || undefined,
+      cta: variant.cta || undefined,
+      features: Array.isArray(variant.features) ? variant.features : undefined,
     });
     setResult(res);
     if (res.export_only) {
@@ -61,6 +69,7 @@ export function CreativeImagePanel({ variant, firmId, brandColors, defaultAspect
       toast.success(`Generated via ${PROVIDER_LABELS[res.provider]}`);
     }
   };
+
 
   return (
     <Card className="border-dashed">
@@ -94,7 +103,15 @@ export function CreativeImagePanel({ variant, firmId, brandColors, defaultAspect
               <SelectItem value="4:5">Portrait 4:5</SelectItem>
             </SelectContent>
           </Select>
-          <Input value={onText} onChange={(e) => setOnText(e.target.value)} placeholder="On-image headline (optional)" className="h-8 text-xs" />
+          <Select value={quality} onValueChange={(v) => setQuality(v as CreativeImageQuality)}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Quality" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="draft">Draft (fast)</SelectItem>
+              <SelectItem value="standard">Standard</SelectItem>
+              <SelectItem value="high">High (ad-ready)</SelectItem>
+            </SelectContent>
+          </Select>
+          <Input value={onText} onChange={(e) => setOnText(e.target.value)} placeholder="On-image headline (optional)" className="h-8 text-xs col-span-2" />
         </div>
 
         <Button onClick={run} disabled={gen.isPending} size="sm" className="w-full gap-1.5">

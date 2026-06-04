@@ -63,13 +63,51 @@ Deno.serve(async (req) => {
       userId = userData?.user?.id ?? null;
     }
 
+    // Enrich body with brand kit so the worker can compose a real ad
+    let enriched: Record<string, unknown> = { ...body };
+    if (body.firm_id) {
+      try {
+        const { data: kit } = await admin
+          .from("firm_brand_kit")
+          .select("*")
+          .eq("firm_id", body.firm_id)
+          .maybeSingle();
+        if (kit) {
+          enriched = {
+            ...enriched,
+            brand_name: (enriched as any).brand_name ?? kit.brand_name ?? kit.name ?? undefined,
+            tagline: (enriched as any).tagline ?? kit.tagline ?? undefined,
+            logo_description: (enriched as any).logo_description ?? kit.logo_description ?? undefined,
+            trust_badges: (enriched as any).trust_badges ?? (Array.isArray(kit.trust_badges)
+              ? kit.trust_badges.map((x: any) => (typeof x === "string" ? x : x?.label)).filter(Boolean)
+              : undefined),
+            disclaimer: (enriched as any).disclaimer ?? kit.disclaimer ?? undefined,
+            brand_colors: (enriched as any).brand_colors ?? (kit.colors
+              ? [kit.colors.primary, kit.colors.secondary, kit.colors.accent].filter(Boolean)
+              : undefined),
+          };
+        }
+        const { data: firm } = await admin
+          .from("firms")
+          .select("name, city, state")
+          .eq("id", body.firm_id)
+          .maybeSingle();
+        if (firm) {
+          (enriched as any).brand_name = (enriched as any).brand_name ?? firm.name ?? undefined;
+          (enriched as any).location = (enriched as any).location ?? ([firm.city, firm.state].filter(Boolean).join(", ") || undefined);
+        }
+      } catch (e) {
+        console.warn("brand kit enrich failed", e);
+      }
+    }
+
     const { data: job, error: insErr } = await admin
       .from("creative_image_jobs")
       .insert({
         user_id: userId,
         firm_id: body.firm_id ?? null,
         provider: body.provider ?? "openai",
-        request: body,
+        request: enriched,
         status: "pending",
       })
       .select("id")
@@ -86,7 +124,7 @@ Deno.serve(async (req) => {
         Authorization: `Bearer ${serviceKey}`,
         apikey: serviceKey,
       },
-      body: JSON.stringify({ job_id: job.id, body }),
+      body: JSON.stringify({ job_id: job.id, body: enriched }),
     }).then((r) => r.body?.cancel()).catch((e) => console.error("worker trigger failed", e));
 
     // Brief waitUntil ensures the outbound request is actually sent before isolate recycles,
