@@ -117,6 +117,7 @@ export const navGroups: NavGroup[] = [
     icon: Sparkles,
     items: [
       { name: 'Creative Studio', href: '/creative-studio', icon: Sparkles, premium: true, module: 'creative_studio' },
+      { name: 'Brand Kit', href: '/brand-kit', icon: Palette },
       { name: 'Viral Content', href: '/viral-content', icon: Flame, premium: true, module: 'viral_content' },
       { name: 'Video Ad Generator', href: '/video-ads', icon: Video, premium: true, module: 'video_ads' },
     ],
