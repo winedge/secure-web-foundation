@@ -103,7 +103,15 @@ export function CreativeImagePanel({ variant, firmId, brandColors, defaultAspect
               <SelectItem value="4:5">Portrait 4:5</SelectItem>
             </SelectContent>
           </Select>
-          <Input value={onText} onChange={(e) => setOnText(e.target.value)} placeholder="On-image headline (optional)" className="h-8 text-xs" />
+          <Select value={quality} onValueChange={(v) => setQuality(v as CreativeImageQuality)}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Quality" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="draft">Draft (fast)</SelectItem>
+              <SelectItem value="standard">Standard</SelectItem>
+              <SelectItem value="high">High (ad-ready)</SelectItem>
+            </SelectContent>
+          </Select>
+          <Input value={onText} onChange={(e) => setOnText(e.target.value)} placeholder="On-image headline (optional)" className="h-8 text-xs col-span-2" />
         </div>
 
         <Button onClick={run} disabled={gen.isPending} size="sm" className="w-full gap-1.5">
