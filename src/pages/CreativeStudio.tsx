@@ -174,31 +174,44 @@ export default function CreativeStudio() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {result.variants.map((v: any) => (
-                <Card key={v.id} className="hover:shadow-md transition-shadow">
+                <Card key={v.id} className="hover:shadow-md transition-shadow flex flex-col">
                   <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline">{v.id}</Badge>
-                      <div className="flex items-center gap-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <Badge variant="outline" className="text-[10px]">{v.id}</Badge>
+                      {v.archetype && (
+                        <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] uppercase tracking-wide" variant="outline">
+                          {v.archetype}
+                        </Badge>
+                      )}
+                      <div className="flex items-center gap-1 ml-auto">
                         <Star className="h-3 w-3 text-amber-500" />
                         <span className="text-sm font-semibold">{v.engagement_score}</span>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="space-y-3 flex-1 flex flex-col">
+                    {v.hook && (
+                      <p className="text-xs italic text-primary/80 border-l-2 border-primary/40 pl-2">"{v.hook}"</p>
+                    )}
                     <div>
-                      <p className="font-bold text-foreground text-lg">{v.headline}</p>
+                      <p className="font-bold text-foreground text-lg leading-tight">{v.headline}</p>
+                      {v.subheadline && <p className="text-sm font-medium text-foreground/80 mt-0.5">{v.subheadline}</p>}
                       <p className="text-sm text-muted-foreground mt-1">{v.body_short}</p>
                     </div>
                     <div className="flex gap-2 flex-wrap">
-                      <Badge className="bg-primary/10 text-primary">{v.emotional_angle}</Badge>
-                      <Badge variant="outline">{v.best_for_platform}</Badge>
+                      {v.emotional_angle && <Badge className="bg-rose-500/10 text-rose-600 border-rose-500/20" variant="outline">{v.emotional_angle}</Badge>}
+                      {v.best_for_platform && <Badge variant="outline">{v.best_for_platform}</Badge>}
+                      {v.badge && <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/20" variant="outline">{v.badge}</Badge>}
                     </div>
                     <div className="bg-muted/50 rounded-lg p-2">
                       <p className="text-xs font-medium text-foreground">CTA: {v.cta}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Hook: {v.target_hook}</p>
+                      {v.target_hook && <p className="text-xs text-muted-foreground mt-1">Targets: {v.target_hook}</p>}
                     </div>
-                    <p className="text-xs text-muted-foreground italic">A/B: {v.a_b_test_hypothesis}</p>
-                    <div className="flex gap-2 flex-col">
+                    {v.disclaimer && (
+                      <p className="text-[10px] text-muted-foreground/70 leading-snug">{v.disclaimer}</p>
+                    )}
+                    {v.a_b_test_hypothesis && <p className="text-xs text-muted-foreground italic">A/B: {v.a_b_test_hypothesis}</p>}
+                    <div className="flex gap-2 flex-col mt-auto">
                       <div className="flex gap-2">
                         <Button
                           size="sm"
