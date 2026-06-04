@@ -273,7 +273,8 @@ export function MetaCampaignWizard({ open, onOpenChange, onCreated, prefillData 
             device_types: data.deviceTypes,
             behaviors: data.behaviors,
           },
-        }, { onSuccess: resolve, onError: reject });
+          destination_type: data.conversionLocation || undefined,
+        } as any, { onSuccess: resolve, onError: reject });
       });
 
       if (data.headline) {
@@ -285,10 +286,13 @@ export function MetaCampaignWizard({ open, onOpenChange, onCreated, prefillData 
             body_text: data.bodyText,
             description: data.description,
             call_to_action: data.callToAction,
-            link_url: data.linkUrl || undefined,
+            link_url: data.conversionLocation === 'WEBSITE' ? (data.linkUrl || undefined) : undefined,
             image_url: data.imageUrl || undefined,
             ai_generated: data.useAiCreative,
-          }, { onSuccess: () => resolve(), onError: reject });
+            destination_type: data.conversionLocation || undefined,
+            lead_form_id: data.conversionLocation === 'INSTANT_FORM' ? (data.leadFormId || undefined) : undefined,
+            phone_number: data.conversionLocation === 'PHONE_CALL' ? (data.phoneNumber || undefined) : undefined,
+          } as any, { onSuccess: () => resolve(), onError: reject });
         });
       }
 
