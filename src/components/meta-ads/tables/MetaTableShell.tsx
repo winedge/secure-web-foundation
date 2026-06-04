@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Search, ChevronLeft, ChevronRight, RefreshCw, ArrowUp, ArrowDown } from 'lucide-react';
@@ -43,6 +44,10 @@ interface Props<T> {
   sortColumn?: string | null;
   sortDirection?: 'asc' | 'desc';
   onSortChange?: (column: string | null, direction: 'asc' | 'desc') => void;
+  selectable?: boolean;
+  selectedIds?: string[];
+  onSelectedIdsChange?: (ids: string[]) => void;
+  bulkActions?: (selected: string[]) => ReactNode;
 }
 
 export function MetaTableShell<T extends { id: string }>({
@@ -51,7 +56,22 @@ export function MetaTableShell<T extends { id: string }>({
   statusValue, onStatusChange, statusOptions, extraFilters, onRefresh,
   rightActions, emptyMessage, onRowClick,
   sortColumn, sortDirection, onSortChange,
+  selectable, selectedIds = [], onSelectedIdsChange, bulkActions,
 }: Props<T>) {
+  const selectedSet = new Set(selectedIds);
+  const allRowIds = (rows || []).map((r) => r.id);
+  const allSelected = selectable && allRowIds.length > 0 && allRowIds.every((id) => selectedSet.has(id));
+  const someSelected = selectable && allRowIds.some((id) => selectedSet.has(id));
+  const toggleAll = () => {
+    if (!onSelectedIdsChange) return;
+    if (allSelected) onSelectedIdsChange(selectedIds.filter((id) => !allRowIds.includes(id)));
+    else onSelectedIdsChange(Array.from(new Set([...selectedIds, ...allRowIds])));
+  };
+  const toggleOne = (id: string) => {
+    if (!onSelectedIdsChange) return;
+    if (selectedSet.has(id)) onSelectedIdsChange(selectedIds.filter((x) => x !== id));
+    else onSelectedIdsChange([...selectedIds, id]);
+  };
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const from = total === 0 ? 0 : page * pageSize + 1;
   const to = Math.min((page + 1) * pageSize, total);
