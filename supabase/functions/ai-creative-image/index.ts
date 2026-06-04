@@ -35,6 +35,15 @@ Deno.serve(async (req) => {
       const { data, error } = await admin.from("creative_image_jobs").select("*").eq("id", body.job_id).maybeSingle();
       if (error) throw error;
       if (!data) return jsonResponse({ error: "job not found" }, 404);
+      const lastTouch = new Date(data.updated_at ?? data.created_at).getTime();
+      if ((data.status === "pending" || data.status === "processing") && Date.now() - lastTouch > 145_000) {
+        const staleError = "Image generation took too long. Try ChatGPT Image Mini, Midjourney prompt export, or a shorter prompt.";
+        await admin
+          .from("creative_image_jobs")
+          .update({ status: "failed", error: staleError, updated_at: new Date().toISOString() })
+          .eq("id", body.job_id);
+        return jsonResponse({ job_id: data.id, status: "failed", error: staleError });
+      }
       return jsonResponse({
         job_id: data.id,
         status: data.status,
