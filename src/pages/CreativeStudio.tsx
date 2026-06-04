@@ -244,6 +244,12 @@ export default function CreativeStudio() {
                         Launch as Meta Campaign
                       </Button>
                     </div>
+                    <CreativeImagePanel
+                      variant={v}
+                      firmId={firm?.id}
+                      brandColors={[brandKit?.colors?.primary, brandKit?.colors?.secondary, brandKit?.colors?.accent].filter(Boolean) as string[]}
+                      defaultAspect={quality.aspect_ratio === '9:16' ? '9:16' : quality.aspect_ratio === '16:9' ? '16:9' : '1:1'}
+                    />
                   </CardContent>
                 </Card>
               ))}
