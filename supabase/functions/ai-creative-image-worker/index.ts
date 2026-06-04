@@ -12,6 +12,8 @@ type Provider =
   | "ideogram"
   | "midjourney";
 
+type Quality = "draft" | "standard" | "high";
+
 interface Body {
   prompt?: string;
   provider?: Provider;
@@ -22,14 +24,57 @@ interface Body {
   brand_colors?: string[];
   on_image_text?: string;
   midjourney_style_refs?: string[];
+  quality?: Quality;
+  // Brand context (forwarded by orchestrator)
+  brand_name?: string;
+  tagline?: string;
+  logo_description?: string;
+  trust_badges?: string[];
+  disclaimer?: string;
+  location?: string;
+  cta?: string;
+  subheadline?: string;
+  features?: string[];
 }
 
 const PRESET_DIRECTIVES: Record<string, string> = {
-  "lifestyle-hero": "Cinematic lifestyle hero photography, golden hour, shallow depth of field, premium brand mood. Photoreal, no AI artifacts.",
-  "product-shot": "Studio product photography, soft key light, seamless backdrop, crisp shadows, e-commerce ready.",
-  "typography-poster": "Bold typographic ad poster, large kerned headline as the hero element, editorial layout, high contrast, magazine-grade design.",
-  "ugc-style": "Authentic UGC mobile-shot aesthetic, natural lighting, candid framing, looks like a real customer post.",
-  "minimalist-brand": "Minimalist Swiss-style brand design, generous whitespace, single bold focal element, refined color palette.",
+  "ad-poster": [
+    "MULTI-ZONE PRINT-AD POSTER COMPOSITION, magazine-grade editorial layout.",
+    "Layout zones top-to-bottom: (1) header strip with brand logo lockup and tagline in small caps,",
+    "(2) hero headline block with oversized serif display type and accent-colored keyword,",
+    "(3) supporting sub-headline in clean sans-serif,",
+    "(4) horizontal feature row with 3-4 minimal line icons under short ALL-CAPS labels,",
+    "(5) circular inset thumbnails on one side showing supporting detail shots with gold-stroke borders and small ALL-CAPS captions,",
+    "(6) a location/trust chip with map-pin glyph,",
+    "(7) full-width footer CTA bar in primary brand color with the call-to-action centered.",
+    "Hero subject occupies the right half edge-to-edge with shallow depth of field. Generous whitespace, refined typographic hierarchy, premium spa/lifestyle/legal aesthetic.",
+  ].join(" "),
+  "lifestyle-hero": [
+    "Cinematic editorial lifestyle hero photograph for a premium brand campaign.",
+    "Golden-hour natural light, soft warm key with gentle rim, photoreal skin (no plastic AI sheen).",
+    "85mm portrait lens, f/2.0 shallow depth of field, subject sharp, background creamy bokeh.",
+    "Composition leaves clean negative space for headline overlay (rule of thirds, subject offset).",
+    "Color grade matches brand palette; mood: aspirational, confident, calm.",
+  ].join(" "),
+  "product-shot": [
+    "Studio product photography, packshot quality, seamless backdrop, soft large key + gentle fill.",
+    "Crisp natural shadow, accurate materials and reflections, e-commerce ready, perfectly straight horizon.",
+    "Product centered with breathing room; subtle gradient backdrop in brand tone.",
+  ].join(" "),
+  "typography-poster": [
+    "Bold typographic ad POSTER with kerned display headline as the hero element.",
+    "Editorial magazine layout, oversized serif or condensed grotesk, tight line-height, strong weight contrast.",
+    "High color contrast, one accent-colored keyword, supporting micro-copy and small caps eyebrow line.",
+    "Subtle product or portrait integrated behind/beside type, never competing with it.",
+  ].join(" "),
+  "ugc-style": [
+    "Authentic UGC mobile-phone aesthetic: slight grain, natural mixed lighting, candid framing.",
+    "Looks like a real customer's iPhone photo posted to Instagram. Imperfect, warm, relatable.",
+  ].join(" "),
+  "minimalist-brand": [
+    "Minimalist Swiss-style brand poster. Generous whitespace, one bold focal element, refined limited palette.",
+    "Tight grid, micro-typography eyebrow line, single oversized headline, brand mark in corner.",
+  ].join(" "),
 };
 
 const ASPECT_TO_SIZE: Record<string, string> = {
@@ -46,12 +91,67 @@ const ASPECT_TO_IDEOGRAM: Record<string, string> = {
   "4:5": "ASPECT_4_5",
 };
 
+// Presets that need precise text/layout rendering → route to OpenAI gpt-image-2
+const TYPO_HEAVY_PRESETS = new Set(["ad-poster", "typography-poster"]);
+
 function buildFinalPrompt(b: Body) {
-  const preset = PRESET_DIRECTIVES[b.preset ?? "lifestyle-hero"] ?? "";
-  const colors = b.brand_colors?.length ? `Use brand colors: ${b.brand_colors.join(", ")}. ` : "";
-  const text = b.on_image_text ? `Render the headline "${b.on_image_text}" as legible on-image typography with strong contrast. ` : "";
-  const aspect = `Composition aspect ratio: ${b.aspect_ratio ?? "1:1"}. `;
-  return [preset, aspect, colors, text, b.prompt, "Avoid watermarks, logos, fake brand names, or platform UI."].filter(Boolean).join(" ");
+  const preset = b.preset ?? "lifestyle-hero";
+  const directive = PRESET_DIRECTIVES[preset] ?? PRESET_DIRECTIVES["lifestyle-hero"];
+  const aspect = b.aspect_ratio ?? "1:1";
+
+  const colorLine = b.brand_colors?.length
+    ? `BRAND COLOR SYSTEM: ${b.brand_colors.join(", ")}. Use the first as primary/CTA bar, the rest as accents and supporting tones. Skin tones, neutrals and backgrounds must harmonize with this palette.`
+    : "";
+
+  const onText = b.on_image_text
+    ? `HERO HEADLINE TEXT (render verbatim, no spelling errors, no garbled letters): "${b.on_image_text}". Large display weight, tight kerning, perfectly legible, single accent color word allowed.`
+    : "";
+
+  const sub = b.subheadline ? `SUB-HEADLINE: "${b.subheadline}" rendered in clean sans-serif, smaller weight, beneath the headline.` : "";
+
+  const brand = b.brand_name
+    ? `BRAND LOCKUP (top-left): logo wordmark "${b.brand_name}"${b.tagline ? ` with small-caps tagline "${b.tagline}" directly under it` : ""}.${b.logo_description ? ` Logo style: ${b.logo_description}.` : ""}`
+    : "";
+
+  const features = b.features?.length
+    ? `FEATURE ROW (4 minimal line icons with ALL-CAPS labels below each): ${b.features.slice(0, 4).map((f) => `"${f}"`).join(", ")}.`
+    : "";
+
+  const badges = b.trust_badges?.length
+    ? `TRUST/PROOF STRIP (bottom of poster, small icons + labels): ${b.trust_badges.slice(0, 4).join(", ")}.`
+    : "";
+
+  const location = b.location
+    ? `LOCATION CHIP: pill-shaped chip with map-pin glyph reading "SERVING YOU IN ${b.location.toUpperCase()}" with a faint city skyline silhouette behind it.`
+    : "";
+
+  const cta = b.cta
+    ? `FOOTER CTA BAR (full-width, primary brand color background, centered): "${b.cta.toUpperCase()}" with a small calendar/arrow glyph to the left.`
+    : "";
+
+  const disclaimer = b.disclaimer ? `Small disclaimer fine-print at very bottom: "${b.disclaimer}".` : "";
+
+  const composition = `CANVAS: ${aspect} aspect, edge-to-edge full-bleed composition, magazine-grade typographic hierarchy, generous whitespace, premium polished finish, NO mockup frame, NO browser chrome, NO Instagram UI.`;
+
+  const subject = `HERO SUBJECT / SCENE: ${b.prompt}`;
+
+  const negative = `NEGATIVE: no watermarks, no fake brand logos other than the one specified, no extra fingers or distorted hands, no garbled text, no plastic AI skin texture, no double faces, no signature, no stock-photo overlay.`;
+
+  return [
+    directive,
+    composition,
+    brand,
+    subject,
+    onText,
+    sub,
+    colorLine,
+    features,
+    location,
+    badges,
+    cta,
+    disclaimer,
+    negative,
+  ].filter(Boolean).join("\n\n");
 }
 
 async function readImageStream(res: Response) {
@@ -84,6 +184,9 @@ async function readImageStream(res: Response) {
       if (payload.error?.message) throw new Error(payload.error.message);
       if ((event === "image_generation.completed" || payload.type === "image_generation.completed") && payload.b64_json) {
         finalB64 = payload.b64_json;
+      } else if (payload.b64_json) {
+        // keep the latest partial as fallback in case completed event is missing
+        finalB64 = payload.b64_json;
       }
     }
   }
@@ -92,10 +195,23 @@ async function readImageStream(res: Response) {
   return finalB64;
 }
 
-async function callLovableImage(model: string, prompt: string, size: string, apiKey: string, useChatShape: boolean) {
+const QUALITY_MAP: Record<Quality, "low" | "medium" | "high"> = {
+  draft: "low",
+  standard: "medium",
+  high: "high",
+};
+
+async function callLovableImage(
+  model: string,
+  prompt: string,
+  size: string,
+  apiKey: string,
+  useChatShape: boolean,
+  quality: Quality,
+) {
   const body = useChatShape
     ? { model, messages: [{ role: "user", content: prompt }], modalities: ["image", "text"], stream: true }
-    : { model, prompt, size, quality: "low", n: 1, stream: true, partial_images: 1 };
+    : { model, prompt, size, quality: QUALITY_MAP[quality], n: 1, stream: true, partial_images: 1 };
   const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -114,7 +230,7 @@ async function callIdeogram(prompt: string, aspect: string, apiKey: string) {
     headers: { "Api-Key": apiKey, "Content-Type": "application/json" },
     body: JSON.stringify({
       prompt,
-      rendering_speed: "DEFAULT",
+      rendering_speed: "QUALITY",
       style_type: "DESIGN",
       aspect_ratio: ASPECT_TO_IDEOGRAM[aspect] ?? "ASPECT_1_1",
       num_images: 1,
@@ -146,19 +262,36 @@ function adminClient() {
   return createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 }
 
+function resolveModel(provider: Provider, preset: string): { model: string; chat: boolean; provider: Provider } {
+  // Force typography-heavy presets to gpt-image-2 unless user picked ideogram/midjourney
+  if (TYPO_HEAVY_PRESETS.has(preset) && provider !== "ideogram" && provider !== "midjourney") {
+    return { model: "openai/gpt-image-2", chat: false, provider: "openai" };
+  }
+  const map: Record<string, { model: string; chat: boolean }> = {
+    "openai": { model: "openai/gpt-image-2", chat: false },
+    "openai-mini": { model: "openai/gpt-image-1-mini", chat: false },
+    "gemini-flash": { model: "google/gemini-3.1-flash-image-preview", chat: true },
+    "gemini-pro": { model: "google/gemini-3-pro-image-preview", chat: true },
+  };
+  const sel = map[provider] ?? map.openai;
+  return { ...sel, provider };
+}
+
 async function processJob(jobId: string, body: Body) {
   const admin = adminClient();
   try {
     await admin.from("creative_image_jobs").update({ status: "processing", updated_at: new Date().toISOString() }).eq("id", jobId);
 
-    const provider: Provider = body.provider ?? "openai";
+    const rawProvider: Provider = body.provider ?? "openai";
+    const preset = body.preset ?? "lifestyle-hero";
     const aspect = body.aspect_ratio ?? "1:1";
     const size = ASPECT_TO_SIZE[aspect] ?? "1024x1024";
+    const quality: Quality = body.quality ?? "high";
     const finalPrompt = buildFinalPrompt(body);
 
-    if (provider === "midjourney") {
+    if (rawProvider === "midjourney") {
       const result = {
-        provider,
+        provider: rawProvider,
         export_only: true,
         midjourney_prompt: buildMidjourneyPrompt(body),
         instructions: "Paste this prompt into Discord with the Midjourney bot. Midjourney has no public API.",
@@ -170,8 +303,9 @@ async function processJob(jobId: string, body: Body) {
 
     let b64: string | null = null;
     let modelUsed = "";
+    let usedProvider: Provider = rawProvider;
 
-    if (provider === "ideogram") {
+    if (rawProvider === "ideogram") {
       const key = Deno.env.get("IDEOGRAM_API_KEY");
       if (!key) throw new Error("IDEOGRAM_API_KEY not configured. Add it in Lovable Cloud secrets.");
       b64 = await callIdeogram(finalPrompt, aspect, key);
@@ -179,15 +313,10 @@ async function processJob(jobId: string, body: Body) {
     } else {
       const key = Deno.env.get("LOVABLE_API_KEY");
       if (!key) throw new Error("LOVABLE_API_KEY missing");
-      const map: Record<string, { model: string; chat: boolean }> = {
-        "openai": { model: "openai/gpt-image-2", chat: false },
-        "openai-mini": { model: "openai/gpt-image-1-mini", chat: false },
-        "gemini-flash": { model: "google/gemini-3.1-flash-image-preview", chat: true },
-        "gemini-pro": { model: "google/gemini-3-pro-image-preview", chat: true },
-      };
-      const sel = map[provider] ?? map.openai;
+      const sel = resolveModel(rawProvider, preset);
       modelUsed = sel.model;
-      b64 = await callLovableImage(sel.model, finalPrompt, size, key, sel.chat);
+      usedProvider = sel.provider;
+      b64 = await callLovableImage(sel.model, finalPrompt, size, key, sel.chat, quality);
     }
 
     const firmId = body.firm_id ?? "anon";
@@ -206,10 +335,11 @@ async function processJob(jobId: string, body: Body) {
     if (signErr) throw new Error(`sign url: ${signErr.message}`);
 
     const result = {
-      provider,
+      provider: usedProvider,
       model_used: modelUsed,
-      preset: body.preset ?? "lifestyle-hero",
+      preset,
       aspect_ratio: aspect,
+      quality,
       storage_path: path,
       signed_url: signed.signedUrl,
       variant_id: body.variant_id ?? null,
