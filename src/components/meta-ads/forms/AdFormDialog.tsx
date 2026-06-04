@@ -203,6 +203,23 @@ export function AdFormDialog({
   };
 
   const handleSave = () => {
+    const isCarousel = form.format === 'carousel';
+    const cards = isCarousel
+      ? form.carousel_cards
+          .filter((c) => c.image_url || c.headline)
+          .map((c) => ({ ...c, link: buildUrlWithUtm(c.link || form.link_url, {
+            source: form.utm_source, medium: form.utm_medium, campaign: form.utm_campaign,
+          }) }))
+      : [];
+    const dynamic_creative_specs = form.dynamic_creative
+      ? {
+          titles: [form.headline, ...form.dynamic_headlines.split('\n').map((s) => s.trim()).filter(Boolean)].filter(Boolean).slice(0, 5),
+          descriptions: [form.description, ...form.dynamic_descriptions.split('\n').map((s) => s.trim()).filter(Boolean)].filter(Boolean).slice(0, 5),
+          bodies: [form.primary_text].filter(Boolean),
+          call_to_action_types: [form.cta],
+        }
+      : null;
+
     const payload: any = {
       ad_set_id: adSetId,
       name: form.name.trim(),
@@ -212,8 +229,10 @@ export function AdFormDialog({
       call_to_action: form.cta,
       link_url: finalUrl,
       display_link: form.display_link || null,
-      creative_type: form.format,
+      creative_type: isCarousel ? 'carousel' : form.format,
       image_url: form.image_url || null,
+      carousel_cards: cards,
+      dynamic_creative_specs: dynamic_creative_specs || {},
       ai_generated: false,
     };
     const done = (d: any) => { if (onSaved) onSaved(d.id); else onOpenChange(false); };
