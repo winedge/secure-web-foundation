@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,10 +15,32 @@ import { useFirm } from '@/hooks/use-firm';
 import { useVertical } from '@/hooks/use-vertical';
 import { useToast } from '@/hooks/use-toast';
 import { useMetaPixel } from '@/hooks/use-meta-pixel';
+import { supabase } from '@/integrations/supabase/client';
 import {
   ChevronRight, ChevronLeft, Target, Users, DollarSign, Eye, CheckCircle2,
-  Zap, Globe, Smartphone, Monitor, Image, Play, Layers, X, Plus, Loader2, Sparkles
+  Zap, Globe, Smartphone, Monitor, Image, Play, Layers, X, Plus, Loader2, Sparkles,
+  FileText, Phone, MessageCircle, MessageSquare, AppWindow,
 } from 'lucide-react';
+
+// ─── Conversion Location (where leads/traffic end up) — mirrors Meta Ads Manager ───
+const CONVERSION_LOCATIONS = [
+  { id: 'WEBSITE', label: 'Website', description: 'Drive people to your site or landing page', icon: Globe },
+  { id: 'INSTANT_FORM', label: 'Instant Form', description: 'Collect leads with a Meta lead form (in-app)', icon: FileText },
+  { id: 'PHONE_CALL', label: 'Phone Call', description: 'Get people to call your business', icon: Phone },
+  { id: 'MESSENGER', label: 'Messenger', description: 'Start a chat in Messenger', icon: MessageCircle },
+  { id: 'WHATSAPP', label: 'WhatsApp', description: 'Start a chat on WhatsApp', icon: MessageSquare },
+  { id: 'APP', label: 'App', description: 'Drive installs or activity in your app', icon: AppWindow },
+] as const;
+
+// Which conversion locations are valid per objective (mirrors Meta Ads Manager)
+const LOCATIONS_BY_GOAL: Record<string, string[]> = {
+  OUTCOME_LEADS: ['INSTANT_FORM', 'WEBSITE', 'PHONE_CALL', 'MESSENGER', 'WHATSAPP'],
+  OUTCOME_TRAFFIC: ['WEBSITE', 'MESSENGER', 'WHATSAPP', 'APP', 'PHONE_CALL'],
+  OUTCOME_ENGAGEMENT: ['MESSENGER', 'WHATSAPP', 'WEBSITE', 'PHONE_CALL'],
+  OUTCOME_SALES: ['WEBSITE', 'APP', 'MESSENGER'],
+  OUTCOME_AWARENESS: ['WEBSITE'],
+  OUTCOME_APP_PROMOTION: ['APP'],
+};
 
 // ─── Meta Ads Campaign Goals (mirrors Meta Ads Manager) ───
 const CAMPAIGN_GOALS = [
@@ -108,6 +130,9 @@ const STATES = [
 interface WizardData {
   // Step 1: Campaign Goal
   goal: string;
+  conversionLocation: string;
+  leadFormId: string;
+  phoneNumber: string;
   campaignName: string;
   tortType: string;
   
@@ -151,7 +176,8 @@ interface WizardData {
 }
 
 const defaultData: WizardData = {
-  goal: '', campaignName: '', tortType: '',
+  goal: '', conversionLocation: '', leadFormId: '', phoneNumber: '',
+  campaignName: '', tortType: '',
   budgetType: 'daily', dailyBudget: 50, lifetimeBudget: 0,
   bidStrategy: 'LOWEST_COST_WITHOUT_CAP', targetCostPerLead: 0,
   startDate: '', endDate: '',
@@ -192,6 +218,22 @@ export function MetaCampaignWizard({ open, onOpenChange, onCreated, prefillData 
 
   const update = (partial: Partial<WizardData>) => setData(prev => ({ ...prev, ...partial }));
 
+  // Load existing Meta lead forms for the Instant Form conversion location
+  const [leadForms, setLeadForms] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    if (!open) return;
+    supabase.from('meta_lead_forms').select('id,name').limit(50)
+      .then(({ data }) => setLeadForms((data as any[]) || []));
+  }, [open]);
+
+  // Reset conversion location if it isn't valid for the chosen goal
+  useEffect(() => {
+    const allowed = LOCATIONS_BY_GOAL[data.goal] || [];
+    if (data.conversionLocation && !allowed.includes(data.conversionLocation)) {
+      update({ conversionLocation: '' });
+    }
+  }, [data.goal]);
+
   const toggleArray = (arr: string[], val: string): string[] =>
     arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val];
 
@@ -231,7 +273,8 @@ export function MetaCampaignWizard({ open, onOpenChange, onCreated, prefillData 
             device_types: data.deviceTypes,
             behaviors: data.behaviors,
           },
-        }, { onSuccess: resolve, onError: reject });
+          destination_type: data.conversionLocation || undefined,
+        } as any, { onSuccess: resolve, onError: reject });
       });
 
       if (data.headline) {
@@ -243,10 +286,13 @@ export function MetaCampaignWizard({ open, onOpenChange, onCreated, prefillData 
             body_text: data.bodyText,
             description: data.description,
             call_to_action: data.callToAction,
-            link_url: data.linkUrl || undefined,
+            link_url: data.conversionLocation === 'WEBSITE' ? (data.linkUrl || undefined) : undefined,
             image_url: data.imageUrl || undefined,
             ai_generated: data.useAiCreative,
-          }, { onSuccess: () => resolve(), onError: reject });
+            destination_type: data.conversionLocation || undefined,
+            lead_form_id: data.conversionLocation === 'INSTANT_FORM' ? (data.leadFormId || undefined) : undefined,
+            phone_number: data.conversionLocation === 'PHONE_CALL' ? (data.phoneNumber || undefined) : undefined,
+          } as any, { onSuccess: () => resolve(), onError: reject });
         });
       }
 
@@ -268,7 +314,14 @@ export function MetaCampaignWizard({ open, onOpenChange, onCreated, prefillData 
   };
 
   const canProceed = () => {
-    if (step === 0) return !!data.goal && !!data.campaignName;
+    if (step === 0) {
+      if (!data.goal || !data.campaignName) return false;
+      const allowed = LOCATIONS_BY_GOAL[data.goal] || [];
+      if (allowed.length && !data.conversionLocation) return false;
+      if (data.conversionLocation === 'INSTANT_FORM' && !data.leadFormId) return false;
+      if (data.conversionLocation === 'PHONE_CALL' && !data.phoneNumber) return false;
+      return true;
+    }
     if (step === 1) return data.dailyBudget > 0 || data.lifetimeBudget > 0;
     if (step === 4) return !!data.headline;
     return true;
@@ -331,6 +384,60 @@ export function MetaCampaignWizard({ open, onOpenChange, onCreated, prefillData 
                   );
                 })}
               </div>
+
+              {/* Conversion Location — what people do after they see the ad */}
+              {data.goal && (LOCATIONS_BY_GOAL[data.goal]?.length ?? 0) > 0 && (
+                <div className="mt-2">
+                  <Label className="text-base font-semibold">Conversion Location</Label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Choose where people will go when they engage with your ad.
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3">
+                    {CONVERSION_LOCATIONS
+                      .filter(loc => LOCATIONS_BY_GOAL[data.goal]?.includes(loc.id))
+                      .map(loc => {
+                        const Icon = loc.icon;
+                        const active = data.conversionLocation === loc.id;
+                        return (
+                          <button
+                            key={loc.id}
+                            onClick={() => update({ conversionLocation: loc.id })}
+                            className={`text-left p-3 rounded-xl border-2 transition-all hover:shadow-sm ${
+                              active ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
+                            }`}
+                          >
+                            <div className="inline-flex p-1.5 rounded-lg mb-1.5 bg-muted">
+                              <Icon className="h-4 w-4 text-foreground" />
+                            </div>
+                            <p className="font-semibold text-sm">{loc.label}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{loc.description}</p>
+                          </button>
+                        );
+                      })}
+                  </div>
+
+                  {/* Per-destination follow-up inputs */}
+                  {data.conversionLocation === 'INSTANT_FORM' && (
+                    <div className="mt-3">
+                      <Label>Lead Form *</Label>
+                      <Select value={data.leadFormId} onValueChange={v => update({ leadFormId: v })}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder={leadForms.length ? 'Select a lead form' : 'No lead forms yet — create one in Lead Forms tab'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {leadForms.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {data.conversionLocation === 'PHONE_CALL' && (
+                    <div className="mt-3">
+                      <Label>Phone Number *</Label>
+                      <Input value={data.phoneNumber} onChange={e => update({ phoneNumber: e.target.value })} placeholder="+1 555 123 4567" className="mt-1 max-w-xs" />
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3 mt-4">
                 <div>
                   <Label>Campaign Name *</Label>
