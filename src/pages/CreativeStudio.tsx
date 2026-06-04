@@ -20,6 +20,7 @@ import { ComplianceNotice } from '@/components/ai/ComplianceNotice';
 import { useGenerateStrategy, type CreativeStrategy } from '@/hooks/use-creative-strategy';
 import { useBrandKit } from '@/hooks/use-brand-kit';
 import { StrategyPanel } from '@/components/creative-studio/StrategyPanel';
+import { CreativeImagePanel } from '@/components/creative-studio/CreativeImagePanel';
 
 export default function CreativeStudio() {
   const [brief, setBrief] = useState('');
