@@ -205,6 +205,7 @@ const App = () => (
                 <Route path="/predictive-leads" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="predictive_leads" label="Predictive Leads"><PredictiveLeads /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/benchmarks" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="benchmarks" label="Cross-Firm Benchmarks"><CrossFirmBenchmarks /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/creative-studio" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="creative_studio" label="Creative Studio"><CreativeStudio /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/brand-kit" element={<ProtectedRoute><LazyRoute><BrandKitPage /></LazyRoute></ProtectedRoute>} />
                 <Route path="/viral-content" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="viral_content" label="Viral Content Engine"><ViralContentEngine /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/video-ads" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="video_ads" label="Video Ad Generator"><VideoAdGenerator /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/google-ads" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="google_ads" label="Google Ads"><GoogleAds /></ModuleGate></LazyRoute></ProtectedRoute>} />
