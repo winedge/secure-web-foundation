@@ -44,6 +44,19 @@ export default function CreativeStudio() {
   const [brandKitLoaded, setBrandKitLoaded] = useState(false);
   const genStrategy = useGenerateStrategy();
 
+  const buildStrategy = async () => {
+    if (!brief) { toast.error('Enter a creative brief'); return; }
+    const categoryValidation = validateCategoryValue(tortType, categoryLabel);
+    setCategoryError(categoryValidation ?? undefined);
+    if (categoryValidation) { toast.error(categoryValidation); return; }
+    try {
+      const res = await genStrategy.mutateAsync({ brief, category: tortType, brand_tone: brandTone });
+      setStrategy(res.strategy);
+      setBrandKitLoaded(res.brand_kit_loaded);
+      toast.success(res.brand_kit_loaded ? 'Strategy ready | Brand kit applied' : 'Strategy ready');
+    } catch (_) { /* hook toasts */ }
+  };
+
   const generate = async () => {
     if (!brief) { toast.error('Enter a creative brief'); return; }
     const categoryValidation = validateCategoryValue(tortType, categoryLabel);
@@ -52,11 +65,10 @@ export default function CreativeStudio() {
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('ai-creative-studio', {
-        body: { firm_id: firm?.id, brief, category: tortType, brand_tone: brandTone, num_variants: 6, quality },
+        body: { firm_id: firm?.id, brief, category: tortType, brand_tone: brandTone, num_variants: 6, quality, strategy },
       });
       if (error) throw error;
       if (data?.error) {
-        // Surface compliance-block payload to the user with full context
         if (data.compliance) setResult({ compliance: data.compliance, blocked: true });
         throw new Error(data.error);
       }
