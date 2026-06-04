@@ -4055,6 +4055,7 @@ export type Database = {
       }
       meta_ad_sets: {
         Row: {
+          adset_schedule: Json | null
           attribution_spec: Json | null
           bid_amount: number | null
           bid_strategy: Database["public"]["Enums"]["meta_bid_strategy"] | null
@@ -4088,6 +4089,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          adset_schedule?: Json | null
           attribution_spec?: Json | null
           bid_amount?: number | null
           bid_strategy?: Database["public"]["Enums"]["meta_bid_strategy"] | null
@@ -4121,6 +4123,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          adset_schedule?: Json | null
           attribution_spec?: Json | null
           bid_amount?: number | null
           bid_strategy?: Database["public"]["Enums"]["meta_bid_strategy"] | null
@@ -4199,6 +4202,7 @@ export type Database = {
           creative_type: string | null
           description: string | null
           display_link: string | null
+          dynamic_creative_specs: Json | null
           effective_status: string | null
           firm_id: string
           headline: string | null
@@ -4239,6 +4243,7 @@ export type Database = {
           creative_type?: string | null
           description?: string | null
           display_link?: string | null
+          dynamic_creative_specs?: Json | null
           effective_status?: string | null
           firm_id: string
           headline?: string | null
@@ -4279,6 +4284,7 @@ export type Database = {
           creative_type?: string | null
           description?: string | null
           display_link?: string | null
+          dynamic_creative_specs?: Json | null
           effective_status?: string | null
           firm_id?: string
           headline?: string | null
@@ -4569,6 +4575,7 @@ export type Database = {
           attribution_setting: string | null
           bid_strategy: Database["public"]["Enums"]["meta_bid_strategy"] | null
           budget_remaining: number | null
+          budget_schedule_specs: Json | null
           buying_type: Database["public"]["Enums"]["meta_buying_type"] | null
           created_at: string
           created_by: string | null
@@ -4606,6 +4613,7 @@ export type Database = {
           attribution_setting?: string | null
           bid_strategy?: Database["public"]["Enums"]["meta_bid_strategy"] | null
           budget_remaining?: number | null
+          budget_schedule_specs?: Json | null
           buying_type?: Database["public"]["Enums"]["meta_buying_type"] | null
           created_at?: string
           created_by?: string | null
@@ -4643,6 +4651,7 @@ export type Database = {
           attribution_setting?: string | null
           bid_strategy?: Database["public"]["Enums"]["meta_bid_strategy"] | null
           budget_remaining?: number | null
+          budget_schedule_specs?: Json | null
           buying_type?: Database["public"]["Enums"]["meta_buying_type"] | null
           created_at?: string
           created_by?: string | null
