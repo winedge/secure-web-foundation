@@ -57,7 +57,7 @@ function buildFinalPrompt(b: Body) {
 async function callLovableImage(model: string, prompt: string, size: string, apiKey: string, useChatShape: boolean) {
   const body = useChatShape
     ? { model, messages: [{ role: "user", content: prompt }], modalities: ["image", "text"] }
-    : { model, prompt, size, quality: "high", n: 1 };
+    : { model, prompt, size, quality: "low", n: 1 };
   const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
