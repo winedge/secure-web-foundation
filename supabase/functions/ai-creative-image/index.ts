@@ -1,14 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 
-// Multi-provider image engine for the AI Creative Studio.
-// Providers:
-//   - openai (gpt-image-2)              | via Lovable AI Gateway, default
-//   - openai-mini (gpt-image-1-mini)    | via Lovable AI Gateway, cost-efficient
-//   - gemini-flash (nano banana 2)      | via Lovable AI Gateway, drafts/edits
-//   - gemini-pro (gemini-3-pro-image)   | via Lovable AI Gateway, premium
-//   - ideogram (v3)                     | via api.ideogram.ai, requires IDEOGRAM_API_KEY
-//   - midjourney                        | prompt-export only (no public API)
+// Async multi-provider image engine.
+// POST  { prompt, provider, ... }                  -> creates job, returns 202 { job_id, status: "pending" }
+// POST  { job_id }                                 -> returns current job status/result
+// Background task does the heavy lifting so we never hit the 150s idle timeout.
 
 type Provider =
   | "openai"
@@ -19,15 +15,16 @@ type Provider =
   | "midjourney";
 
 interface Body {
-  prompt: string;
+  prompt?: string;
   provider?: Provider;
-  preset?: string;            // creative style preset
-  aspect_ratio?: string;      // "1:1" | "9:16" | "16:9" | "4:5"
+  preset?: string;
+  aspect_ratio?: string;
   firm_id?: string;
   variant_id?: string;
   brand_colors?: string[];
-  on_image_text?: string;     // optional headline burned into image
+  on_image_text?: string;
   midjourney_style_refs?: string[];
+  job_id?: string;
 }
 
 const PRESET_DIRECTIVES: Record<string, string> = {
@@ -62,13 +59,8 @@ function buildFinalPrompt(b: Body) {
 
 async function callLovableImage(model: string, prompt: string, size: string, apiKey: string, useChatShape: boolean) {
   const body = useChatShape
-    ? {
-        model,
-        messages: [{ role: "user", content: prompt }],
-        modalities: ["image", "text"],
-      }
+    ? { model, messages: [{ role: "user", content: prompt }], modalities: ["image", "text"] }
     : { model, prompt, size, quality: "high", n: 1 };
-
   const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -105,7 +97,6 @@ async function callIdeogram(prompt: string, aspect: string, apiKey: string) {
   if (!url) throw new Error("Ideogram returned no image url");
   const img = await fetch(url);
   const buf = new Uint8Array(await img.arrayBuffer());
-  // to base64
   let bin = "";
   for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
   return btoa(bin);
@@ -119,27 +110,30 @@ function buildMidjourneyPrompt(b: Body) {
   return `/imagine ${preset} ${b.prompt}${colors} --ar ${aspect} --v 7 --style raw ${refs}`.trim();
 }
 
-Deno.serve(async (req) => {
-  const cors = handleCors(req);
-  if (cors) return cors;
+function adminClient() {
+  return createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+}
 
+async function processJob(jobId: string, body: Body) {
+  const admin = adminClient();
   try {
-    const body = (await req.json()) as Body;
-    if (!body?.prompt) return jsonResponse({ error: "prompt required" }, 400);
+    await admin.from("creative_image_jobs").update({ status: "processing", updated_at: new Date().toISOString() }).eq("id", jobId);
 
     const provider: Provider = body.provider ?? "openai";
     const aspect = body.aspect_ratio ?? "1:1";
     const size = ASPECT_TO_SIZE[aspect] ?? "1024x1024";
     const finalPrompt = buildFinalPrompt(body);
 
-    // Midjourney = prompt export only
     if (provider === "midjourney") {
-      return jsonResponse({
+      const result = {
         provider,
         export_only: true,
         midjourney_prompt: buildMidjourneyPrompt(body),
         instructions: "Paste this prompt into Discord with the Midjourney bot. Midjourney has no public API.",
-      });
+        final_prompt: finalPrompt,
+      };
+      await admin.from("creative_image_jobs").update({ status: "completed", result, updated_at: new Date().toISOString() }).eq("id", jobId);
+      return;
     }
 
     let b64: string | null = null;
@@ -147,19 +141,12 @@ Deno.serve(async (req) => {
 
     if (provider === "ideogram") {
       const key = Deno.env.get("IDEOGRAM_API_KEY");
-      if (!key) {
-        return jsonResponse({
-          error: "IDEOGRAM_API_KEY not configured. Add it in Lovable Cloud secrets to enable Ideogram (best for typography posters).",
-          provider,
-          requires_secret: "IDEOGRAM_API_KEY",
-        }, 400);
-      }
+      if (!key) throw new Error("IDEOGRAM_API_KEY not configured. Add it in Lovable Cloud secrets.");
       b64 = await callIdeogram(finalPrompt, aspect, key);
       modelUsed = "ideogram-v3";
     } else {
       const key = Deno.env.get("LOVABLE_API_KEY");
-      if (!key) return jsonResponse({ error: "LOVABLE_API_KEY missing" }, 500);
-
+      if (!key) throw new Error("LOVABLE_API_KEY missing");
       const map: Record<string, { model: string; chat: boolean }> = {
         "openai": { model: "openai/gpt-image-2", chat: false },
         "openai-mini": { model: "openai/gpt-image-1-mini", chat: false },
@@ -171,10 +158,6 @@ Deno.serve(async (req) => {
       b64 = await callLovableImage(sel.model, finalPrompt, size, key, sel.chat);
     }
 
-    // Upload to storage
-    const supaUrl = Deno.env.get("SUPABASE_URL")!;
-    const supaKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const admin = createClient(supaUrl, supaKey);
     const firmId = body.firm_id ?? "anon";
     const stamp = Date.now();
     const path = `${firmId}/${stamp}-${crypto.randomUUID()}.png`;
@@ -190,7 +173,7 @@ Deno.serve(async (req) => {
       .createSignedUrl(path, 60 * 60 * 24 * 7);
     if (signErr) throw new Error(`sign url: ${signErr.message}`);
 
-    return jsonResponse({
+    const result = {
       provider,
       model_used: modelUsed,
       preset: body.preset ?? "lifestyle-hero",
@@ -199,7 +182,65 @@ Deno.serve(async (req) => {
       signed_url: signed.signedUrl,
       variant_id: body.variant_id ?? null,
       final_prompt: finalPrompt,
-    });
+    };
+    await admin.from("creative_image_jobs").update({ status: "completed", result, updated_at: new Date().toISOString() }).eq("id", jobId);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    console.error("processJob error", msg);
+    await admin.from("creative_image_jobs").update({ status: "failed", error: msg, updated_at: new Date().toISOString() }).eq("id", jobId);
+  }
+}
+
+Deno.serve(async (req) => {
+  const cors = handleCors(req);
+  if (cors) return cors;
+
+  try {
+    const body = (await req.json()) as Body;
+    const admin = adminClient();
+
+    // Poll path: client passes job_id to check status
+    if (body.job_id) {
+      const { data, error } = await admin.from("creative_image_jobs").select("*").eq("id", body.job_id).maybeSingle();
+      if (error) throw error;
+      if (!data) return jsonResponse({ error: "job not found" }, 404);
+      return jsonResponse({
+        job_id: data.id,
+        status: data.status,
+        ...(data.result || {}),
+        ...(data.error ? { error: data.error } : {}),
+      });
+    }
+
+    if (!body?.prompt) return jsonResponse({ error: "prompt required" }, 400);
+
+    // Identify user (best effort)
+    let userId: string | null = null;
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data: userData } = await admin.auth.getUser(token);
+      userId = userData?.user?.id ?? null;
+    }
+
+    const { data: job, error: insErr } = await admin
+      .from("creative_image_jobs")
+      .insert({
+        user_id: userId,
+        firm_id: body.firm_id ?? null,
+        provider: body.provider ?? "openai",
+        request: body,
+        status: "pending",
+      })
+      .select("id")
+      .single();
+    if (insErr) throw insErr;
+
+    // Background processing — does NOT block the response
+    // @ts-ignore EdgeRuntime is available in Supabase edge runtime
+    EdgeRuntime.waitUntil(processJob(job.id, body));
+
+    return jsonResponse({ job_id: job.id, status: "pending" }, 202);
   } catch (e) {
     console.error("ai-creative-image error", e);
     return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);

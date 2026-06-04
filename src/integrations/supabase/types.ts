@@ -1431,6 +1431,45 @@ export type Database = {
           },
         ]
       }
+      creative_image_jobs: {
+        Row: {
+          created_at: string
+          error: string | null
+          firm_id: string | null
+          id: string
+          provider: string
+          request: Json
+          result: Json | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          firm_id?: string | null
+          id?: string
+          provider: string
+          request: Json
+          result?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          firm_id?: string | null
+          id?: string
+          provider?: string
+          request?: Json
+          result?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       creative_studio_projects: {
         Row: {
           ai_score: number | null

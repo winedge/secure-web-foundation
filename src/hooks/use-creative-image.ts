@@ -36,6 +36,8 @@ export interface CreativeImageResult {
   instructions?: string;
   requires_secret?: string;
   error?: string;
+  job_id?: string;
+  status?: 'pending' | 'processing' | 'completed' | 'failed';
 }
 
 export const PROVIDER_LABELS: Record<CreativeImageProvider, string> = {
@@ -55,13 +57,34 @@ export const PROVIDER_RECOMMENDATIONS: Record<string, CreativeImageProvider> = {
   'minimalist-brand': 'gemini-pro',
 };
 
+async function invoke(body: Record<string, unknown>): Promise<CreativeImageResult> {
+  const { data, error } = await supabase.functions.invoke('ai-creative-image', { body });
+  if (error) throw error;
+  if (data?.error && data?.status !== 'processing' && data?.status !== 'pending') throw new Error(data.error);
+  return data as CreativeImageResult;
+}
+
+async function pollJob(jobId: string, timeoutMs = 240_000): Promise<CreativeImageResult> {
+  const start = Date.now();
+  let delay = 2000;
+  while (Date.now() - start < timeoutMs) {
+    await new Promise((r) => setTimeout(r, delay));
+    const res = await invoke({ job_id: jobId });
+    if (res.status === 'completed') return res;
+    if (res.status === 'failed') throw new Error(res.error || 'Image generation failed');
+    delay = Math.min(delay + 1000, 5000);
+  }
+  throw new Error('Image generation timed out');
+}
+
 export function useGenerateCreativeImage() {
   return useMutation({
     mutationFn: async (req: CreativeImageRequest): Promise<CreativeImageResult> => {
-      const { data, error } = await supabase.functions.invoke('ai-creative-image', { body: req });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      return data as CreativeImageResult;
+      const initial = await invoke(req as unknown as Record<string, unknown>);
+      if (initial.job_id && initial.status !== 'completed') {
+        return pollJob(initial.job_id);
+      }
+      return initial;
     },
     onError: (err: any) => toast.error(err.message || 'Image generation failed'),
   });
