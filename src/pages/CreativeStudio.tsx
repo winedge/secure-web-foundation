@@ -143,15 +143,26 @@ export default function CreativeStudio() {
                 required
                 onValidityChange={setCategoryValid}
               />
-              <Input placeholder="Brand tone (e.g. empathetic, urgent)" value={brandTone} onChange={(e) => setBrandTone(e.target.value)} className="max-w-xs" />
+              <Input placeholder={brandKit?.tone_of_voice ? `Override tone (kit: ${brandKit.tone_of_voice})` : 'Brand tone (e.g. empathetic, urgent)'} value={brandTone} onChange={(e) => setBrandTone(e.target.value)} className="max-w-xs" />
+              <Button onClick={buildStrategy} variant="outline" disabled={genStrategy.isPending || !categoryValid} className="gap-2">
+                {genStrategy.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+                {strategy ? 'Rebuild Strategy' : 'Build Strategy'}
+              </Button>
               <Button onClick={generate} disabled={isGenerating || !categoryValid} className="gap-2">
                 {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                {isGenerating ? 'Generating...' : 'Generate Campaign'}
+                {isGenerating ? 'Generating...' : strategy ? 'Generate 6 Variants' : 'Generate Campaign'}
               </Button>
             </div>
+            {!brandKit && (
+              <p className="text-xs text-muted-foreground">
+                Tip: <Link to="/brand-kit" className="text-primary underline">Set up your Brand Kit</Link> so every variant uses your tone, colors, trust badges, and disclaimer.
+              </p>
+            )}
             <QualityControls value={quality} onChange={setQuality} />
           </CardContent>
         </Card>
+
+        {strategy && <StrategyPanel strategy={strategy} brandKitLoaded={brandKitLoaded} />}
 
         {result?.compliance && <ComplianceNotice compliance={result.compliance} />}
 
