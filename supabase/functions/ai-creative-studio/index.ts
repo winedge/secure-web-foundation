@@ -150,7 +150,7 @@ Generate all 6 archetype variants. Each must feel distinct in angle but consiste
     const variantFindings: Array<{ id: string; field: string; findings: any[] }> = [];
     if (Array.isArray(parsed.variants)) {
       parsed.variants = parsed.variants.map((v: any) => {
-        const fields: Array<keyof typeof v> = ["headline", "body_short", "body_long", "cta", "image_prompt"];
+        const fields: Array<keyof typeof v> = ["headline", "subheadline", "body_short", "body_long", "cta", "hook", "badge", "disclaimer", "image_prompt"];
         for (const f of fields) {
           if (typeof v[f] === "string") {
             const r = checkPromptCompliance(v[f], verticalSlug);
