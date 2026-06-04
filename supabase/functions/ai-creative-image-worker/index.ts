@@ -54,10 +54,48 @@ function buildFinalPrompt(b: Body) {
   return [preset, aspect, colors, text, b.prompt, "Avoid watermarks, logos, fake brand names, or platform UI."].filter(Boolean).join(" ");
 }
 
+async function readImageStream(res: Response) {
+  if (!res.body) throw new Error("Image gateway returned an empty stream");
+  const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+  let buffer = "";
+  let finalB64 = "";
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += value;
+    const parts = buffer.split(/\r?\n\r?\n/);
+    buffer = parts.pop() ?? "";
+
+    for (const part of parts) {
+      const event = part.split(/\r?\n/).find((line) => line.startsWith("event:"))?.replace(/^event:\s*/, "").trim();
+      const data = part
+        .split(/\r?\n/)
+        .filter((line) => line.startsWith("data:"))
+        .map((line) => line.replace(/^data:\s*/, ""))
+        .join("\n");
+      if (!data || data === "[DONE]") continue;
+      let payload: { type?: string; b64_json?: string; error?: { message?: string } };
+      try {
+        payload = JSON.parse(data);
+      } catch {
+        continue;
+      }
+      if (payload.error?.message) throw new Error(payload.error.message);
+      if ((event === "image_generation.completed" || payload.type === "image_generation.completed") && payload.b64_json) {
+        finalB64 = payload.b64_json;
+      }
+    }
+  }
+
+  if (!finalB64) throw new Error("Image stream ended without a completed image");
+  return finalB64;
+}
+
 async function callLovableImage(model: string, prompt: string, size: string, apiKey: string, useChatShape: boolean) {
   const body = useChatShape
-    ? { model, messages: [{ role: "user", content: prompt }], modalities: ["image", "text"] }
-    : { model, prompt, size, quality: "high", n: 1 };
+    ? { model, messages: [{ role: "user", content: prompt }], modalities: ["image", "text"], stream: true }
+    : { model, prompt, size, quality: "low", n: 1, stream: true, partial_images: 1 };
   const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -67,10 +105,7 @@ async function callLovableImage(model: string, prompt: string, size: string, api
     const txt = await res.text();
     throw new Error(`Lovable image gateway ${res.status}: ${txt.slice(0, 400)}`);
   }
-  const data = await res.json();
-  const b64 = data?.data?.[0]?.b64_json;
-  if (!b64) throw new Error("No image returned from gateway");
-  return b64 as string;
+  return readImageStream(res);
 }
 
 async function callIdeogram(prompt: string, aspect: string, apiKey: string) {
@@ -111,18 +146,9 @@ function adminClient() {
   return createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 }
 
-Deno.serve(async (req) => {
-  const cors = handleCors(req);
-  if (cors) return cors;
-
+async function processJob(jobId: string, body: Body) {
   const admin = adminClient();
-  let jobId: string | undefined;
-
   try {
-    const { job_id, body } = (await req.json()) as { job_id: string; body: Body };
-    jobId = job_id;
-    if (!jobId) return jsonResponse({ error: "job_id required" }, 400);
-
     await admin.from("creative_image_jobs").update({ status: "processing", updated_at: new Date().toISOString() }).eq("id", jobId);
 
     const provider: Provider = body.provider ?? "openai";
@@ -139,7 +165,7 @@ Deno.serve(async (req) => {
         final_prompt: finalPrompt,
       };
       await admin.from("creative_image_jobs").update({ status: "completed", result, updated_at: new Date().toISOString() }).eq("id", jobId);
-      return jsonResponse({ ok: true });
+      return;
     }
 
     let b64: string | null = null;
@@ -159,7 +185,7 @@ Deno.serve(async (req) => {
         "gemini-flash": { model: "google/gemini-3.1-flash-image-preview", chat: true },
         "gemini-pro": { model: "google/gemini-3-pro-image-preview", chat: true },
       };
-      const sel = map[provider];
+      const sel = map[provider] ?? map.openai;
       modelUsed = sel.model;
       b64 = await callLovableImage(sel.model, finalPrompt, size, key, sel.chat);
     }
@@ -190,13 +216,33 @@ Deno.serve(async (req) => {
       final_prompt: finalPrompt,
     };
     await admin.from("creative_image_jobs").update({ status: "completed", result, updated_at: new Date().toISOString() }).eq("id", jobId);
-    return jsonResponse({ ok: true });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";
     console.error("ai-creative-image-worker error", msg);
-    if (jobId) {
-      await admin.from("creative_image_jobs").update({ status: "failed", error: msg, updated_at: new Date().toISOString() }).eq("id", jobId);
+    await admin.from("creative_image_jobs").update({ status: "failed", error: msg, updated_at: new Date().toISOString() }).eq("id", jobId);
+  }
+}
+
+Deno.serve(async (req) => {
+  const cors = handleCors(req);
+  if (cors) return cors;
+
+  try {
+    const { job_id, body } = (await req.json()) as { job_id: string; body: Body };
+    if (!job_id) return jsonResponse({ error: "job_id required" }, 400);
+
+    const task = processJob(job_id, body ?? {});
+    try {
+      // @ts-ignore EdgeRuntime is provided in Supabase edge runtime
+      EdgeRuntime?.waitUntil?.(task);
+    } catch {
+      task.catch((e) => console.error("worker background task failed", e));
     }
+
+    return jsonResponse({ ok: true, status: "accepted" }, 202);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    console.error("ai-creative-image-worker request error", msg);
     return jsonResponse({ error: msg }, 500);
   }
 });
