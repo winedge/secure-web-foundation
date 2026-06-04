@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,10 +15,32 @@ import { useFirm } from '@/hooks/use-firm';
 import { useVertical } from '@/hooks/use-vertical';
 import { useToast } from '@/hooks/use-toast';
 import { useMetaPixel } from '@/hooks/use-meta-pixel';
+import { supabase } from '@/integrations/supabase/client';
 import {
   ChevronRight, ChevronLeft, Target, Users, DollarSign, Eye, CheckCircle2,
-  Zap, Globe, Smartphone, Monitor, Image, Play, Layers, X, Plus, Loader2, Sparkles
+  Zap, Globe, Smartphone, Monitor, Image, Play, Layers, X, Plus, Loader2, Sparkles,
+  FileText, Phone, MessageCircle, MessageSquare, AppWindow,
 } from 'lucide-react';
+
+// ─── Conversion Location (where leads/traffic end up) — mirrors Meta Ads Manager ───
+const CONVERSION_LOCATIONS = [
+  { id: 'WEBSITE', label: 'Website', description: 'Drive people to your site or landing page', icon: Globe },
+  { id: 'INSTANT_FORM', label: 'Instant Form', description: 'Collect leads with a Meta lead form (in-app)', icon: FileText },
+  { id: 'PHONE_CALL', label: 'Phone Call', description: 'Get people to call your business', icon: Phone },
+  { id: 'MESSENGER', label: 'Messenger', description: 'Start a chat in Messenger', icon: MessageCircle },
+  { id: 'WHATSAPP', label: 'WhatsApp', description: 'Start a chat on WhatsApp', icon: MessageSquare },
+  { id: 'APP', label: 'App', description: 'Drive installs or activity in your app', icon: AppWindow },
+] as const;
+
+// Which conversion locations are valid per objective (mirrors Meta Ads Manager)
+const LOCATIONS_BY_GOAL: Record<string, string[]> = {
+  OUTCOME_LEADS: ['INSTANT_FORM', 'WEBSITE', 'PHONE_CALL', 'MESSENGER', 'WHATSAPP'],
+  OUTCOME_TRAFFIC: ['WEBSITE', 'MESSENGER', 'WHATSAPP', 'APP', 'PHONE_CALL'],
+  OUTCOME_ENGAGEMENT: ['MESSENGER', 'WHATSAPP', 'WEBSITE', 'PHONE_CALL'],
+  OUTCOME_SALES: ['WEBSITE', 'APP', 'MESSENGER'],
+  OUTCOME_AWARENESS: ['WEBSITE'],
+  OUTCOME_APP_PROMOTION: ['APP'],
+};
 
 // ─── Meta Ads Campaign Goals (mirrors Meta Ads Manager) ───
 const CAMPAIGN_GOALS = [
