@@ -164,27 +164,161 @@ async function publishCampaign(supabase: any, firmId: string, campaignId: string
     .select("meta_ad_account_id").eq("id", campaign.ad_account_id).single();
   if (!account) throw new Error("Ad account missing");
 
-  const res = await metaPost(`/${account.meta_ad_account_id}/campaigns`, conn.access_token, {
-    name: campaign.name,
-    objective: campaign.objective,
-    status: "PAUSED",
-    buying_type: campaign.buying_type ?? "AUCTION",
-    special_ad_categories: campaign.special_ad_categories ?? [],
-    ...(campaign.daily_budget ? { daily_budget: campaign.daily_budget } : {}),
-    ...(campaign.lifetime_budget ? { lifetime_budget: campaign.lifetime_budget } : {}),
-    ...(campaign.bid_strategy ? { bid_strategy: campaign.bid_strategy } : {}),
-  });
+  // ─── 1. Publish campaign ───
+  const campRes = campaign.meta_campaign_id
+    ? { id: campaign.meta_campaign_id }
+    : await metaPost(`/${account.meta_ad_account_id}/campaigns`, conn.access_token, {
+        name: campaign.name,
+        objective: campaign.objective,
+        status: "PAUSED",
+        buying_type: campaign.buying_type ?? "AUCTION",
+        special_ad_categories: campaign.special_ad_categories ?? [],
+        ...(campaign.daily_budget ? { daily_budget: Math.round(Number(campaign.daily_budget) * 100) } : {}),
+        ...(campaign.lifetime_budget ? { lifetime_budget: Math.round(Number(campaign.lifetime_budget) * 100) } : {}),
+        ...(campaign.bid_strategy ? { bid_strategy: campaign.bid_strategy } : {}),
+        ...(campaign.spend_cap ? { spend_cap: Math.round(Number(campaign.spend_cap) * 100) } : {}),
+      });
 
   await supabase.from("meta_campaigns").update({
-    meta_campaign_id: res.id,
+    meta_campaign_id: campRes.id,
     review_status: "published",
     published_at: new Date().toISOString(),
     status: "paused",
   }).eq("id", campaignId);
 
+  // ─── 2. Publish ad sets ───
+  const { data: adSets } = await supabase.from("meta_ad_sets").select("*").eq("campaign_id", campaignId);
+  const adSetIdMap = new Map<string, string>();
+  for (const as of adSets || []) {
+    if (as.meta_adset_id) { adSetIdMap.set(as.id, as.meta_adset_id); continue; }
+    const destType = (as.destination_type || "WEBSITE").toUpperCase();
+    const promoted: Record<string, unknown> = { ...(as.promoted_object || {}) };
+    if (destType === "ON_AD" || destType === "INSTANT_FORM") {
+      if (promoted.lead_form_id) { /* keep */ }
+    }
+    if (destType === "PHONE_CALL" && !promoted.phone_number && (as.raw?.phone_number)) {
+      promoted.phone_number = as.raw.phone_number;
+    }
+    if (destType === "APP" && (as.raw?.application_id) && !promoted.application_id) {
+      promoted.application_id = as.raw.application_id;
+      if (as.raw?.object_store_url) promoted.object_store_url = as.raw.object_store_url;
+    }
+
+    const body: Record<string, unknown> = {
+      campaign_id: campRes.id,
+      name: as.name,
+      status: "PAUSED",
+      optimization_goal: as.optimization_goal || "LEAD_GENERATION",
+      billing_event: as.billing_event || "IMPRESSIONS",
+      ...(as.bid_strategy ? { bid_strategy: as.bid_strategy } : {}),
+      ...(as.bid_amount ? { bid_amount: Math.round(Number(as.bid_amount) * 100) } : {}),
+      ...(as.daily_budget ? { daily_budget: Math.round(Number(as.daily_budget) * 100) } : {}),
+      ...(as.lifetime_budget ? { lifetime_budget: Math.round(Number(as.lifetime_budget) * 100) } : {}),
+      ...(as.start_time ? { start_time: as.start_time } : {}),
+      ...(as.end_time ? { end_time: as.end_time } : {}),
+      targeting: as.targeting || {},
+      destination_type: destType,
+      ...(Object.keys(promoted).length ? { promoted_object: promoted } : {}),
+      ...(Array.isArray(as.adset_schedule) && as.adset_schedule.length ? { adset_schedule: as.adset_schedule } : {}),
+      ...(as.attribution_spec ? { attribution_spec: as.attribution_spec } : {}),
+    };
+    try {
+      const asRes = await metaPost(`/${account.meta_ad_account_id}/adsets`, conn.access_token, body);
+      await supabase.from("meta_ad_sets").update({ meta_adset_id: asRes.id, status: "paused" }).eq("id", as.id);
+      adSetIdMap.set(as.id, asRes.id);
+    } catch (e) {
+      console.error(`[publish] adset ${as.id} failed`, e);
+    }
+  }
+
+  // ─── 3. Publish ads ───
+  const { data: ads } = await supabase.from("meta_ads")
+    .select("*, ad_set:meta_ad_sets(id,page_id,ig_account_id)")
+    .eq("firm_id", firmId)
+    .in("ad_set_id", Array.from(adSetIdMap.keys()).length ? Array.from(adSetIdMap.keys()) : ["00000000-0000-0000-0000-000000000000"]);
+
+  for (const ad of ads || []) {
+    if (ad.meta_ad_id) continue;
+    const metaAdSetId = adSetIdMap.get(ad.ad_set_id);
+    if (!metaAdSetId) continue;
+
+    // Resolve page id
+    let pageId: string | null = null;
+    if (ad.ad_set?.page_id) {
+      const { data: page } = await supabase.from("meta_pages").select("meta_page_id").eq("id", ad.ad_set.page_id).maybeSingle();
+      pageId = page?.meta_page_id ?? null;
+    }
+    if (!pageId) {
+      const { data: anyPage } = await supabase.from("meta_pages").select("meta_page_id").eq("firm_id", firmId).limit(1).maybeSingle();
+      pageId = anyPage?.meta_page_id ?? null;
+    }
+    if (!pageId) { console.warn(`[publish] no FB page for ad ${ad.id}`); continue; }
+
+    let creative_spec: Record<string, unknown>;
+    if (Array.isArray(ad.carousel_cards) && ad.carousel_cards.length >= 2) {
+      creative_spec = {
+        object_story_spec: {
+          page_id: pageId,
+          link_data: {
+            link: ad.link_url || ad.carousel_cards[0]?.link || "https://example.com",
+            message: ad.body_text || "",
+            child_attachments: ad.carousel_cards.map((c: any) => ({
+              link: c.link || ad.link_url,
+              name: c.headline || "",
+              description: c.description || "",
+              picture: c.image_url || undefined,
+              call_to_action: { type: ad.call_to_action || "LEARN_MORE" },
+            })),
+          },
+        },
+      };
+    } else if (ad.dynamic_creative_specs && Object.keys(ad.dynamic_creative_specs).length) {
+      creative_spec = {
+        object_story_spec: { page_id: pageId },
+        asset_feed_spec: {
+          ...ad.dynamic_creative_specs,
+          link_urls: ad.link_url ? [{ website_url: ad.link_url }] : [],
+          images: ad.image_url ? [{ url: ad.image_url }] : [],
+        },
+      };
+    } else {
+      creative_spec = {
+        object_story_spec: {
+          page_id: pageId,
+          link_data: {
+            message: ad.body_text || "",
+            link: ad.link_url || "https://example.com",
+            name: ad.headline || "",
+            description: ad.description || "",
+            call_to_action: { type: ad.call_to_action || "LEARN_MORE" },
+            ...(ad.image_url ? { picture: ad.image_url } : {}),
+          },
+        },
+      };
+    }
+
+    try {
+      const cr = await metaPost(`/${account.meta_ad_account_id}/adcreatives`, conn.access_token, {
+        name: `Creative | ${ad.name}`,
+        ...creative_spec,
+      });
+      const adRes = await metaPost(`/${account.meta_ad_account_id}/ads`, conn.access_token, {
+        name: ad.name,
+        adset_id: metaAdSetId,
+        creative: { creative_id: cr.id },
+        status: "PAUSED",
+      });
+      await supabase.from("meta_ads").update({
+        meta_ad_id: adRes.id, meta_creative_id: cr.id, status: "paused",
+      }).eq("id", ad.id);
+    } catch (e) {
+      console.error(`[publish] ad ${ad.id} failed`, e);
+    }
+  }
+
   await supabase.rpc("meta_log_audit", {
     _firm_id: firmId, _actor_id: null, _action: "publish_campaign",
-    _level: "campaign", _object_id: campaignId, _meta_object_id: res.id,
-    _before: campaign, _after: { meta_campaign_id: res.id },
+    _level: "campaign", _object_id: campaignId, _meta_object_id: campRes.id,
+    _before: campaign, _after: { meta_campaign_id: campRes.id, adsets: adSetIdMap.size },
   });
 }

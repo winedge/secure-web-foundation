@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Search, ChevronLeft, ChevronRight, RefreshCw, ArrowUp, ArrowDown } from 'lucide-react';
@@ -43,6 +44,10 @@ interface Props<T> {
   sortColumn?: string | null;
   sortDirection?: 'asc' | 'desc';
   onSortChange?: (column: string | null, direction: 'asc' | 'desc') => void;
+  selectable?: boolean;
+  selectedIds?: string[];
+  onSelectedIdsChange?: (ids: string[]) => void;
+  bulkActions?: (selected: string[]) => ReactNode;
 }
 
 export function MetaTableShell<T extends { id: string }>({
@@ -51,7 +56,22 @@ export function MetaTableShell<T extends { id: string }>({
   statusValue, onStatusChange, statusOptions, extraFilters, onRefresh,
   rightActions, emptyMessage, onRowClick,
   sortColumn, sortDirection, onSortChange,
+  selectable, selectedIds = [], onSelectedIdsChange, bulkActions,
 }: Props<T>) {
+  const selectedSet = new Set(selectedIds);
+  const allRowIds = (rows || []).map((r) => r.id);
+  const allSelected = selectable && allRowIds.length > 0 && allRowIds.every((id) => selectedSet.has(id));
+  const someSelected = selectable && allRowIds.some((id) => selectedSet.has(id));
+  const toggleAll = () => {
+    if (!onSelectedIdsChange) return;
+    if (allSelected) onSelectedIdsChange(selectedIds.filter((id) => !allRowIds.includes(id)));
+    else onSelectedIdsChange(Array.from(new Set([...selectedIds, ...allRowIds])));
+  };
+  const toggleOne = (id: string) => {
+    if (!onSelectedIdsChange) return;
+    if (selectedSet.has(id)) onSelectedIdsChange(selectedIds.filter((x) => x !== id));
+    else onSelectedIdsChange([...selectedIds, id]);
+  };
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const from = total === 0 ? 0 : page * pageSize + 1;
   const to = Math.min((page + 1) * pageSize, total);
@@ -106,10 +126,27 @@ export function MetaTableShell<T extends { id: string }>({
         {extraFilters}
       </div>
 
+      {selectable && selectedIds.length > 0 && bulkActions && (
+        <div className="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2 text-xs">
+          <span className="font-medium">{selectedIds.length} selected</span>
+          <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => onSelectedIdsChange?.([])}>Clear</Button>
+          <div className="ml-auto flex items-center gap-2">{bulkActions(selectedIds)}</div>
+        </div>
+      )}
+
       <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
+              {selectable && (
+                <TableHead className="w-8">
+                  <Checkbox
+                    checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                    onCheckedChange={toggleAll}
+                    aria-label="Select all rows on this page"
+                  />
+                </TableHead>
+              )}
               {columns.map(c => {
                 const active = sortColumn === (c.sortKey || c.key);
                 return (
@@ -141,6 +178,7 @@ export function MetaTableShell<T extends { id: string }>({
             {isLoading ? (
               Array.from({ length: 6 }).map((_, i) => (
                 <TableRow key={i}>
+                  {selectable && <TableCell><Skeleton className="h-4 w-4" /></TableCell>}
                   {columns.map((c) => (
                     <TableCell key={c.key}><Skeleton className="h-4 w-full" /></TableCell>
                   ))}
@@ -148,7 +186,7 @@ export function MetaTableShell<T extends { id: string }>({
               ))
             ) : !rows?.length ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="text-center text-sm text-muted-foreground py-8">
+                <TableCell colSpan={columns.length + (selectable ? 1 : 0)} className="text-center text-sm text-muted-foreground py-8">
                   {emptyMessage || 'No results'}
                 </TableCell>
               </TableRow>
@@ -159,6 +197,15 @@ export function MetaTableShell<T extends { id: string }>({
                   className={onRowClick ? 'cursor-pointer hover:bg-muted/50' : ''}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                 >
+                  {selectable && (
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={selectedSet.has(row.id)}
+                        onCheckedChange={() => toggleOne(row.id)}
+                        aria-label="Select row"
+                      />
+                    </TableCell>
+                  )}
                   {columns.map(c => (
                     <TableCell key={c.key} className={c.align === 'right' ? 'text-right tabular-nums' : c.align === 'center' ? 'text-center' : ''}>
                       {c.render(row)}
@@ -170,6 +217,7 @@ export function MetaTableShell<T extends { id: string }>({
           </TableBody>
         </Table>
       </div>
+
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
         <div className="flex items-center gap-2">

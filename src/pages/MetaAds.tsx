@@ -7,6 +7,7 @@ import { AdsTable } from '@/components/meta-ads/tables/AdsTable';
 import { AudiencesTable } from '@/components/meta-ads/tables/AudiencesTable';
 import { ReportsTable } from '@/components/meta-ads/tables/ReportsTable';
 import { MetaAnalyticsPanel } from '@/components/meta-ads/MetaAnalyticsPanel';
+import { BreakdownsPanel } from '@/components/meta-ads/BreakdownsPanel';
 import { MetaAiPanel } from '@/components/meta-ads/MetaAiPanel';
 import { AutopilotPanel } from '@/components/meta-ads/AutopilotPanel';
 import { MetaPixelPanel } from '@/components/meta-ads/MetaPixelPanel';
@@ -112,7 +113,10 @@ export default function MetaAds() {
 
             <TabsContent value="pixel"><MetaPixelPanel /></TabsContent>
             <TabsContent value="lead-forms"><MetaLeadFormsPanel /></TabsContent>
-            <TabsContent value="analytics"><MetaAnalyticsPanel campaignId={selectedCampaignId} /></TabsContent>
+            <TabsContent value="analytics" className="space-y-4">
+              <MetaAnalyticsPanel campaignId={selectedCampaignId} />
+              <BreakdownsPanel />
+            </TabsContent>
 
             <TabsContent value="ai">
               <MetaAiPanel

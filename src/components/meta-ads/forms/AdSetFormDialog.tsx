@@ -66,6 +66,9 @@ type FormState = {
   device_platforms: string[];
   platforms: string[];
   positions: Record<string, string[]>;
+  // schedule
+  day_parting_enabled: boolean;
+  adset_schedule: { days: number[]; start_hour: number; end_hour: number }[];
 };
 
 const INITIAL: FormState = {
@@ -95,6 +98,8 @@ const INITIAL: FormState = {
   device_platforms: [...META_DEVICE_PLATFORMS],
   platforms: [...META_PLATFORMS],
   positions: {},
+  day_parting_enabled: false,
+  adset_schedule: [{ days: [1, 2, 3, 4, 5], start_hour: 9, end_hour: 18 }],
 };
 
 export function AdSetFormDialog({
@@ -183,6 +188,16 @@ export function AdSetFormDialog({
       ),
     };
 
+    // Meta adset_schedule: [{ start_minute, end_minute, days[] }]
+    // start/end minutes are minutes from start of day (sunday=0)
+    const adset_schedule = form.day_parting_enabled
+      ? form.adset_schedule.flatMap((s) =>
+          s.days.length && s.end_hour > s.start_hour
+            ? [{ start_minute: s.start_hour * 60, end_minute: s.end_hour * 60, days: s.days }]
+            : []
+        )
+      : [];
+
     const payload: any = {
       campaign_id: campaignId,
       name: form.name.trim(),
@@ -202,6 +217,7 @@ export function AdSetFormDialog({
       start_time: form.start_time || null,
       end_time: form.end_time || null,
       bid_amount: form.cost_per_result_goal > 0 ? Math.round(form.cost_per_result_goal * 100) : null,
+      adset_schedule,
     };
 
     const done = (d: any) => { if (onSaved) onSaved(d.id); else onOpenChange(false); };
@@ -378,6 +394,74 @@ export function AdSetFormDialog({
                     ))}
                   </RadioGroup>
                 </div>
+              </Section>
+
+              <Section title="Day Parting (Ad Scheduling)">
+                <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+                  <div>
+                    <div className="text-xs font-bold text-white">Run on a schedule</div>
+                    <p className="text-[10px] text-slate-500">Only available with a Lifetime budget. Times use the ad account timezone.</p>
+                  </div>
+                  <Switch
+                    checked={form.day_parting_enabled}
+                    disabled={form.budget_type !== 'lifetime'}
+                    onCheckedChange={(v) => set('day_parting_enabled', v)}
+                  />
+                </div>
+
+                {form.day_parting_enabled && (
+                  <div className="space-y-2">
+                    {form.adset_schedule.map((slot, i) => (
+                      <div key={i} className="rounded-md border border-slate-800 bg-slate-950/60 p-3 space-y-2">
+                        <div className="flex flex-wrap gap-1">
+                          {['S','M','T','W','T','F','S'].map((label, dayIdx) => {
+                            const active = slot.days.includes(dayIdx);
+                            return (
+                              <Badge
+                                key={dayIdx}
+                                variant="outline"
+                                className={`cursor-pointer w-7 h-7 flex items-center justify-center text-[11px] ${active
+                                  ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
+                                  : 'border-slate-700 text-slate-500'}`}
+                                onClick={() => set('adset_schedule', form.adset_schedule.map((s, x) => x === i
+                                  ? { ...s, days: active ? s.days.filter((d) => d !== dayIdx) : [...s.days, dayIdx].sort() }
+                                  : s))}
+                              >
+                                {label}
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 items-center">
+                          <div className="flex items-center gap-2 text-xs">
+                            From <Input type="number" min={0} max={23} className={`${inputCls} w-16`} value={slot.start_hour}
+                              onChange={(e) => set('adset_schedule', form.adset_schedule.map((s, x) => x === i ? { ...s, start_hour: Number(e.target.value) || 0 } : s))} /> :00
+                          </div>
+                          <div className="flex items-center gap-2 text-xs">
+                            To <Input type="number" min={1} max={24} className={`${inputCls} w-16`} value={slot.end_hour}
+                              onChange={(e) => set('adset_schedule', form.adset_schedule.map((s, x) => x === i ? { ...s, end_hour: Number(e.target.value) || 0 } : s))} /> :00
+                          </div>
+                        </div>
+                        {form.adset_schedule.length > 1 && (
+                          <button
+                            type="button"
+                            className="text-[10px] text-rose-300 hover:text-rose-200"
+                            onClick={() => set('adset_schedule', form.adset_schedule.filter((_, x) => x !== i))}
+                          >
+                            Remove slot
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      className="text-[11px] text-emerald-400 hover:text-emerald-300"
+                      onClick={() => set('adset_schedule', [...form.adset_schedule, { days: [0, 6], start_hour: 9, end_hour: 18 }])}
+                    >
+                      + Add another time slot
+                    </button>
+                  </div>
+                )}
               </Section>
             </TabsContent>
 
