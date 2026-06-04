@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { getVerticalContext, buildSystemPrompt, resolveCategory } from "../_shared/vertical.ts";
 import { buildQualityDirective, pickScriptModel, type QualityControls } from "../_shared/quality.ts";
