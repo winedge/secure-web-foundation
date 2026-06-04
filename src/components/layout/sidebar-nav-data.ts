@@ -8,6 +8,7 @@ import {
   Megaphone,
   CalendarDays,
   Paintbrush,
+  Palette,
   FileText,
   Settings,
   Shield,
