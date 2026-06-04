@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Loader2, Play, Pause } from 'lucide-react';
 import { MetaTableShell, MetaStatusBadge, type MetaTableColumn } from './MetaTableShell';
 import { useMetaAdsTable, useMetaAdSetsLookup, useMetaCampaignsLookup, type AdRow } from '@/hooks/use-meta-tables';
-import { useSyncFromMeta } from '@/hooks/use-meta-campaigns';
+import { useSyncFromMeta, useToggleMetaStatus } from '@/hooks/use-meta-campaigns';
 import { AdDetailDialog } from '../AdDetailDialog';
 import { useUrlFilters } from '@/hooks/use-url-filters';
 
@@ -36,7 +36,9 @@ export function AdsTable({ initialAdSetId = null, initialCampaignId = null }: Pr
   });
   const { page, pageSize, search, status, campaignId, adSetId, sortColumn, sortDirection } = values;
   const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const syncFromMeta = useSyncFromMeta();
+  const toggle = useToggleMetaStatus();
 
   const { data: campaigns } = useMetaCampaignsLookup();
   const { data: adSets } = useMetaAdSetsLookup(campaignId === 'all' ? null : campaignId);
@@ -50,6 +52,14 @@ export function AdsTable({ initialAdSetId = null, initialCampaignId = null }: Pr
 
   const handleRefresh = async () => {
     await syncFromMeta.mutateAsync();
+    await refetch();
+  };
+
+  const bulkSet = async (active: boolean) => {
+    for (const id of selectedIds) {
+      await toggle.mutateAsync({ level: 'ad', id, active });
+    }
+    setSelectedIds([]);
     await refetch();
   };
 
@@ -93,6 +103,19 @@ export function AdsTable({ initialAdSetId = null, initialCampaignId = null }: Pr
         sortDirection={sortDirection as 'asc' | 'desc'}
         onSortChange={(col, dir) => setFilters({ sortColumn: col || '', sortDirection: dir })}
         onRowClick={(row) => setSelectedAdId(row.id)}
+        selectable
+        selectedIds={selectedIds}
+        onSelectedIdsChange={setSelectedIds}
+        bulkActions={() => (
+          <>
+            <Button size="sm" variant="outline" className="h-7" onClick={() => bulkSet(true)} disabled={toggle.isPending}>
+              {toggle.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5 mr-1" />} Activate
+            </Button>
+            <Button size="sm" variant="outline" className="h-7" onClick={() => bulkSet(false)} disabled={toggle.isPending}>
+              <Pause className="h-3.5 w-3.5 mr-1" /> Pause
+            </Button>
+          </>
+        )}
         extraFilters={
           <>
             <Select value={campaignId} onValueChange={(v) => setFilters({ campaignId: v, adSetId: 'all' })}>

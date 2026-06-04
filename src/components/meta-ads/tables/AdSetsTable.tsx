@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Loader2, Play, Pause } from 'lucide-react';
 import { MetaTableShell, MetaStatusBadge, fmtMoney, type MetaTableColumn } from './MetaTableShell';
 import { useMetaAdSetsTable, useMetaCampaignsLookup, type AdSetRow } from '@/hooks/use-meta-tables';
-import { useSyncFromMeta } from '@/hooks/use-meta-campaigns';
+import { useSyncFromMeta, useToggleMetaStatus } from '@/hooks/use-meta-campaigns';
 import { useUrlFilters } from '@/hooks/use-url-filters';
 
 const STATUS_OPTIONS = [
@@ -31,6 +34,8 @@ export function AdSetsTable({ initialCampaignId = null, onSelectAdSet }: Props) 
   });
   const { page, pageSize, search, status, campaignId, sortColumn, sortDirection } = values;
   const syncFromMeta = useSyncFromMeta();
+  const toggle = useToggleMetaStatus();
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const { data: campaigns } = useMetaCampaignsLookup();
   const { data, isLoading, refetch, isFetching } = useMetaAdSetsTable({
@@ -42,6 +47,14 @@ export function AdSetsTable({ initialCampaignId = null, onSelectAdSet }: Props) 
 
   const handleRefresh = async () => {
     await syncFromMeta.mutateAsync();
+    await refetch();
+  };
+
+  const bulkSet = async (active: boolean) => {
+    for (const id of selectedIds) {
+      await toggle.mutateAsync({ level: 'adset', id, active });
+    }
+    setSelectedIds([]);
     await refetch();
   };
 
@@ -82,6 +95,19 @@ export function AdSetsTable({ initialCampaignId = null, onSelectAdSet }: Props) 
       sortColumn={sortColumn || null}
       sortDirection={sortDirection as 'asc' | 'desc'}
       onSortChange={(col, dir) => setFilters({ sortColumn: col || '', sortDirection: dir })}
+      selectable
+      selectedIds={selectedIds}
+      onSelectedIdsChange={setSelectedIds}
+      bulkActions={() => (
+        <>
+          <Button size="sm" variant="outline" className="h-7" onClick={() => bulkSet(true)} disabled={toggle.isPending}>
+            {toggle.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5 mr-1" />} Activate
+          </Button>
+          <Button size="sm" variant="outline" className="h-7" onClick={() => bulkSet(false)} disabled={toggle.isPending}>
+            <Pause className="h-3.5 w-3.5 mr-1" /> Pause
+          </Button>
+        </>
+      )}
       extraFilters={
         <Select value={campaignId} onValueChange={(v) => setFilter('campaignId', v)}>
           <SelectTrigger className="w-full sm:w-[220px] h-8 text-sm"><SelectValue placeholder="Campaign" /></SelectTrigger>
