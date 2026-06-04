@@ -1,61 +1,73 @@
-## Problem
+# Fix slow image generation in Creative Studio
 
-Output is "basic" because the worker sends a thin prompt + `quality: "low"` to the gateway. The reference (VitalGlow poster) is a multi-zone ad composition with logo lockup, headline hierarchy, feature icons, product insets, location chip, and CTA bar — none of which our prompt asks for. Gemini/OpenAI will happily render a single portrait when that's all you describe.
+## Why it is slow today
 
-## Fix
+ChatGPT shows progressive previews while the model renders, so it *feels* fast even though total generation time is similar. Our pipeline does the opposite:
 
-### 1. Rewrite `buildFinalPrompt` in `ai-creative-image-worker` as a creative-director brief
+1. Client calls `ai-creative-image` → inserts a job row → invokes `ai-creative-image-worker` fire-and-forget.
+2. Worker calls the Lovable AI Gateway with `stream: true`, but **consumes the entire SSE stream server-side**, uploads the final PNG to storage, then writes `status=completed` to the DB.
+3. Client polls every 2–5s asking "is it done yet?" through a second edge function round-trip.
 
-Instead of concatenating a one-line preset + user prompt, assemble a structured brief with explicit sections the model can latch onto:
+Net effect: the user stares at "Generating…" for the full render time + storage upload + the next poll tick (up to 5s), with zero visual feedback. On top of that:
 
-- **Format & canvas**: aspect, "print-ad / social poster composition, edge-to-edge layout, magazine-grade"
-- **Hero subject**: derived from `prompt` (the variant's image_prompt)
-- **Layout zones**: header (logo + tagline), hero headline block, supporting bullets/icons row, product/feature insets (circular crops), trust chip, footer CTA bar — only include zones relevant to the chosen preset
-- **Typography spec**: serif display headline + sans-serif body, kerning, weight contrast, accent color word
-- **Lighting & lens**: 85mm portrait, soft key + warm rim, golden-hour skin tones, shallow DOF
-- **Color system**: explicit hex list from `brand_colors` mapped to roles (primary accent, CTA bar, headline highlight)
-- **On-image text rendering**: render `on_image_text` verbatim, with spec for size/placement
-- **Negative prompt**: no watermarks, no fake logos, no extra fingers, no garbled text, no AI plastic skin
+- `ad-poster` is hard-routed to `openai/gpt-image-2` at `quality: "high"` (the slowest, most expensive path).
+- The orchestrator marks jobs failed at 145s and the client gives up at 240s, so on a bad day you get nothing.
 
-### 2. Replace preset directives with richer ad-archetype templates
+## The fix — stream straight to the client
 
-Add new presets (or rewrite existing):
-- `ad-poster` (matches the VitalGlow reference: multi-zone composition with feature icons + insets)
-- `lifestyle-hero`, `product-shot`, `typography-poster`, `ugc-style`, `minimalist-brand` — each expanded from one sentence to a ~6-line art-direction block.
+Replace the job-queue + poll architecture for the interactive path with a single streaming edge function, exactly like the Lovable AI Gateway docs recommend. The user will see the first blurred preview within a few seconds and the final image as soon as the model finishes — same UX as ChatGPT.
 
-### 3. Raise quality + pick the right model per preset
+### 1. New streaming endpoint
 
-- Change OpenAI default from `quality: "low"` to `quality: "high"` (and route `gpt-image-2` for poster/typography presets — it follows complex layout instructions better than Gemini).
-- Keep Gemini 3 Pro Image as default for `lifestyle-hero` (best skin/photoreal).
-- Auto-route `typography-poster` and `ad-poster` to `openai/gpt-image-2` regardless of UI selection unless user overrides.
-- Pass `size` matching aspect (we already do).
+Rewrite `supabase/functions/ai-creative-image/index.ts` to:
 
-### 4. Surface a Quality control in `CreativeImagePanel`
+- Accept the same request body.
+- Build the brand-enriched prompt (move `buildFinalPrompt` + brand-kit fetch into a shared helper so both worker and streamer use it).
+- Open a `fetch` to `https://ai.gateway.lovable.dev/v1/images/generations` with `stream: true` and `partial_images: 2` for OpenAI models.
+- **Pipe the SSE body straight back to the client** (`return new Response(upstream.body, { headers: { "content-type": "text/event-stream", ...cors }})`). No buffering, no DB write on the hot path.
+- After the stream ends, in `EdgeRuntime.waitUntil`, decode the final `image_generation.completed` frame, upload to the `creative-assets` bucket, and insert one row into `creative_image_jobs` with the signed URL — so history/exports still work, but the user never waits for it.
 
-Add a small Select: `Draft` / `Standard` / `High` that maps to OpenAI `quality` (`low`/`medium`/`high`) and is forwarded through `useGenerateCreativeImage` → orchestrator → worker. Default to `high`.
+### 2. Client consumes SSE with `eventsource-parser`
 
-### 5. Feed brand kit + strategy into the image brief
+Rewrite `src/hooks/use-creative-image.ts`:
 
-The worker currently only sees `brand_colors`. Extend the orchestrator (`ai-creative-image`) to also pass:
-- `brand_name`, `tagline`, `logo_description` (from `firm_brand_kit`)
-- `trust_badges` (rendered as the bottom icon row)
-- `disclaimer` (rendered into footer if present)
-- `location` (for the "Serving you in ANDHERI" chip pattern)
+- Drop `pollJob` entirely.
+- Use `supabase.functions.invoke` only for the Midjourney/Ideogram export path.
+- For OpenAI/Gemini, call the function URL directly with `fetch` (auth header from `supabase.auth.getSession()`) and parse SSE via `eventsource-parser` (already documented in the AI Gateway skill).
+- Expose `{ previewDataUrl, finalDataUrl, isStreaming }` so the panel can show the blurred partial → sharp final transition.
 
-Worker stitches these into the brief so the output reads as a real branded ad, not a stock photo.
+### 3. UI: progressive preview
 
-### 6. Optional: two-pass refinement for `ad-poster`
+In `src/components/creative-studio/CreativeImagePanel.tsx`:
 
-When preset is `ad-poster`, run a second pass that takes the first output as a reference image (Gemini edit endpoint) with a "tighten typography, sharpen layout zones, fix any garbled text" instruction. Behind a `refine: true` flag, default on for poster preset only.
+- While streaming, render the latest `previewDataUrl` with `filter: blur(16px)` and a subtle pulse.
+- On final frame, swap to `finalDataUrl` with `filter: none` and a 200ms fade.
+- Replace the spinner "Generating…" with the live preview as soon as the first frame arrives.
+
+### 4. Speed defaults
+
+- Change default `quality` from `high` to `standard` (`medium`) — the AI Gateway docs explicitly recommend `low`/`medium` for interactive flows; `high` roughly doubles wall-clock time on `gpt-image-2`.
+- Keep the "High (ad-ready)" option in the Quality select for users who knowingly want it.
+- Remove the hard typography-preset → `gpt-image-2` override. Let users keep their selected model; only suggest gpt-image-2 in a hint under the preset.
+- Default `ad-poster` provider recommendation stays `openai` but at `medium`.
+
+### 5. Keep the worker for batch / non-interactive
+
+`ai-creative-image-worker` stays for any future server-triggered batch generation (campaign rollouts, scheduled refresh). The interactive Creative Studio just stops using it.
 
 ## Files to change
 
-- `supabase/functions/ai-creative-image-worker/index.ts` — new brief builder, expanded presets, quality param, brand-kit fields, optional refine pass
-- `supabase/functions/ai-creative-image/index.ts` — fetch brand kit, forward quality + brand fields to worker
-- `src/hooks/use-creative-image.ts` — add `quality` + new preset to mutation input
-- `src/components/creative-studio/CreativeImagePanel.tsx` — Quality select, add `ad-poster` to PRESETS, default new preset to `gemini-pro` or `openai`
+- `supabase/functions/_shared/creative-image-prompt.ts` — new, holds `buildFinalPrompt`, brand-kit fetch, model resolution, quality map (extracted from current worker).
+- `supabase/functions/ai-creative-image/index.ts` — rewritten as streaming proxy + background persist.
+- `supabase/functions/ai-creative-image-worker/index.ts` — import from shared helper, otherwise untouched.
+- `src/hooks/use-creative-image.ts` — SSE consumer, `eventsource-parser`, exposes streaming state.
+- `src/components/creative-studio/CreativeImagePanel.tsx` — progressive preview UI, default quality `standard`.
+- `package.json` — add `eventsource-parser`.
 
-## Out of scope
+## What the user will see
 
-- No DB migration needed (job row already stores arbitrary `request`/`result` JSON).
-- No new providers; routing changes only.
+- First blurred preview in ~3–6s (vs. 60–120s of spinner today).
+- Final sharp image appears the moment the model finishes — no extra storage/poll latency.
+- Quality selector defaults to "Standard" (still ad-ready); "High" remains a click away.
+
+No DB migration required. No new providers or secrets.

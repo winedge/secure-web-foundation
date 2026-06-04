@@ -36,7 +36,7 @@ export function CreativeImagePanel({ variant, firmId, brandColors, defaultAspect
   const [preset, setPreset] = useState<typeof PRESETS[number]['value']>('ad-poster');
   const [provider, setProvider] = useState<CreativeImageProvider>('openai');
   const [aspect, setAspect] = useState(defaultAspect);
-  const [quality, setQuality] = useState<CreativeImageQuality>('high');
+  const [quality, setQuality] = useState<CreativeImageQuality>('standard');
   const [onText, setOnText] = useState(variant.headline || '');
   const [result, setResult] = useState<CreativeImageResult | null>(null);
   const gen = useGenerateCreativeImage();
@@ -116,20 +116,38 @@ export function CreativeImagePanel({ variant, firmId, brandColors, defaultAspect
 
         <Button onClick={run} disabled={gen.isPending} size="sm" className="w-full gap-1.5">
           {gen.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-          {gen.isPending ? 'Generating...' : provider === 'midjourney' ? 'Build MJ Prompt' : 'Generate Creative'}
+          {gen.isPending
+            ? gen.previewDataUrl
+              ? 'Rendering preview...'
+              : 'Starting...'
+            : provider === 'midjourney' ? 'Build MJ Prompt' : 'Generate Creative'}
         </Button>
 
-        {result?.signed_url && (
+        {(gen.previewDataUrl || result?.signed_url) && !result?.export_only && (
           <div className="space-y-2">
             <div className="relative rounded-lg overflow-hidden border bg-muted">
-              <img src={result.signed_url} alt="Generated creative" className="w-full h-auto" />
+              <img
+                src={result?.signed_url || gen.previewDataUrl!}
+                alt="Generated creative"
+                className="w-full h-auto transition-[filter] duration-300"
+                style={{
+                  filter: gen.isStreaming && !gen.isFinal ? 'blur(16px)' : 'none',
+                }}
+              />
+              {gen.isStreaming && !gen.isFinal && (
+                <div className="absolute bottom-2 left-2 text-[10px] bg-background/80 px-2 py-0.5 rounded">
+                  rendering...
+                </div>
+              )}
             </div>
-            <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-              <Badge variant="outline" className="text-[10px]">{result.model_used}</Badge>
-              <a href={result.signed_url} download target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-foreground">
-                <Download className="h-3 w-3" /> Download
-              </a>
-            </div>
+            {result?.signed_url && (
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                <Badge variant="outline" className="text-[10px]">{result.model_used || provider}</Badge>
+                <a href={result.signed_url} download target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-foreground">
+                  <Download className="h-3 w-3" /> Download
+                </a>
+              </div>
+            )}
           </div>
         )}
 

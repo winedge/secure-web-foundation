@@ -1,4 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
+import { useRef, useState, useCallback } from 'react';
+import { createParser } from 'eventsource-parser';
+import { flushSync } from 'react-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -34,17 +37,13 @@ export interface CreativeImageResult {
   preset?: string;
   aspect_ratio?: string;
   quality?: CreativeImageQuality;
-  storage_path?: string;
-  signed_url?: string;
+  signed_url?: string; // data URL for streamed images
   variant_id?: string | null;
-  final_prompt?: string;
   export_only?: boolean;
   midjourney_prompt?: string;
   instructions?: string;
   requires_secret?: string;
   error?: string;
-  job_id?: string;
-  status?: 'pending' | 'processing' | 'completed' | 'failed';
 }
 
 export const PROVIDER_LABELS: Record<CreativeImageProvider, string> = {
@@ -65,36 +64,119 @@ export const PROVIDER_RECOMMENDATIONS: Record<string, CreativeImageProvider> = {
   'minimalist-brand': 'gemini-pro',
 };
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
-async function invoke(body: Record<string, unknown>): Promise<CreativeImageResult> {
+async function invokeJson(body: Record<string, unknown>): Promise<CreativeImageResult> {
   const { data, error } = await supabase.functions.invoke('ai-creative-image', { body });
   if (error) throw error;
-  if (data?.error && data?.status !== 'processing' && data?.status !== 'pending') throw new Error(data.error);
+  if (data?.error) throw new Error(data.error);
   return data as CreativeImageResult;
 }
 
-async function pollJob(jobId: string, timeoutMs = 240_000): Promise<CreativeImageResult> {
-  const start = Date.now();
-  let delay = 2000;
-  while (Date.now() - start < timeoutMs) {
-    await new Promise((r) => setTimeout(r, delay));
-    const res = await invoke({ job_id: jobId });
-    if (res.status === 'completed') return res;
-    if (res.status === 'failed') throw new Error(res.error || 'Image generation failed');
-    delay = Math.min(delay + 1000, 5000);
-  }
-  throw new Error('Image generation timed out');
+export interface StreamingState {
+  previewDataUrl: string | null;
+  isFinal: boolean;
+  isStreaming: boolean;
 }
 
 export function useGenerateCreativeImage() {
-  return useMutation({
+  const [preview, setPreview] = useState<string | null>(null);
+  const [isFinal, setIsFinal] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const reset = useCallback(() => {
+    setPreview(null);
+    setIsFinal(false);
+    setIsStreaming(false);
+  }, []);
+
+  const mutation = useMutation({
     mutationFn: async (req: CreativeImageRequest): Promise<CreativeImageResult> => {
-      const initial = await invoke(req as unknown as Record<string, unknown>);
-      if (initial.job_id && initial.status !== 'completed') {
-        return pollJob(initial.job_id);
+      reset();
+      // Non-streaming providers (Midjourney/Ideogram) take the JSON path.
+      if (req.provider === 'midjourney' || req.provider === 'ideogram') {
+        return invokeJson(req as unknown as Record<string, unknown>);
       }
-      return initial;
+
+      setIsStreaming(true);
+      abortRef.current?.abort();
+      const ctrl = new AbortController();
+      abortRef.current = ctrl;
+
+      const session = (await supabase.auth.getSession()).data.session;
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-creative-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: ANON_KEY,
+          Authorization: `Bearer ${session?.access_token ?? ANON_KEY}`,
+        },
+        body: JSON.stringify(req),
+        signal: ctrl.signal,
+      });
+
+      if (!res.ok || !res.body) {
+        setIsStreaming(false);
+        const txt = await res.text().catch(() => '');
+        throw new Error(txt || `Image generation failed: ${res.status}`);
+      }
+
+      let finalDataUrl = '';
+      let sawCompleted = false;
+      const parser = createParser({
+        onEvent(evt) {
+          if (evt.event !== 'image_generation.partial_image' && evt.event !== 'image_generation.completed') return;
+          let payload: any;
+          try { payload = JSON.parse(evt.data); } catch { return; }
+          if (!payload?.b64_json) return;
+          const dataUrl = `data:image/png;base64,${payload.b64_json}`;
+          const final = evt.event === 'image_generation.completed';
+          flushSync(() => {
+            setPreview(dataUrl);
+            if (final) {
+              setIsFinal(true);
+              finalDataUrl = dataUrl;
+              sawCompleted = true;
+            }
+          });
+        },
+      });
+
+      const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          parser.feed(value);
+        }
+      } finally {
+        reader.cancel().catch(() => {});
+        setIsStreaming(false);
+      }
+
+      if (!sawCompleted) throw new Error('Image stream ended without a completed event');
+
+      return {
+        provider: req.provider ?? 'openai',
+        preset: req.preset,
+        aspect_ratio: req.aspect_ratio,
+        quality: req.quality,
+        signed_url: finalDataUrl,
+        variant_id: req.variant_id ?? null,
+      };
     },
-    onError: (err: any) => toast.error(err.message || 'Image generation failed'),
+    onError: (err: any) => {
+      setIsStreaming(false);
+      toast.error(err.message || 'Image generation failed');
+    },
+  });
+
+  return Object.assign(mutation, {
+    previewDataUrl: preview,
+    isFinal,
+    isStreaming,
+    reset,
   });
 }
