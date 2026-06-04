@@ -10,7 +10,7 @@ serve(async (req) => {
   if (corsResp) return corsResp;
 
   try {
-    const { brief, tort_type, category, target_audience, brand_tone, num_variants, firm_id, quality } = await req.json();
+    const { brief, tort_type, category, target_audience, brand_tone, num_variants, firm_id, quality, strategy } = await req.json();
     if (!brief) throw new Error("brief required");
     const q: QualityControls = quality || {};
     const qualityDirective = buildQualityDirective(q);
@@ -18,6 +18,14 @@ serve(async (req) => {
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+
+    // Brand kit (best-effort)
+    let brandKit: any = null;
+    try {
+      const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const { data } = await admin.from("firm_brand_kit").select("*").eq("firm_id", firm_id).maybeSingle();
+      brandKit = data;
+    } catch (_) { /* ignore */ }
 
     const { config: vCfg, prompt: vPrompt, verticalSlug } = await getVerticalContext(firm_id, "creative");
     const verticalName = vCfg?.vertical?.name ?? "Mass Tort Legal";
