@@ -218,13 +218,44 @@ export function MetaCampaignWizard({ open, onOpenChange, onCreated, prefillData 
 
   const update = (partial: Partial<WizardData>) => setData(prev => ({ ...prev, ...partial }));
 
-  // Load existing Meta lead forms for the Instant Form conversion location
-  const [leadForms, setLeadForms] = useState<{ id: string; name: string }[]>([]);
+  // Load existing Meta lead forms (live from Meta via meta-ads-sync) for Instant Form
+  const [leadForms, setLeadForms] = useState<{ id: string; name: string; page_id?: string; page_name?: string }[]>([]);
+  const [leadFormsLoading, setLeadFormsLoading] = useState(false);
+  const [leadFormsError, setLeadFormsError] = useState<string | null>(null);
+
+  const loadLeadForms = async () => {
+    if (!firm?.id) return;
+    setLeadFormsLoading(true);
+    setLeadFormsError(null);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data, error } = await supabase.functions.invoke('meta-ads-sync', {
+        body: { action: 'get_lead_forms', user_id: user?.id, firm_id: firm.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const forms = (data?.forms || []).map((f: any) => ({
+        id: f.id, name: f.name, page_id: f.page_id, page_name: f.page_name,
+      }));
+      setLeadForms(forms);
+      if (forms.length === 0) {
+        setLeadFormsError('No lead forms found on your connected Meta pages yet.');
+      }
+    } catch (e: any) {
+      setLeadFormsError(e.message || 'Could not load lead forms. Connect your Meta page first.');
+    } finally {
+      setLeadFormsLoading(false);
+    }
+  };
+
+  // Lazy-load when user picks Instant Form (and once on open if already chosen)
   useEffect(() => {
     if (!open) return;
-    supabase.from('meta_lead_forms').select('id,name').limit(50)
-      .then(({ data }) => setLeadForms((data as any[]) || []));
-  }, [open]);
+    if (data.conversionLocation === 'INSTANT_FORM' && leadForms.length === 0 && !leadFormsLoading) {
+      loadLeadForms();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, data.conversionLocation]);
 
   // Reset conversion location if it isn't valid for the chosen goal
   useEffect(() => {
