@@ -81,6 +81,7 @@ const EvidenceVault = lazyWithRetry(() => import("./pages/EvidenceVault"));
 const PredictiveLeads = lazyWithRetry(() => import("./pages/PredictiveLeads"));
 const CrossFirmBenchmarks = lazyWithRetry(() => import("./pages/CrossFirmBenchmarks"));
 const CreativeStudio = lazyWithRetry(() => import("./pages/CreativeStudio"));
+const BrandKitPage = lazyWithRetry(() => import("./pages/BrandKit"));
 const ViralContentEngine = lazyWithRetry(() => import("./pages/ViralContentEngine"));
 const VideoAdGenerator = lazyWithRetry(() => import("./pages/VideoAdGenerator"));
 const GoogleAds = lazyWithRetry(() => import("./pages/GoogleAds"));
