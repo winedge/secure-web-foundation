@@ -75,6 +75,9 @@ verify_jwt = false
 [functions.ai-creative-studio]
 verify_jwt = false
 
+[functions.ai-creative-strategy]
+verify_jwt = false
+
 [functions.viral-content]
 verify_jwt = false
 
