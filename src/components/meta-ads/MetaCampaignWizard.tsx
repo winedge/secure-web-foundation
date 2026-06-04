@@ -218,6 +218,22 @@ export function MetaCampaignWizard({ open, onOpenChange, onCreated, prefillData 
 
   const update = (partial: Partial<WizardData>) => setData(prev => ({ ...prev, ...partial }));
 
+  // Load existing Meta lead forms for the Instant Form conversion location
+  const [leadForms, setLeadForms] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    if (!open) return;
+    supabase.from('meta_lead_forms').select('id,name').limit(50)
+      .then(({ data }) => setLeadForms((data as any[]) || []));
+  }, [open]);
+
+  // Reset conversion location if it isn't valid for the chosen goal
+  useEffect(() => {
+    const allowed = LOCATIONS_BY_GOAL[data.goal] || [];
+    if (data.conversionLocation && !allowed.includes(data.conversionLocation)) {
+      update({ conversionLocation: '' });
+    }
+  }, [data.goal]);
+
   const toggleArray = (arr: string[], val: string): string[] =>
     arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val];
 
