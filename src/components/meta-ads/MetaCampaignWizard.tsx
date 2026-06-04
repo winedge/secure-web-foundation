@@ -130,6 +130,9 @@ const STATES = [
 interface WizardData {
   // Step 1: Campaign Goal
   goal: string;
+  conversionLocation: string;
+  leadFormId: string;
+  phoneNumber: string;
   campaignName: string;
   tortType: string;
   
@@ -173,7 +176,8 @@ interface WizardData {
 }
 
 const defaultData: WizardData = {
-  goal: '', campaignName: '', tortType: '',
+  goal: '', conversionLocation: '', leadFormId: '', phoneNumber: '',
+  campaignName: '', tortType: '',
   budgetType: 'daily', dailyBudget: 50, lifetimeBudget: 0,
   bidStrategy: 'LOWEST_COST_WITHOUT_CAP', targetCostPerLead: 0,
   startDate: '', endDate: '',
