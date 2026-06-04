@@ -1,187 +1,98 @@
+# AI Creative Studio | Agency-Grade Build
 
-# Meta Ads Manager (2026) | Gap Audit & Roadmap
+Goal: replace today's "single AI image + copy" flow with a real creative engine that outputs ads indistinguishable from agency work, across 11 formats, with a brand kit, editor, scoring, and one-click publish.
 
-Audit of existing code under `src/components/meta-ads/*`, `supabase/functions/meta-*`, and tables `meta_campaigns / meta_ad_sets / meta_ads / meta_creatives / meta_custom_audiences / meta_lead_forms / meta_pixels / meta_pages / meta_ig_accounts / meta_insights_* / meta_audit_log / meta_job_queue / meta_automated_rules / meta_ab_tests / meta_saved_reports / meta_recommendations`.
+## Image model strategy (your new question)
 
-Existing edge actions in `meta-ads-sync`: get/set ad_accounts, create/update/delete campaign, create/update adset, create ad, refresh creative, fetch analytics, sync_from_meta, publish_campaign, toggle_status, reach_estimate, live_insights, duplicate_campaign, create_ab_test, get_lead_forms, fetch_form_leads, subscribe_lead_updates, verify_webhook, verify_pixel, lead_form_webhook. Plus `meta-publish-campaign`, `meta-webhook`, `meta-lead-webhook`, `meta-targeting-search`, `meta-job-worker`, `meta-oauth`, `meta-ai-*`.
+We do **not** pick one model. Each has different strengths, so we route per use case and let the user override. Midjourney has **no public API**, so we use it via prompt export only (copy-to-clipboard for users who want to paste into Discord).
 
-Legend | P0 Critical | P1 High | P2 Medium | P3 Low
+| Provider | Access | Strength | Role in Studio |
+|---|---|---|---|
+| **OpenAI gpt-image-2** (via Lovable AI Gateway, already wired) | API | Photoreal, strong text inside images, fast | **Default** for product shots, lifestyle hero images, anything with on-image copy |
+| **Google Gemini 3.1 Flash Image (Nano Banana 2)** via Gateway | API | Free-tier on Gateway, fast iteration, great editing/inpainting | **Default for "Draft" mode**, and for image edits / variant remixes in the editor |
+| **Gemini 3 Pro Image Preview** via Gateway | API | Highest Gemini quality | Optional "Premium" tier alongside gpt-image-2 |
+| **Ideogram v3** | Public API (`api.ideogram.ai`, requires `IDEOGRAM_API_KEY` secret) | Best-in-class typography, logos inside images, posters | Style preset "Typography poster / billboard" |
+| **Midjourney v7** | No public API | Most artistic | "Send to Midjourney" button: copies a tuned `/imagine` prompt + style refs to clipboard; user pastes into their Discord. No automated render. |
 
----
+Routing rule in `ai-creative-image`:
+```
+if user picks "Typography Poster" preset → Ideogram (if key) else gpt-image-2
+elif quality.tier === "draft" → gemini-3.1-flash-image (free on Gateway)
+elif quality.tier === "premium" → openai/gpt-image-2
+else → gemini-3-pro-image-preview
+```
+All free-tier traffic goes through the existing `LOVABLE_API_KEY`. Ideogram is opt-in (we'll prompt for its key the first time the user picks that preset). Midjourney is prompt-export only.
 
-## SECTION A | Campaign Layer
+## What we're building
 
-| Feature | Status | Priority |
-|---|---|---|
-| Buying type (AUCTION) | column exists, no UI selector | P2 |
-| Reach & Frequency buying | missing entirely | P2 |
-| Special Ad Categories | column exists, no UI enforcement | P0 (legal/compliance) |
-| A/B Testing | `meta_ab_tests` table + create_ab_test action exist; no results UI, no winner promotion | P1 |
-| CBO (Campaign Budget Optimization) | `is_cbo` column, no UI toggle, no enforcement vs adset budgets | P1 |
-| Advantage Campaign Budget | missing | P1 |
-| Budget scheduling (high/low spend dates) | missing | P2 |
-| Day parting / ad scheduling | missing (no `adset_schedule` field) | P1 |
-| Spend cap | column exists, no UI | P1 |
-| Campaign drafts | implicit via `status='draft'` | OK |
-| Campaign versioning | none | P2 |
-| Approval workflows | `review_status/reviewed_by` exist; no UI flow | P1 |
-| Campaign templates | missing | P2 |
-| Duplicate campaign | `duplicate_campaign` exists, no deep-copy of adsets/ads | P1 |
-| Bulk editing (multi-select status/budget) | missing | P0 |
+### 1. Brand Kit
+New table `firm_brand_kit` (logo, dark logo, wordmark, colors{primary,secondary,accent,bg,text,cta}, fonts{heading,body}, tone, guidelines, trust_badges[], contact{phone,site,address}, product_images[], disclaimer). New `/settings/brand-kit` page seeded from existing `firm_branding`.
 
-## SECTION B | Ad Set Layer
+### 2. Strategy Engine — `ai-creative-strategy` edge fn
+Brief + brand kit + website + vertical → `{objective, persona, pain_points[], desires[], usp, angles[], hooks[], ctas[], keywords[]}`. Model: `google/gemini-3-flash-preview`.
 
-Conversion Locations: only Website / Instant Form / Phone / Messenger / WhatsApp / App in wizard | Calls and **Instagram-profile** and **App** destinations not wired to publish payload | P0 |
-Optimization Goals: enum exists, only a subset in UI (LEADS, LINK_CLICKS) | missing REACH, IMPRESSIONS, LANDING_PAGE_VIEWS, OFFSITE_CONVERSIONS, VALUE, THRUPLAY | P0 |
+### 3. Copy Engine — extend `ai-creative-studio`
+Returns 6 archetypes (Emotional / Promotional / Urgency / Problem-Solution / Social Proof / Brand Awareness), each with headline, subheadline, body_short, body_long, CTA, hook, badge, disclaimer.
 
-Audiences:
-- Custom Audiences: `meta_custom_audiences` table + AudiencePickers exist | no create/sync flow | P0
-- Lookalike: `lookalike-audience` function exists | not surfaced in adset builder | P1
-- Advantage+ Audience | missing | P1
-- Audience suggestions / expansion toggles | missing | P2
+### 4. Image Engine — `ai-creative-image` edge fn
+- Routes to gpt-image-2 / Gemini / Ideogram per rule above.
+- Streams `image_generation.partial_image` events back to the client (blurred previews → sharp final, per Lovable's streaming pattern).
+- Generates **background hero only** — text is composited by us, not baked into the pixels (except for the "Typography Poster" preset via Ideogram).
+- Uploads final PNG to new private bucket `creative-assets`, returns signed URL.
+- Style presets: Photoreal Lifestyle, Studio Product, Abstract Gradient, Editorial, UGC, Typography Poster.
 
-Targeting:
-- Age/Gender | present
-- Languages | missing
-- Interests/Behaviors/Demographics search | `meta-targeting-search` exists | not wired into wizard
-- Life events / income / job titles / education / parents / relationship status | missing UI
+### 5. Render Engine (the heart — HTML/SVG, not pixels)
+`src/lib/creative-engine/`:
+- `templates/` — one React/SVG component per ad format (11 total: Meta 1080², 1080×1350, Story 1080×1920, Reel cover; Google 300×250, 728×90, 160×600, 1200×628; LinkedIn 1200×627 + 1200×1200; IG post/story/reel).
+- Layered: bg image → color overlay → logo → headline → subheadline → CTA pill → trust badge → contact strip — all bound to `{brandKit, copy, image, layoutVariant}`.
+- 5 **layout variants** per format (Bold-Type, Split-Photo, Bottom-Bar, Centered-Pill, Editorial-Frame).
+- `renderToPng.ts` exports at exact pixel dimensions using `html-to-image`; server fallback `creative-render-export` uses `satori` + `resvg-wasm` for headless export.
 
-Location:
-- Country/States | present
-- Radius / postal codes / regions / cities / excluded locations / pin drop | missing
+### 6. One-click Generation Wizard
+Brief → strategy preview → pick formats → generates 5 copy variants × selected formats. Stored as `creative_projects` → `creative_variants` → `creative_renders`.
 
-Placements: only Advantage placements assumed; no manual placements UI (FB/IG/Messenger/Audience Network checkboxes, device, OS, position) | P0
+### 7. Canva-lite Editor `CreativeEditor.tsx`
+Layers panel | canvas with `react-rnd` drag/resize, inline text edit | properties panel (color, font, size, alignment, replace image — upload OR regenerate via image engine — swap template variant, change format) | toolbar (undo/redo, duplicate, save template, export PNG/JPG, "Publish to Meta"). Edits persisted to `creative_renders.overrides`.
 
-Delivery: cost cap / bid cap / ROAS goal not exposed | attribution_spec column exists, no UI | frequency_control_specs column exists, no UI | P1
+### 8. Creative Scoring — `ai-creative-score` edge fn
+Per render returns 0–100 + sub-scores: readability + contrast (client-side heuristic), brand_consistency (color/font match vs brand kit, client-side), CTA visibility (size/contrast), marketing_effectiveness + layout_quality + conversion_optimization (LLM judge using `gemini-3-flash-preview`). Composite score badge on every card.
 
-## SECTION C | Ad Layer
+### 9. Publish
+"Publish to Meta" uploads PNG to `meta_media_assets`, opens `MetaCampaignWizard` pre-filled with headline/body/CTA + image hash. Google/LinkedIn = ZIP download. Midjourney = "Copy MJ prompt" button.
 
-Creative types: only single image/video; missing Carousel, Collection, Dynamic Creative, Instant Experience, Catalog (DPA), Advantage+ Creative | P0
-Asset variations / multiple headlines & descriptions / dynamic text | missing | P1
-AI enhancements (cropping, expansion, brightness, text variations) | missing | P2
-UTM builder / URL params builder | missing | P1
-Deep links / app links | missing | P2
-Identity: Page selected via adset; IG account binding partial; WhatsApp identity missing | P1
+## Database (one migration)
+```sql
+firm_brand_kit (firm_id pk, logo_url, dark_logo_url, wordmark_url,
+                colors jsonb, fonts jsonb, tone, guidelines,
+                trust_badges jsonb, contact jsonb, products jsonb)
+creative_projects   (id, firm_id, name, brief, strategy jsonb, status)
+creative_variants   (id, project_id, archetype, copy jsonb, hero_image_url,
+                     image_model text, scores jsonb)
+creative_renders    (id, variant_id, format, layout_variant, template_id,
+                     overrides jsonb, png_url, score numeric)
+creative_templates  (id, firm_id nullable, name, formats jsonb, schema jsonb)
+storage: creative-assets (private, signed URLs)
+```
+Full GRANTs + RLS scoped to `get_user_firm_id(auth.uid())`.
 
-## SECTION D | Lead Generation
+## Secrets
+- `LOVABLE_API_KEY` — already present; covers OpenAI gpt-image-2 + all Gemini image models.
+- `IDEOGRAM_API_KEY` — request only the first time the user picks the "Typography Poster" preset.
+- Midjourney — none (prompt-export only).
 
-Instant Forms:
-- Form Types (More Volume / Higher Intent / Rich Creative) | missing
-- Form builder UI (intro, custom questions, conditional logic, appointment, consent, privacy, disclaimer, thank-you) | missing | P0
-- Question types beyond defaults | missing
-- Lead delivery: webhook + Supabase sync exists; CRM-side connectors (Salesforce/HubSpot/Zoho/GHL/Zapier) | `crm-sync` exists but no per-provider mapping UI | P1
+## Phased delivery (each phase shippable on its own)
+1. **Brand Kit** — table, page, hook, seed from `firm_branding`.
+2. **Strategy + extended Copy engine** — edge fn + UI panel.
+3. **Image engine + storage bucket** — gpt-image-2 + Gemini routing, streaming previews, Ideogram opt-in, Midjourney prompt export.
+4. **Render engine v1** — 4 core templates (1080², 1080×1350, 1080×1920, 1200×628) × 2 layout variants, PNG export.
+5. **Wizard end-to-end** — brief → 5 variants × 4 formats rendered + saved.
+6. **Editor** — drag/edit/replace/regen/duplicate/save template.
+7. **Remaining 7 formats** — Google sizes, LinkedIn, Reel cover.
+8. **Scoring + publish to Meta** — scores on cards, one-click Meta launch.
 
-## SECTION E | Audience System
+## Out of scope
+- Real video/Reel generation (static cover only).
+- Animated HTML5 banners.
+- Multi-page brand-guidelines PDF export.
 
-Audience Builder UI | missing | P0
-Custom + Lookalike + Value-based Lookalike | partial backend, no UI | P0
-Audience Insights / Recommendations / Overlap | missing | P2
-Audience library / sharing / permissions | missing | P2
-
-## SECTION F | Reporting
-
-Metrics columns exist in `meta_insights_*_daily` (impressions, reach, clicks, spend, conversions). Missing: CPM/CPC/CTR/CPL/ROAS computed views, Purchases & Revenue ingest from `actions`/`action_values`, multi-attribution windows.
-Breakdowns: age, gender, placement, device, country/region/city, hour, day | not implemented in ingest or UI | P0
-Saved Reports table exists | no schedule/export pipeline | P1
-Exports: CSV/XLSX/PDF | missing | P1
-
-## SECTION G | Automation
-
-`meta_automated_rules` table + `campaign-autopilot` exist. Missing: rule builder UI (conditions, time windows), Slack/email/webhook actions, scale rules, monitoring dashboard | P1
-
-## SECTION H | Infrastructure
-
-Webhook receiver exists. Missing: lead-gen subscription auto-provisioning per page, retry/DLQ visibility, rate-limit backoff metrics, audit log viewer (table exists, no UI), version history | P1
-
-## SECTION I | Enterprise
-
-Workspaces (firms exist) | OK
-RBAC for Meta Ads (publisher/viewer/approver) | missing | P1
-Asset permissions / approval flows | partial (`review_status`) | P1
-Comments / change history UI | missing | P2
-
-## SECTION J | Media Library
-
-`meta_media_assets` table exists. Missing: library UI, folders, tags, search, bulk upload, asset reuse, creative templates | P1
-
-## SECTION K | Meta API Coverage
-
-Implemented: `/me/adaccounts`, `/act_{id}/campaigns`, `/act_{id}/adsets`, `/act_{id}/ads`, `/act_{id}/adcreatives` (basic), `/act_{id}/insights` (basic), `/{form_id}/leads`, `/{page_id}/leadgen_forms`, `/{page_id}/subscribed_apps`, pixel verify.
-
-Missing / needed:
-- `/act_{id}/reachestimate` (have stub) + `/act_{id}/delivery_estimate`
-- `/act_{id}/targetingsearch`, `/targetingbrowse`, `/targetingsuggestions`, `/targetingvalidation`
-- `/act_{id}/customaudiences` CRUD + `/{audience}/users` (hashed upload)
-- `/act_{id}/saved_audiences`
-- `/act_{id}/adimages`, `/act_{id}/advideos` (upload + chunked)
-- `/act_{id}/adcreatives` full (carousel, collection, asset_feed_spec, dynamic_creative)
-- `/act_{id}/adlabels`, `/act_{id}/adrules_library`, `/act_{id}/adrules_history`
-- `/act_{id}/insights` with `breakdowns`, `action_breakdowns`, `time_increment`, `action_attribution_windows`
-- `/act_{id}/copies` (bulk duplication)
-- `/{ad_id}/previews` (multi-format)
-- `/{campaign_id}/budget_schedules`
-- `/act_{id}/instant_experiences`
-- `/{page_id}/instagram_accounts`, `/me/businesses`
-- Webhook fields: `ad_account`, `application`, `page` leadgen | only leadgen subscribed
-- Deprecated to remove: `reach` & `conversions` legacy objectives if any | enum currently OK (uses `OUTCOME_*`)
-
----
-
-## FINAL ROADMAP
-
-### Phase 1 | Critical (blocks parity with Ads Manager)
-1. **Manual Placements & Advantage toggle** | adset wizard step, `targeting.publisher_platforms/facebook_positions/instagram_positions/device_platforms`, persist + publish.
-2. **Full Optimization Goals + Billing Event matrix** | enum mapping per objective; validation.
-3. **Special Ad Categories enforcement** | required selector on campaign step; lock targeting (age/gender/zip) when CREDIT/EMPLOYMENT/HOUSING/SOCIAL_ISSUES.
-4. **Location targeting** | radius, cities, postal codes, regions, excluded locations | `meta-targeting-search` extension + map UI.
-5. **Custom Audience CRUD + Lookalike builder** | new `audience-builder` edge actions, Audiences tab UI replacing read-only table.
-6. **Carousel + Dynamic Creative ads** | `asset_feed_spec` builder, multi-card UI, publish payload.
-7. **Instant Form Builder** | full form designer (intro, questions, conditional logic, consent, TY screen), `create_lead_form` action.
-8. **Reporting breakdowns + computed KPIs** | extend `meta-ads-sync.fetch_analytics` with `breakdowns`, new tables `meta_insights_breakdown_daily`, ratio views.
-9. **Bulk editing & multi-select toolbar** | tables refactor.
-10. **Conversion-location wiring fix** | App / IG profile / Calls payload mapping in `meta-publish-campaign`.
-
-### Phase 2 | High
-11. CBO + spend caps + budget scheduling + day parting UI.
-12. A/B test results & winner promotion.
-13. Approval workflow UI (uses existing `review_status`).
-14. UTM builder + URL params on ad form.
-15. Automated rules builder + Slack/email actions.
-16. CRM mapping UI per provider (Salesforce/HubSpot/Zoho/GHL/Zapier) on top of `crm-sync`.
-17. Saved/scheduled reports + CSV/XLSX/PDF export pipeline.
-18. Media Library UI on `meta_media_assets` + chunked video upload.
-19. Ad previews for all placements via `/{ad_id}/previews`.
-20. Audit log viewer (table exists).
-
-### Phase 3 | Growth
-21. Advantage+ Audience / Advantage+ Creative.
-22. Audience Insights, Overlap, Recommendations.
-23. Catalog (DPA) + Collection + Instant Experience.
-24. AI creative enhancements (cropping, expansion, text variants).
-25. Reach & Frequency buying type.
-26. Lookalike value-based + seed sharing.
-27. Campaign templates + versioning.
-
-### Phase 4 | Enterprise
-28. Meta-Ads RBAC (publisher/viewer/approver) on top of existing `firm_members`.
-29. Asset permissions + approval routing.
-30. Comments + change history UI.
-31. Workspace-level shared audiences/creatives library.
-32. Rate-limit/DLQ dashboards, webhook health, replay tools.
-
----
-
-## Per-feature task template (applied to each roadmap item)
-
-For every item the implementation ticket will contain:
-
-- **Frontend**: components touched, new wizard steps, validation states, semantic-token styling.
-- **Backend**: new actions in `meta-ads-sync` (or new edge function), Zod schemas, error handling.
-- **DB**: migration (new columns/tables, GRANTs, RLS via `is_firm_member`).
-- **API**: exact Meta Graph endpoints + fields.
-- **Validation**: required fields, objective→goal→billing matrix, Special Ad Category lockouts.
-- **Testing**: unit (Zod), edge function curl test, UI smoke, publish dry-run.
-
-No existing functionality will be rebuilt | only the gaps above will be implemented, reusing current tables, hooks (`use-meta-campaigns`, `use-meta-tables`, `use-meta-targeting`, `use-meta-realtime`), and shells (`MetaAdsManagerShell`, `MetaCampaignWizard`, `CampaignCreateWizard`).
-
-Approve this audit + roadmap and I'll start Phase 1 in order (item 1 → 10), one PR-sized change per turn.
+Reply "go" to start with Phase 1, or pick a phase to begin with.
