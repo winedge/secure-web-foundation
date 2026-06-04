@@ -5,9 +5,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Sparkles, Loader2, AlertTriangle, Link as LinkIcon } from 'lucide-react';
+import { Sparkles, Loader2, AlertTriangle, Link as LinkIcon, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   useCreateMetaAd, useUpdateMetaAd, useMetaAiAssistant, MetaAd,
@@ -34,6 +35,13 @@ interface Props {
   wizardActiveStep?: string;
 }
 
+type CarouselCard = {
+  image_url: string;
+  headline: string;
+  description: string;
+  link: string;
+};
+
 type FormState = {
   name: string;
   page_id: string;
@@ -55,7 +63,13 @@ type FormState = {
   utm_content: string;
   lead_form_id: string;
   pixel_id: string;
+  carousel_cards: CarouselCard[];
+  dynamic_creative: boolean;
+  dynamic_headlines: string;
+  dynamic_descriptions: string;
 };
+
+const EMPTY_CARD: CarouselCard = { image_url: '', headline: '', description: '', link: '' };
 
 const INITIAL: FormState = {
   name: '',
@@ -78,6 +92,10 @@ const INITIAL: FormState = {
   utm_content: '',
   lead_form_id: '',
   pixel_id: '',
+  carousel_cards: [{ ...EMPTY_CARD }, { ...EMPTY_CARD }],
+  dynamic_creative: false,
+  dynamic_headlines: '',
+  dynamic_descriptions: '',
 };
 
 function counter(value: string, lim: { recommended: number; hard: number }) {
