@@ -8,13 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Loader2, AlertTriangle, AlertCircle, Info, CheckCircle2, Download, RefreshCw,
-  Sparkles, Copy, FileText, ShieldCheck, Bot, Zap, FileCode2,
+  Sparkles, Copy, FileText, ShieldCheck, Bot, Zap, FileCode2, FileDown,
 } from 'lucide-react';
 import { useSeoScan, useSeoIssues, useStartSeoScan } from '@/hooks/use-seo-scans';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts';
 import { useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { generateSeoReportPdf } from '@/lib/seo-report-pdf';
 
 const SEV_ORDER: Record<string, number> = { critical: 0, error: 1, warning: 2, info: 3 };
 const SEV_COLORS: Record<string, string> = { critical: 'destructive', error: 'destructive', warning: 'secondary', info: 'outline' };
@@ -104,6 +105,9 @@ export default function SeoDeepScanReport() {
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => rerun.mutate(scan.url)}><RefreshCw className="h-4 w-4 mr-2" />Re-run</Button>
             <Button variant="outline" size="sm" onClick={exportCsv}><Download className="h-4 w-4 mr-2" />Export CSV</Button>
+            <Button size="sm" onClick={() => { try { generateSeoReportPdf(scan as any, issues as any); toast.success('PDF report downloaded'); } catch (e) { toast.error((e as Error).message); } }}>
+              <FileDown className="h-4 w-4 mr-2" />Download PDF
+            </Button>
           </div>
         </header>
 
