@@ -106,8 +106,8 @@ function addFooters(doc: jsPDF, generated: string) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(...MUTED);
-    doc.text('SEO Deep Scan Report  |  ABA 512 / GDPR / EU AI Act compliant', MARGIN, PAGE_H - 9);
-    doc.text(`Generated ${generated}`, PAGE_W / 2, PAGE_H - 9, { align: 'center' });
+    doc.text('ABA 512  |  GDPR  |  EU AI Act', MARGIN, PAGE_H - 9);
+    doc.text(generated, PAGE_W / 2, PAGE_H - 9, { align: 'center' });
     doc.text(`Page ${i} of ${total}`, PAGE_W - MARGIN, PAGE_H - 9, { align: 'right' });
   }
 }
@@ -259,14 +259,16 @@ export function generateSeoReportPdf(scan: Scan, issues: Issue[]) {
     ['Favicon', !!summary.has_favicon, 'On-Page'],
   ];
   const checkColW = CONTENT_W / 2;
-  checks.forEach((c, i) => {
-    const col = i % 2;
-    const rowI = Math.floor(i / 2);
-    const ry = y + rowI * 7;
-    if (col === 0) y = ensureSpace(doc, ry, 7);
-    checkRow(doc, c[0], c[1], MARGIN + col * checkColW, y + rowI * 7 + 2, checkColW);
-  });
-  y += Math.ceil(checks.length / 2) * 7 + 6;
+  const ROW_H = 7;
+  for (let i = 0; i < checks.length; i += 2) {
+    y = ensureSpace(doc, y, ROW_H);
+    checkRow(doc, checks[i][0], checks[i][1], MARGIN, y + 2, checkColW);
+    if (checks[i + 1]) {
+      checkRow(doc, checks[i + 1][0], checks[i + 1][1], MARGIN + checkColW, y + 2, checkColW);
+    }
+    y += ROW_H;
+  }
+  y += 6;
 
   // 4. Priority Actions
   const actions: any[] = Array.isArray(summary.priority_actions) ? summary.priority_actions : [];
