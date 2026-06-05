@@ -106,8 +106,8 @@ function addFooters(doc: jsPDF, generated: string) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(...MUTED);
-    doc.text('SEO Deep Scan Report  |  ABA 512 / GDPR / EU AI Act compliant', MARGIN, PAGE_H - 9);
-    doc.text(`Generated ${generated}`, PAGE_W / 2, PAGE_H - 9, { align: 'center' });
+    doc.text('ABA 512  |  GDPR  |  EU AI Act', MARGIN, PAGE_H - 9);
+    doc.text(generated, PAGE_W / 2, PAGE_H - 9, { align: 'center' });
     doc.text(`Page ${i} of ${total}`, PAGE_W - MARGIN, PAGE_H - 9, { align: 'right' });
   }
 }
