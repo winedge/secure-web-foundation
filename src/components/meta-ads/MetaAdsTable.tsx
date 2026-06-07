@@ -8,7 +8,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Eye, Pencil, Trash2, Sparkles, Loader2, Send,
+  Eye, Pencil, Trash2, Sparkles, Loader2, Send, Bot,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import {
