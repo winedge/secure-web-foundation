@@ -190,6 +190,7 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
               onEdit={openEdit}
               onDelete={(id) => setDeletingId(id)}
               onPublish={(c) => setPublishCampaign(c)}
+              onOptimize={(c) => setOptimizeCampaign(c)}
               visibleColumns={visibleColumns}
               breakdown={breakdown}
               datePreset={datePreset}
