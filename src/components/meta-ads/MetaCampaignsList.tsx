@@ -9,7 +9,9 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { DollarSign, TrendingUp, Zap, Target, Cloud, Loader2 } from 'lucide-react';
+import { DollarSign, TrendingUp, Zap, Target, Cloud, Loader2, Sparkles } from 'lucide-react';
+import { AiCampaignBuilderDialog } from './AiCampaignBuilderDialog';
+import { CampaignOptimizerDialog } from './CampaignOptimizerDialog';
 import { formatCurrency } from '@/lib/utils';
 import { MetaAdsManagerShell, type ChipFilter } from './MetaAdsManagerShell';
 import { MetaAdsToolbar, type ColumnId, type Breakdown } from './MetaAdsToolbar';
