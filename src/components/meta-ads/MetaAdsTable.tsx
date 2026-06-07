@@ -193,6 +193,17 @@ export function MetaAdsTable({
                             <Send className="h-3.5 w-3.5" /> <span className="hidden lg:inline">Review &amp; Publish</span><span className="lg:hidden">Publish</span>
                           </Button>
                         )}
+                        {onOptimize && c.status !== 'draft' && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-emerald-600 hover:text-emerald-700"
+                            onClick={() => onOptimize(c)}
+                            title="AI Optimize"
+                          >
+                            <Bot className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onOpenCampaign(c.id)} title="View">
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
