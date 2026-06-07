@@ -25,6 +25,7 @@ interface Props {
   onEdit: (c: MetaCampaign) => void;
   onDelete: (id: string) => void;
   onPublish: (c: MetaCampaign) => void;
+  onOptimize?: (c: MetaCampaign) => void;
   visibleColumns: Set<ColumnId>;
   breakdown: Breakdown;
   datePreset: string;
