@@ -8,7 +8,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Eye, Pencil, Trash2, Sparkles, Loader2, Send,
+  Eye, Pencil, Trash2, Sparkles, Loader2, Send, Bot,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import {
@@ -25,6 +25,7 @@ interface Props {
   onEdit: (c: MetaCampaign) => void;
   onDelete: (id: string) => void;
   onPublish: (c: MetaCampaign) => void;
+  onOptimize?: (c: MetaCampaign) => void;
   visibleColumns: Set<ColumnId>;
   breakdown: Breakdown;
   datePreset: string;
@@ -50,7 +51,7 @@ function groupKey(c: MetaCampaign, b: Breakdown): string {
 
 export function MetaAdsTable({
   campaigns, isLoading, selected, onSelectionChange,
-  onOpenCampaign, onEdit, onDelete, onPublish,
+  onOpenCampaign, onEdit, onDelete, onPublish, onOptimize,
   visibleColumns, breakdown, datePreset,
 }: Props) {
   const toggleStatus = useToggleMetaStatus();
@@ -190,6 +191,17 @@ export function MetaAdsTable({
                         {isDraft && (
                           <Button size="sm" variant="default" className="h-7 gap-1 bg-green-600 hover:bg-green-700" onClick={() => onPublish(c)}>
                             <Send className="h-3.5 w-3.5" /> <span className="hidden lg:inline">Review &amp; Publish</span><span className="lg:hidden">Publish</span>
+                          </Button>
+                        )}
+                        {onOptimize && c.status !== 'draft' && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-emerald-600 hover:text-emerald-700"
+                            onClick={() => onOptimize(c)}
+                            title="AI Optimize"
+                          >
+                            <Bot className="h-3.5 w-3.5" />
                           </Button>
                         )}
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onOpenCampaign(c.id)} title="View">

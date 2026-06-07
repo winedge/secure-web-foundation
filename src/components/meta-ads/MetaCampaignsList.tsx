@@ -9,7 +9,9 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { DollarSign, TrendingUp, Zap, Target, Cloud, Loader2 } from 'lucide-react';
+import { DollarSign, TrendingUp, Zap, Target, Cloud, Loader2, Sparkles } from 'lucide-react';
+import { AiCampaignBuilderDialog } from './AiCampaignBuilderDialog';
+import { CampaignOptimizerDialog } from './CampaignOptimizerDialog';
 import { formatCurrency } from '@/lib/utils';
 import { MetaAdsManagerShell, type ChipFilter } from './MetaAdsManagerShell';
 import { MetaAdsToolbar, type ColumnId, type Breakdown } from './MetaAdsToolbar';
@@ -44,6 +46,8 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [publishCampaign, setPublishCampaign] = useState<MetaCampaign | null>(null);
   const [abOpen, setAbOpen] = useState(false);
+  const [aiBuilderOpen, setAiBuilderOpen] = useState(false);
+  const [optimizeCampaign, setOptimizeCampaign] = useState<MetaCampaign | null>(null);
 
   // Filter / display state (persisted in URL)
   const { values: shellValues, setFilter: setShell } = useUrlFilters({
@@ -139,7 +143,14 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total Spend</CardTitle><Target className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{formatCurrency(stats.totalSpend)}</div></CardContent></Card>
       </div>
 
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-end gap-2">
+        <Button
+          onClick={() => setAiBuilderOpen(true)}
+          className="gap-2 h-8 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white"
+        >
+          <Sparkles className="h-4 w-4" />
+          Create with AI
+        </Button>
         <Button variant="outline" onClick={() => syncFromMeta.mutate()} disabled={syncFromMeta.isPending} className="gap-2 h-8">
           {syncFromMeta.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Cloud className="h-4 w-4" />}
           Sync from Meta
@@ -179,6 +190,7 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
               onEdit={openEdit}
               onDelete={(id) => setDeletingId(id)}
               onPublish={(c) => setPublishCampaign(c)}
+              onOptimize={(c) => setOptimizeCampaign(c)}
               visibleColumns={visibleColumns}
               breakdown={breakdown}
               datePreset={datePreset}
@@ -231,6 +243,23 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
         onOpenChange={setAbOpen}
         candidates={list}
         preselected={selected.slice(0, 2)}
+      />
+
+      <AiCampaignBuilderDialog
+        open={aiBuilderOpen}
+        onOpenChange={setAiBuilderOpen}
+        onDraftFinalized={(d) => {
+          // Surface the draft via the existing create wizard so the user can review & save it.
+          setWizardOpen(true);
+          // Stash the draft for the wizard to optionally consume.
+          try { sessionStorage.setItem('ai-campaign-draft', JSON.stringify(d)); } catch { /* noop */ }
+        }}
+      />
+
+      <CampaignOptimizerDialog
+        campaign={optimizeCampaign}
+        open={!!optimizeCampaign}
+        onOpenChange={(o) => !o && setOptimizeCampaign(null)}
       />
     </div>
   );
