@@ -51,7 +51,7 @@ function groupKey(c: MetaCampaign, b: Breakdown): string {
 
 export function MetaAdsTable({
   campaigns, isLoading, selected, onSelectionChange,
-  onOpenCampaign, onEdit, onDelete, onPublish,
+  onOpenCampaign, onEdit, onDelete, onPublish, onOptimize,
   visibleColumns, breakdown, datePreset,
 }: Props) {
   const toggleStatus = useToggleMetaStatus();
