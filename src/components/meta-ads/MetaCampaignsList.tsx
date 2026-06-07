@@ -244,6 +244,23 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
         candidates={list}
         preselected={selected.slice(0, 2)}
       />
+
+      <AiCampaignBuilderDialog
+        open={aiBuilderOpen}
+        onOpenChange={setAiBuilderOpen}
+        onDraftFinalized={(d) => {
+          // Surface the draft via the existing create wizard so the user can review & save it.
+          setWizardOpen(true);
+          // Stash the draft for the wizard to optionally consume.
+          try { sessionStorage.setItem('ai-campaign-draft', JSON.stringify(d)); } catch { /* noop */ }
+        }}
+      />
+
+      <CampaignOptimizerDialog
+        campaign={optimizeCampaign}
+        open={!!optimizeCampaign}
+        onOpenChange={(o) => !o && setOptimizeCampaign(null)}
+      />
     </div>
   );
 }
