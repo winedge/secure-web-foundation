@@ -46,6 +46,8 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [publishCampaign, setPublishCampaign] = useState<MetaCampaign | null>(null);
   const [abOpen, setAbOpen] = useState(false);
+  const [aiBuilderOpen, setAiBuilderOpen] = useState(false);
+  const [optimizeCampaign, setOptimizeCampaign] = useState<MetaCampaign | null>(null);
 
   // Filter / display state (persisted in URL)
   const { values: shellValues, setFilter: setShell } = useUrlFilters({
