@@ -175,6 +175,11 @@ export function AiCampaignBuilderDialog({ open, onOpenChange, onPublished }: Pro
           pixel_id: pixelId || undefined,
           lead_form_id: leadFormId || undefined,
           page_id: pageId || undefined,
+          advantage_plus: {
+            audience: advAudience,
+            placements: advPlacements,
+            creative: advCreative,
+          },
         },
       });
       if (saveErr) throw saveErr;
