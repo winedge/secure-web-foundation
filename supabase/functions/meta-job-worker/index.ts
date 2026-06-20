@@ -298,9 +298,20 @@ async function publishCampaign(supabase: any, firmId: string, campaignId: string
     }
 
     try {
+      // Fetch advantage_creative_features from the persisted creative (set by save-ai-campaign).
+      let advantageSpec: Record<string, unknown> | null = null;
+      if (ad.creative_id) {
+        const { data: crRow } = await supabase
+          .from("meta_creatives")
+          .select("advantage_creative_features")
+          .eq("id", ad.creative_id)
+          .maybeSingle();
+        if (crRow?.advantage_creative_features) advantageSpec = crRow.advantage_creative_features;
+      }
       const cr = await metaPost(`/${account.meta_ad_account_id}/adcreatives`, conn.access_token, {
         name: `Creative | ${ad.name}`,
         ...creative_spec,
+        ...(advantageSpec ? { degrees_of_freedom_spec: advantageSpec } : {}),
       });
       const adRes = await metaPost(`/${account.meta_ad_account_id}/ads`, conn.access_token, {
         name: ad.name,
