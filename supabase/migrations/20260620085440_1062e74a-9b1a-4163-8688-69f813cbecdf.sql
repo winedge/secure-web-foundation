@@ -11,10 +11,10 @@ ALTER TABLE public.meta_ad_sets
 
 ALTER TABLE public.meta_creatives
   ADD COLUMN IF NOT EXISTS advantage_creative_features jsonb,
-  ADD COLUMN IF NOT EXISTS creative_source text NOT NULL DEFAULT 'lovable_ai',
+  ADD COLUMN IF NOT EXISTS creative_source text NOT NULL DEFAULT 'leadsthru_ai',
   ADD COLUMN IF NOT EXISTS meta_genai_request_id text;
 
--- Tolerant check: allow manual / lovable_ai / meta_genai
+-- Tolerant check: allow manual / leadsthru_ai / meta_genai
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -22,6 +22,6 @@ BEGIN
   ) THEN
     ALTER TABLE public.meta_creatives
       ADD CONSTRAINT meta_creatives_creative_source_chk
-      CHECK (creative_source IN ('manual','lovable_ai','meta_genai'));
+      CHECK (creative_source IN ('manual','leadsthru_ai','meta_genai'));
   END IF;
 END $$;

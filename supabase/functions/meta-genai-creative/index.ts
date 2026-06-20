@@ -5,7 +5,7 @@
 // accounts do not have access, so this function probes capabilities first
 // and surfaces a structured error if the account is not enrolled. Callers
 // (meta-ai-campaign-builder, AiCampaignBuilderDialog) are expected to fall
-// back to Lovable AI when capability is missing.
+// back to Leadsthru AI when capability is missing.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders, handleCors, jsonResponse } from "../_shared/cors.ts";
 

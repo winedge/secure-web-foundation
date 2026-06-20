@@ -502,13 +502,13 @@ function ReviewPane({
                 ) : metaGenAi.image ? (
                   <ToggleRow
                     label="Use Meta's Generative AI when available"
-                    hint="Generate images directly via Meta's allowlisted endpoints; falls back to Lovable AI if anything fails."
+                    hint="Generate images directly via Meta's allowlisted endpoints; falls back to Leadsthru AI if anything fails."
                     checked={useMetaGenAi}
                     onCheckedChange={setUseMetaGenAi}
                   />
                 ) : (
                   <div className="text-[11px] text-muted-foreground bg-muted/40 rounded p-2 leading-relaxed">
-                    Your ad account isn't enrolled in Meta's Generative AI program. Creatives will be generated with <strong>Lovable AI</strong>.
+                    Your ad account isn't enrolled in Meta's Generative AI program. Creatives will be generated with <strong>Leadsthru AI</strong>.
                   </div>
                 )}
               </CardContent>
@@ -549,7 +549,7 @@ function ReviewPane({
                     {ad.creative_source === 'meta_genai' ? (
                       <Badge className="text-[10px] bg-blue-600 hover:bg-blue-600">Meta AI</Badge>
                     ) : ad.image_url ? (
-                      <Badge variant="secondary" className="text-[10px]">Lovable AI</Badge>
+                      <Badge variant="secondary" className="text-[10px]">Leadsthru AI</Badge>
                     ) : null}
                   </div>
                   {ad.cta && <Badge variant="outline" className="text-[10px]">{ad.cta}</Badge>}
