@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   useMetaCampaigns, useDeleteMetaCampaign, useSyncFromMeta,
   useDuplicateMetaCampaign, useMetaLiveInsights, MetaCampaign,
@@ -33,6 +34,7 @@ interface Props {
 }
 
 export function MetaCampaignsList({ onSelectCampaign }: Props) {
+  const qc = useQueryClient();
   useMetaRealtime();
   const { data: campaigns, isLoading } = useMetaCampaigns();
   const deleteCampaign = useDeleteMetaCampaign();
@@ -248,7 +250,7 @@ export function MetaCampaignsList({ onSelectCampaign }: Props) {
       <AiCampaignBuilderDialog
         open={aiBuilderOpen}
         onOpenChange={setAiBuilderOpen}
-        onPublished={() => syncFromMeta.mutate(undefined as any)}
+        onPublished={() => qc.invalidateQueries({ queryKey: ['meta-campaigns'] })}
       />
 
       <CampaignOptimizerDialog
