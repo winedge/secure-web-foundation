@@ -1,67 +1,60 @@
-## Plan: AI-powered Meta Ads — Builder + Optimizer (grounded, no hallucinations)
+## Goal
 
-Two additions to the Meta Ads Manager, both engineered so the AI can **only** speak from verified Meta data and validated schemas.
+After the AI chat finishes building the campaign, persist it as a real draft in Meta tables, show a full review screen with placement previews, and only push to Meta (via the existing publish pipeline) once the user clicks Approve & Publish.
 
----
+Currently the builder just hands a JSON blob to `CampaignCreateWizard` via `sessionStorage`. The user never sees an in-context summary, the draft isn't saved, and nothing reaches Meta. The publish pipeline (`meta-publish-campaign` → `meta-job-worker`) already creates campaigns, ad sets, ad creatives and ads on Meta's Graph API from rows in `meta_campaigns` / `meta_ad_sets` / `meta_creatives` / `meta_ads` — we just need to feed it.
 
-### 1. AI Campaign Builder (conversational, end-to-end)
+## Flow after this change
 
-**UI**
-- New "✨ Create with AI" button in `MetaCampaignsList` header.
-- New `src/components/meta-ads/AiCampaignBuilderDialog.tsx`: chat on left, live structured "Campaign Draft" preview on right (objective, audience, budget, ad sets, ads, image thumbnails), progress chips (Objective → Audience → Budget → Offer → Creative → Assets).
-- Final step opens existing `PublishCampaignReviewDialog` pre-filled with the draft. Nothing publishes to Meta automatically.
+```text
+AI chat → finalize_draft
+        ↓
+[Review & Publish screen inside the dialog]
+  • Summary: objective, budget, schedule, audience, ad account, pixel, lead form
+  • Per-ad placement preview (Facebook Feed / Instagram Feed / Reels / Stories)
+        ↓ user clicks "Approve & Publish to Meta"
+[save-ai-campaign edge fn]  → inserts meta_campaigns + meta_ad_sets + meta_creatives + meta_ads (status=paused, review_status=pending, ai_generated=true)
+        ↓
+[meta-publish-campaign]     → approves + enqueues publish_campaign job
+        ↓
+[meta-job-worker]           → calls Meta Graph API, creates campaign/adset/creative/ad, writes back meta_*_id
+        ↓
+Toast + redirect to campaign row (status: paused on Meta, ready to toggle live)
+```
 
-**Backend** — new edge function `supabase/functions/meta-ai-campaign-builder/index.ts`
-- AI SDK streaming via Lovable AI Gateway, model `google/gemini-3-flash-preview`.
-- Strict **tool-only output**: the assistant cannot emit free-form campaign fields — every field must come through a Zod-validated tool call (`update_campaign_draft`, `update_audience`, `add_ad_set`, `add_ad`, `generate_ad_image`, `finalize_draft`). Anything outside the schema is rejected server-side and the AI is asked to retry.
-- `generate_ad_image` calls OpenAI `gpt-image-1` using existing `OPENAI_API_KEY`, uploads to `meta-ad-creatives` bucket.
-- New tables: `meta_ai_builder_conversations` (threaded chat per `chat-agent-ui-contract`), `meta_ai_campaign_drafts`.
+Ads are created **paused** on Meta — exactly how the existing wizard works — so nothing goes live until the user flips the on/off toggle in the campaigns table. This matches Meta's own publishing model and avoids accidental spend.
 
-**Anti-hallucination guardrails (Builder)**
-1. **Schema-locked outputs** — Zod inputSchemas with hard enums for objective, optimization_goal, bid_strategy, CTA, placements. Invalid values throw, never silently coerce.
-2. **Grounding context injected at session start** — system prompt receives a JSON block containing: the firm's vertical, allowed objectives, Meta character limits (headline 40, primary 125, description 30), min daily budget by currency, valid placements, the firm's connected ad account currency, and the firm's actual saved audiences / pixels / lead forms fetched live from DB. AI is told it must only choose from this list and cite the ID it used.
-3. **Live validation via `meta-targeting-search`** — when AI proposes interests/locations, the tool calls the existing edge function to resolve them against Meta's real targeting API. Unresolved targets are rejected and AI is asked to choose from returned suggestions.
-4. **No invented numbers** — system prompt forbids fabricated benchmarks ("expected CTR 3.2%"). If the AI needs a benchmark, it must call a `get_firm_benchmarks` tool which returns real aggregated values from the firm's `meta_insights_*` tables or returns `null` (in which case the AI must say "no historical data" instead of guessing).
-5. **Image prompts grounded in offer** — `generate_ad_image` requires `offer_summary` and `must_include_text` arguments derived from earlier confirmed answers; the tool refuses if those fields are empty.
-6. **User-confirmation gate** — `finalize_draft` will only fire after the AI has surfaced a structured summary card and the user clicks "Confirm draft". The dialog ignores `finalize_draft` invoked before that click.
-7. **Temperature 0.2** + `stopWhen: stepCountIs(50)`. Any tool call with `confidence < 0.6` (self-reported per call) is shown to the user as "needs review" instead of being silently applied.
+## Changes
 
----
+**1. New edge function `save-ai-campaign`**
+- Input: finalized AI draft + chosen `ad_account_id` (and optional `pixel_id` / `page_id` / `lead_form_id`).
+- Auth: user JWT + firm membership check.
+- Inserts in one transaction-style sequence: `meta_campaigns` (status=paused, review_status=pending, ai_generated=true, ai_metadata=full draft), one `meta_ad_sets` row (targeting jsonb built from draft.audience: geo_locations, age_min/max, genders, interests, default Advantage+ placements), and for each ad a `meta_creatives` + `meta_ads` row.
+- Returns `{ campaign_id }`.
 
-### 2. Per-Campaign AI Optimizer
+**2. `AiCampaignBuilderDialog` review step**
+- When `finalized=true`, replace the chat pane with a **Review & Publish** view:
+  - Left: editable summary cards (name, objective, daily budget, schedule, audience chips, account/pixel/lead-form selectors populated from the grounding data).
+  - Right: existing `AdPreviewPanel` reused for each ad, with placement tabs (FB Feed, IG Feed, Reels, Stories) so the user sees exactly how each ad will render before approving.
+  - Bottom bar: "Back to chat" + "Approve & Publish to Meta" (calls `save-ai-campaign` then `meta-publish-campaign` with `approve: true`).
+- On success: toast "Campaign queued for publish on Meta", close dialog, refresh the campaigns list. Remove the old `sessionStorage` handoff.
 
-**UI**
-- New row action "🤖 Optimize with AI" in `MetaAdsTable` for campaign rows.
-- New `src/components/meta-ads/CampaignOptimizerDialog.tsx`: header with range toggle (7/14/30 days), performance summary (score, CPA, ROAS, CTR, frequency, fatigue), prioritized recommendation cards (priority, why, expected impact, optional Apply button — recommendations-only in v1).
+**3. Builder edge function tweak (`meta-ai-campaign-builder`)**
+- When emitting the final summary, include `ad_account_id` / `pixel_id` / `lead_form_id` choices the user confirmed (already grounded in firm data), and require at least one ad before allowing `finalize_draft`. Continues to refuse fabricated benchmarks.
 
-**Backend** — extend existing `supabase/functions/meta-ai-recommend/index.ts` to accept `{ campaign_id, range_days }` and return recommendations synchronously while still persisting them to `meta_recommendations`.
+**4. Targeting mapping**
+- `draft.audience.locations` → Meta `geo_locations.countries` / `regions` lookup is out of scope for this pass; we save the raw values into `targeting.geo_locations.custom_locations` plus `audience_keywords` and let the worker pass the jsonb through. (Existing wizard does the same.)
 
-**Anti-hallucination guardrails (Optimizer)**
-1. **Data-first prompt assembly** — the function fetches real campaign config + aggregated `meta_insights_campaign_daily`, `meta_insights_adset_daily`, `meta_insights_ad_daily`, and demographic/placement breakdowns. That JSON is the *only* source of facts in the prompt. System prompt: "If a metric is missing or null, say 'insufficient data'. Never estimate a metric that is not in the provided JSON."
-2. **Citation requirement** — each recommendation must include `evidence: { metric, value, comparison }` fields pulled from the supplied dataset. Server-side validation rejects any recommendation whose `evidence.metric` is not a key present in the input dataset.
-3. **Tool-calling structured output** — same `submit_recommendations` tool already in `meta-ai-recommend`, extended with `evidence` and `score` (0–100) required fields, validated by Zod before persistence. Invalid items are dropped and the function asks AI for one retry.
-4. **Minimum-data gate** — if spend < a configurable threshold (default $50) or impressions < 1000 in range, the function returns a "not enough data to recommend" response instead of calling the model.
-5. **No Meta API name-dropping** — system prompt forbids referencing features the firm has not enabled (e.g., Advantage+ if `campaign.is_advantage_plus = false`). Enabled features are passed as a whitelist.
-6. **Deterministic settings** — temperature 0.1, `tool_choice` forced to `submit_recommendations`. Response strictly typed; raw assistant text is discarded.
-7. **Transparency log** — every recommendation set is written to `ai_transparency_logs` with the exact dataset hash, model, and prompt version (per existing project rule).
+## Guardrails
 
----
+- Nothing is created on Meta until the user clicks Approve & Publish.
+- Ads always created `status: paused` on Meta — user must flip the on/off toggle to go live (matches existing wizard).
+- `review_status` starts `pending`; `meta-publish-campaign` flips to `approved` only on explicit approval.
+- AI still cannot invent ad accounts/pixels/lead forms — selectors are restricted to the grounded list.
+- All character limits and CTA/objective whitelists stay enforced server-side.
 
-### Files
+## Out of scope (call out if needed)
 
-New
-- `src/components/meta-ads/AiCampaignBuilderDialog.tsx`
-- `src/components/meta-ads/CampaignOptimizerDialog.tsx`
-- `supabase/functions/meta-ai-campaign-builder/index.ts`
-- 1 migration: `meta_ai_builder_conversations`, `meta_ai_campaign_drafts` (RLS scoped to firm members, GRANTs), storage bucket `meta-ad-creatives`
-
-Edited
-- `src/components/meta-ads/MetaCampaignsList.tsx` — add "Create with AI" button
-- `src/components/meta-ads/MetaAdsTable.tsx` — add "Optimize with AI" row action
-- `supabase/functions/meta-ai-recommend/index.ts` — single-campaign mode + evidence validation + min-data gate
-
-### Quick questions
-
-1. **Ad image generation** — confirm I should use your existing `OPENAI_API_KEY` (`gpt-image-1`), same as the creative studio?
-2. **Auto-publish** — keep "draft only, user reviews & publishes manually" (recommended)? Or allow AI to publish to Meta on confirmation?
-3. **Optimizer "Apply" actions** — recommendations-only for v1, or include one-click apply (pause ad, shift budget) where safe?
+- Custom-audience / lookalike targeting (not in current AI flow).
+- Multi-ad-set campaigns (one ad set per AI campaign for now; ads share it).
+- Video creatives (image + text only; matches current `generateImage` capability).
