@@ -160,6 +160,16 @@ Deno.serve(async (req) => {
       if (lf) promoted_object.lead_form_id = lf.id;
     }
 
+    // Honor the Advantage+ Audience toggle | strip the flag from targeting if disabled.
+    const finalTargeting: Record<string, unknown> = { ...targeting };
+    if (!advantageAudience) delete (finalTargeting as any).targeting_automation;
+    // Honor Advantage+ Placements toggle | if disabled, restore explicit placements.
+    if (!advantagePlacements) {
+      (finalTargeting as any).publisher_platforms = ["facebook", "instagram"];
+      (finalTargeting as any).facebook_positions = ["feed", "story"];
+      (finalTargeting as any).instagram_positions = ["stream", "story", "reels"];
+    }
+
     const { data: adset, error: adsetErr } = await admin.from("meta_ad_sets").insert({
       firm_id,
       campaign_id: camp.id,
@@ -170,8 +180,10 @@ Deno.serve(async (req) => {
       ...(typeof draft.daily_budget === "number" ? { daily_budget: draft.daily_budget } : {}),
       ...(draft.start_date ? { start_time: new Date(draft.start_date).toISOString() } : {}),
       ...(draft.end_date ? { end_time: new Date(draft.end_date).toISOString() } : {}),
-      targeting,
+      targeting: finalTargeting,
       destination_type,
+      advantage_audience_enabled: advantageAudience,
+      placement_mode: advantagePlacements ? "advantage_plus" : "manual",
       ...(Object.keys(promoted_object).length ? { promoted_object } : {}),
       ...(pixel_id ? { pixel_id } : {}),
       ...(page_id ? { page_id } : {}),
@@ -183,6 +195,9 @@ Deno.serve(async (req) => {
     for (const ad of draft.ads as Array<Record<string, unknown>>) {
       adIndex++;
       const cta = CTAS.includes(String(ad.cta)) ? String(ad.cta) : "LEARN_MORE";
+      const source = String(ad.creative_source || "lovable_ai");
+      const creativeSource: "manual" | "lovable_ai" | "meta_genai" =
+        source === "meta_genai" || source === "manual" ? source as any : "lovable_ai";
       const { data: creative, error: crErr } = await admin.from("meta_creatives").insert({
         firm_id,
         headline: typeof ad.headline === "string" ? ad.headline.slice(0, 40) : null,
@@ -194,6 +209,9 @@ Deno.serve(async (req) => {
         creative_type: "image",
         ad_format: "single_image",
         ai_generated: true,
+        creative_source: creativeSource,
+        ...(ad.meta_genai_request_id ? { meta_genai_request_id: String(ad.meta_genai_request_id) } : {}),
+        ...(advantageCreative ? { advantage_creative_features: ADVANTAGE_CREATIVE_FEATURES } : {}),
       }).select("id").single();
       if (crErr || !creative) return jsonResponse({ error: `Failed to create creative ${adIndex}: ${crErr?.message}` }, 500);
 
