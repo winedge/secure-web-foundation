@@ -544,7 +544,14 @@ function ReviewPane({
             draft.ads.map((ad: any, i: number) => (
               <Card key={i}>
                 <CardHeader className="py-2 px-3 flex flex-row items-center justify-between space-y-0">
-                  <CardTitle className="text-sm">Ad {i + 1}</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-sm">Ad {i + 1}</CardTitle>
+                    {ad.creative_source === 'meta_genai' ? (
+                      <Badge className="text-[10px] bg-blue-600 hover:bg-blue-600">Meta AI</Badge>
+                    ) : ad.image_url ? (
+                      <Badge variant="secondary" className="text-[10px]">Lovable AI</Badge>
+                    ) : null}
+                  </div>
                   {ad.cta && <Badge variant="outline" className="text-[10px]">{ad.cta}</Badge>}
                 </CardHeader>
                 <CardContent className="px-3 pb-3">
@@ -566,6 +573,18 @@ function ReviewPane({
           )}
         </div>
       </ScrollArea>
+    </div>
+  );
+}
+
+function ToggleRow({ label, hint, checked, onCheckedChange }: { label: string; hint: string; checked: boolean; onCheckedChange: (v: boolean) => void }) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <div className="space-y-0.5 flex-1">
+        <div className="text-xs font-medium">{label}</div>
+        <div className="text-[10px] text-muted-foreground leading-snug">{hint}</div>
+      </div>
+      <Switch checked={checked} onCheckedChange={onCheckedChange} className="mt-0.5" />
     </div>
   );
 }
