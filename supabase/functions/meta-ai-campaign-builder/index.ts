@@ -173,6 +173,9 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const messages: Array<{ role: string; content: string }> = Array.isArray(body?.messages) ? body.messages : [];
     const draft: Record<string, unknown> = body?.draft && typeof body.draft === "object" ? body.draft : {};
+    // Caller may pre-select an ad account + Meta Generative AI preference.
+    const preferMetaGenAi: boolean = body?.use_meta_genai === true;
+    const preferredAdAccountId: string | undefined = typeof body?.ad_account_id === "string" ? body.ad_account_id : undefined;
 
     const [{ data: firm }, { data: adAccounts }, { data: pixels }, { data: leadForms }] = await Promise.all([
       admin.from("firms").select("id,name,states,practice_type,vertical_id").eq("id", firm_id).maybeSingle(),
