@@ -90,6 +90,27 @@ export function AiCampaignBuilderDialog({ open, onOpenChange, onPublished }: Pro
     })();
   }, [showReview]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Probe Meta Generative AI capability for the selected ad account.
+  useEffect(() => {
+    if (!showReview || !adAccountId) { setMetaGenAi(null); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase.functions.invoke('meta-genai-creative', {
+          body: { action: 'probe', ad_account_id: adAccountId },
+        });
+        if (cancelled) return;
+        const caps = data?.capabilities ?? { text: false, image: false };
+        setMetaGenAi(caps);
+        // Default the toggle ON when access is present.
+        if (caps.image) setUseMetaGenAi(true);
+      } catch {
+        if (!cancelled) setMetaGenAi({ text: false, image: false });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [showReview, adAccountId]);
+
   const reset = () => {
     setMessages([SEED_GREETING]);
     setDraft({ ads: [] });
