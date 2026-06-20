@@ -89,7 +89,7 @@ const TOOLS = [
   },
 ];
 
-async function generateImage(prompt: string): Promise<string | null> {
+async function generateImageLovable(prompt: string): Promise<string | null> {
   try {
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -103,16 +103,50 @@ async function generateImage(prompt: string): Promise<string | null> {
       }),
     });
     if (!r.ok) {
-      console.error("image gen error", r.status, await r.text());
+      console.error("lovable image gen error", r.status, await r.text());
       return null;
     }
     const json = await r.json();
     const url = json?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
     return url || null;
   } catch (e) {
-    console.error("image gen exception", e);
+    console.error("lovable image gen exception", e);
     return null;
   }
+}
+
+// Try Meta's generative AI image endpoint first (when the account is allowlisted),
+// fall back to Lovable AI. Returns { url, source, request_id }.
+async function generateImage(
+  prompt: string,
+  opts: { preferMetaGenAi: boolean; adAccountId?: string; authHeader: string },
+): Promise<{ url: string | null; source: "meta_genai" | "lovable_ai"; request_id: string | null }> {
+  if (opts.preferMetaGenAi && opts.adAccountId) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/meta-genai-creative`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: opts.authHeader },
+        body: JSON.stringify({
+          action: "generate",
+          type: "image",
+          prompt: `High-converting Meta ad creative, square 1:1, clean modern design. ${prompt}`,
+          ad_account_id: opts.adAccountId,
+          count: 1,
+        }),
+      });
+      if (r.ok) {
+        const j = await r.json();
+        const url = Array.isArray(j?.urls) && j.urls[0] ? j.urls[0] : null;
+        if (url) return { url, source: "meta_genai", request_id: j?.request_id ?? null };
+      } else {
+        console.warn("meta-genai-creative returned", r.status, "| falling back to Lovable AI");
+      }
+    } catch (e) {
+      console.warn("meta-genai-creative exception | falling back to Lovable AI", e);
+    }
+  }
+  const url = await generateImageLovable(prompt);
+  return { url, source: "lovable_ai", request_id: null };
 }
 
 function clamp(s: unknown, max: number): string | undefined {
@@ -139,6 +173,9 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const messages: Array<{ role: string; content: string }> = Array.isArray(body?.messages) ? body.messages : [];
     const draft: Record<string, unknown> = body?.draft && typeof body.draft === "object" ? body.draft : {};
+    // Caller may pre-select an ad account + Meta Generative AI preference.
+    const preferMetaGenAi: boolean = body?.use_meta_genai === true;
+    const preferredAdAccountId: string | undefined = typeof body?.ad_account_id === "string" ? body.ad_account_id : undefined;
 
     const [{ data: firm }, { data: adAccounts }, { data: pixels }, { data: leadForms }] = await Promise.all([
       admin.from("firms").select("id,name,states,practice_type,vertical_id").eq("id", firm_id).maybeSingle(),
@@ -234,10 +271,20 @@ ${JSON.stringify(grounding, null, 2)}
           description: clamp(args.description, LIMITS.description),
           cta: args.cta,
           link_url: args.link_url,
+          creative_source: "lovable_ai",
         };
         if (typeof args.image_prompt === "string") {
-          const img = await generateImage(`${args.image_prompt}. Offer: ${args.offer_summary}`);
-          if (img) ad.image_url = img;
+          const adAccountId = preferredAdAccountId
+            ?? (Array.isArray(adAccounts) && adAccounts[0]?.id ? adAccounts[0].id : undefined);
+          const img = await generateImage(
+            `${args.image_prompt}. Offer: ${args.offer_summary}`,
+            { preferMetaGenAi, adAccountId, authHeader: auth },
+          );
+          if (img.url) {
+            ad.image_url = img.url;
+            ad.creative_source = img.source;
+            if (img.request_id) ad.meta_genai_request_id = img.request_id;
+          }
         }
         (newDraft.ads as unknown[]).push(ad);
         toolEvents.push({ name, ok: true });

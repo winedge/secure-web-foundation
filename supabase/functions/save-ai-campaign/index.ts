@@ -52,6 +52,8 @@ function buildTargeting(audience: Record<string, unknown> | undefined, firmState
 
   const interestKeywords = Array.isArray((a as any).interest_keywords) ? (a as any).interest_keywords as string[] : [];
 
+  // Advantage+ Placements: omit publisher_platforms and *_positions so Meta
+  // auto-distributes across Feed, Stories, Reels, Search, Audience Network etc.
   return {
     geo_locations,
     age_min: Number((a as any).age_min) || 18,
@@ -59,11 +61,19 @@ function buildTargeting(audience: Record<string, unknown> | undefined, firmState
     ...(metaGenders && metaGenders.length ? { genders: metaGenders } : {}),
     targeting_automation: { advantage_audience: 1 },
     ...(interestKeywords.length ? { audience_keywords: interestKeywords } : {}),
-    publisher_platforms: ["facebook", "instagram"],
-    facebook_positions: ["feed", "story"],
-    instagram_positions: ["stream", "story", "reels"],
   };
 }
+
+// Meta Advantage+ Creative opt-ins. Lets Meta auto-enhance brightness,
+// crop variants, music for Reels, and text variants per placement.
+const ADVANTAGE_CREATIVE_FEATURES = {
+  creative_features_spec: {
+    standard_enhancements: { enroll_status: "OPT_IN" },
+    image_brightness_and_contrast: { enroll_status: "OPT_IN" },
+    image_templates: { enroll_status: "OPT_IN" },
+    text_optimizations: { enroll_status: "OPT_IN" },
+  },
+};
 
 Deno.serve(async (req) => {
   const cors = handleCors(req);
@@ -87,6 +97,15 @@ Deno.serve(async (req) => {
     const pixel_id: string | undefined = body?.pixel_id || undefined;
     const page_id: string | undefined = body?.page_id || undefined;
     const lead_form_id: string | undefined = body?.lead_form_id || undefined;
+    // Advantage+ toggles | defaulted ON when the client omits them.
+    const advantage: {
+      audience?: boolean;
+      placements?: boolean;
+      creative?: boolean;
+    } = body?.advantage_plus ?? {};
+    const advantageAudience = advantage.audience !== false;
+    const advantagePlacements = advantage.placements !== false;
+    const advantageCreative = advantage.creative !== false;
 
     if (!ad_account_id) return jsonResponse({ error: "ad_account_id is required" }, 400);
     if (!draft?.name || !draft?.objective) return jsonResponse({ error: "Draft is missing name or objective" }, 400);
@@ -141,6 +160,16 @@ Deno.serve(async (req) => {
       if (lf) promoted_object.lead_form_id = lf.id;
     }
 
+    // Honor the Advantage+ Audience toggle | strip the flag from targeting if disabled.
+    const finalTargeting: Record<string, unknown> = { ...targeting };
+    if (!advantageAudience) delete (finalTargeting as any).targeting_automation;
+    // Honor Advantage+ Placements toggle | if disabled, restore explicit placements.
+    if (!advantagePlacements) {
+      (finalTargeting as any).publisher_platforms = ["facebook", "instagram"];
+      (finalTargeting as any).facebook_positions = ["feed", "story"];
+      (finalTargeting as any).instagram_positions = ["stream", "story", "reels"];
+    }
+
     const { data: adset, error: adsetErr } = await admin.from("meta_ad_sets").insert({
       firm_id,
       campaign_id: camp.id,
@@ -151,8 +180,10 @@ Deno.serve(async (req) => {
       ...(typeof draft.daily_budget === "number" ? { daily_budget: draft.daily_budget } : {}),
       ...(draft.start_date ? { start_time: new Date(draft.start_date).toISOString() } : {}),
       ...(draft.end_date ? { end_time: new Date(draft.end_date).toISOString() } : {}),
-      targeting,
+      targeting: finalTargeting,
       destination_type,
+      advantage_audience_enabled: advantageAudience,
+      placement_mode: advantagePlacements ? "advantage_plus" : "manual",
       ...(Object.keys(promoted_object).length ? { promoted_object } : {}),
       ...(pixel_id ? { pixel_id } : {}),
       ...(page_id ? { page_id } : {}),
@@ -164,6 +195,9 @@ Deno.serve(async (req) => {
     for (const ad of draft.ads as Array<Record<string, unknown>>) {
       adIndex++;
       const cta = CTAS.includes(String(ad.cta)) ? String(ad.cta) : "LEARN_MORE";
+      const source = String(ad.creative_source || "lovable_ai");
+      const creativeSource: "manual" | "lovable_ai" | "meta_genai" =
+        source === "meta_genai" || source === "manual" ? source as any : "lovable_ai";
       const { data: creative, error: crErr } = await admin.from("meta_creatives").insert({
         firm_id,
         headline: typeof ad.headline === "string" ? ad.headline.slice(0, 40) : null,
@@ -175,6 +209,9 @@ Deno.serve(async (req) => {
         creative_type: "image",
         ad_format: "single_image",
         ai_generated: true,
+        creative_source: creativeSource,
+        ...(ad.meta_genai_request_id ? { meta_genai_request_id: String(ad.meta_genai_request_id) } : {}),
+        ...(advantageCreative ? { advantage_creative_features: ADVANTAGE_CREATIVE_FEATURES } : {}),
       }).select("id").single();
       if (crErr || !creative) return jsonResponse({ error: `Failed to create creative ${adIndex}: ${crErr?.message}` }, 500);
 

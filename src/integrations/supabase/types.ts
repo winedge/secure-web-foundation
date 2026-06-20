@@ -4097,6 +4097,8 @@ export type Database = {
           disable_reason: number | null
           firm_id: string
           funding_source: string | null
+          gen_ai_capabilities: Json | null
+          gen_ai_capabilities_checked_at: string | null
           id: string
           meta_ad_account_id: string
           name: string | null
@@ -4115,6 +4117,8 @@ export type Database = {
           disable_reason?: number | null
           firm_id: string
           funding_source?: string | null
+          gen_ai_capabilities?: Json | null
+          gen_ai_capabilities_checked_at?: string | null
           id?: string
           meta_ad_account_id: string
           name?: string | null
@@ -4133,6 +4137,8 @@ export type Database = {
           disable_reason?: number | null
           firm_id?: string
           funding_source?: string | null
+          gen_ai_capabilities?: Json | null
+          gen_ai_capabilities_checked_at?: string | null
           id?: string
           meta_ad_account_id?: string
           name?: string | null
@@ -4154,6 +4160,7 @@ export type Database = {
       meta_ad_sets: {
         Row: {
           adset_schedule: Json | null
+          advantage_audience_enabled: boolean
           attribution_spec: Json | null
           bid_amount: number | null
           bid_strategy: Database["public"]["Enums"]["meta_bid_strategy"] | null
@@ -4179,6 +4186,7 @@ export type Database = {
           pacing_type: string[] | null
           page_id: string | null
           pixel_id: string | null
+          placement_mode: string
           promoted_object: Json | null
           raw: Json | null
           start_time: string | null
@@ -4188,6 +4196,7 @@ export type Database = {
         }
         Insert: {
           adset_schedule?: Json | null
+          advantage_audience_enabled?: boolean
           attribution_spec?: Json | null
           bid_amount?: number | null
           bid_strategy?: Database["public"]["Enums"]["meta_bid_strategy"] | null
@@ -4213,6 +4222,7 @@ export type Database = {
           pacing_type?: string[] | null
           page_id?: string | null
           pixel_id?: string | null
+          placement_mode?: string
           promoted_object?: Json | null
           raw?: Json | null
           start_time?: string | null
@@ -4222,6 +4232,7 @@ export type Database = {
         }
         Update: {
           adset_schedule?: Json | null
+          advantage_audience_enabled?: boolean
           attribution_spec?: Json | null
           bid_amount?: number | null
           bid_strategy?: Database["public"]["Enums"]["meta_bid_strategy"] | null
@@ -4247,6 +4258,7 @@ export type Database = {
           pacing_type?: string[] | null
           page_id?: string | null
           pixel_id?: string | null
+          placement_mode?: string
           promoted_object?: Json | null
           raw?: Json | null
           start_time?: string | null
@@ -4793,10 +4805,12 @@ export type Database = {
       meta_creatives: {
         Row: {
           ad_account_id: string | null
+          advantage_creative_features: Json | null
           asset_feed_spec: Json | null
           body: string | null
           call_to_action_type: string | null
           created_at: string
+          creative_source: string
           degrees_of_freedom_spec: Json | null
           display_url: string | null
           firm_id: string
@@ -4804,6 +4818,7 @@ export type Database = {
           ig_account_id: string | null
           link_url: string | null
           meta_creative_id: string | null
+          meta_genai_request_id: string | null
           name: string | null
           object_story_spec: Json | null
           page_id: string | null
@@ -4815,10 +4830,12 @@ export type Database = {
         }
         Insert: {
           ad_account_id?: string | null
+          advantage_creative_features?: Json | null
           asset_feed_spec?: Json | null
           body?: string | null
           call_to_action_type?: string | null
           created_at?: string
+          creative_source?: string
           degrees_of_freedom_spec?: Json | null
           display_url?: string | null
           firm_id: string
@@ -4826,6 +4843,7 @@ export type Database = {
           ig_account_id?: string | null
           link_url?: string | null
           meta_creative_id?: string | null
+          meta_genai_request_id?: string | null
           name?: string | null
           object_story_spec?: Json | null
           page_id?: string | null
@@ -4837,10 +4855,12 @@ export type Database = {
         }
         Update: {
           ad_account_id?: string | null
+          advantage_creative_features?: Json | null
           asset_feed_spec?: Json | null
           body?: string | null
           call_to_action_type?: string | null
           created_at?: string
+          creative_source?: string
           degrees_of_freedom_spec?: Json | null
           display_url?: string | null
           firm_id?: string
@@ -4848,6 +4868,7 @@ export type Database = {
           ig_account_id?: string | null
           link_url?: string | null
           meta_creative_id?: string | null
+          meta_genai_request_id?: string | null
           name?: string | null
           object_story_spec?: Json | null
           page_id?: string | null

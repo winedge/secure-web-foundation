@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sparkles, Loader2, Send, CheckCircle2, ShieldCheck, RotateCcw, ChevronLeft, Rocket, AlertTriangle } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Sparkles, Loader2, Send, CheckCircle2, ShieldCheck, RotateCcw, ChevronLeft, Rocket, AlertTriangle, Zap, Wand2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
@@ -53,6 +54,15 @@ export function AiCampaignBuilderDialog({ open, onOpenChange, onPublished }: Pro
   const [pageId, setPageId] = useState<string>('');
   const [publishing, setPublishing] = useState(false);
 
+  // Meta Advantage+ toggles (all default ON | Meta auto-optimizes audience, placements, creative)
+  const [advAudience, setAdvAudience] = useState(true);
+  const [advPlacements, setAdvPlacements] = useState(true);
+  const [advCreative, setAdvCreative] = useState(true);
+
+  // Meta Generative AI capability + opt-in
+  const [metaGenAi, setMetaGenAi] = useState<{ text: boolean; image: boolean } | null>(null);
+  const [useMetaGenAi, setUseMetaGenAi] = useState(false);
+
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 100);
   }, [open, sending]);
@@ -80,6 +90,27 @@ export function AiCampaignBuilderDialog({ open, onOpenChange, onPublished }: Pro
     })();
   }, [showReview]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Probe Meta Generative AI capability for the selected ad account.
+  useEffect(() => {
+    if (!showReview || !adAccountId) { setMetaGenAi(null); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase.functions.invoke('meta-genai-creative', {
+          body: { action: 'probe', ad_account_id: adAccountId },
+        });
+        if (cancelled) return;
+        const caps = data?.capabilities ?? { text: false, image: false };
+        setMetaGenAi(caps);
+        // Default the toggle ON when access is present.
+        if (caps.image) setUseMetaGenAi(true);
+      } catch {
+        if (!cancelled) setMetaGenAi({ text: false, image: false });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [showReview, adAccountId]);
+
   const reset = () => {
     setMessages([SEED_GREETING]);
     setDraft({ ads: [] });
@@ -101,7 +132,12 @@ export function AiCampaignBuilderDialog({ open, onOpenChange, onPublished }: Pro
     setSending(true);
     try {
       const { data, error } = await supabase.functions.invoke('meta-ai-campaign-builder', {
-        body: { messages: next, draft },
+        body: {
+          messages: next,
+          draft,
+          use_meta_genai: useMetaGenAi && !!metaGenAi?.image,
+          ad_account_id: adAccountId || undefined,
+        },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -139,6 +175,11 @@ export function AiCampaignBuilderDialog({ open, onOpenChange, onPublished }: Pro
           pixel_id: pixelId || undefined,
           lead_form_id: leadFormId || undefined,
           page_id: pageId || undefined,
+          advantage_plus: {
+            audience: advAudience,
+            placements: advPlacements,
+            creative: advCreative,
+          },
         },
       });
       if (saveErr) throw saveErr;
@@ -211,6 +252,15 @@ export function AiCampaignBuilderDialog({ open, onOpenChange, onPublished }: Pro
             pageId={pageId}
             setPageId={setPageId}
             publishing={publishing}
+            advAudience={advAudience}
+            setAdvAudience={setAdvAudience}
+            advPlacements={advPlacements}
+            setAdvPlacements={setAdvPlacements}
+            advCreative={advCreative}
+            setAdvCreative={setAdvCreative}
+            metaGenAi={metaGenAi}
+            useMetaGenAi={useMetaGenAi}
+            setUseMetaGenAi={setUseMetaGenAi}
             onBack={() => setShowReview(false)}
             onPublish={publish}
           />
@@ -349,7 +399,10 @@ function ChatPane({
 function ReviewPane({
   draft, adAccounts, pixels, leadForms, pages,
   adAccountId, setAdAccountId, pixelId, setPixelId, leadFormId, setLeadFormId, pageId, setPageId,
-  publishing, onBack, onPublish,
+  publishing,
+  advAudience, setAdvAudience, advPlacements, setAdvPlacements, advCreative, setAdvCreative,
+  metaGenAi, useMetaGenAi, setUseMetaGenAi,
+  onBack, onPublish,
 }: any) {
   const noAccounts = adAccounts.length === 0;
   return (
@@ -405,6 +458,62 @@ function ReviewPane({
               </CardContent>
             </Card>
 
+            {/* Meta Advantage+ optimizations */}
+            <Card>
+              <CardHeader className="py-2 px-3">
+                <CardTitle className="text-sm flex items-center gap-1.5">
+                  <Zap className="h-3.5 w-3.5 text-emerald-500" />
+                  Meta Advantage+ Optimizations
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 px-3 pb-3">
+                <ToggleRow
+                  label="Advantage+ Audience"
+                  hint="Meta may expand beyond your selected states / interests to find more conversions."
+                  checked={advAudience}
+                  onCheckedChange={setAdvAudience}
+                />
+                <ToggleRow
+                  label="Advantage+ Placements"
+                  hint="Auto-distribute across Feed, Reels, Stories, Search and Audience Network."
+                  checked={advPlacements}
+                  onCheckedChange={setAdvPlacements}
+                />
+                <ToggleRow
+                  label="Advantage+ Creative"
+                  hint="Meta auto-enhances brightness, cropping, music for Reels, and text variants per placement."
+                  checked={advCreative}
+                  onCheckedChange={setAdvCreative}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Meta Generative AI source */}
+            <Card>
+              <CardHeader className="py-2 px-3">
+                <CardTitle className="text-sm flex items-center gap-1.5">
+                  <Wand2 className="h-3.5 w-3.5 text-emerald-500" />
+                  Creative AI Source
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 px-3 pb-3">
+                {metaGenAi === null ? (
+                  <div className="text-[11px] text-muted-foreground">Checking Meta Generative AI availability|</div>
+                ) : metaGenAi.image ? (
+                  <ToggleRow
+                    label="Use Meta's Generative AI when available"
+                    hint="Generate images directly via Meta's allowlisted endpoints; falls back to Lovable AI if anything fails."
+                    checked={useMetaGenAi}
+                    onCheckedChange={setUseMetaGenAi}
+                  />
+                ) : (
+                  <div className="text-[11px] text-muted-foreground bg-muted/40 rounded p-2 leading-relaxed">
+                    Your ad account isn't enrolled in Meta's Generative AI program. Creatives will be generated with <strong>Lovable AI</strong>.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             <div className="text-[11px] text-muted-foreground bg-muted/40 rounded p-2 leading-relaxed">
               On publish we create the campaign, ad set and ads on Meta in <strong>PAUSED</strong> state. Nothing spends until you flip the on/off toggle from the campaigns table.
             </div>
@@ -435,7 +544,14 @@ function ReviewPane({
             draft.ads.map((ad: any, i: number) => (
               <Card key={i}>
                 <CardHeader className="py-2 px-3 flex flex-row items-center justify-between space-y-0">
-                  <CardTitle className="text-sm">Ad {i + 1}</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-sm">Ad {i + 1}</CardTitle>
+                    {ad.creative_source === 'meta_genai' ? (
+                      <Badge className="text-[10px] bg-blue-600 hover:bg-blue-600">Meta AI</Badge>
+                    ) : ad.image_url ? (
+                      <Badge variant="secondary" className="text-[10px]">Lovable AI</Badge>
+                    ) : null}
+                  </div>
                   {ad.cta && <Badge variant="outline" className="text-[10px]">{ad.cta}</Badge>}
                 </CardHeader>
                 <CardContent className="px-3 pb-3">
@@ -457,6 +573,18 @@ function ReviewPane({
           )}
         </div>
       </ScrollArea>
+    </div>
+  );
+}
+
+function ToggleRow({ label, hint, checked, onCheckedChange }: { label: string; hint: string; checked: boolean; onCheckedChange: (v: boolean) => void }) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <div className="space-y-0.5 flex-1">
+        <div className="text-xs font-medium">{label}</div>
+        <div className="text-[10px] text-muted-foreground leading-snug">{hint}</div>
+      </div>
+      <Switch checked={checked} onCheckedChange={onCheckedChange} className="mt-0.5" />
     </div>
   );
 }

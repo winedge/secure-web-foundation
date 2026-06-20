@@ -1,60 +1,86 @@
-## Goal
+# Plan: Meta AI + Advantage+ Integration for AI Campaign Builder
 
-After the AI chat finishes building the campaign, persist it as a real draft in Meta tables, show a full review screen with placement previews, and only push to Meta (via the existing publish pipeline) once the user clicks Approve & Publish.
+Wire Meta's Advantage+ Suite into the publish pipeline, and add Meta's Generative AI (text + image) endpoints as an optional source alongside Gemini.
 
-Currently the builder just hands a JSON blob to `CampaignCreateWizard` via `sessionStorage`. The user never sees an in-context summary, the draft isn't saved, and nothing reaches Meta. The publish pipeline (`meta-publish-campaign` → `meta-job-worker`) already creates campaigns, ad sets, ad creatives and ads on Meta's Graph API from rows in `meta_campaigns` / `meta_ad_sets` / `meta_creatives` / `meta_ads` — we just need to feed it.
+## A. Advantage+ on Publish (always-on)
 
-## Flow after this change
+Update `supabase/functions/save-ai-campaign/index.ts` and `supabase/functions/meta-publish-campaign/index.ts` so every AI-built campaign opts into Meta's auto-optimization:
 
-```text
-AI chat → finalize_draft
-        ↓
-[Review & Publish screen inside the dialog]
-  • Summary: objective, budget, schedule, audience, ad account, pixel, lead form
-  • Per-ad placement preview (Facebook Feed / Instagram Feed / Reels / Stories)
-        ↓ user clicks "Approve & Publish to Meta"
-[save-ai-campaign edge fn]  → inserts meta_campaigns + meta_ad_sets + meta_creatives + meta_ads (status=paused, review_status=pending, ai_generated=true)
-        ↓
-[meta-publish-campaign]     → approves + enqueues publish_campaign job
-        ↓
-[meta-job-worker]           → calls Meta Graph API, creates campaign/adset/creative/ad, writes back meta_*_id
-        ↓
-Toast + redirect to campaign row (status: paused on Meta, ready to toggle live)
-```
+1. **Ad Set level** | when writing to Meta Graph API:
+   - `targeting_automation: { advantage_audience: 1 }` (Advantage+ Audience | Meta expands beyond the seed targeting)
+   - Omit `publisher_platforms` / `facebook_positions` / `instagram_positions` so Advantage+ Placements is implicit (already default; will make explicit and store `placement_mode: 'advantage_plus'` in `meta_ad_sets`)
+   - For lead-gen objectives, set `optimization_goal: LEAD_GENERATION` with `bid_strategy: LOWEST_COST_WITHOUT_CAP` (Advantage+ campaign budget)
 
-Ads are created **paused** on Meta — exactly how the existing wizard works — so nothing goes live until the user flips the on/off toggle in the campaigns table. This matches Meta's own publishing model and avoids accidental spend.
+2. **Creative level** | `degrees_of_freedom_spec`:
+   ```json
+   {
+     "creative_features_spec": {
+       "standard_enhancements": { "enroll_status": "OPT_IN" },
+       "image_brightness_and_contrast": { "enroll_status": "OPT_IN" },
+       "image_templates": { "enroll_status": "OPT_IN" },
+       "text_optimizations": { "enroll_status": "OPT_IN" }
+     }
+   }
+   ```
+   Meta will auto-generate cropping variants, text variants, music for Reels, etc.
 
-## Changes
+3. **Campaign level** | for Sales/Leads objectives, set `special_ad_categories: []` (or pass through user selection) and enable `is_advantage_plus_audience: true` where applicable.
 
-**1. New edge function `save-ai-campaign`**
-- Input: finalized AI draft + chosen `ad_account_id` (and optional `pixel_id` / `page_id` / `lead_form_id`).
-- Auth: user JWT + firm membership check.
-- Inserts in one transaction-style sequence: `meta_campaigns` (status=paused, review_status=pending, ai_generated=true, ai_metadata=full draft), one `meta_ad_sets` row (targeting jsonb built from draft.audience: geo_locations, age_min/max, genders, interests, default Advantage+ placements), and for each ad a `meta_creatives` + `meta_ads` row.
-- Returns `{ campaign_id }`.
+4. **Schema** | add columns to track which Advantage+ features are enrolled, for the Review pane to display:
+   - `meta_ad_sets.advantage_audience_enabled boolean default true`
+   - `meta_creatives.advantage_creative_features jsonb`
 
-**2. `AiCampaignBuilderDialog` review step**
-- When `finalized=true`, replace the chat pane with a **Review & Publish** view:
-  - Left: editable summary cards (name, objective, daily budget, schedule, audience chips, account/pixel/lead-form selectors populated from the grounding data).
-  - Right: existing `AdPreviewPanel` reused for each ad, with placement tabs (FB Feed, IG Feed, Reels, Stories) so the user sees exactly how each ad will render before approving.
-  - Bottom bar: "Back to chat" + "Approve & Publish to Meta" (calls `save-ai-campaign` then `meta-publish-campaign` with `approve: true`).
-- On success: toast "Campaign queued for publish on Meta", close dialog, refresh the campaigns list. Remove the old `sessionStorage` handoff.
+5. **Review pane (`AiCampaignBuilderDialog.tsx`)** | add a collapsible "Meta Advantage+ Optimizations" section showing badges for each enabled feature (Audience, Placements, Creative Enhancements, Text Optimizations) with brief tooltips. User can toggle each off if desired.
 
-**3. Builder edge function tweak (`meta-ai-campaign-builder`)**
-- When emitting the final summary, include `ad_account_id` / `pixel_id` / `lead_form_id` choices the user confirmed (already grounded in firm data), and require at least one ad before allowing `finalize_draft`. Continues to refuse fabricated benchmarks.
+## B. Meta Generative AI (optional, feature-flagged)
 
-**4. Targeting mapping**
-- `draft.audience.locations` → Meta `geo_locations.countries` / `regions` lookup is out of scope for this pass; we save the raw values into `targeting.geo_locations.custom_locations` plus `audience_keywords` and let the worker pass the jsonb through. (Existing wizard does the same.)
+Add Meta's `/act_<id>/ai_generated_text` and `/ai_generated_image` endpoints as an alternate creative source. Meta's generative endpoints are gated by Marketing API allowlist | many ad accounts don't have access, so this must fail gracefully back to Gemini.
 
-## Guardrails
+1. **Capability probe** | new helper `checkMetaGenAiAccess(adAccountId, accessToken)` in `meta-ai-campaign-builder`:
+   - Calls `GET /act_<id>?fields=capabilities` once per session
+   - Caches result in `meta_ad_accounts.gen_ai_capabilities jsonb` (new column)
+   - Returns `{ text: boolean, image: boolean }`
 
-- Nothing is created on Meta until the user clicks Approve & Publish.
-- Ads always created `status: paused` on Meta — user must flip the on/off toggle to go live (matches existing wizard).
-- `review_status` starts `pending`; `meta-publish-campaign` flips to `approved` only on explicit approval.
-- AI still cannot invent ad accounts/pixels/lead forms — selectors are restricted to the grounded list.
-- All character limits and CTA/objective whitelists stay enforced server-side.
+2. **New edge function `meta-genai-creative`**:
+   - Input: `{ ad_account_id, prompt, type: 'text'|'image', count }`
+   - For text: POST to `https://graph.facebook.com/v21.0/act_<id>/ai_generated_text` with `{ prompt, generation_type: 'PRIMARY_TEXT'|'HEADLINE'|'DESCRIPTION', n: count }`
+   - For image: POST to `/ai_generated_image` with `{ prompt, n }`, response returns Meta-hosted image URLs (no upload needed | use directly as `image_url` on creative)
+   - Surfaces 400s (unsupported region, unallowed account) with structured error
 
-## Out of scope (call out if needed)
+3. **Builder integration (`meta-ai-campaign-builder/index.ts`)**:
+   - When `gen_ai_capabilities.image === true`, add new tool `generate_meta_image(prompt)` alongside existing `generate_image` (Gemini)
+   - Gemini orchestrator picks per-ad which source to use based on user intent ("use Meta's AI" → prefer Meta; otherwise round-robin or A/B)
+   - Each generated asset tagged with `creative_source: 'meta_genai' | 'lovable_ai'` for the Review pane
 
-- Custom-audience / lookalike targeting (not in current AI flow).
-- Multi-ad-set campaigns (one ad set per AI campaign for now; ads share it).
-- Video creatives (image + text only; matches current `generateImage` capability).
+4. **Review pane UI**:
+   - New toggle: **"Use Meta's Generative AI when available"** (default ON if capability present, hidden otherwise)
+   - Each preview card shows a small badge: "Meta AI" or "Lovable AI"
+   - If Meta access is missing, show inline note: *"Your ad account isn't enrolled in Meta's Generative AI program. Using Lovable AI as fallback."*
+
+5. **Storage** | persist source on `meta_creatives`:
+   - `creative_source text check (creative_source in ('meta_genai','lovable_ai','manual'))`
+   - `meta_genai_request_id text` (for Meta's audit trail)
+
+## Files Changed
+
+**Edit:**
+- `supabase/functions/save-ai-campaign/index.ts` | inject Advantage+ flags, persist creative_source
+- `supabase/functions/meta-publish-campaign/index.ts` | send `degrees_of_freedom_spec`, `targeting_automation`, placement automation
+- `supabase/functions/meta-ai-campaign-builder/index.ts` | capability probe, new `generate_meta_image` tool, source tagging
+- `src/components/meta-ads/AiCampaignBuilderDialog.tsx` | Advantage+ section, Meta AI toggle, source badges, fallback notice
+
+**Create:**
+- `supabase/functions/meta-genai-creative/index.ts` | wrapper around Meta's ai_generated_text/image endpoints
+- Migration: columns above + new check constraint
+
+## Out of Scope
+- Advantage+ Shopping/App campaigns (different objective tree; future)
+- Custom Audience / Lookalike auto-creation
+- Video generation via Meta's gen AI (still in closed preview)
+- Per-user OAuth refresh changes (existing token flow used as-is)
+
+## Risks / Gotchas
+- Meta's gen AI endpoints are **region- and account-gated**. Capability probe + fallback is mandatory; never assume access.
+- `degrees_of_freedom_spec` schema has changed across API versions | pin to `v21.0` and version-check on first call.
+- Advantage+ Audience overrides some manual targeting | the Review pane must clearly say "Meta may expand beyond your selected states/interests" so users aren't surprised.
+- Meta-hosted gen AI image URLs expire (~24h for some accounts) | for safety, download and re-upload to Meta as a permanent `image_hash` before campaign goes live.
