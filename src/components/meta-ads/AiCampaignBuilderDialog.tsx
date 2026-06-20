@@ -252,6 +252,15 @@ export function AiCampaignBuilderDialog({ open, onOpenChange, onPublished }: Pro
             pageId={pageId}
             setPageId={setPageId}
             publishing={publishing}
+            advAudience={advAudience}
+            setAdvAudience={setAdvAudience}
+            advPlacements={advPlacements}
+            setAdvPlacements={setAdvPlacements}
+            advCreative={advCreative}
+            setAdvCreative={setAdvCreative}
+            metaGenAi={metaGenAi}
+            useMetaGenAi={useMetaGenAi}
+            setUseMetaGenAi={setUseMetaGenAi}
             onBack={() => setShowReview(false)}
             onPublish={publish}
           />
