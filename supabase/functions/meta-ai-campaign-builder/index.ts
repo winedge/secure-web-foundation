@@ -116,11 +116,11 @@ async function generateImageLovable(prompt: string): Promise<string | null> {
 }
 
 // Try Meta's generative AI image endpoint first (when the account is allowlisted),
-// fall back to Lovable AI. Returns { url, source, request_id }.
+// fall back to Leadsthru AI. Returns { url, source, request_id }.
 async function generateImage(
   prompt: string,
   opts: { preferMetaGenAi: boolean; adAccountId?: string; authHeader: string },
-): Promise<{ url: string | null; source: "meta_genai" | "lovable_ai"; request_id: string | null }> {
+): Promise<{ url: string | null; source: "meta_genai" | "leadsthru_ai"; request_id: string | null }> {
   if (opts.preferMetaGenAi && opts.adAccountId) {
     try {
       const r = await fetch(`${SUPABASE_URL}/functions/v1/meta-genai-creative`, {
@@ -139,14 +139,14 @@ async function generateImage(
         const url = Array.isArray(j?.urls) && j.urls[0] ? j.urls[0] : null;
         if (url) return { url, source: "meta_genai", request_id: j?.request_id ?? null };
       } else {
-        console.warn("meta-genai-creative returned", r.status, "| falling back to Lovable AI");
+        console.warn("meta-genai-creative returned", r.status, "| falling back to Leadsthru AI");
       }
     } catch (e) {
-      console.warn("meta-genai-creative exception | falling back to Lovable AI", e);
+      console.warn("meta-genai-creative exception | falling back to Leadsthru AI", e);
     }
   }
   const url = await generateImageLovable(prompt);
-  return { url, source: "lovable_ai", request_id: null };
+  return { url, source: "leadsthru_ai", request_id: null };
 }
 
 function clamp(s: unknown, max: number): string | undefined {
@@ -271,7 +271,7 @@ ${JSON.stringify(grounding, null, 2)}
           description: clamp(args.description, LIMITS.description),
           cta: args.cta,
           link_url: args.link_url,
-          creative_source: "lovable_ai",
+          creative_source: "leadsthru_ai",
         };
         if (typeof args.image_prompt === "string") {
           const adAccountId = preferredAdAccountId

@@ -195,9 +195,9 @@ Deno.serve(async (req) => {
     for (const ad of draft.ads as Array<Record<string, unknown>>) {
       adIndex++;
       const cta = CTAS.includes(String(ad.cta)) ? String(ad.cta) : "LEARN_MORE";
-      const source = String(ad.creative_source || "lovable_ai");
-      const creativeSource: "manual" | "lovable_ai" | "meta_genai" =
-        source === "meta_genai" || source === "manual" ? source as any : "lovable_ai";
+      const source = String(ad.creative_source || "leadsthru_ai");
+      const creativeSource: "manual" | "leadsthru_ai" | "meta_genai" =
+        source === "meta_genai" || source === "manual" ? source as any : "leadsthru_ai";
       const { data: creative, error: crErr } = await admin.from("meta_creatives").insert({
         firm_id,
         headline: typeof ad.headline === "string" ? ad.headline.slice(0, 40) : null,
