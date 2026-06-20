@@ -97,6 +97,15 @@ Deno.serve(async (req) => {
     const pixel_id: string | undefined = body?.pixel_id || undefined;
     const page_id: string | undefined = body?.page_id || undefined;
     const lead_form_id: string | undefined = body?.lead_form_id || undefined;
+    // Advantage+ toggles | defaulted ON when the client omits them.
+    const advantage: {
+      audience?: boolean;
+      placements?: boolean;
+      creative?: boolean;
+    } = body?.advantage_plus ?? {};
+    const advantageAudience = advantage.audience !== false;
+    const advantagePlacements = advantage.placements !== false;
+    const advantageCreative = advantage.creative !== false;
 
     if (!ad_account_id) return jsonResponse({ error: "ad_account_id is required" }, 400);
     if (!draft?.name || !draft?.objective) return jsonResponse({ error: "Draft is missing name or objective" }, 400);
