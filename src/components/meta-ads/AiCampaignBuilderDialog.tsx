@@ -399,7 +399,10 @@ function ChatPane({
 function ReviewPane({
   draft, adAccounts, pixels, leadForms, pages,
   adAccountId, setAdAccountId, pixelId, setPixelId, leadFormId, setLeadFormId, pageId, setPageId,
-  publishing, onBack, onPublish,
+  publishing,
+  advAudience, setAdvAudience, advPlacements, setAdvPlacements, advCreative, setAdvCreative,
+  metaGenAi, useMetaGenAi, setUseMetaGenAi,
+  onBack, onPublish,
 }: any) {
   const noAccounts = adAccounts.length === 0;
   return (
@@ -452,6 +455,62 @@ function ReviewPane({
                 <SelectField label="Facebook Page" value={pageId} onChange={setPageId} options={pages} placeholder="Select page" />
                 <SelectField label="Pixel (optional)" value={pixelId} onChange={setPixelId} options={pixels} placeholder="None" allowClear />
                 <SelectField label="Lead Form (optional)" value={leadFormId} onChange={setLeadFormId} options={leadForms} placeholder="None" allowClear />
+              </CardContent>
+            </Card>
+
+            {/* Meta Advantage+ optimizations */}
+            <Card>
+              <CardHeader className="py-2 px-3">
+                <CardTitle className="text-sm flex items-center gap-1.5">
+                  <Zap className="h-3.5 w-3.5 text-emerald-500" />
+                  Meta Advantage+ Optimizations
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 px-3 pb-3">
+                <ToggleRow
+                  label="Advantage+ Audience"
+                  hint="Meta may expand beyond your selected states / interests to find more conversions."
+                  checked={advAudience}
+                  onCheckedChange={setAdvAudience}
+                />
+                <ToggleRow
+                  label="Advantage+ Placements"
+                  hint="Auto-distribute across Feed, Reels, Stories, Search and Audience Network."
+                  checked={advPlacements}
+                  onCheckedChange={setAdvPlacements}
+                />
+                <ToggleRow
+                  label="Advantage+ Creative"
+                  hint="Meta auto-enhances brightness, cropping, music for Reels, and text variants per placement."
+                  checked={advCreative}
+                  onCheckedChange={setAdvCreative}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Meta Generative AI source */}
+            <Card>
+              <CardHeader className="py-2 px-3">
+                <CardTitle className="text-sm flex items-center gap-1.5">
+                  <Wand2 className="h-3.5 w-3.5 text-emerald-500" />
+                  Creative AI Source
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 px-3 pb-3">
+                {metaGenAi === null ? (
+                  <div className="text-[11px] text-muted-foreground">Checking Meta Generative AI availability|</div>
+                ) : metaGenAi.image ? (
+                  <ToggleRow
+                    label="Use Meta's Generative AI when available"
+                    hint="Generate images directly via Meta's allowlisted endpoints; falls back to Lovable AI if anything fails."
+                    checked={useMetaGenAi}
+                    onCheckedChange={setUseMetaGenAi}
+                  />
+                ) : (
+                  <div className="text-[11px] text-muted-foreground bg-muted/40 rounded p-2 leading-relaxed">
+                    Your ad account isn't enrolled in Meta's Generative AI program. Creatives will be generated with <strong>Lovable AI</strong>.
+                  </div>
+                )}
               </CardContent>
             </Card>
 
