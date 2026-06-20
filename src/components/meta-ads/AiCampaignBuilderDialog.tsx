@@ -440,16 +440,14 @@ function ReviewPane({
                 </CardHeader>
                 <CardContent className="px-3 pb-3">
                   <AdPreviewPanel
-                    data={{
-                      headline: ad.headline,
-                      bodyText: ad.primary_text,
-                      description: ad.description,
-                      callToAction: ad.cta,
-                      linkUrl: ad.link_url,
-                      imageUrl: ad.image_url,
-                      adFormat: 'single_image',
-                      pageName: pages.find((p: Option) => p.id === pageId)?.name || draft.name || 'Your Page',
-                    }}
+                    headline={ad.headline}
+                    bodyText={ad.primary_text}
+                    description={ad.description}
+                    callToAction={ad.cta}
+                    linkUrl={ad.link_url}
+                    imageUrl={ad.image_url}
+                    adFormat="single_image"
+                    pageName={pages.find((p: Option) => p.id === pageId)?.name || draft.name || 'Your Page'}
                   />
                 </CardContent>
               </Card>
