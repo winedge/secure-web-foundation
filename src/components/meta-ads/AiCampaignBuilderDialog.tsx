@@ -54,6 +54,15 @@ export function AiCampaignBuilderDialog({ open, onOpenChange, onPublished }: Pro
   const [pageId, setPageId] = useState<string>('');
   const [publishing, setPublishing] = useState(false);
 
+  // Meta Advantage+ toggles (all default ON | Meta auto-optimizes audience, placements, creative)
+  const [advAudience, setAdvAudience] = useState(true);
+  const [advPlacements, setAdvPlacements] = useState(true);
+  const [advCreative, setAdvCreative] = useState(true);
+
+  // Meta Generative AI capability + opt-in
+  const [metaGenAi, setMetaGenAi] = useState<{ text: boolean; image: boolean } | null>(null);
+  const [useMetaGenAi, setUseMetaGenAi] = useState(false);
+
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 100);
   }, [open, sending]);
