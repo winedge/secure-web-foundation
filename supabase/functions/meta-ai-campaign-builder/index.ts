@@ -271,10 +271,20 @@ ${JSON.stringify(grounding, null, 2)}
           description: clamp(args.description, LIMITS.description),
           cta: args.cta,
           link_url: args.link_url,
+          creative_source: "lovable_ai",
         };
         if (typeof args.image_prompt === "string") {
-          const img = await generateImage(`${args.image_prompt}. Offer: ${args.offer_summary}`);
-          if (img) ad.image_url = img;
+          const adAccountId = preferredAdAccountId
+            ?? (Array.isArray(adAccounts) && adAccounts[0]?.id ? adAccounts[0].id : undefined);
+          const img = await generateImage(
+            `${args.image_prompt}. Offer: ${args.offer_summary}`,
+            { preferMetaGenAi, adAccountId, authHeader: auth },
+          );
+          if (img.url) {
+            ad.image_url = img.url;
+            ad.creative_source = img.source;
+            if (img.request_id) ad.meta_genai_request_id = img.request_id;
+          }
         }
         (newDraft.ads as unknown[]).push(ad);
         toolEvents.push({ name, ok: true });
