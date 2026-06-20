@@ -89,7 +89,7 @@ const TOOLS = [
   },
 ];
 
-async function generateImage(prompt: string): Promise<string | null> {
+async function generateImageLovable(prompt: string): Promise<string | null> {
   try {
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -103,16 +103,50 @@ async function generateImage(prompt: string): Promise<string | null> {
       }),
     });
     if (!r.ok) {
-      console.error("image gen error", r.status, await r.text());
+      console.error("lovable image gen error", r.status, await r.text());
       return null;
     }
     const json = await r.json();
     const url = json?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
     return url || null;
   } catch (e) {
-    console.error("image gen exception", e);
+    console.error("lovable image gen exception", e);
     return null;
   }
+}
+
+// Try Meta's generative AI image endpoint first (when the account is allowlisted),
+// fall back to Lovable AI. Returns { url, source, request_id }.
+async function generateImage(
+  prompt: string,
+  opts: { preferMetaGenAi: boolean; adAccountId?: string; authHeader: string },
+): Promise<{ url: string | null; source: "meta_genai" | "lovable_ai"; request_id: string | null }> {
+  if (opts.preferMetaGenAi && opts.adAccountId) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/meta-genai-creative`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: opts.authHeader },
+        body: JSON.stringify({
+          action: "generate",
+          type: "image",
+          prompt: `High-converting Meta ad creative, square 1:1, clean modern design. ${prompt}`,
+          ad_account_id: opts.adAccountId,
+          count: 1,
+        }),
+      });
+      if (r.ok) {
+        const j = await r.json();
+        const url = Array.isArray(j?.urls) && j.urls[0] ? j.urls[0] : null;
+        if (url) return { url, source: "meta_genai", request_id: j?.request_id ?? null };
+      } else {
+        console.warn("meta-genai-creative returned", r.status, "| falling back to Lovable AI");
+      }
+    } catch (e) {
+      console.warn("meta-genai-creative exception | falling back to Lovable AI", e);
+    }
+  }
+  const url = await generateImageLovable(prompt);
+  return { url, source: "lovable_ai", request_id: null };
 }
 
 function clamp(s: unknown, max: number): string | undefined {
