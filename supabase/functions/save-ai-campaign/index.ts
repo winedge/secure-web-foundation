@@ -52,6 +52,8 @@ function buildTargeting(audience: Record<string, unknown> | undefined, firmState
 
   const interestKeywords = Array.isArray((a as any).interest_keywords) ? (a as any).interest_keywords as string[] : [];
 
+  // Advantage+ Placements: omit publisher_platforms and *_positions so Meta
+  // auto-distributes across Feed, Stories, Reels, Search, Audience Network etc.
   return {
     geo_locations,
     age_min: Number((a as any).age_min) || 18,
@@ -59,11 +61,19 @@ function buildTargeting(audience: Record<string, unknown> | undefined, firmState
     ...(metaGenders && metaGenders.length ? { genders: metaGenders } : {}),
     targeting_automation: { advantage_audience: 1 },
     ...(interestKeywords.length ? { audience_keywords: interestKeywords } : {}),
-    publisher_platforms: ["facebook", "instagram"],
-    facebook_positions: ["feed", "story"],
-    instagram_positions: ["stream", "story", "reels"],
   };
 }
+
+// Meta Advantage+ Creative opt-ins. Lets Meta auto-enhance brightness,
+// crop variants, music for Reels, and text variants per placement.
+const ADVANTAGE_CREATIVE_FEATURES = {
+  creative_features_spec: {
+    standard_enhancements: { enroll_status: "OPT_IN" },
+    image_brightness_and_contrast: { enroll_status: "OPT_IN" },
+    image_templates: { enroll_status: "OPT_IN" },
+    text_optimizations: { enroll_status: "OPT_IN" },
+  },
+};
 
 Deno.serve(async (req) => {
   const cors = handleCors(req);
