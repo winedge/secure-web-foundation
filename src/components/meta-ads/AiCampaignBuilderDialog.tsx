@@ -132,7 +132,12 @@ export function AiCampaignBuilderDialog({ open, onOpenChange, onPublished }: Pro
     setSending(true);
     try {
       const { data, error } = await supabase.functions.invoke('meta-ai-campaign-builder', {
-        body: { messages: next, draft },
+        body: {
+          messages: next,
+          draft,
+          use_meta_genai: useMetaGenAi && !!metaGenAi?.image,
+          ad_account_id: adAccountId || undefined,
+        },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
