@@ -1,5 +1,5 @@
 // AI Campaign Builder | conversational, end-to-end Meta Ads campaign drafting.
-// Uses Lovable AI Gateway for both chat (Gemini) and image generation.
+// Uses Leadsthru AI Gateway for both chat (Gemini) and image generation.
 // Anti-hallucination: grounded context, evidence-only outputs, code-side validation.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders, handleCors, jsonResponse } from "../_shared/cors.ts";
