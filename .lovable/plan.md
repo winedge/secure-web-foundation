@@ -50,15 +50,15 @@ Add Meta's `/act_<id>/ai_generated_text` and `/ai_generated_image` endpoints as 
 3. **Builder integration (`meta-ai-campaign-builder/index.ts`)**:
    - When `gen_ai_capabilities.image === true`, add new tool `generate_meta_image(prompt)` alongside existing `generate_image` (Gemini)
    - Gemini orchestrator picks per-ad which source to use based on user intent ("use Meta's AI" → prefer Meta; otherwise round-robin or A/B)
-   - Each generated asset tagged with `creative_source: 'meta_genai' | 'lovable_ai'` for the Review pane
+   - Each generated asset tagged with `creative_source: 'meta_genai' | 'leadsthru_ai'` for the Review pane
 
 4. **Review pane UI**:
    - New toggle: **"Use Meta's Generative AI when available"** (default ON if capability present, hidden otherwise)
-   - Each preview card shows a small badge: "Meta AI" or "Lovable AI"
-   - If Meta access is missing, show inline note: *"Your ad account isn't enrolled in Meta's Generative AI program. Using Lovable AI as fallback."*
+   - Each preview card shows a small badge: "Meta AI" or "Leadsthru AI"
+   - If Meta access is missing, show inline note: *"Your ad account isn't enrolled in Meta's Generative AI program. Using Leadsthru AI as fallback."*
 
 5. **Storage** | persist source on `meta_creatives`:
-   - `creative_source text check (creative_source in ('meta_genai','lovable_ai','manual'))`
+   - `creative_source text check (creative_source in ('meta_genai','leadsthru_ai','manual'))`
    - `meta_genai_request_id text` (for Meta's audit trail)
 
 ## Files Changed
