@@ -320,7 +320,7 @@ export function CampaignForm({ open, onOpenChange, campaign, onSubmit, isLoading
                 </div>
               )}
             </div>
-          </ScrollArea>
+          </div>
 
           <DialogFooter className="pt-4 border-t">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
