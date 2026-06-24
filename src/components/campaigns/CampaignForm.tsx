@@ -111,8 +111,8 @@ export function CampaignForm({ open, onOpenChange, campaign, onSubmit, isLoading
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex-1 overflow-hidden flex flex-col">
-          <ScrollArea className="flex-1 pr-4">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex-1 min-h-0 overflow-hidden flex flex-col">
+          <div className="flex-1 min-h-0 overflow-y-auto pr-4">
             <div className="space-y-6 pb-4">
               {/* Basic Info */}
               <div className="space-y-4">
