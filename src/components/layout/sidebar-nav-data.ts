@@ -178,6 +178,8 @@ export const navGroups: NavGroup[] = [
       { name: 'Demand Forecaster', href: '/ecom/demand-forecaster', icon: TrendingUp, module: 'ecom_demand_forecaster' },
       { name: 'Trend Hunter', href: '/ecom/trend-hunter', icon: Flame, module: 'ecom_trend_hunter' },
       { name: 'Creator Radar', href: '/ecom/creator-radar', icon: Users, module: 'ecom_creator_radar' },
+      { name: 'Arbitrage Finder', href: '/ecom/arbitrage', icon: Handshake, module: 'ecom_arbitrage_finder' },
+      { name: 'Review Heatmap', href: '/ecom/review-heatmap', icon: Activity, module: 'ecom_review_heatmap' },
     ],
   },
 ];
