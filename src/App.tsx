@@ -129,6 +129,8 @@ const EcomListingDoctor = lazyWithRetry(() => import("./pages/ecom/EcomListingDo
 const EcomDemandForecaster = lazyWithRetry(() => import("./pages/ecom/EcomDemandForecaster"));
 const EcomTrendHunter = lazyWithRetry(() => import("./pages/ecom/EcomTrendHunter"));
 const EcomCreatorRadar = lazyWithRetry(() => import("./pages/ecom/EcomCreatorRadar"));
+const EcomArbitrageFinder = lazyWithRetry(() => import("./pages/ecom/EcomArbitrageFinder"));
+const EcomReviewHeatmap = lazyWithRetry(() => import("./pages/ecom/EcomReviewHeatmap"));
 
 
 const WebsiteDoctorProjects = lazyWithRetry(() => import("./pages/WebsiteDoctorProjects"));
@@ -257,6 +259,9 @@ const App = () => (
                 <Route path="/ecom/demand-forecaster" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_demand_forecaster" label="Demand Forecaster"><EcomDemandForecaster /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/ecom/trend-hunter" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_trend_hunter" label="Trend Hunter"><EcomTrendHunter /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/ecom/creator-radar" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_creator_radar" label="Creator Radar"><EcomCreatorRadar /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/ecom/arbitrage" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_arbitrage_finder" label="Arbitrage Finder"><EcomArbitrageFinder /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/ecom/review-heatmap" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_review_heatmap" label="Review Heatmap"><EcomReviewHeatmap /></ModuleGate></LazyRoute></ProtectedRoute>} />
+
 
 
 
