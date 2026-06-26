@@ -53,7 +53,7 @@ export default function EcomDemandForecaster() {
         .select('captured_on, units_sold, revenue')
         .eq('watchlist_id', target)
         .order('captured_on', { ascending: true }).limit(180);
-      return (data as Snap[]) ?? [];
+      return ((data as unknown) as Snap[]) ?? [];
     },
   });
 
