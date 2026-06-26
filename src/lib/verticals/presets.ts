@@ -114,8 +114,8 @@ export const VERTICAL_PRESETS: VerticalPreset[] = [
   },
   {
     slug: 'ecommerce_seller',
-    name: 'E-commerce Seller Intelligence',
-    description: 'Sellers & brands on Shopee, Lazada, Tiki, and TikTok Shop | live competitor war room, AI pricing copilot, demand forecasts',
+    name: 'FMCG',
+    description: 'FMCG brands & sellers on Shopee, Lazada, Tiki, and TikTok Shop | live competitor war room, AI pricing copilot, demand forecasts',
     icon: 'ShoppingBag',
     highlights: [
       'Live Competitor War Room',
