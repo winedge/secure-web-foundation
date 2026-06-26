@@ -183,6 +183,8 @@ export const navGroups: NavGroup[] = [
       { name: 'Top Rankings', href: '/ecom/top-rankings', icon: Star, module: 'ecom_top_rankings' },
       { name: 'Social & Web Listening', href: '/ecom/listening', icon: Bell, module: 'ecom_listening' },
       { name: 'Weekly Brief', href: '/ecom/weekly-brief', icon: FileText, module: 'ecom_weekly_brief' },
+      { name: 'Category & Brand', href: '/ecom/category-brand', icon: Layers, module: 'ecom_category_brand_analysis' },
+      { name: 'Data Export', href: '/ecom/data-export', icon: Upload, module: 'ecom_data_export' },
     ],
   },
 ];
