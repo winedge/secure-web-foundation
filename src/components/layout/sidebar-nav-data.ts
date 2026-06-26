@@ -168,7 +168,7 @@ export const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: 'E-commerce Intelligence',
+    label: 'FMCG',
     icon: ShoppingCart,
     items: [
       { name: 'Marketplace Radar', href: '/ecom/market-overview', icon: Radar, module: 'ecom_market_overview' },

@@ -1,0 +1,1 @@
+UPDATE public.industry_verticals SET name = 'FMCG', description = 'FMCG brands & sellers on Shopee, Lazada, Tiki and TikTok Shop' WHERE slug = 'ecommerce_seller';
