@@ -2003,6 +2003,513 @@ export type Database = {
           },
         ]
       }
+      ecom_ai_recommendations: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          details: Json
+          evidence_refs: Json
+          firm_id: string
+          id: string
+          rec_type: string
+          status: string
+          summary: string | null
+          title: string
+          updated_at: string
+          watchlist_id: string | null
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          details?: Json
+          evidence_refs?: Json
+          firm_id: string
+          id?: string
+          rec_type: string
+          status?: string
+          summary?: string | null
+          title: string
+          updated_at?: string
+          watchlist_id?: string | null
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          details?: Json
+          evidence_refs?: Json
+          firm_id?: string
+          id?: string
+          rec_type?: string
+          status?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
+          watchlist_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ecom_ai_recommendations_watchlist_id_fkey"
+            columns: ["watchlist_id"]
+            isOneToOne: false
+            referencedRelation: "ecom_watchlist"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ecom_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          firm_id: string
+          id: string
+          is_read: boolean
+          message: string | null
+          payload: Json
+          severity: string
+          title: string
+          watchlist_id: string | null
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          firm_id: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          payload?: Json
+          severity?: string
+          title: string
+          watchlist_id?: string | null
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          firm_id?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          payload?: Json
+          severity?: string
+          title?: string
+          watchlist_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ecom_alerts_watchlist_id_fkey"
+            columns: ["watchlist_id"]
+            isOneToOne: false
+            referencedRelation: "ecom_watchlist"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ecom_briefs: {
+        Row: {
+          created_at: string
+          firm_id: string
+          id: string
+          pdf_url: string | null
+          period_end: string
+          period_start: string
+          summary: Json
+        }
+        Insert: {
+          created_at?: string
+          firm_id: string
+          id?: string
+          pdf_url?: string | null
+          period_end: string
+          period_start: string
+          summary?: Json
+        }
+        Update: {
+          created_at?: string
+          firm_id?: string
+          id?: string
+          pdf_url?: string | null
+          period_end?: string
+          period_start?: string
+          summary?: Json
+        }
+        Relationships: []
+      }
+      ecom_creators: {
+        Row: {
+          captured_at: string
+          contact_info: Json | null
+          engagement_rate: number | null
+          firm_id: string
+          followers: number | null
+          gmv_proxy: number | null
+          handle: string
+          id: string
+          niches: string[] | null
+          profile_url: string | null
+        }
+        Insert: {
+          captured_at?: string
+          contact_info?: Json | null
+          engagement_rate?: number | null
+          firm_id: string
+          followers?: number | null
+          gmv_proxy?: number | null
+          handle: string
+          id?: string
+          niches?: string[] | null
+          profile_url?: string | null
+        }
+        Update: {
+          captured_at?: string
+          contact_info?: Json | null
+          engagement_rate?: number | null
+          firm_id?: string
+          followers?: number | null
+          gmv_proxy?: number | null
+          handle?: string
+          id?: string
+          niches?: string[] | null
+          profile_url?: string | null
+        }
+        Relationships: []
+      }
+      ecom_mentions: {
+        Row: {
+          author: string | null
+          captured_at: string
+          content: string | null
+          firm_id: string
+          id: string
+          platform: string | null
+          rating: number | null
+          sentiment: string | null
+          source_url: string | null
+          topics: string[] | null
+          watchlist_id: string | null
+        }
+        Insert: {
+          author?: string | null
+          captured_at?: string
+          content?: string | null
+          firm_id: string
+          id?: string
+          platform?: string | null
+          rating?: number | null
+          sentiment?: string | null
+          source_url?: string | null
+          topics?: string[] | null
+          watchlist_id?: string | null
+        }
+        Update: {
+          author?: string | null
+          captured_at?: string
+          content?: string | null
+          firm_id?: string
+          id?: string
+          platform?: string | null
+          rating?: number | null
+          sentiment?: string | null
+          source_url?: string | null
+          topics?: string[] | null
+          watchlist_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ecom_mentions_watchlist_id_fkey"
+            columns: ["watchlist_id"]
+            isOneToOne: false
+            referencedRelation: "ecom_watchlist"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ecom_price_history: {
+        Row: {
+          captured_at: string
+          discount_pct: number | null
+          firm_id: string
+          id: string
+          in_stock: boolean | null
+          original_price: number | null
+          price: number | null
+          promo_label: string | null
+          rating: number | null
+          rating_count: number | null
+          source_url: string | null
+          watchlist_id: string | null
+        }
+        Insert: {
+          captured_at?: string
+          discount_pct?: number | null
+          firm_id: string
+          id?: string
+          in_stock?: boolean | null
+          original_price?: number | null
+          price?: number | null
+          promo_label?: string | null
+          rating?: number | null
+          rating_count?: number | null
+          source_url?: string | null
+          watchlist_id?: string | null
+        }
+        Update: {
+          captured_at?: string
+          discount_pct?: number | null
+          firm_id?: string
+          id?: string
+          in_stock?: boolean | null
+          original_price?: number | null
+          price?: number | null
+          promo_label?: string | null
+          rating?: number | null
+          rating_count?: number | null
+          source_url?: string | null
+          watchlist_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ecom_price_history_watchlist_id_fkey"
+            columns: ["watchlist_id"]
+            isOneToOne: false
+            referencedRelation: "ecom_watchlist"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ecom_scrape_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          firecrawl_job_id: string | null
+          firm_id: string
+          id: string
+          job_type: string
+          payload: Json
+          result: Json | null
+          started_at: string | null
+          status: string
+          updated_at: string
+          watchlist_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          firecrawl_job_id?: string | null
+          firm_id: string
+          id?: string
+          job_type: string
+          payload?: Json
+          result?: Json | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          watchlist_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          firecrawl_job_id?: string | null
+          firm_id?: string
+          id?: string
+          job_type?: string
+          payload?: Json
+          result?: Json | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          watchlist_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ecom_scrape_jobs_watchlist_id_fkey"
+            columns: ["watchlist_id"]
+            isOneToOne: false
+            referencedRelation: "ecom_watchlist"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ecom_snapshots: {
+        Row: {
+          active_products: number | null
+          active_shops: number | null
+          avg_price: number | null
+          captured_on: string
+          created_at: string
+          firm_id: string
+          id: string
+          market_share: number | null
+          raw: Json
+          revenue: number | null
+          units_sold: number | null
+          watchlist_id: string | null
+        }
+        Insert: {
+          active_products?: number | null
+          active_shops?: number | null
+          avg_price?: number | null
+          captured_on?: string
+          created_at?: string
+          firm_id: string
+          id?: string
+          market_share?: number | null
+          raw?: Json
+          revenue?: number | null
+          units_sold?: number | null
+          watchlist_id?: string | null
+        }
+        Update: {
+          active_products?: number | null
+          active_shops?: number | null
+          avg_price?: number | null
+          captured_on?: string
+          created_at?: string
+          firm_id?: string
+          id?: string
+          market_share?: number | null
+          raw?: Json
+          revenue?: number | null
+          units_sold?: number | null
+          watchlist_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ecom_snapshots_watchlist_id_fkey"
+            columns: ["watchlist_id"]
+            isOneToOne: false
+            referencedRelation: "ecom_watchlist"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ecom_top_entities: {
+        Row: {
+          captured_on: string
+          category: string | null
+          entity_name: string
+          entity_url: string | null
+          firm_id: string
+          id: string
+          metric_label: string | null
+          metric_value: number | null
+          platform: string
+          rank: number
+          rank_type: string
+        }
+        Insert: {
+          captured_on?: string
+          category?: string | null
+          entity_name: string
+          entity_url?: string | null
+          firm_id: string
+          id?: string
+          metric_label?: string | null
+          metric_value?: number | null
+          platform: string
+          rank: number
+          rank_type: string
+        }
+        Update: {
+          captured_on?: string
+          category?: string | null
+          entity_name?: string
+          entity_url?: string | null
+          firm_id?: string
+          id?: string
+          metric_label?: string | null
+          metric_value?: number | null
+          platform?: string
+          rank?: number
+          rank_type?: string
+        }
+        Relationships: []
+      }
+      ecom_trend_signals: {
+        Row: {
+          detected_at: string
+          entity_name: string
+          entity_url: string | null
+          evidence: Json
+          firm_id: string
+          id: string
+          platform: string
+          signal_type: string
+          velocity_score: number | null
+        }
+        Insert: {
+          detected_at?: string
+          entity_name: string
+          entity_url?: string | null
+          evidence?: Json
+          firm_id: string
+          id?: string
+          platform: string
+          signal_type: string
+          velocity_score?: number | null
+        }
+        Update: {
+          detected_at?: string
+          entity_name?: string
+          entity_url?: string | null
+          evidence?: Json
+          firm_id?: string
+          id?: string
+          platform?: string
+          signal_type?: string
+          velocity_score?: number | null
+        }
+        Relationships: []
+      }
+      ecom_watchlist: {
+        Row: {
+          created_at: string
+          entity_type: string
+          entity_url: string
+          firm_id: string
+          id: string
+          is_active: boolean
+          is_own: boolean
+          label: string | null
+          last_scraped_at: string | null
+          platform: string
+          retention_months: number
+          track_frequency_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          entity_type: string
+          entity_url: string
+          firm_id: string
+          id?: string
+          is_active?: boolean
+          is_own?: boolean
+          label?: string | null
+          last_scraped_at?: string | null
+          platform: string
+          retention_months?: number
+          track_frequency_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          entity_type?: string
+          entity_url?: string
+          firm_id?: string
+          id?: string
+          is_active?: boolean
+          is_own?: boolean
+          label?: string | null
+          last_scraped_at?: string | null
+          platform?: string
+          retention_months?: number
+          track_frequency_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       evidence_audit_trail: {
         Row: {
           action: string
