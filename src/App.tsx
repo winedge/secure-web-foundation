@@ -269,6 +269,9 @@ const App = () => (
                 <Route path="/ecom/top-rankings" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_top_rankings" label="Top Rankings"><EcomTopRankings /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/ecom/listening" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_listening" label="Social & Web Listening"><EcomListening /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/ecom/weekly-brief" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_weekly_brief" label="Weekly Brief"><EcomWeeklyBrief /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/ecom/data-export" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_data_export" label="Data Export"><EcomDataExport /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/ecom/category-brand" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_category_brand_analysis" label="Category & Brand Analysis"><EcomCategoryBrandAnalysis /></ModuleGate></LazyRoute></ProtectedRoute>} />
+
 
 
 
