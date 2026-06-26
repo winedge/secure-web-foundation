@@ -26,7 +26,7 @@ export interface EcomWatchlistRow {
 }
 
 export function useEcomWatchlist() {
-  const { firm } = useFirm();
+  const firmQuery = useFirm(); const firm = firmQuery.data;
   const qc = useQueryClient();
 
   const list = useQuery({
