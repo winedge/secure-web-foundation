@@ -112,6 +112,34 @@ export const VERTICAL_PRESETS: VerticalPreset[] = [
       'gmb_manager','seo_suite','tool_seo_deep_scan','tool_keyword_research','tool_backlink_audit','tool_local_citations','tool_review_manager','tool_gmb_post_scheduler',
     ],
   },
+  {
+    slug: 'ecommerce_seller',
+    name: 'E-commerce Seller Intelligence',
+    description: 'Sellers & brands on Shopee, Lazada, Tiki, and TikTok Shop | live competitor war room, AI pricing copilot, demand forecasts',
+    icon: 'ShoppingBag',
+    highlights: [
+      'Live Competitor War Room',
+      'AI Pricing Copilot',
+      'Demand Forecaster',
+      'Listing Doctor',
+      'TikTok Creator Radar',
+      'Cross-platform Arbitrage Finder',
+      'Weekly Intel PDF',
+      'Evidence-linked AI',
+    ],
+    exampleStages: ['Watchlist', 'Tracking', 'Insight Ready', 'Action Taken'],
+    exampleCategories: ['Shopee', 'Lazada', 'Tiki', 'TikTok Shop'],
+    enabledModules: [
+      'creative_studio','viral_content','video_ads','social_calendar','competitor_intel',
+      'meta_ads','google_ads','cross_platform_autopilot','benchmarks','website_doctor',
+      'gmb_manager','seo_suite',
+      'ecom_market_overview','ecom_category_brand_analysis','ecom_competitor_war_room',
+      'ecom_pricing_copilot','ecom_demand_forecaster','ecom_listing_doctor',
+      'ecom_creator_radar','ecom_trend_hunter','ecom_arbitrage_finder','ecom_review_heatmap',
+      'ecom_top_rankings','ecom_listening','ecom_weekly_brief','ecom_data_export',
+    ],
+  },
+
 ];
 
 /** Default fallback terminology when DB fetch fails */
