@@ -2,7 +2,7 @@
  * EcomMarketOverview - main dashboard for the E-commerce Seller Intelligence vertical.
  * Shows KPI cards from ecom_snapshots and lets users add/scrape watchlist URLs.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useFirm } from '@/hooks/use-firm';
