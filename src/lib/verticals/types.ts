@@ -10,7 +10,9 @@ export type VerticalSlug =
   | 'solar'
   | 'dental'
   | 'home_services'
+  | 'ecommerce_seller'
   | 'custom';
+
 
 export type ModuleKey =
   | 'lead_scoring'
