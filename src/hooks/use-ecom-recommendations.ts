@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useFirm } from '@/hooks/use-firm';
 import { toast } from '@/hooks/use-toast';
 
-export type EcomRecMode = 'war_room' | 'pricing';
+export type EcomRecMode = 'war_room' | 'pricing' | 'listing_doctor' | 'demand_forecast';
 
 export interface EcomRecommendation {
   id: string;

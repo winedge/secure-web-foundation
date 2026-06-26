@@ -125,6 +125,8 @@ const CompetitorAdLibrary = lazyWithRetry(() => import("./pages/seo/ai/Competito
 const EcomMarketOverview = lazyWithRetry(() => import("./pages/ecom/EcomMarketOverview"));
 const EcomWarRoom = lazyWithRetry(() => import("./pages/ecom/EcomWarRoom"));
 const EcomPricingCopilot = lazyWithRetry(() => import("./pages/ecom/EcomPricingCopilot"));
+const EcomListingDoctor = lazyWithRetry(() => import("./pages/ecom/EcomListingDoctor"));
+const EcomDemandForecaster = lazyWithRetry(() => import("./pages/ecom/EcomDemandForecaster"));
 
 
 const WebsiteDoctorProjects = lazyWithRetry(() => import("./pages/WebsiteDoctorProjects"));
@@ -249,6 +251,8 @@ const App = () => (
                 <Route path="/ecom/market-overview" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_market_overview" label="Marketplace Radar"><EcomMarketOverview /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/ecom/war-room" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_competitor_war_room" label="Competitor War Room"><EcomWarRoom /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/ecom/pricing-copilot" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_pricing_copilot" label="Pricing Copilot"><EcomPricingCopilot /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/ecom/listing-doctor" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_listing_doctor" label="Listing Doctor"><EcomListingDoctor /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/ecom/demand-forecaster" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_demand_forecaster" label="Demand Forecaster"><EcomDemandForecaster /></ModuleGate></LazyRoute></ProtectedRoute>} />
 
 
 
