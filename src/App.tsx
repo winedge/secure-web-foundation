@@ -129,6 +129,8 @@ const EcomListingDoctor = lazyWithRetry(() => import("./pages/ecom/EcomListingDo
 const EcomDemandForecaster = lazyWithRetry(() => import("./pages/ecom/EcomDemandForecaster"));
 const EcomTrendHunter = lazyWithRetry(() => import("./pages/ecom/EcomTrendHunter"));
 const EcomCreatorRadar = lazyWithRetry(() => import("./pages/ecom/EcomCreatorRadar"));
+const EcomArbitrageFinder = lazyWithRetry(() => import("./pages/ecom/EcomArbitrageFinder"));
+const EcomReviewHeatmap = lazyWithRetry(() => import("./pages/ecom/EcomReviewHeatmap"));
 
 
 const WebsiteDoctorProjects = lazyWithRetry(() => import("./pages/WebsiteDoctorProjects"));
