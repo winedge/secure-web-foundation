@@ -1,86 +1,131 @@
-# Plan: Meta AI + Advantage+ Integration for AI Campaign Builder
 
-Wire Meta's Advantage+ Suite into the publish pipeline, and add Meta's Generative AI (text + image) endpoints as an optional source alongside Gemini.
+# Plan: E-commerce Seller Intelligence Vertical — Game-Changer Edition
 
-## A. Advantage+ on Publish (always-on)
+A new vertical for sellers/brands on Shopee, Lazada, Tiki, and TikTok Shop. Goes beyond a static dashboard: real-time competitor warfare, AI-driven pricing & promo decisions, creator-led growth, and predictive demand — all grounded in scraped evidence so the AI never hallucinates.
 
-Update `supabase/functions/save-ai-campaign/index.ts` and `supabase/functions/meta-publish-campaign/index.ts` so every AI-built campaign opts into Meta's auto-optimization:
+## What makes it a game-changer (vs. typical analytics tools like Metric.vn / EcomHeat)
 
-1. **Ad Set level** | when writing to Meta Graph API:
-   - `targeting_automation: { advantage_audience: 1 }` (Advantage+ Audience | Meta expands beyond the seed targeting)
-   - Omit `publisher_platforms` / `facebook_positions` / `instagram_positions` so Advantage+ Placements is implicit (already default; will make explicit and store `placement_mode: 'advantage_plus'` in `meta_ad_sets`)
-   - For lead-gen objectives, set `optimization_goal: LEAD_GENERATION` with `bid_strategy: LOWEST_COST_WITHOUT_CAP` (Advantage+ campaign budget)
+1. **Live Competitor War Room** — minute-level price/stock/promo changes with instant alerts and a "what to do now" AI playbook (not just a chart).
+2. **AI Pricing Copilot** — every product on your watchlist gets a recommended price + expected revenue impact, simulated against scraped competitor data.
+3. **Demand Forecaster** — 30/60/90-day units & revenue forecast per SKU/category using historical snapshots + seasonality + promo signal.
+4. **Listing Doctor** — scrapes your own product page, scores title/images/specs/keywords against the top 10 ranked listings, and rewrites them with AI.
+5. **TikTok Shop Creator Radar** — finds creators driving GMV in your category, ranks them by ROAS proxy, and drafts outreach DMs.
+6. **Trend Hunter** — detects breakout products/keywords across all 4 platforms 7–14 days before they trend (velocity + review-acceleration model).
+7. **Auto-generated Weekly Intel Brief** — a branded PDF (reuses `seo-report-pdf.ts` engine) delivered every Monday: wins, threats, recommended actions.
+8. **Cross-platform Arbitrage Finder** — same product priced lower on one marketplace than another → opportunity card.
+9. **Review Sentiment Heatmap** — clusters complaints/praise per product so brand teams know exactly what to fix.
+10. **Evidence-Linked AI** — every AI insight cites the scrape row (URL + captured_at) it was generated from. Zero hallucination.
 
-2. **Creative level** | `degrees_of_freedom_spec`:
-   ```json
-   {
-     "creative_features_spec": {
-       "standard_enhancements": { "enroll_status": "OPT_IN" },
-       "image_brightness_and_contrast": { "enroll_status": "OPT_IN" },
-       "image_templates": { "enroll_status": "OPT_IN" },
-       "text_optimizations": { "enroll_status": "OPT_IN" }
-     }
-   }
-   ```
-   Meta will auto-generate cropping variants, text variants, music for Reels, etc.
+## 1. Vertical registration
 
-3. **Campaign level** | for Sales/Leads objectives, set `special_ad_categories: []` (or pass through user selection) and enable `is_advantage_plus_audience: true` where applicable.
+- `industry_verticals` row: slug `ecommerce_seller`, name "E-commerce Seller Intelligence", icon `ShoppingBag`.
+- Terminology: lead→"Shop/Brand", marketplace→"Marketplace Radar", pipeline→"Opportunity Pipeline".
+- Categories: Shopee, Lazada, Tiki, TikTok Shop.
+- Pipeline stages: Watchlist → Tracking → Insight Ready → Action Taken → Outcome Logged.
+- Full standard module stack PLUS new e-commerce keys below.
+- Add `VerticalPreset` entry in `src/lib/verticals/presets.ts`, new keys in `src/lib/verticals/types.ts`.
 
-4. **Schema** | add columns to track which Advantage+ features are enrolled, for the Review pane to display:
-   - `meta_ad_sets.advantage_audience_enabled boolean default true`
-   - `meta_creatives.advantage_creative_features jsonb`
+## 2. New module keys (vertical-exclusive)
 
-5. **Review pane (`AiCampaignBuilderDialog.tsx`)** | add a collapsible "Meta Advantage+ Optimizations" section showing badges for each enabled feature (Audience, Placements, Creative Enhancements, Text Optimizations) with brief tooltips. User can toggle each off if desired.
+`ecom_market_overview`, `ecom_category_brand_analysis`, `ecom_competitor_war_room`, `ecom_pricing_copilot`, `ecom_demand_forecaster`, `ecom_listing_doctor`, `ecom_creator_radar`, `ecom_trend_hunter`, `ecom_arbitrage_finder`, `ecom_review_heatmap`, `ecom_top_rankings`, `ecom_listening`, `ecom_weekly_brief`, `ecom_data_export`.
 
-## B. Meta Generative AI (optional, feature-flagged)
+`ModuleGate` automatically hides them for other verticals.
 
-Add Meta's `/act_<id>/ai_generated_text` and `/ai_generated_image` endpoints as an alternate creative source. Meta's generative endpoints are gated by Marketing API allowlist | many ad accounts don't have access, so this must fail gracefully back to Gemini.
+## 3. Database schema (public, RLS by firm_id, GRANTs included)
 
-1. **Capability probe** | new helper `checkMetaGenAiAccess(adAccountId, accessToken)` in `meta-ai-campaign-builder`:
-   - Calls `GET /act_<id>?fields=capabilities` once per session
-   - Caches result in `meta_ad_accounts.gen_ai_capabilities jsonb` (new column)
-   - Returns `{ text: boolean, image: boolean }`
+- `ecom_watchlist` — what's tracked (`platform`, `entity_type`, `entity_url`, `label`, `is_active`, `retention_months` default 12 / max 36, `track_frequency_minutes`).
+- `ecom_snapshots` — daily KPI rollups per watchlist entry.
+- `ecom_price_history` — minute/hour-grain price/promo/stock timeline.
+- `ecom_top_entities` — leaderboard cache (top brands/shops/products by category).
+- `ecom_mentions` — reviews/comments with sentiment + topic cluster.
+- `ecom_trend_signals` — breakout candidates with velocity scores.
+- `ecom_creators` — TikTok Shop creators with GMV proxy, engagement, niche tags.
+- `ecom_ai_recommendations` — every AI suggestion with `evidence_refs` jsonb (links back to source rows) + `confidence` + `status` (new/viewed/applied/dismissed).
+- `ecom_alerts` — fired alerts (price drop, stockout, new competitor, review spike).
+- `ecom_scrape_jobs` — Firecrawl job tracking.
+- `ecom_briefs` — generated weekly PDFs stored in `creative-assets` bucket.
 
-2. **New edge function `meta-genai-creative`**:
-   - Input: `{ ad_account_id, prompt, type: 'text'|'image', count }`
-   - For text: POST to `https://graph.facebook.com/v21.0/act_<id>/ai_generated_text` with `{ prompt, generation_type: 'PRIMARY_TEXT'|'HEADLINE'|'DESCRIPTION', n: count }`
-   - For image: POST to `/ai_generated_image` with `{ prompt, n }`, response returns Meta-hosted image URLs (no upload needed | use directly as `image_url` on creative)
-   - Surfaces 400s (unsupported region, unallowed account) with structured error
+Retention sweep (pg_cron daily) deletes rows older than each firm's `retention_months`.
 
-3. **Builder integration (`meta-ai-campaign-builder/index.ts`)**:
-   - When `gen_ai_capabilities.image === true`, add new tool `generate_meta_image(prompt)` alongside existing `generate_image` (Gemini)
-   - Gemini orchestrator picks per-ad which source to use based on user intent ("use Meta's AI" → prefer Meta; otherwise round-robin or A/B)
-   - Each generated asset tagged with `creative_source: 'meta_genai' | 'leadsthru_ai'` for the Review pane
+## 4. Firecrawl + AI edge functions
 
-4. **Review pane UI**:
-   - New toggle: **"Use Meta's Generative AI when available"** (default ON if capability present, hidden otherwise)
-   - Each preview card shows a small badge: "Meta AI" or "Leadsthru AI"
-   - If Meta access is missing, show inline note: *"Your ad account isn't enrolled in Meta's Generative AI program. Using Leadsthru AI as fallback."*
+- `ecom-scrape-listing` — single product scrape → `ecom_price_history` + `ecom_snapshots`.
+- `ecom-scrape-category` — map + scrape category → `ecom_top_entities`.
+- `ecom-listening-collect` — reviews → `ecom_mentions` (sentiment + topic via Lovable AI Gateway).
+- `ecom-trend-detect` — runs daily; computes velocity / review-acceleration → `ecom_trend_signals`.
+- `ecom-pricing-copilot` — for a watchlist row, scrapes top 10 competitors, asks Gemini for a price recommendation, writes to `ecom_ai_recommendations` with evidence refs.
+- `ecom-listing-doctor` — scrape user's listing + top 10 ranked listings, AI scores & rewrites.
+- `ecom-creator-radar` — scrape TikTok Shop creator pages, rank by GMV proxy.
+- `ecom-arbitrage-scan` — cross-platform price diff detector.
+- `ecom-weekly-brief` — assembles a branded PDF using the existing `seo-report-pdf.ts` style and emails via Resend.
+- `ecom-alert-dispatcher` — fans out alerts via in-app + email (Resend) + optional Telegram (connector).
+- `ecom-scheduler` — pg_cron driver that enqueues watchlist scrapes at each entry's `track_frequency_minutes`.
 
-5. **Storage** | persist source on `meta_creatives`:
-   - `creative_source text check (creative_source in ('meta_genai','leadsthru_ai','manual'))`
-   - `meta_genai_request_id text` (for Meta's audit trail)
+All read `FIRECRAWL_API_KEY` server-side and use Firecrawl v2 REST. Lovable AI Gateway (`google/gemini-2.5-flash`) handles classification + recommendations. **No client ever sees an AI output without a linked evidence row.**
 
-## Files Changed
+## 5. Frontend pages (mounted under `/ecom/*`, gated to the vertical)
 
-**Edit:**
-- `supabase/functions/save-ai-campaign/index.ts` | inject Advantage+ flags, persist creative_source
-- `supabase/functions/meta-publish-campaign/index.ts` | send `degrees_of_freedom_spec`, `targeting_automation`, placement automation
-- `supabase/functions/meta-ai-campaign-builder/index.ts` | capability probe, new `generate_meta_image` tool, source tagging
-- `src/components/meta-ads/AiCampaignBuilderDialog.tsx` | Advantage+ section, Meta AI toggle, source badges, fallback notice
+- `/ecom/market-overview` — KPI hero + trend charts (revenue, units, market share) + AI summary chip.
+- `/ecom/war-room` — live competitor feed (realtime channel), per-row "Act on this" buttons.
+- `/ecom/pricing-copilot` — table of SKUs with current vs. recommended price, expected revenue delta, evidence drawer.
+- `/ecom/forecast` — 30/60/90-day forecast charts with confidence band.
+- `/ecom/listing-doctor` — paste your URL → side-by-side score vs. top 10 + AI-rewritten copy.
+- `/ecom/creator-radar` — TikTok Shop creators table with niche/ROAS filters + outreach DM generator.
+- `/ecom/trend-hunter` — breakout products/keywords with velocity sparklines.
+- `/ecom/arbitrage` — opportunity cards (same SKU cheaper on another platform).
+- `/ecom/review-heatmap` — sentiment & topic clusters per product.
+- `/ecom/leaderboards` — Top Brands / Shops / Products tabs per platform.
+- `/ecom/listening` — reviews & mentions feed.
+- `/ecom/history` — date-range comparison tool.
+- `/ecom/briefs` — list of generated weekly PDFs with download.
+- Watchlist management modal everywhere via global "Track URL" button.
 
-**Create:**
-- `supabase/functions/meta-genai-creative/index.ts` | wrapper around Meta's ai_generated_text/image endpoints
-- Migration: columns above + new check constraint
+Sidebar group "E-commerce Intelligence" added to `sidebar-nav-data.ts`, visible only when vertical = `ecommerce_seller`.
 
-## Out of Scope
-- Advantage+ Shopping/App campaigns (different objective tree; future)
-- Custom Audience / Lookalike auto-creation
-- Video generation via Meta's gen AI (still in closed preview)
-- Per-user OAuth refresh changes (existing token flow used as-is)
+## 6. Realtime + alerts
 
-## Risks / Gotchas
-- Meta's gen AI endpoints are **region- and account-gated**. Capability probe + fallback is mandatory; never assume access.
-- `degrees_of_freedom_spec` schema has changed across API versions | pin to `v21.0` and version-check on first call.
-- Advantage+ Audience overrides some manual targeting | the Review pane must clearly say "Meta may expand beyond your selected states/interests" so users aren't surprised.
-- Meta-hosted gen AI image URLs expire (~24h for some accounts) | for safety, download and re-upload to Meta as a permanent `image_hash` before campaign goes live.
+- Supabase realtime channel on `ecom_alerts` powers the in-app toast + War Room feed.
+- Smart Alert Engine (existing) gets new alert types: `price_drop`, `stockout`, `new_competitor`, `review_spike`, `trend_breakout`.
+- Email digest via Resend; optional Telegram bot via the standard connector for instant pings.
+
+## 7. Per-firm settings
+
+Settings → Vertical adds:
+- Historical retention slider (3 / 6 / 12 / 24 / 36 months, default 12).
+- Default scrape frequency (hourly / 6h / daily).
+- Alert preferences (which event types, which channels).
+- Currency & marketplace defaults (VND, IDR, THB, PHP, MYR, SGD, USD).
+
+## 8. Onboarding
+
+`VerticalSelector` picks up the new preset. Choosing it routes to a 3-step onboarding: pick platforms → paste your shop URL(s) + 3 competitor URL(s) → set alert preferences. First scrape kicks off immediately so the dashboard isn't empty.
+
+## 9. Anti-hallucination guarantees
+
+- Every AI card on screen has an **"Evidence"** chevron that opens a drawer listing the exact scraped rows (URL + captured_at + raw snippet) used.
+- AI prompts include only those scraped rows as context (no free-roaming reasoning).
+- AI must emit structured tool-call JSON validated by Zod; free-text fallback is rejected.
+- Numeric metrics shown in UI come ONLY from `ecom_*` tables, never from the LLM.
+
+## Technical notes
+
+- Firecrawl connector already linked (`FIRECRAWL_API_KEY` configured).
+- AI: Lovable AI Gateway (`google/gemini-2.5-flash` for classification, `gemini-2.5-pro` for recommendations).
+- Charts: existing `recharts`.
+- PDF: reuses `src/lib/seo-report-pdf.ts` patterns.
+- Email: existing Resend secret.
+- Realtime: Supabase channels, same pattern as Smart Alerts.
+- Currency formatting via existing `src/hooks/use-currency.ts`.
+- All new tables follow project RLS + GRANT convention with `created_at` / `updated_at` triggers.
+
+## Phasing (so it ships fast and compounds)
+
+- **Phase 1 (MVP):** vertical registration, watchlist, Market Overview, Leaderboards, Listening, Historical Trends, weekly PDF brief.
+- **Phase 2:** War Room (realtime), Pricing Copilot, Listing Doctor, Alerts.
+- **Phase 3:** Demand Forecaster, Trend Hunter, Creator Radar, Arbitrage Finder, Review Heatmap.
+
+## Out of scope (future)
+
+- Direct seller-center API integrations (Shopee/Lazada/TikTok Shop Open Platforms) — needs per-user OAuth.
+- Auto-execution of price changes (today: recommend only).
+- Native mobile app.
