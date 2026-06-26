@@ -3,7 +3,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Bot, ShieldCheck, AlertTriangle, TrendingUp, Loader2, RefreshCw } from 'lucide-react';
@@ -62,8 +61,8 @@ export function CampaignOptimizerDialog({ campaign, open, onOpenChange }: Props)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col p-0">
-        <DialogHeader className="px-6 pt-5 pb-3 border-b">
+      <DialogContent className="max-w-3xl h-[85dvh] max-h-[calc(100dvh-2rem)] flex flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="shrink-0 px-6 pt-5 pb-3 border-b">
           <DialogTitle className="flex items-center gap-2">
             <Bot className="h-5 w-5 text-emerald-500" />
             AI Optimizer | {campaign?.name}
@@ -74,7 +73,7 @@ export function CampaignOptimizerDialog({ campaign, open, onOpenChange }: Props)
           </DialogDescription>
         </DialogHeader>
 
-        <div className="px-6 py-3 border-b flex items-center justify-between gap-2">
+        <div className="shrink-0 px-6 py-3 border-b flex items-center justify-between gap-2">
           <Tabs value={String(range)} onValueChange={(v) => setRange(Number(v) as 7 | 14 | 30)}>
             <TabsList>
               <TabsTrigger value="7">Last 7 days</TabsTrigger>
@@ -88,8 +87,8 @@ export function CampaignOptimizerDialog({ campaign, open, onOpenChange }: Props)
           </Button>
         </div>
 
-        <ScrollArea className="flex-1 min-h-0">
-          <div className="p-6 space-y-4">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 py-6">
+          <div className="space-y-4 pb-2">
             {loading && (
               <>
                 <Skeleton className="h-24 w-full" />
@@ -178,7 +177,7 @@ export function CampaignOptimizerDialog({ campaign, open, onOpenChange }: Props)
               </Card>
             )}
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
