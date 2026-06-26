@@ -243,6 +243,8 @@ const App = () => (
                 <Route path="/seo/citations" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="tool_local_citations" label="Local Citations"><SeoCitations /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/seo/ai/competitor-ad-library" element={<ProtectedRoute><LazyRoute><CompetitorAdLibrary /></LazyRoute></ProtectedRoute>} />
                 <Route path="/seo/ai/:slug" element={<ProtectedRoute><LazyRoute><AiSeoToolPage /></LazyRoute></ProtectedRoute>} />
+                <Route path="/ecom/market-overview" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_market_overview" label="Marketplace Radar"><EcomMarketOverview /></ModuleGate></LazyRoute></ProtectedRoute>} />
+
 
                 {/* Admin routes */}
                 <Route path="/admin" element={<ProtectedRoute requireAdmin><LazyRoute><AdminDashboard /></LazyRoute></ProtectedRoute>} />
