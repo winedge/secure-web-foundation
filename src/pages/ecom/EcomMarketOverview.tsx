@@ -201,7 +201,12 @@ export default function EcomMarketOverview() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
+
+        <EcomOnboardingWizard open={wizardOpen} onOpenChange={setWizardOpen} />
+
+
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
