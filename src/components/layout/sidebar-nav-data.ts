@@ -180,6 +180,9 @@ export const navGroups: NavGroup[] = [
       { name: 'Creator Radar', href: '/ecom/creator-radar', icon: Users, module: 'ecom_creator_radar' },
       { name: 'Arbitrage Finder', href: '/ecom/arbitrage', icon: Handshake, module: 'ecom_arbitrage_finder' },
       { name: 'Review Heatmap', href: '/ecom/review-heatmap', icon: Activity, module: 'ecom_review_heatmap' },
+      { name: 'Top Rankings', href: '/ecom/top-rankings', icon: Star, module: 'ecom_top_rankings' },
+      { name: 'Social & Web Listening', href: '/ecom/listening', icon: Bell, module: 'ecom_listening' },
+      { name: 'Weekly Brief', href: '/ecom/weekly-brief', icon: FileText, module: 'ecom_weekly_brief' },
     ],
   },
 ];
