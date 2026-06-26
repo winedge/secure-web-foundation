@@ -16,7 +16,7 @@ const corsHeaders = {
 const GATEWAY = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 const MODEL = 'google/gemini-2.5-flash';
 
-type Mode = 'war_room' | 'pricing' | 'listing_doctor' | 'demand_forecast';
+type Mode = 'war_room' | 'pricing' | 'listing_doctor' | 'demand_forecast' | 'arbitrage' | 'review_heatmap';
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
