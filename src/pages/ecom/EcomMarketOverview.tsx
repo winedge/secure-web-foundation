@@ -15,9 +15,10 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Plus, RefreshCw, ShoppingBag, TrendingUp, Package, Star, ExternalLink, Trash2, AlertTriangle } from 'lucide-react';
+import { Plus, RefreshCw, ShoppingBag, TrendingUp, Package, Star, ExternalLink, Trash2, AlertTriangle, Sparkles } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { formatDistanceToNow } from 'date-fns';
+import { EcomOnboardingWizard } from '@/components/ecom/EcomOnboardingWizard';
 
 const PLATFORMS: { value: EcomPlatform; label: string }[] = [
   { value: 'shopee', label: 'Shopee' },
