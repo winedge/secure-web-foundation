@@ -255,6 +255,9 @@ const App = () => (
                 <Route path="/ecom/pricing-copilot" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_pricing_copilot" label="Pricing Copilot"><EcomPricingCopilot /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/ecom/listing-doctor" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_listing_doctor" label="Listing Doctor"><EcomListingDoctor /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/ecom/demand-forecaster" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_demand_forecaster" label="Demand Forecaster"><EcomDemandForecaster /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/ecom/trend-hunter" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_trend_hunter" label="Trend Hunter"><EcomTrendHunter /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/ecom/creator-radar" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="ecom_creator_radar" label="Creator Radar"><EcomCreatorRadar /></ModuleGate></LazyRoute></ProtectedRoute>} />
+
 
 
 
