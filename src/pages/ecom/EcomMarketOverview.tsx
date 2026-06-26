@@ -2,7 +2,7 @@
  * EcomMarketOverview - main dashboard for the E-commerce Seller Intelligence vertical.
  * Shows KPI cards from ecom_snapshots and lets users add/scrape watchlist URLs.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useFirm } from '@/hooks/use-firm';
@@ -15,9 +15,10 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Plus, RefreshCw, ShoppingBag, TrendingUp, Package, Star, ExternalLink, Trash2, AlertTriangle } from 'lucide-react';
+import { Plus, RefreshCw, ShoppingBag, TrendingUp, Package, Star, ExternalLink, Trash2, AlertTriangle, Sparkles } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { formatDistanceToNow } from 'date-fns';
+import { EcomOnboardingWizard } from '@/components/ecom/EcomOnboardingWizard';
 
 const PLATFORMS: { value: EcomPlatform; label: string }[] = [
   { value: 'shopee', label: 'Shopee' },
@@ -38,6 +39,7 @@ export default function EcomMarketOverview() {
   const firm = useFirm().data;
   const { list, add, remove, scrape } = useEcomWatchlist();
   const [open, setOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [form, setForm] = useState({
     platform: 'shopee' as EcomPlatform,
     entity_type: 'product' as EcomEntityType,
@@ -45,6 +47,13 @@ export default function EcomMarketOverview() {
     label: '',
     is_own: false,
   });
+
+  // Auto-open the guided wizard the first time a firm lands here with no watchlist.
+  useEffect(() => {
+    if (!firm?.id || list.isLoading || list.data === undefined) return;
+    const seen = localStorage.getItem(`ecom-onboarded-${firm.id}`);
+    if (!seen && list.data.length === 0) setWizardOpen(true);
+  }, [firm?.id, list.isLoading, list.data]);
 
   const snapshots = useQuery({
     queryKey: ['ecom-snapshots', firm?.id],
@@ -125,13 +134,18 @@ export default function EcomMarketOverview() {
               Live competitor intel across Shopee, Lazada, Tiki and TikTok Shop | every insight linked to scraped evidence.
             </p>
           </div>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Track URL
-              </Button>
-            </DialogTrigger>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setWizardOpen(true)}>
+              <Sparkles className="h-4 w-4 mr-2" />
+              Setup wizard
+            </Button>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Track URL
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Add to watchlist</DialogTitle>
@@ -187,7 +201,12 @@ export default function EcomMarketOverview() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
+
+        <EcomOnboardingWizard open={wizardOpen} onOpenChange={setWizardOpen} />
+
+
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
