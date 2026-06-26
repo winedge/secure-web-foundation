@@ -123,6 +123,9 @@ const SeoCitations = lazyWithRetry(() => import("./pages/seo/SeoTools").then(m =
 const AiSeoToolPage = lazyWithRetry(() => import("./pages/seo/ai/AiSeoToolPage"));
 const CompetitorAdLibrary = lazyWithRetry(() => import("./pages/seo/ai/CompetitorAdLibrary"));
 const EcomMarketOverview = lazyWithRetry(() => import("./pages/ecom/EcomMarketOverview"));
+const EcomWarRoom = lazyWithRetry(() => import("./pages/ecom/EcomWarRoom"));
+const EcomPricingCopilot = lazyWithRetry(() => import("./pages/ecom/EcomPricingCopilot"));
+
 
 const WebsiteDoctorProjects = lazyWithRetry(() => import("./pages/WebsiteDoctorProjects"));
 const WebsiteDoctorProject = lazyWithRetry(() => import("./pages/WebsiteDoctorProject"));
