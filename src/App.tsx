@@ -134,6 +134,8 @@ const EcomReviewHeatmap = lazyWithRetry(() => import("./pages/ecom/EcomReviewHea
 const EcomTopRankings = lazyWithRetry(() => import("./pages/ecom/EcomTopRankings"));
 const EcomListening = lazyWithRetry(() => import("./pages/ecom/EcomListening"));
 const EcomWeeklyBrief = lazyWithRetry(() => import("./pages/ecom/EcomWeeklyBrief"));
+const EcomDataExport = lazyWithRetry(() => import("./pages/ecom/EcomDataExport"));
+const EcomCategoryBrandAnalysis = lazyWithRetry(() => import("./pages/ecom/EcomCategoryBrandAnalysis"));
 
 
 const WebsiteDoctorProjects = lazyWithRetry(() => import("./pages/WebsiteDoctorProjects"));
