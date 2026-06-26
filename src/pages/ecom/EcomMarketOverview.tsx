@@ -39,6 +39,7 @@ export default function EcomMarketOverview() {
   const firm = useFirm().data;
   const { list, add, remove, scrape } = useEcomWatchlist();
   const [open, setOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [form, setForm] = useState({
     platform: 'shopee' as EcomPlatform,
     entity_type: 'product' as EcomEntityType,
@@ -46,6 +47,13 @@ export default function EcomMarketOverview() {
     label: '',
     is_own: false,
   });
+
+  // Auto-open the guided wizard the first time a firm lands here with no watchlist.
+  useEffect(() => {
+    if (!firm?.id || list.isLoading || list.data === undefined) return;
+    const seen = localStorage.getItem(`ecom-onboarded-${firm.id}`);
+    if (!seen && list.data.length === 0) setWizardOpen(true);
+  }, [firm?.id, list.isLoading, list.data]);
 
   const snapshots = useQuery({
     queryKey: ['ecom-snapshots', firm?.id],
