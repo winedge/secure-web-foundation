@@ -122,6 +122,8 @@ const SeoBacklinks = lazyWithRetry(() => import("./pages/seo/SeoTools").then(m =
 const SeoCitations = lazyWithRetry(() => import("./pages/seo/SeoTools").then(m => ({ default: m.SeoCitations })));
 const AiSeoToolPage = lazyWithRetry(() => import("./pages/seo/ai/AiSeoToolPage"));
 const CompetitorAdLibrary = lazyWithRetry(() => import("./pages/seo/ai/CompetitorAdLibrary"));
+const EcomMarketOverview = lazyWithRetry(() => import("./pages/ecom/EcomMarketOverview"));
+
 const WebsiteDoctorProjects = lazyWithRetry(() => import("./pages/WebsiteDoctorProjects"));
 const WebsiteDoctorProject = lazyWithRetry(() => import("./pages/WebsiteDoctorProject"));
 const queryClient = new QueryClient();
