@@ -176,6 +176,8 @@ export const navGroups: NavGroup[] = [
       { name: 'Pricing Copilot', href: '/ecom/pricing-copilot', icon: DollarSign, module: 'ecom_pricing_copilot' },
       { name: 'Listing Doctor', href: '/ecom/listing-doctor', icon: Wrench, module: 'ecom_listing_doctor' },
       { name: 'Demand Forecaster', href: '/ecom/demand-forecaster', icon: TrendingUp, module: 'ecom_demand_forecaster' },
+      { name: 'Trend Hunter', href: '/ecom/trend-hunter', icon: Flame, module: 'ecom_trend_hunter' },
+      { name: 'Creator Radar', href: '/ecom/creator-radar', icon: Users, module: 'ecom_creator_radar' },
     ],
   },
 ];
