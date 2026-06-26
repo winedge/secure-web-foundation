@@ -65,22 +65,58 @@ Deno.serve(async (req: Request) => {
       return j({ error: 'No scraped data yet. Run a scrape first so AI has real evidence to cite.' }, 400);
     }
 
-    // Competitor context for war room / pricing
+    // Competitor context for war room / pricing / arbitrage
     let competitors: any[] = [];
-    if (mode === 'war_room' || mode === 'pricing') {
-      const { data: peers } = await admin
-        .from('ecom_watchlist').select('id, label, entity_url, is_own')
-        .eq('firm_id', watch.firm_id).eq('platform', watch.platform).neq('id', watch.id).limit(20);
+    if (mode === 'war_room' || mode === 'pricing' || mode === 'arbitrage') {
+      const peerScope = mode === 'arbitrage'
+        ? admin.from('ecom_watchlist').select('id, label, entity_url, is_own, platform')
+            .eq('firm_id', watch.firm_id).neq('id', watch.id).limit(40)
+        : admin.from('ecom_watchlist').select('id, label, entity_url, is_own, platform')
+            .eq('firm_id', watch.firm_id).eq('platform', watch.platform).neq('id', watch.id).limit(20);
+      const { data: peers } = await peerScope;
       const peerIds = (peers ?? []).map((p) => p.id);
       const { data: peerLatest } = peerIds.length
         ? await admin.from('ecom_price_history')
-            .select('watchlist_id, price, in_stock, captured_at')
-            .in('watchlist_id', peerIds).order('captured_at', { ascending: false }).limit(peerIds.length * 2)
+            .select('id, watchlist_id, price, original_price, in_stock, captured_at')
+            .in('watchlist_id', peerIds).order('captured_at', { ascending: false }).limit(peerIds.length * 3)
         : { data: [] as any[] };
       competitors = (peers ?? []).map((p) => {
         const last = (peerLatest ?? []).find((h: any) => h.watchlist_id === p.id);
-        return { id: p.id, label: p.label, is_own: p.is_own, latest_price: last?.price ?? null, in_stock: last?.in_stock ?? null };
+        return {
+          id: p.id, label: p.label, url: p.entity_url, platform: p.platform, is_own: p.is_own,
+          latest_price: last?.price ?? null, original_price: last?.original_price ?? null,
+          in_stock: last?.in_stock ?? null, evidence_id: last?.id ?? null,
+        };
       });
+    }
+
+    // Review topic aggregation for review_heatmap
+    let reviewAggregates: any = null;
+    if (mode === 'review_heatmap') {
+      const buckets: Record<string, { count: number; pos: number; neg: number; neu: number; sample_ids: string[] }> = {};
+      let pos = 0, neg = 0, neu = 0;
+      for (const m of mentions ?? []) {
+        if (m.sentiment === 'positive') pos++;
+        else if (m.sentiment === 'negative') neg++;
+        else neu++;
+        const topics: string[] = Array.isArray(m.topics) ? m.topics : [];
+        for (const t of topics) {
+          const key = String(t).toLowerCase().slice(0, 40);
+          if (!buckets[key]) buckets[key] = { count: 0, pos: 0, neg: 0, neu: 0, sample_ids: [] };
+          buckets[key].count++;
+          if (m.sentiment === 'positive') buckets[key].pos++;
+          else if (m.sentiment === 'negative') buckets[key].neg++;
+          else buckets[key].neu++;
+          if (buckets[key].sample_ids.length < 3) buckets[key].sample_ids.push(m.id);
+        }
+      }
+      reviewAggregates = {
+        total_reviews: (mentions ?? []).length,
+        sentiment: { positive: pos, negative: neg, neutral: neu },
+        topics: Object.entries(buckets)
+          .map(([topic, v]) => ({ topic, ...v }))
+          .sort((a, b) => b.count - a.count).slice(0, 25),
+      };
     }
 
     // Listing snapshot fields for doctor
@@ -104,6 +140,7 @@ Deno.serve(async (req: Request) => {
       listing: listingFacts,
       mentions: mentions ?? [],
       competitors,
+      review_aggregates: reviewAggregates,
     };
 
     const SYS: Record<Mode, string> = {
@@ -111,6 +148,8 @@ Deno.serve(async (req: Request) => {
       war_room: `You are a marketplace war room analyst. Produce a SHORT playbook of 2-4 prioritised actions reacting to recent competitor moves, stockouts, promos and price drops in the evidence. Every action MUST cite at least one evidence id from price_history or alerts. Do not invent metrics.`,
       listing_doctor: `You are a marketplace listing conversion expert. Audit the listing fields (title, description, promo, rating, mentions) and propose 3-5 prioritised fixes covering: title clarity & keywords, bullet/description structure, missing trust signals, image/asset gaps, and review-driven objections. Each fix MUST cite at least one evidence id from snapshots or mentions. Do not invent ratings or numbers absent from the evidence.`,
       demand_forecast: `You are a demand-planning analyst. From the snapshots (units_sold, revenue) and price_history over time, estimate the 30-day demand trend (growing / flat / declining) and recommend restock or promo timing. Quantify the trend ONLY from numbers actually present in the snapshots; cite snapshot ids as evidence. If <14 days of data, say the forecast is low-confidence and request more scrapes.`,
+      arbitrage: `You are a cross-marketplace arbitrage analyst. Compare the target listing's latest price (price_history[0]) against competitor latest_price entries across platforms in 'competitors'. Identify 2-4 concrete arbitrage or sourcing opportunities (e.g. "buy on Lazada at X, resell on Shopee at Y", "competitor stocked-out -> raise price"). Each action MUST cite at least one evidence id from price_history (target) AND one competitor evidence_id. NEVER invent prices not present in the data. If the competitor list is empty, say arbitrage cannot be computed and request peer listings.`,
+      review_heatmap: `You are a voice-of-customer analyst. Using ONLY review_aggregates.topics and the underlying mentions, surface the top 3-5 pain points and top 2-3 praise themes. For each, cite the mention ids from review_aggregates.topics[].sample_ids and quantify with the topic.count / sentiment split. Do not invent themes that are absent from the aggregates. Recommend one concrete listing or product fix per pain point.`,
     };
 
     const tools = [{
