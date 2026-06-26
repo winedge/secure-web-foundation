@@ -10,7 +10,9 @@ export type VerticalSlug =
   | 'solar'
   | 'dental'
   | 'home_services'
+  | 'ecommerce_seller'
   | 'custom';
+
 
 export type ModuleKey =
   | 'lead_scoring'
@@ -87,7 +89,23 @@ export type ModuleKey =
   | 'tool_review_manager'
   | 'tool_gmb_post_scheduler'
   // ===== Website Doctor (cross-vertical) =====
-  | 'website_doctor';
+  | 'website_doctor'
+  // ===== E-commerce Seller Intelligence =====
+  | 'ecom_market_overview'
+  | 'ecom_category_brand_analysis'
+  | 'ecom_competitor_war_room'
+  | 'ecom_pricing_copilot'
+  | 'ecom_demand_forecaster'
+  | 'ecom_listing_doctor'
+  | 'ecom_creator_radar'
+  | 'ecom_trend_hunter'
+  | 'ecom_arbitrage_finder'
+  | 'ecom_review_heatmap'
+  | 'ecom_top_rankings'
+  | 'ecom_listening'
+  | 'ecom_weekly_brief'
+  | 'ecom_data_export';
+
 
 export interface IndustryVertical {
   id: string;

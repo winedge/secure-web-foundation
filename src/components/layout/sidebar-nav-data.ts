@@ -167,7 +167,15 @@ export const navGroups: NavGroup[] = [
       { name: 'Local Citations', href: '/seo/citations', icon: ListChecks, module: 'tool_local_citations' },
     ],
   },
+  {
+    label: 'E-commerce Intelligence',
+    icon: ShoppingCart,
+    items: [
+      { name: 'Marketplace Radar', href: '/ecom/market-overview', icon: Radar, module: 'ecom_market_overview' },
+    ],
+  },
 ];
+
 
 // Settings is standalone at the bottom
 export const bottomItems: NavItem[] = [
