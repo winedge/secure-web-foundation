@@ -2,256 +2,239 @@
 @tailwind components;
 @tailwind utilities;
 
-/* LeadsThru Design System - Professional Legal-Tech Aesthetic */
+/* LeadsThru Design System | Editorial legal-tech aesthetic
+   Inspired by The Browser Company / Linear / classic broadsheet pages.
+   Warm parchment surfaces, ink-navy sidebar, electric-blue actions,
+   Fraunces serif display, Inter body, JetBrains Mono micro-labels. */
 
 @layer base {
   :root {
-    /* Core backgrounds */
-    --background: 210 20% 98%;
-    --foreground: 222 47% 11%;
+    /* Core surfaces — warm parchment instead of cool gray */
+    --background: 40 22% 96%;          /* #F5F3EE */
+    --foreground: 222 47% 11%;         /* deep navy ink */
 
-    /* Card surfaces */
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
 
-    /* Popover surfaces */
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Primary brand - Deep Navy */
-    --primary: 222 47% 11%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary — electric blue (the action color) */
+    --primary: 221 83% 53%;            /* #2563EB */
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary - Slate */
-    --secondary: 215 20% 95%;
+    /* Ink — navy used for serif headings & sidebar */
+    --ink: 222 47% 11%;
+    --ink-foreground: 40 22% 96%;
+
+    /* Secondary surfaces */
+    --secondary: 40 18% 92%;
     --secondary-foreground: 222 47% 11%;
 
-    /* Muted surfaces */
-    --muted: 215 20% 95%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 40 18% 93%;
+    --muted-foreground: 220 13% 46%;
 
-    /* Accent - Emerald for trust/verified */
+    /* Accent (emerald — trust / verified badges only) */
     --accent: 160 84% 39%;
     --accent-foreground: 0 0% 100%;
 
-    /* Destructive */
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Borders */
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 222 47% 11%;
+    /* Borders — warm tinted */
+    --border: 40 14% 86%;
+    --input: 40 14% 86%;
+    --ring: 221 83% 53%;
 
-    --radius: 0.625rem;
+    --radius: 0.5rem;
 
-    /* Sidebar */
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 160 84% 39%;
+    /* Sidebar — near-black ink */
+    --sidebar-background: 222 47% 8%;
+    --sidebar-foreground: 40 22% 96%;
+    --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 47% 16%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 222 47% 20%;
-    --sidebar-ring: 160 84% 39%;
+    --sidebar-accent: 221 83% 53%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 222 40% 16%;
+    --sidebar-ring: 221 83% 53%;
+    --sidebar-muted: 220 14% 60%;
 
-    /* Lead Tiers */
+    /* Lead tiers */
     --tier-a: 160 84% 39%;
     --tier-b: 199 89% 48%;
     --tier-c: 38 92% 50%;
     --tier-d: 0 84% 60%;
 
-    /* Status colors */
-    --success: 160 84% 39%;
+    /* Status */
+    --success: 160 84% 36%;
     --warning: 38 92% 50%;
     --info: 199 89% 48%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(222 47% 11%), hsl(222 47% 20%));
+    --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(221 83% 46%));
     --gradient-accent: linear-gradient(135deg, hsl(160 84% 39%), hsl(160 84% 30%));
-    --gradient-hero: linear-gradient(135deg, hsl(222 47% 11%) 0%, hsl(215 28% 17%) 50%, hsl(160 40% 20%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(222 47% 11%) 0%, hsl(222 47% 16%) 100%);
 
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    --shadow-glow: 0 0 20px hsl(160 84% 39% / 0.3);
+    /* Shadows — softer, editorial */
+    --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.04);
+    --shadow-md: 0 2px 6px -1px hsl(222 47% 11% / 0.06), 0 2px 4px -2px hsl(222 47% 11% / 0.04);
+    --shadow-lg: 0 8px 24px -4px hsl(222 47% 11% / 0.08);
+    --shadow-xl: 0 20px 40px -8px hsl(222 47% 11% / 0.12);
+    --shadow-glow: 0 0 0 4px hsl(221 83% 53% / 0.12);
   }
 
   .dark {
     --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
-
+    --foreground: 40 22% 96%;
     --card: 222 47% 9%;
-    --card-foreground: 210 40% 98%;
-
+    --card-foreground: 40 22% 96%;
     --popover: 222 47% 9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 160 84% 39%;
+    --popover-foreground: 40 22% 96%;
+    --primary: 221 83% 60%;
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 222 47% 16%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 222 47% 16%;
-    --muted-foreground: 215 20% 65%;
-
+    --secondary: 222 47% 14%;
+    --secondary-foreground: 40 22% 96%;
+    --muted: 222 47% 14%;
+    --muted-foreground: 215 16% 65%;
     --accent: 160 84% 39%;
     --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 62% 45%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 222 47% 20%;
-    --input: 222 47% 20%;
-    --ring: 160 84% 39%;
-
-    --sidebar-background: 222 47% 6%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 160 84% 39%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 40 22% 96%;
+    --border: 222 47% 18%;
+    --input: 222 47% 18%;
+    --ring: 221 83% 60%;
+    --sidebar-background: 222 47% 5%;
+    --sidebar-foreground: 40 22% 96%;
+    --sidebar-primary: 221 83% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 47% 12%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 222 47% 16%;
-    --sidebar-ring: 160 84% 39%;
+    --sidebar-accent: 221 83% 53%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 222 47% 14%;
+    --sidebar-ring: 221 83% 60%;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+  * { @apply border-border; }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-feature-settings: 'cv11', 'ss01';
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
+  /* Editorial display headings — Fraunces serif on the largest titles only.
+     Component-level h1s opt in via the `font-serif` utility; we avoid forcing
+     it globally so dashboard widgets keep their sans-serif rhythm. */
+  .font-serif {
+    font-family: 'Fraunces', 'Source Serif Pro', Georgia, serif;
+    font-feature-settings: 'ss01', 'ss02';
+    letter-spacing: -0.01em;
   }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  }
+
+  /* Subtle paper-grain on the main surface — barely visible, adds warmth. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+    background-image: radial-gradient(hsl(40 14% 86% / 0.5) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  body > * { position: relative; z-index: 1; }
 }
 
 @layer components {
+  /* Editorial micro-label — used for ALL stat-card labels, table headers,
+     section eyebrows. Tracks wide, uppercase, mono. */
+  .eyebrow {
+    @apply font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted-foreground;
+  }
+
+  /* The display-size serif number used on stat cards. */
+  .stat-display {
+    @apply font-serif text-4xl font-medium tracking-tight text-foreground tabular-nums;
+  }
+
+  /* Top-bar page-title (small caps treatment). */
+  .topbar-title {
+    @apply font-serif text-lg font-medium text-foreground;
+  }
+
+  /* Card shells — softer borders, no aggressive shadow by default. */
+  .card-editorial {
+    @apply bg-card border border-border/70 rounded-xl;
+  }
+
   /* Lead tier badges */
   .tier-badge {
-    @apply inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide;
+    @apply inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide;
   }
+  .tier-a { background: hsl(var(--tier-a)); color: white; }
+  .tier-b { background: hsl(var(--tier-b)); color: white; }
+  .tier-c { background: hsl(var(--tier-c)); color: white; }
+  .tier-d { background: hsl(var(--tier-d)); color: white; }
 
-  .tier-a {
-    background: hsl(var(--tier-a));
-    color: white;
-  }
-
-  .tier-b {
-    background: hsl(var(--tier-b));
-    color: white;
-  }
-
-  .tier-c {
-    background: hsl(var(--tier-c));
-    color: white;
-  }
-
-  .tier-d {
-    background: hsl(var(--tier-d));
-    color: white;
-  }
-
-  /* Score indicator */
-  .score-ring {
-    @apply relative inline-flex items-center justify-center;
-  }
-
+  /* Score ring */
+  .score-ring { @apply relative inline-flex items-center justify-center; }
   .score-ring::before {
     content: '';
     @apply absolute inset-0 rounded-full;
-    background: conic-gradient(
-      hsl(var(--accent)) calc(var(--score) * 1%),
-      hsl(var(--muted)) 0
-    );
+    background: conic-gradient(hsl(var(--accent)) calc(var(--score) * 1%), hsl(var(--muted)) 0);
   }
 
-  /* Glass effect cards */
   .glass-card {
     @apply bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl shadow-lg;
   }
 
-  /* Animated gradient background */
   .gradient-bg {
     background: var(--gradient-hero);
     @apply relative overflow-hidden;
   }
-
   .gradient-bg::before {
     content: '';
     @apply absolute inset-0 opacity-30 pointer-events-none;
-    background: radial-gradient(ellipse at 30% 20%, hsl(160 84% 39% / 0.15) 0%, transparent 50%),
-                radial-gradient(ellipse at 70% 80%, hsl(199 89% 48% / 0.1) 0%, transparent 50%);
+    background:
+      radial-gradient(ellipse at 30% 20%, hsl(221 83% 53% / 0.18) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 80%, hsl(160 84% 39% / 0.12) 0%, transparent 50%);
   }
 
-  /* Stat card hover effect */
   .stat-card {
-    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+    @apply transition-all duration-300;
   }
 
-  /* Table row hover */
   .table-row-hover {
-    @apply transition-colors duration-150 hover:bg-muted/50;
+    @apply transition-colors duration-150 hover:bg-muted/40;
   }
 
-  /* Button glow effect */
-  .btn-glow {
-    @apply relative;
-  }
-
+  .btn-glow { @apply relative; }
   .btn-glow::after {
     content: '';
     @apply absolute inset-0 rounded-lg opacity-0 transition-opacity duration-300;
     box-shadow: var(--shadow-glow);
   }
-
-  .btn-glow:hover::after {
-    @apply opacity-100;
-  }
+  .btn-glow:hover::after { @apply opacity-100; }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  .text-balance { text-wrap: balance; }
+  .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+  .animate-slide-up { animation: slideUp 0.5s ease-out forwards; }
+  .animate-scale-in { animation: scaleIn 0.3s ease-out forwards; }
 
-  .animate-fade-in {
-    animation: fadeIn 0.5s ease-out forwards;
-  }
-
-  .animate-slide-up {
-    animation: slideUp 0.5s ease-out forwards;
-  }
-
-  .animate-scale-in {
-    animation: scaleIn 0.3s ease-out forwards;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes scaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
 }
 
-/* Compact scrollbar used inside Meta campaign wizard dialogs. */
+/* Compact scrollbar */
 .cmd-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
 .cmd-scroll::-webkit-scrollbar-track { background: transparent; }
-.cmd-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-.cmd-scroll::-webkit-scrollbar-thumb:hover { background: #475569; }
+.cmd-scroll::-webkit-scrollbar-thumb { background: hsl(222 40% 30%); border-radius: 10px; }
+.cmd-scroll::-webkit-scrollbar-thumb:hover { background: hsl(222 40% 40%); }
