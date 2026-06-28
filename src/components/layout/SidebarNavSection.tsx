@@ -15,20 +15,17 @@ export function SidebarNavSection({ items, tier, variant = 'core', onNavigate }:
   const { isAdmin } = useIsAdmin();
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
-      'group flex items-center gap-3 rounded-lg px-3 text-sm font-medium transition-all duration-200',
-      variant === 'core' ? 'py-2.5' : 'py-2',
+      'group flex items-center gap-3 rounded-md px-3 py-2 text-[13.5px] font-medium transition-colors duration-150',
       isActive
-        ? variant === 'admin'
-          ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-          : 'bg-sidebar-accent text-sidebar-accent-foreground'
-        : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+        ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm'
+        : 'text-sidebar-foreground/65 hover:bg-sidebar-border/60 hover:text-sidebar-foreground'
     );
 
   return (
     <div className="space-y-0.5">
       {items.map((item) => (
-        <NavLink key={item.name} to={item.href} className={linkClass} onClick={onNavigate}>
-          <item.icon className="h-5 w-5 shrink-0" />
+        <NavLink key={item.name} to={item.href} className={linkClass} onClick={onNavigate} end={item.href === '/'}>
+          <item.icon className="h-4 w-4 shrink-0" />
           <span className="flex-1">{item.name}</span>
           {item.premium && !isAdmin && tier !== 'premium' && (
             <Crown className="h-3.5 w-3.5 text-sidebar-foreground/40" />
