@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { Crown, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import logoImg from '@/assets/leadthru-logo-dark.png';
+import { LeadsThruLogo } from './LeadsThruLogo';
 import { useIsAdmin } from '@/hooks/use-user-role';
 import { useSubscriptionContext } from '@/components/subscription/SubscriptionProvider';
 import { Button } from '@/components/ui/button';
@@ -10,8 +10,26 @@ import { useState } from 'react';
 import { SidebarNavSection } from './SidebarNavSection';
 import { SidebarNavGroup } from './SidebarNavGroup';
 import { SidebarUserFooter } from './SidebarUserFooter';
-import { standaloneItems, navGroups, bottomItems, adminOverview, adminData, adminLogs, applyVerticalToNav, buildAiToolGroups } from './sidebar-nav-data';
+import {
+  standaloneItems,
+  navGroups,
+  bottomItems,
+  adminOverview,
+  adminData,
+  adminLogs,
+  applyVerticalToNav,
+  buildAiToolGroups,
+} from './sidebar-nav-data';
 import { useVertical } from '@/hooks/use-vertical';
+
+/** Editorial uppercase eyebrow used between sidebar sections. */
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="px-3 pt-5 pb-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-sidebar-foreground/40">
+      {children}
+    </p>
+  );
+}
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { isAdmin } = useIsAdmin();
@@ -20,68 +38,60 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const groups = applyVerticalToNav(navGroups, enabledModules, terminology);
   const aiToolGroups = applyVerticalToNav(buildAiToolGroups(), enabledModules, terminology);
 
-  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+  const upgradeClass = ({ isActive }: { isActive: boolean }) =>
     cn(
-      'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+      'group flex items-center gap-3 rounded-md px-3 py-2 text-[13.5px] font-medium transition-colors',
       isActive
         ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-        : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+        : 'text-sidebar-foreground/65 hover:bg-sidebar-border/60 hover:text-sidebar-foreground'
     );
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
-        <img src={logoImg} alt="LeadThru" className="h-8" />
+      <div className="flex h-16 items-center border-b border-sidebar-border px-5">
+        <LeadsThruLogo />
       </div>
 
-      <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
-        {/* Standalone: Dashboard */}
+      <nav className="flex-1 px-3 py-4 overflow-y-auto cmd-scroll">
+        <SectionLabel>Operate</SectionLabel>
         <SidebarNavSection items={standaloneItems} tier={tier} onNavigate={onNavigate} />
 
-        {/* Grouped sections (vertical-aware) */}
-        {groups.map((group) => (
-          <SidebarNavGroup key={group.label} group={group} tier={tier} onNavigate={onNavigate} />
-        ))}
+        {groups.length > 0 && (
+          <div className="mt-1 space-y-0.5">
+            {groups.map((group) => (
+              <SidebarNavGroup key={group.label} group={group} tier={tier} onNavigate={onNavigate} />
+            ))}
+          </div>
+        )}
 
-        {/* AI Toolbox — vertical-specific tools, gated by module access */}
         {aiToolGroups.length > 0 && (
           <>
-            <div className="my-3 border-t border-sidebar-border/50" />
-            <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-              AI Tools
-            </p>
-            {aiToolGroups.map((group) => (
-              <SidebarNavGroup key={`ai-${group.label}`} group={group} tier={tier} onNavigate={onNavigate} />
-            ))}
+            <SectionLabel>AI Tools</SectionLabel>
+            <div className="space-y-0.5">
+              {aiToolGroups.map((group) => (
+                <SidebarNavGroup key={`ai-${group.label}`} group={group} tier={tier} onNavigate={onNavigate} />
+              ))}
+            </div>
           </>
         )}
 
-        {/* Bottom standalone items */}
+        <SectionLabel>Account</SectionLabel>
         <SidebarNavSection items={bottomItems} tier={tier} onNavigate={onNavigate} />
 
         {tier !== 'premium' && (
-          <NavLink to="/pricing" className={navLinkClass} onClick={onNavigate}>
-            <Crown className="h-5 w-5 shrink-0 text-accent" />
+          <NavLink to="/pricing" className={upgradeClass} onClick={onNavigate}>
+            <Crown className="h-4 w-4 shrink-0 text-accent" />
             <span className="flex-1 text-accent">Upgrade Plan</span>
           </NavLink>
         )}
 
         {isAdmin && (
           <>
-            <div className="my-4 border-t border-sidebar-border" />
-            <p className="px-3 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-              Admin - Overview
-            </p>
+            <SectionLabel>Admin · Overview</SectionLabel>
             <SidebarNavSection items={adminOverview} variant="admin" onNavigate={onNavigate} />
-
-            <p className="px-3 pt-4 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-              Data Management
-            </p>
+            <SectionLabel>Data Management</SectionLabel>
             <SidebarNavSection items={adminData} variant="admin" onNavigate={onNavigate} />
-
-            <p className="px-3 pt-4 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-              Logs &amp; Monitoring
-            </p>
+            <SectionLabel>Logs &amp; Monitoring</SectionLabel>
             <SidebarNavSection items={adminLogs} variant="admin" onNavigate={onNavigate} />
           </>
         )}
@@ -99,7 +109,7 @@ export function MobileHeader() {
     <div className="lg:hidden sticky top-0 z-50 flex h-14 items-center gap-3 border-b border-border bg-sidebar px-4">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="text-sidebar-foreground">
+          <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-border/60">
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle menu</span>
           </Button>
@@ -108,7 +118,7 @@ export function MobileHeader() {
           <SidebarContent onNavigate={() => setOpen(false)} />
         </SheetContent>
       </Sheet>
-      <img src={logoImg} alt="LeadThru" className="h-7" />
+      <LeadsThruLogo />
     </div>
   );
 }
