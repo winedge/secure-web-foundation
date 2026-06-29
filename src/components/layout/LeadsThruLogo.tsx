@@ -1,37 +1,24 @@
 /**
- * LeadsThru mark — solid blue rounded square with a white check, paired with
- * the "LeadsThru" wordmark. Used in the sidebar header and mobile header so we
- * stop relying on the legacy raster logo image.
+ * LeadsThru logo — uses the uploaded brand mark image.
  */
-import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import logoAsset from '@/assets/leadsthru-logo.png.asset.json';
 
 interface LeadsThruLogoProps {
   className?: string;
+  /** kept for API compatibility; the wordmark is part of the image */
   showWordmark?: boolean;
   wordmarkClassName?: string;
 }
 
-export function LeadsThruLogo({
-  className,
-  showWordmark = true,
-  wordmarkClassName,
-}: LeadsThruLogoProps) {
+export function LeadsThruLogo({ className }: LeadsThruLogoProps) {
   return (
-    <div className={cn('flex items-center gap-2.5', className)}>
-      <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm">
-        <Check className="h-4.5 w-4.5" strokeWidth={3} />
-      </span>
-      {showWordmark && (
-        <span
-          className={cn(
-            'font-serif text-[20px] font-semibold tracking-tight leading-none',
-            wordmarkClassName ?? 'text-sidebar-foreground'
-          )}
-        >
-          LeadsThru
-        </span>
-      )}
+    <div className={cn('flex items-center', className)}>
+      <img
+        src={logoAsset.url}
+        alt="LeadsThru"
+        className="h-9 w-auto object-contain"
+      />
     </div>
   );
 }
