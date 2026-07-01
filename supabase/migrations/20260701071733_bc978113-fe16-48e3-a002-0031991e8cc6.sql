@@ -1,0 +1,1 @@
+DELETE FROM public.ecom_alerts WHERE alert_type = 'stockout' AND (payload->>'url') IS NOT NULL AND payload->>'url' ~ '/search|/catalog|[?&](q|keyword|kw)=';
