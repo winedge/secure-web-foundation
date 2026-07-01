@@ -164,19 +164,28 @@ export function EcomOnboardingWizard({ open, onOpenChange }: Props) {
             <div className="grid grid-cols-2 gap-2">
               {PLATFORMS.map((p) => {
                 const active = platforms.includes(p.id);
+                const limited = p.id === 'tiktok_shop' || p.id === 'lazada';
                 return (
                   <Card key={p.id}
                     onClick={() => togglePlatform(p.id)}
                     className={`cursor-pointer p-4 flex items-center gap-3 transition ${active ? 'border-primary bg-primary/5' : 'hover:border-muted-foreground/40'}`}>
                     <Checkbox checked={active} onCheckedChange={() => togglePlatform(p.id)} />
-                    <div>
-                      <div className="font-medium">{p.label}</div>
-                      <div className="text-xs text-muted-foreground">Top sellers + keyword feed</div>
+                    <div className="min-w-0">
+                      <div className="font-medium flex items-center gap-2">
+                        {p.label}
+                        {limited && <Badge variant="outline" className="text-[9px] uppercase">limited</Badge>}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {limited ? 'Coverage varies | may fail on some pages' : 'Top sellers + keyword feed'}
+                      </div>
                     </div>
                   </Card>
                 );
               })}
             </div>
+            <p className="text-xs text-muted-foreground">
+              Tip: Shopee and Tiki have the highest scrape success rate today.
+            </p>
           </div>
         )}
 
