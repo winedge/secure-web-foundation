@@ -44,7 +44,9 @@ export function EcomOnboardingWizard({ open, onOpenChange }: Props) {
   const qc = useQueryClient();
   const [step, setStep] = useState(1);
   const [niche, setNiche] = useState('');
-  const [platforms, setPlatforms] = useState<EcomPlatform[]>(['shopee', 'tiktok_shop']);
+  // Default to platforms our scraper actually supports well. TikTok Shop / Lazada
+  // are opt-in because Firecrawl often returns "site not supported" for them.
+  const [platforms, setPlatforms] = useState<EcomPlatform[]>(['shopee', 'tiki']);
   const [busy, setBusy] = useState(false);
   const [createdCount, setCreatedCount] = useState(0);
 
