@@ -1023,3 +1023,169 @@ function SecurityConfig() {
     </div>
   );
 }
+
+function TikTokApiConfig() {
+  const { data: appIdSetting } = useAdminSetting('tiktok_app_id');
+  const { data: appSecretSetting } = useAdminSetting('tiktok_app_secret');
+  const { data: redirectSetting } = useAdminSetting('tiktok_redirect_uri');
+  const upsert = useUpsertAdminSetting();
+  const { toast } = useToast();
+
+  const [appId, setAppId] = useState('');
+  const [appSecret, setAppSecret] = useState('');
+  const [redirectUri, setRedirectUri] = useState('');
+  const [showSecret, setShowSecret] = useState(false);
+
+  const isConfigured = !!appIdSetting?.value?.app_id && !!appSecretSetting?.value?.app_secret;
+  const currentRedirect =
+    redirectSetting?.value?.redirect_uri || `${window.location.origin}/settings?tab=integrations&provider=tiktok`;
+
+  const handleSave = async () => {
+    if (!appId.trim() || !appSecret.trim()) {
+      toast({ title: 'Error', description: 'Both App ID and App Secret are required', variant: 'destructive' });
+      return;
+    }
+    await upsert.mutateAsync({
+      key: 'tiktok_app_id',
+      value: { app_id: appId.trim() },
+      description: 'TikTok Marketing API App ID',
+    });
+    await upsert.mutateAsync({
+      key: 'tiktok_app_secret',
+      value: { app_secret: appSecret.trim() },
+      description: 'TikTok Marketing API App Secret',
+    });
+    if (redirectUri.trim()) {
+      await upsert.mutateAsync({
+        key: 'tiktok_redirect_uri',
+        value: { redirect_uri: redirectUri.trim() },
+        description: 'TikTok OAuth redirect URI (must match TikTok app settings)',
+      });
+    }
+    setAppId('');
+    setAppSecret('');
+    setRedirectUri('');
+  };
+
+  const copy = (val: string) => {
+    navigator.clipboard.writeText(val);
+    toast({ title: 'Copied' });
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Video className="h-5 w-5" />
+            TikTok Ads API Configuration
+          </CardTitle>
+          <CardDescription>
+            Enter the platform-wide TikTok Marketing API app credentials. Firms will use OAuth with these credentials to connect their own TikTok ad accounts.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center gap-3 p-4 rounded-lg border bg-muted/30">
+            {isConfigured ? (
+              <>
+                <CheckCircle className="h-5 w-5 text-accent" />
+                <div>
+                  <p className="font-medium">TikTok API Configured</p>
+                  <p className="text-sm text-muted-foreground">
+                    App ID: {appIdSetting?.value?.app_id?.slice(0, 6)}***
+                  </p>
+                </div>
+                <Badge variant="outline" className="ml-auto">Active</Badge>
+              </>
+            ) : (
+              <>
+                <XCircle className="h-5 w-5 text-destructive" />
+                <div>
+                  <p className="font-medium">Not Configured</p>
+                  <p className="text-sm text-muted-foreground">Enter your TikTok Marketing API app credentials below</p>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="tiktok-app-id">TikTok App ID</Label>
+              <Input
+                id="tiktok-app-id"
+                value={appId}
+                onChange={(e) => setAppId(e.target.value)}
+                placeholder={isConfigured ? '••••••••' : 'Enter App ID'}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tiktok-app-secret">TikTok App Secret</Label>
+              <div className="relative">
+                <Input
+                  id="tiktok-app-secret"
+                  type={showSecret ? 'text' : 'password'}
+                  value={appSecret}
+                  onChange={(e) => setAppSecret(e.target.value)}
+                  placeholder={isConfigured ? '••••••••' : 'Enter App Secret'}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3"
+                  onClick={() => setShowSecret(!showSecret)}
+                >
+                  {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="tiktok-redirect">OAuth Redirect URI</Label>
+            <Input
+              id="tiktok-redirect"
+              value={redirectUri}
+              onChange={(e) => setRedirectUri(e.target.value)}
+              placeholder={currentRedirect}
+            />
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Current:</span>
+              <code className="px-2 py-1 rounded bg-muted">{currentRedirect}</code>
+              <Button size="sm" variant="ghost" onClick={() => copy(currentRedirect)}>
+                <Copy className="h-3 w-3" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Add this URL exactly to your TikTok Developer app under Redirect URIs.
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <Button onClick={handleSave} disabled={upsert.isPending}>
+              {upsert.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Save Credentials
+            </Button>
+            <Button variant="outline" asChild>
+              <a href="https://business-api.tiktok.com/portal" target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Open TikTok Developer Portal
+              </a>
+            </Button>
+          </div>
+
+          <div className="border-t pt-6 space-y-4">
+            <h4 className="text-lg font-semibold">Setup Guide</h4>
+            <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
+              <li>Go to the <a className="text-primary underline" href="https://business-api.tiktok.com/portal" target="_blank" rel="noopener noreferrer">TikTok Marketing API Developer Portal</a> and create an app.</li>
+              <li>Under <strong>App Details → Redirect URL</strong>, paste the OAuth Redirect URI shown above.</li>
+              <li>Request the <strong>Ads Management</strong> scopes (campaign, adgroup, ad, reporting, audience).</li>
+              <li>Copy the <strong>App ID</strong> and <strong>App Secret</strong> from your app and paste them here.</li>
+              <li>Save. Firms can now connect their TikTok ad accounts via OAuth from the TikTok Ads page.</li>
+            </ol>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
