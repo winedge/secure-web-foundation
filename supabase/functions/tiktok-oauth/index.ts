@@ -6,26 +6,39 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 const TT_AUTH_HOST = 'https://business-api.tiktok.com';
 const TT_OPEN = `${TT_AUTH_HOST}/open_api/v1.3`;
 
-const APP_ID = Deno.env.get('TIKTOK_APP_ID') ?? '';
-const APP_SECRET = Deno.env.get('TIKTOK_APP_SECRET') ?? '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const svc = () => createClient(SUPABASE_URL, SERVICE_ROLE);
 
-function loginUrl(redirectUri: string, state: string) {
+async function getCreds() {
+  let appId = Deno.env.get('TIKTOK_APP_ID') ?? '';
+  let appSecret = Deno.env.get('TIKTOK_APP_SECRET') ?? '';
+  if (!appId || !appSecret) {
+    const supabase = svc();
+    const [{ data: idRow }, { data: secretRow }] = await Promise.all([
+      supabase.from('admin_settings').select('value').eq('key', 'tiktok_app_id').maybeSingle(),
+      supabase.from('admin_settings').select('value').eq('key', 'tiktok_app_secret').maybeSingle(),
+    ]);
+    if (!appId) appId = (idRow as any)?.value?.app_id ?? '';
+    if (!appSecret) appSecret = (secretRow as any)?.value?.app_secret ?? '';
+  }
+  return { appId, appSecret };
+}
+
+function loginUrl(appId: string, redirectUri: string, state: string) {
   const u = new URL('https://business-api.tiktok.com/portal/auth');
-  u.searchParams.set('app_id', APP_ID);
+  u.searchParams.set('app_id', appId);
   u.searchParams.set('redirect_uri', redirectUri);
   u.searchParams.set('state', state);
   return u.toString();
 }
 
-async function exchangeCode(authCode: string) {
+async function exchangeCode(appId: string, appSecret: string, authCode: string) {
   const res = await fetch(`${TT_OPEN}/oauth2/access_token/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ app_id: APP_ID, secret: APP_SECRET, auth_code: authCode }),
+    body: JSON.stringify({ app_id: appId, secret: appSecret, auth_code: authCode }),
   });
   const json = await res.json();
   if (json.code !== 0) throw new Error(`TikTok token exchange failed: ${JSON.stringify(json)}`);
@@ -47,9 +60,10 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
+    const { appId: APP_ID, appSecret: APP_SECRET } = await getCreds();
     if (!APP_ID || !APP_SECRET) {
       return new Response(
-        JSON.stringify({ error: 'TikTok app credentials not configured. Add TIKTOK_APP_ID and TIKTOK_APP_SECRET secrets.' }),
+        JSON.stringify({ error: 'TikTok app credentials not configured. Ask an admin to set them in Platform Settings → TikTok API.' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
