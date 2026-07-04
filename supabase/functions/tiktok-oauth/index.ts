@@ -74,13 +74,13 @@ Deno.serve(async (req) => {
 
     if (action === 'get_login_url') {
       const state = crypto.randomUUID();
-      return new Response(JSON.stringify({ login_url: loginUrl(redirect_uri, state), state }), {
+      return new Response(JSON.stringify({ login_url: loginUrl(APP_ID, redirect_uri, state), state }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     if (action === 'exchange_token') {
-      const data = await exchangeCode(code);
+      const data = await exchangeCode(APP_ID, APP_SECRET, code);
       const advertisers = await fetchAdvertiser(data.access_token, data.advertiser_ids ?? []);
 
       // upsert platform connection
