@@ -85,6 +85,7 @@ const BrandKitPage = lazyWithRetry(() => import("./pages/BrandKit"));
 const ViralContentEngine = lazyWithRetry(() => import("./pages/ViralContentEngine"));
 const VideoAdGenerator = lazyWithRetry(() => import("./pages/VideoAdGenerator"));
 const GoogleAds = lazyWithRetry(() => import("./pages/GoogleAds"));
+const TikTokAds = lazyWithRetry(() => import("./pages/TikTokAds"));
 
 const LookalikeAudience = lazyWithRetry(() => import("./pages/LookalikeAudience"));
 const IntentSignalTracker = lazyWithRetry(() => import("./pages/IntentSignalTracker"));
@@ -225,6 +226,8 @@ const App = () => (
                 <Route path="/viral-content" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="viral_content" label="Viral Content Engine"><ViralContentEngine /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/video-ads" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="video_ads" label="Video Ad Generator"><VideoAdGenerator /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/google-ads" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="google_ads" label="Google Ads"><GoogleAds /></ModuleGate></LazyRoute></ProtectedRoute>} />
+                <Route path="/tiktok-ads" element={<ProtectedRoute><LazyRoute><TikTokAds /></LazyRoute></ProtectedRoute>} />
+
 
                 <Route path="/lookalike-audience" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="lookalike" label="Lookalike Audience"><LookalikeAudience /></ModuleGate></LazyRoute></ProtectedRoute>} />
                 <Route path="/intent-signals" element={<ProtectedRoute><LazyRoute><ModuleGate moduleKey="intent_signals" label="Intent Signals"><IntentSignalTracker /></ModuleGate></LazyRoute></ProtectedRoute>} />
