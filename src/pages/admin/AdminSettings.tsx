@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAdminSetting, useUpsertAdminSetting } from '@/hooks/use-admin-settings';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  Settings, Bot, Globe, Shield, CheckCircle, XCircle, Loader2, Eye, EyeOff, CreditCard, Scale, FileInput, Copy, ExternalLink,
+  Settings, Bot, Globe, Shield, CheckCircle, XCircle, Loader2, Eye, EyeOff, CreditCard, Scale, FileInput, Copy, ExternalLink, Video,
 } from 'lucide-react';
 import { TortTypeManager } from '@/components/admin/TortTypeManager';
 
@@ -39,6 +39,10 @@ export default function AdminSettings() {
               <Globe className="h-4 w-4" />
               Meta API
             </TabsTrigger>
+            <TabsTrigger value="tiktok-api" className="gap-2">
+              <Video className="h-4 w-4" />
+              TikTok API
+            </TabsTrigger>
             <TabsTrigger value="stripe" className="gap-2">
               <CreditCard className="h-4 w-4" />
               Stripe
@@ -59,6 +63,7 @@ export default function AdminSettings() {
 
           <TabsContent value="lead-ingestion"><LeadIngestionConfig /></TabsContent>
           <TabsContent value="meta-api"><MetaApiConfig /></TabsContent>
+          <TabsContent value="tiktok-api"><TikTokApiConfig /></TabsContent>
           <TabsContent value="stripe"><StripeConfig /></TabsContent>
           <TabsContent value="tort-types">
             <Card>
