@@ -7092,6 +7092,1034 @@ export type Database = {
           },
         ]
       }
+      tiktok_ad_accounts: {
+        Row: {
+          advertiser_id: string
+          balance: number | null
+          business_center_id: string | null
+          connection_id: string | null
+          created_at: string
+          currency: string | null
+          firm_id: string
+          id: string
+          is_active: boolean
+          is_selected: boolean
+          name: string | null
+          raw: Json | null
+          role: string | null
+          status: string | null
+          timezone: string | null
+          updated_at: string
+        }
+        Insert: {
+          advertiser_id: string
+          balance?: number | null
+          business_center_id?: string | null
+          connection_id?: string | null
+          created_at?: string
+          currency?: string | null
+          firm_id: string
+          id?: string
+          is_active?: boolean
+          is_selected?: boolean
+          name?: string | null
+          raw?: Json | null
+          role?: string | null
+          status?: string | null
+          timezone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          advertiser_id?: string
+          balance?: number | null
+          business_center_id?: string | null
+          connection_id?: string | null
+          created_at?: string
+          currency?: string | null
+          firm_id?: string
+          id?: string
+          is_active?: boolean
+          is_selected?: boolean
+          name?: string | null
+          raw?: Json | null
+          role?: string | null
+          status?: string | null
+          timezone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tiktok_ad_groups: {
+        Row: {
+          advertiser_id: string
+          bid_price: number | null
+          bid_type: string | null
+          budget: number | null
+          budget_mode: string | null
+          campaign_id: string | null
+          created_at: string
+          firm_id: string
+          frequency_cap: Json | null
+          id: string
+          name: string
+          optimization_goal: string | null
+          placement_type: string | null
+          placements: Json | null
+          raw: Json | null
+          schedule_end_time: string | null
+          schedule_start_time: string | null
+          schedule_type: string | null
+          status: string | null
+          targeting: Json | null
+          tiktok_adgroup_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          advertiser_id: string
+          bid_price?: number | null
+          bid_type?: string | null
+          budget?: number | null
+          budget_mode?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          firm_id: string
+          frequency_cap?: Json | null
+          id?: string
+          name: string
+          optimization_goal?: string | null
+          placement_type?: string | null
+          placements?: Json | null
+          raw?: Json | null
+          schedule_end_time?: string | null
+          schedule_start_time?: string | null
+          schedule_type?: string | null
+          status?: string | null
+          targeting?: Json | null
+          tiktok_adgroup_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          advertiser_id?: string
+          bid_price?: number | null
+          bid_type?: string | null
+          budget?: number | null
+          budget_mode?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          firm_id?: string
+          frequency_cap?: Json | null
+          id?: string
+          name?: string
+          optimization_goal?: string | null
+          placement_type?: string | null
+          placements?: Json | null
+          raw?: Json | null
+          schedule_end_time?: string | null
+          schedule_start_time?: string | null
+          schedule_type?: string | null
+          status?: string | null
+          targeting?: Json | null
+          tiktok_adgroup_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tiktok_ad_groups_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "tiktok_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tiktok_ads: {
+        Row: {
+          ad_format: string | null
+          ad_text: string | null
+          adgroup_id: string | null
+          advertiser_id: string
+          ai_generated: boolean | null
+          call_to_action: string | null
+          campaign_id: string | null
+          created_at: string
+          display_name: string | null
+          firm_id: string
+          id: string
+          identity_id: string | null
+          identity_type: string | null
+          image_ids: Json | null
+          is_spark_ad: boolean | null
+          landing_page_url: string | null
+          name: string
+          raw: Json | null
+          status: string | null
+          tiktok_ad_id: string | null
+          tiktok_item_id: string | null
+          updated_at: string
+          utm_params: Json | null
+          video_id: string | null
+        }
+        Insert: {
+          ad_format?: string | null
+          ad_text?: string | null
+          adgroup_id?: string | null
+          advertiser_id: string
+          ai_generated?: boolean | null
+          call_to_action?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          display_name?: string | null
+          firm_id: string
+          id?: string
+          identity_id?: string | null
+          identity_type?: string | null
+          image_ids?: Json | null
+          is_spark_ad?: boolean | null
+          landing_page_url?: string | null
+          name: string
+          raw?: Json | null
+          status?: string | null
+          tiktok_ad_id?: string | null
+          tiktok_item_id?: string | null
+          updated_at?: string
+          utm_params?: Json | null
+          video_id?: string | null
+        }
+        Update: {
+          ad_format?: string | null
+          ad_text?: string | null
+          adgroup_id?: string | null
+          advertiser_id?: string
+          ai_generated?: boolean | null
+          call_to_action?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          display_name?: string | null
+          firm_id?: string
+          id?: string
+          identity_id?: string | null
+          identity_type?: string | null
+          image_ids?: Json | null
+          is_spark_ad?: boolean | null
+          landing_page_url?: string | null
+          name?: string
+          raw?: Json | null
+          status?: string | null
+          tiktok_ad_id?: string | null
+          tiktok_item_id?: string | null
+          updated_at?: string
+          utm_params?: Json | null
+          video_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tiktok_ads_adgroup_id_fkey"
+            columns: ["adgroup_id"]
+            isOneToOne: false
+            referencedRelation: "tiktok_ad_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tiktok_ads_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "tiktok_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tiktok_ai_logs: {
+        Row: {
+          action_type: string
+          actor_id: string | null
+          created_at: string
+          firm_id: string | null
+          id: string
+          metadata: Json | null
+          model: string | null
+          prompt_summary: string | null
+          response_summary: string | null
+          tokens_used: number | null
+        }
+        Insert: {
+          action_type: string
+          actor_id?: string | null
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          metadata?: Json | null
+          model?: string | null
+          prompt_summary?: string | null
+          response_summary?: string | null
+          tokens_used?: number | null
+        }
+        Update: {
+          action_type?: string
+          actor_id?: string | null
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          metadata?: Json | null
+          model?: string | null
+          prompt_summary?: string | null
+          response_summary?: string | null
+          tokens_used?: number | null
+        }
+        Relationships: []
+      }
+      tiktok_audiences: {
+        Row: {
+          advertiser_id: string
+          audience_type: string | null
+          created_at: string
+          firm_id: string
+          id: string
+          name: string
+          raw: Json | null
+          size_estimate: number | null
+          spec: Json | null
+          updated_at: string
+        }
+        Insert: {
+          advertiser_id: string
+          audience_type?: string | null
+          created_at?: string
+          firm_id: string
+          id?: string
+          name: string
+          raw?: Json | null
+          size_estimate?: number | null
+          spec?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          advertiser_id?: string
+          audience_type?: string | null
+          created_at?: string
+          firm_id?: string
+          id?: string
+          name?: string
+          raw?: Json | null
+          size_estimate?: number | null
+          spec?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tiktok_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after: Json | null
+          before: Json | null
+          created_at: string
+          diff: Json | null
+          firm_id: string
+          id: string
+          object_id: string | null
+          object_level:
+            | Database["public"]["Enums"]["tiktok_object_level"]
+            | null
+          tiktok_object_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          diff?: Json | null
+          firm_id: string
+          id?: string
+          object_id?: string | null
+          object_level?:
+            | Database["public"]["Enums"]["tiktok_object_level"]
+            | null
+          tiktok_object_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          diff?: Json | null
+          firm_id?: string
+          id?: string
+          object_id?: string | null
+          object_level?:
+            | Database["public"]["Enums"]["tiktok_object_level"]
+            | null
+          tiktok_object_id?: string | null
+        }
+        Relationships: []
+      }
+      tiktok_automated_rules: {
+        Row: {
+          actions: Json
+          advertiser_id: string | null
+          conditions: Json
+          created_at: string
+          created_by: string | null
+          description: string | null
+          firm_id: string
+          id: string
+          is_enabled: boolean | null
+          last_result: Json | null
+          last_run_at: string | null
+          name: string
+          scope: string | null
+          scope_ids: Json | null
+          updated_at: string
+        }
+        Insert: {
+          actions?: Json
+          advertiser_id?: string | null
+          conditions?: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          firm_id: string
+          id?: string
+          is_enabled?: boolean | null
+          last_result?: Json | null
+          last_run_at?: string | null
+          name: string
+          scope?: string | null
+          scope_ids?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          actions?: Json
+          advertiser_id?: string | null
+          conditions?: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          firm_id?: string
+          id?: string
+          is_enabled?: boolean | null
+          last_result?: Json | null
+          last_run_at?: string | null
+          name?: string
+          scope?: string | null
+          scope_ids?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tiktok_business_centers: {
+        Row: {
+          bc_id: string
+          created_at: string
+          firm_id: string
+          id: string
+          name: string | null
+          raw: Json | null
+        }
+        Insert: {
+          bc_id: string
+          created_at?: string
+          firm_id: string
+          id?: string
+          name?: string | null
+          raw?: Json | null
+        }
+        Update: {
+          bc_id?: string
+          created_at?: string
+          firm_id?: string
+          id?: string
+          name?: string | null
+          raw?: Json | null
+        }
+        Relationships: []
+      }
+      tiktok_campaigns: {
+        Row: {
+          advertiser_id: string
+          ai_generated: boolean | null
+          bid_strategy: string | null
+          budget: number | null
+          budget_mode: string | null
+          created_at: string
+          created_by: string | null
+          end_time: string | null
+          firm_id: string
+          id: string
+          is_archived: boolean | null
+          name: string
+          objective: string | null
+          published_at: string | null
+          raw: Json | null
+          start_time: string | null
+          status: string | null
+          tiktok_campaign_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          advertiser_id: string
+          ai_generated?: boolean | null
+          bid_strategy?: string | null
+          budget?: number | null
+          budget_mode?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_time?: string | null
+          firm_id: string
+          id?: string
+          is_archived?: boolean | null
+          name: string
+          objective?: string | null
+          published_at?: string | null
+          raw?: Json | null
+          start_time?: string | null
+          status?: string | null
+          tiktok_campaign_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          advertiser_id?: string
+          ai_generated?: boolean | null
+          bid_strategy?: string | null
+          budget?: number | null
+          budget_mode?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_time?: string | null
+          firm_id?: string
+          id?: string
+          is_archived?: boolean | null
+          name?: string
+          objective?: string | null
+          published_at?: string | null
+          raw?: Json | null
+          start_time?: string | null
+          status?: string | null
+          tiktok_campaign_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tiktok_creatives: {
+        Row: {
+          advertiser_id: string | null
+          ai_generated: boolean | null
+          created_at: string
+          created_by: string | null
+          duration_seconds: number | null
+          file_name: string | null
+          firm_id: string
+          height: number | null
+          id: string
+          material_type: string | null
+          raw: Json | null
+          size_bytes: number | null
+          storage_path: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          tiktok_material_id: string | null
+          url: string | null
+          width: number | null
+        }
+        Insert: {
+          advertiser_id?: string | null
+          ai_generated?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          duration_seconds?: number | null
+          file_name?: string | null
+          firm_id: string
+          height?: number | null
+          id?: string
+          material_type?: string | null
+          raw?: Json | null
+          size_bytes?: number | null
+          storage_path?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          tiktok_material_id?: string | null
+          url?: string | null
+          width?: number | null
+        }
+        Update: {
+          advertiser_id?: string | null
+          ai_generated?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          duration_seconds?: number | null
+          file_name?: string | null
+          firm_id?: string
+          height?: number | null
+          id?: string
+          material_type?: string | null
+          raw?: Json | null
+          size_bytes?: number | null
+          storage_path?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          tiktok_material_id?: string | null
+          url?: string | null
+          width?: number | null
+        }
+        Relationships: []
+      }
+      tiktok_custom_audiences: {
+        Row: {
+          advertiser_id: string
+          audience_subtype: string | null
+          created_at: string
+          firm_id: string
+          id: string
+          name: string
+          raw: Json | null
+          size: number | null
+          status: string | null
+          tiktok_audience_id: string | null
+        }
+        Insert: {
+          advertiser_id: string
+          audience_subtype?: string | null
+          created_at?: string
+          firm_id: string
+          id?: string
+          name: string
+          raw?: Json | null
+          size?: number | null
+          status?: string | null
+          tiktok_audience_id?: string | null
+        }
+        Update: {
+          advertiser_id?: string
+          audience_subtype?: string | null
+          created_at?: string
+          firm_id?: string
+          id?: string
+          name?: string
+          raw?: Json | null
+          size?: number | null
+          status?: string | null
+          tiktok_audience_id?: string | null
+        }
+        Relationships: []
+      }
+      tiktok_insights_ad_daily: {
+        Row: {
+          ad_id: string | null
+          advertiser_id: string
+          clicks: number | null
+          conversions: number | null
+          cost_per_conversion: number | null
+          cpc: number | null
+          cpm: number | null
+          created_at: string
+          ctr: number | null
+          engagements: number | null
+          firm_id: string
+          id: string
+          impressions: number | null
+          raw: Json | null
+          spend: number | null
+          stat_date: string
+          tiktok_ad_id: string | null
+          video_play_actions: number | null
+        }
+        Insert: {
+          ad_id?: string | null
+          advertiser_id: string
+          clicks?: number | null
+          conversions?: number | null
+          cost_per_conversion?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          created_at?: string
+          ctr?: number | null
+          engagements?: number | null
+          firm_id: string
+          id?: string
+          impressions?: number | null
+          raw?: Json | null
+          spend?: number | null
+          stat_date: string
+          tiktok_ad_id?: string | null
+          video_play_actions?: number | null
+        }
+        Update: {
+          ad_id?: string | null
+          advertiser_id?: string
+          clicks?: number | null
+          conversions?: number | null
+          cost_per_conversion?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          created_at?: string
+          ctr?: number | null
+          engagements?: number | null
+          firm_id?: string
+          id?: string
+          impressions?: number | null
+          raw?: Json | null
+          spend?: number | null
+          stat_date?: string
+          tiktok_ad_id?: string | null
+          video_play_actions?: number | null
+        }
+        Relationships: []
+      }
+      tiktok_insights_adgroup_daily: {
+        Row: {
+          adgroup_id: string | null
+          advertiser_id: string
+          clicks: number | null
+          conversions: number | null
+          cost_per_conversion: number | null
+          cpc: number | null
+          cpm: number | null
+          created_at: string
+          ctr: number | null
+          firm_id: string
+          frequency: number | null
+          id: string
+          impressions: number | null
+          raw: Json | null
+          reach: number | null
+          spend: number | null
+          stat_date: string
+          tiktok_adgroup_id: string | null
+        }
+        Insert: {
+          adgroup_id?: string | null
+          advertiser_id: string
+          clicks?: number | null
+          conversions?: number | null
+          cost_per_conversion?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          created_at?: string
+          ctr?: number | null
+          firm_id: string
+          frequency?: number | null
+          id?: string
+          impressions?: number | null
+          raw?: Json | null
+          reach?: number | null
+          spend?: number | null
+          stat_date: string
+          tiktok_adgroup_id?: string | null
+        }
+        Update: {
+          adgroup_id?: string | null
+          advertiser_id?: string
+          clicks?: number | null
+          conversions?: number | null
+          cost_per_conversion?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          created_at?: string
+          ctr?: number | null
+          firm_id?: string
+          frequency?: number | null
+          id?: string
+          impressions?: number | null
+          raw?: Json | null
+          reach?: number | null
+          spend?: number | null
+          stat_date?: string
+          tiktok_adgroup_id?: string | null
+        }
+        Relationships: []
+      }
+      tiktok_insights_campaign_daily: {
+        Row: {
+          advertiser_id: string
+          average_video_play: number | null
+          campaign_id: string | null
+          clicks: number | null
+          conversion_rate: number | null
+          conversions: number | null
+          cost_per_conversion: number | null
+          cpc: number | null
+          cpm: number | null
+          created_at: string
+          ctr: number | null
+          engagements: number | null
+          firm_id: string
+          frequency: number | null
+          id: string
+          impressions: number | null
+          purchases: number | null
+          raw: Json | null
+          reach: number | null
+          revenue: number | null
+          roas: number | null
+          spend: number | null
+          stat_date: string
+          tiktok_campaign_id: string | null
+          video_play_actions: number | null
+          video_watched_2s: number | null
+          video_watched_6s: number | null
+        }
+        Insert: {
+          advertiser_id: string
+          average_video_play?: number | null
+          campaign_id?: string | null
+          clicks?: number | null
+          conversion_rate?: number | null
+          conversions?: number | null
+          cost_per_conversion?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          created_at?: string
+          ctr?: number | null
+          engagements?: number | null
+          firm_id: string
+          frequency?: number | null
+          id?: string
+          impressions?: number | null
+          purchases?: number | null
+          raw?: Json | null
+          reach?: number | null
+          revenue?: number | null
+          roas?: number | null
+          spend?: number | null
+          stat_date: string
+          tiktok_campaign_id?: string | null
+          video_play_actions?: number | null
+          video_watched_2s?: number | null
+          video_watched_6s?: number | null
+        }
+        Update: {
+          advertiser_id?: string
+          average_video_play?: number | null
+          campaign_id?: string | null
+          clicks?: number | null
+          conversion_rate?: number | null
+          conversions?: number | null
+          cost_per_conversion?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          created_at?: string
+          ctr?: number | null
+          engagements?: number | null
+          firm_id?: string
+          frequency?: number | null
+          id?: string
+          impressions?: number | null
+          purchases?: number | null
+          raw?: Json | null
+          reach?: number | null
+          revenue?: number | null
+          roas?: number | null
+          spend?: number | null
+          stat_date?: string
+          tiktok_campaign_id?: string | null
+          video_play_actions?: number | null
+          video_watched_2s?: number | null
+          video_watched_6s?: number | null
+        }
+        Relationships: []
+      }
+      tiktok_job_queue: {
+        Row: {
+          attempts: number
+          completed_at: string | null
+          created_at: string
+          firm_id: string | null
+          id: string
+          job_type: string
+          last_error: string | null
+          locked_at: string | null
+          locked_by: string | null
+          max_attempts: number
+          payload: Json
+          priority: number
+          result: Json | null
+          run_after: string
+          status: Database["public"]["Enums"]["tiktok_job_status"]
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          job_type: string
+          last_error?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          max_attempts?: number
+          payload?: Json
+          priority?: number
+          result?: Json | null
+          run_after?: string
+          status?: Database["public"]["Enums"]["tiktok_job_status"]
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          job_type?: string
+          last_error?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          max_attempts?: number
+          payload?: Json
+          priority?: number
+          result?: Json | null
+          run_after?: string
+          status?: Database["public"]["Enums"]["tiktok_job_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tiktok_lookalikes: {
+        Row: {
+          advertiser_id: string
+          country_code: string | null
+          created_at: string
+          firm_id: string
+          id: string
+          name: string
+          raw: Json | null
+          seed_audience_id: string | null
+          similarity: string | null
+          size: number | null
+          status: string | null
+          tiktok_audience_id: string | null
+        }
+        Insert: {
+          advertiser_id: string
+          country_code?: string | null
+          created_at?: string
+          firm_id: string
+          id?: string
+          name: string
+          raw?: Json | null
+          seed_audience_id?: string | null
+          similarity?: string | null
+          size?: number | null
+          status?: string | null
+          tiktok_audience_id?: string | null
+        }
+        Update: {
+          advertiser_id?: string
+          country_code?: string | null
+          created_at?: string
+          firm_id?: string
+          id?: string
+          name?: string
+          raw?: Json | null
+          seed_audience_id?: string | null
+          similarity?: string | null
+          size?: number | null
+          status?: string | null
+          tiktok_audience_id?: string | null
+        }
+        Relationships: []
+      }
+      tiktok_recommendations: {
+        Row: {
+          advertiser_id: string | null
+          applied_at: string | null
+          applied_by: string | null
+          created_at: string
+          dismissed_at: string | null
+          firm_id: string
+          id: string
+          metadata: Json | null
+          rationale: string | null
+          recommendation_type: string
+          scope: Database["public"]["Enums"]["tiktok_object_level"] | null
+          scope_id: string | null
+          severity: string | null
+          status: string | null
+          suggested_action: Json | null
+          summary: string | null
+          tiktok_object_id: string | null
+          title: string
+        }
+        Insert: {
+          advertiser_id?: string | null
+          applied_at?: string | null
+          applied_by?: string | null
+          created_at?: string
+          dismissed_at?: string | null
+          firm_id: string
+          id?: string
+          metadata?: Json | null
+          rationale?: string | null
+          recommendation_type: string
+          scope?: Database["public"]["Enums"]["tiktok_object_level"] | null
+          scope_id?: string | null
+          severity?: string | null
+          status?: string | null
+          suggested_action?: Json | null
+          summary?: string | null
+          tiktok_object_id?: string | null
+          title: string
+        }
+        Update: {
+          advertiser_id?: string | null
+          applied_at?: string | null
+          applied_by?: string | null
+          created_at?: string
+          dismissed_at?: string | null
+          firm_id?: string
+          id?: string
+          metadata?: Json | null
+          rationale?: string | null
+          recommendation_type?: string
+          scope?: Database["public"]["Enums"]["tiktok_object_level"] | null
+          scope_id?: string | null
+          severity?: string | null
+          status?: string | null
+          suggested_action?: Json | null
+          summary?: string | null
+          tiktok_object_id?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      tiktok_sync_state: {
+        Row: {
+          advertiser_id: string
+          cursor: string | null
+          entity: string
+          firm_id: string
+          id: string
+          last_synced_at: string | null
+          raw: Json | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          advertiser_id: string
+          cursor?: string | null
+          entity: string
+          firm_id: string
+          id?: string
+          last_synced_at?: string | null
+          raw?: Json | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          advertiser_id?: string
+          cursor?: string | null
+          entity?: string
+          firm_id?: string
+          id?: string
+          last_synced_at?: string | null
+          raw?: Json | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tort_types: {
         Row: {
           category: string | null
@@ -8519,6 +9547,52 @@ export type Database = {
         Args: { _firm_id: string; _lead_id: string; _user_id: string }
         Returns: Json
       }
+      tiktok_claim_jobs: {
+        Args: { _batch_size?: number; _worker_id: string }
+        Returns: {
+          attempts: number
+          completed_at: string | null
+          created_at: string
+          firm_id: string | null
+          id: string
+          job_type: string
+          last_error: string | null
+          locked_at: string | null
+          locked_by: string | null
+          max_attempts: number
+          payload: Json
+          priority: number
+          result: Json | null
+          run_after: string
+          status: Database["public"]["Enums"]["tiktok_job_status"]
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "tiktok_job_queue"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      tiktok_complete_job: {
+        Args: { _job_id: string; _result?: Json }
+        Returns: undefined
+      }
+      tiktok_enqueue_job: {
+        Args: {
+          _delay_seconds?: number
+          _firm_id?: string
+          _job_type: string
+          _max_attempts?: number
+          _payload?: Json
+          _priority?: number
+        }
+        Returns: string
+      }
+      tiktok_fail_job: {
+        Args: { _error: string; _job_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "firm_owner" | "firm_staff" | "claimant"
@@ -8635,6 +9709,20 @@ export type Database = {
         | "view_lead_financials"
         | "view_session_logs"
         | "view_session_recordings"
+      tiktok_job_status:
+        | "queued"
+        | "running"
+        | "retrying"
+        | "completed"
+        | "failed"
+        | "cancelled"
+      tiktok_object_level:
+        | "account"
+        | "campaign"
+        | "adgroup"
+        | "ad"
+        | "creative"
+        | "audience"
       touchpoint_type:
         | "call"
         | "email"
@@ -8895,6 +9983,22 @@ export const Constants = {
         "view_lead_financials",
         "view_session_logs",
         "view_session_recordings",
+      ],
+      tiktok_job_status: [
+        "queued",
+        "running",
+        "retrying",
+        "completed",
+        "failed",
+        "cancelled",
+      ],
+      tiktok_object_level: [
+        "account",
+        "campaign",
+        "adgroup",
+        "ad",
+        "creative",
+        "audience",
       ],
       touchpoint_type: [
         "call",

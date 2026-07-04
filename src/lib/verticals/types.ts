@@ -36,6 +36,7 @@ export type ModuleKey =
   | 'fraud_detection'
   | 'meta_ads'
   | 'google_ads'
+  | 'tiktok_ads'
   | 'cross_platform_autopilot'
   | 'evidence_vault'
   | 'benchmarks'

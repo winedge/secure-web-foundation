@@ -23,6 +23,7 @@ import { useFirm } from '@/hooks/use-firm';
 import { supabase } from '@/integrations/supabase/client';
 import { useFirmBranding, useUpsertBranding } from '@/hooks/use-firm-branding';
 import { usePlatformConnections, useConnectMetaPlatform, useExchangeMetaToken, useVerifyMetaConnection, useDisconnectPlatform } from '@/hooks/use-platform-connections';
+import { TikTokConnectCard } from '@/components/tiktok-ads/TikTokConnectCard';
 import { useSearchParams } from 'react-router-dom';
 import { TortTypeManager as TortTypeManagerComponent } from '@/components/admin/TortTypeManager';
 import { VerticalSettingsTab } from '@/components/settings/VerticalSettingsTab';
@@ -532,6 +533,7 @@ export default function Settings() {
 
           <TabsContent value="connections">
             <div className="space-y-4">
+              <TikTokConnectCard />
               {exchangeToken.isPending && (
                 <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-900 px-4 py-3">
                   <Loader2 className="h-5 w-5 animate-spin text-blue-600 dark:text-blue-400 shrink-0" />

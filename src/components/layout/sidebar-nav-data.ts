@@ -103,6 +103,7 @@ export const navGroups: NavGroup[] = [
       { name: 'Campaigns', href: '/campaigns', icon: TrendingUp },
       { name: 'Meta Ads', href: '/meta-ads', icon: Megaphone, premium: true, module: 'meta_ads' },
       { name: 'Google Ads', href: '/google-ads', icon: Globe, premium: true, module: 'google_ads' },
+      { name: 'TikTok Ads', href: '/tiktok-ads', icon: Megaphone, premium: true, module: 'tiktok_ads' },
       { name: 'Social Calendar', href: '/social-calendar', icon: CalendarDays, premium: true, module: 'social_calendar' },
       { name: 'Competitor Intel', href: '/competitor-intelligence', icon: Radar, premium: true, module: 'competitor_intel' },
       { name: 'Market Pulse', href: '/market-pulse', icon: Target, premium: true, module: 'market_pulse' },
