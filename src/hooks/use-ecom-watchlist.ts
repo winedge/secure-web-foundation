@@ -81,6 +81,9 @@ export function useEcomWatchlist() {
         body: { watchlist_id },
       });
       if (error) throw error;
+      if (data?.success === false || data?.error) {
+        throw new Error(data.error || data.note || 'Scrape did not return usable marketplace data');
+      }
       return data;
     },
     onSuccess: () => {
