@@ -80,7 +80,16 @@ export function useEcomWatchlist() {
       const { data, error } = await supabase.functions.invoke('ecom-scrape-listing', {
         body: { watchlist_id },
       });
-      if (error) throw error;
+      if (error) {
+        const response = (error as any).context;
+        const payload = response instanceof Response
+          ? await response.clone().json().catch(() => null)
+          : null;
+        throw new Error(payload?.error || error.message);
+      }
+      if (data?.success === false || data?.error) {
+        throw new Error(data.error || data.note || 'Scrape did not return usable marketplace data');
+      }
       return data;
     },
     onSuccess: () => {

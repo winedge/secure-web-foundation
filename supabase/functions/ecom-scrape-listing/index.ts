@@ -158,7 +158,7 @@ Deno.serve(async (req: Request) => {
           .from('ecom_scrape_jobs')
           .update({ status: 'failed', completed_at: new Date().toISOString(), error: friendly })
           .eq('id', job!.id);
-        return json({ error: friendly, unsupported }, 200);
+        return json({ success: false, error: friendly, unsupported }, 422);
       }
 
       const data = fcJson.data || fcJson;
@@ -179,7 +179,12 @@ Deno.serve(async (req: Request) => {
             .from('ecom_watchlist')
             .update({ last_scraped_at: new Date().toISOString() })
             .eq('id', watch.id);
-          return json({ success: true, items: 0, note: 'no items extracted' });
+          return json({
+            success: false,
+            error: `No products were extracted from this ${platform} page. The marketplace may be blocking automated scraping, or the URL may not show product cards publicly.`,
+            items: 0,
+            note: 'no items extracted',
+          }, 422);
         }
 
         const prices = items.map((i) => Number(i.price)).filter((n) => Number.isFinite(n) && n > 0);
@@ -229,7 +234,11 @@ Deno.serve(async (req: Request) => {
           .from('ecom_watchlist')
           .update({ last_scraped_at: new Date().toISOString() })
           .eq('id', watch.id);
-        return json({ success: true, note: 'no product data extracted' });
+        return json({
+          success: false,
+          error: `No product data was extracted from this ${platform} listing. The marketplace may be blocking automated scraping, or the URL may require login/location access.`,
+          note: 'no product data extracted',
+        }, 422);
       }
 
       const { data: prev } = await admin
