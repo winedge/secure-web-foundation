@@ -63,6 +63,7 @@ const IntakeFormBuilder = lazyWithRetry(() => import("./pages/IntakeFormBuilder"
 const LandingPreviewByToken = lazyWithRetry(() => import("./pages/LandingPreviewByToken"));
 const Marketplace = lazyWithRetry(() => import("./pages/Marketplace"));
 const MyLeads = lazyWithRetry(() => import("./pages/MyLeads"));
+const MyShops = lazyWithRetry(() => import("./pages/MyShops"));
 const IntakeSubmissions = lazyWithRetry(() => import("./pages/IntakeSubmissions"));
 const Wallet = lazyWithRetry(() => import("./pages/Wallet"));
 const Campaigns = lazyWithRetry(() => import("./pages/Campaigns"));
