@@ -204,6 +204,7 @@ const App = () => (
                 <Route path="/onboarding" element={<ProtectedRoute><LazyRoute><Onboarding /></LazyRoute></ProtectedRoute>} />
                 <Route path="/marketplace" element={<ProtectedRoute><LazyRoute><Marketplace /></LazyRoute></ProtectedRoute>} />
                 <Route path="/my-leads" element={<ProtectedRoute><LazyRoute><MyLeads /></LazyRoute></ProtectedRoute>} />
+                <Route path="/my-shops" element={<ProtectedRoute><LazyRoute><MyShops /></LazyRoute></ProtectedRoute>} />
                 <Route path="/intake-submissions" element={<ProtectedRoute><LazyRoute><IntakeSubmissions /></LazyRoute></ProtectedRoute>} />
                 <Route path="/wallet" element={<ProtectedRoute><LazyRoute><Wallet /></LazyRoute></ProtectedRoute>} />
                 <Route path="/campaigns" element={<ProtectedRoute><LazyRoute><Campaigns /></LazyRoute></ProtectedRoute>} />
