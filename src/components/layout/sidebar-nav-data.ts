@@ -172,6 +172,7 @@ export const navGroups: NavGroup[] = [
     label: 'FMCG',
     icon: ShoppingCart,
     items: [
+      { name: 'My Shops', href: '/my-shops', icon: Store },
       { name: 'Marketplace Radar', href: '/ecom/market-overview', icon: Radar, module: 'ecom_market_overview' },
       { name: 'Competitor War Room', href: '/ecom/war-room', icon: Target, module: 'ecom_competitor_war_room' },
       { name: 'Pricing Copilot', href: '/ecom/pricing-copilot', icon: DollarSign, module: 'ecom_pricing_copilot' },
