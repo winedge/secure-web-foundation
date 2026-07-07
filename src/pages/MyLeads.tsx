@@ -404,6 +404,11 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
 }
 
 export default function MyLeads() {
+  const { isVertical } = useVertical();
+  // FMCG vertical tracks shops on marketplaces, not legal leads — redirect to /my-shops.
+  if (isVertical('ecommerce_seller')) {
+    return <Navigate to="/my-shops" replace />;
+  }
   const isMobile = useIsMobile();
   const { isPiiMaskingEnabled } = usePiiMasking();
   const { term } = useVertical();
