@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -404,6 +405,11 @@ function LeadDetailWithPermissions({ detailLead }: { detailLead: any }) {
 }
 
 export default function MyLeads() {
+  const { isVertical } = useVertical();
+  // FMCG vertical tracks shops on marketplaces, not legal leads — redirect to /my-shops.
+  if (isVertical('ecommerce_seller')) {
+    return <Navigate to="/my-shops" replace />;
+  }
   const isMobile = useIsMobile();
   const { isPiiMaskingEnabled } = usePiiMasking();
   const { term } = useVertical();
