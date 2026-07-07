@@ -63,6 +63,7 @@ const IntakeFormBuilder = lazyWithRetry(() => import("./pages/IntakeFormBuilder"
 const LandingPreviewByToken = lazyWithRetry(() => import("./pages/LandingPreviewByToken"));
 const Marketplace = lazyWithRetry(() => import("./pages/Marketplace"));
 const MyLeads = lazyWithRetry(() => import("./pages/MyLeads"));
+const MyShops = lazyWithRetry(() => import("./pages/MyShops"));
 const IntakeSubmissions = lazyWithRetry(() => import("./pages/IntakeSubmissions"));
 const Wallet = lazyWithRetry(() => import("./pages/Wallet"));
 const Campaigns = lazyWithRetry(() => import("./pages/Campaigns"));
@@ -203,6 +204,7 @@ const App = () => (
                 <Route path="/onboarding" element={<ProtectedRoute><LazyRoute><Onboarding /></LazyRoute></ProtectedRoute>} />
                 <Route path="/marketplace" element={<ProtectedRoute><LazyRoute><Marketplace /></LazyRoute></ProtectedRoute>} />
                 <Route path="/my-leads" element={<ProtectedRoute><LazyRoute><MyLeads /></LazyRoute></ProtectedRoute>} />
+                <Route path="/my-shops" element={<ProtectedRoute><LazyRoute><MyShops /></LazyRoute></ProtectedRoute>} />
                 <Route path="/intake-submissions" element={<ProtectedRoute><LazyRoute><IntakeSubmissions /></LazyRoute></ProtectedRoute>} />
                 <Route path="/wallet" element={<ProtectedRoute><LazyRoute><Wallet /></LazyRoute></ProtectedRoute>} />
                 <Route path="/campaigns" element={<ProtectedRoute><LazyRoute><Campaigns /></LazyRoute></ProtectedRoute>} />
