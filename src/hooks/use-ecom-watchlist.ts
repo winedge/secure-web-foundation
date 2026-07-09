@@ -91,15 +91,20 @@ export function useEcomWatchlist() {
         toast({ title: 'Platform not supported yet', description: data.error, variant: 'destructive' });
         return data;
       }
+      if (data?.blocked) {
+        toast({ title: 'Marketplace blocked the scrape', description: data.error });
+        return data;
+      }
       if (data?.success === false || data?.error) {
         throw new Error(data.error || data.note || 'Scrape did not return usable marketplace data');
       }
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       qc.invalidateQueries({ queryKey: ['ecom-watchlist'] });
       qc.invalidateQueries({ queryKey: ['ecom-price-history'] });
       qc.invalidateQueries({ queryKey: ['ecom-snapshots'] });
+      if (data?.blocked || data?.unsupported) return;
       toast({ title: 'Scrape complete' });
     },
     onError: (e: any) => toast({ title: 'Scrape failed', description: e.message, variant: 'destructive' }),
