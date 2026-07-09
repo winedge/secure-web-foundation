@@ -203,6 +203,50 @@ async function scrapeTikTokShopApify(url: string, listMode: boolean): Promise<Sc
   return listMode ? { items: [] } : {};
 }
 
+const MARKETPLACE_APIFY_ACTORS: Record<string, { actor: string; buildInput: (url: string) => Record<string, unknown> }[]> = {
+  shopee: [{
+    actor: 'easyapi~shopee-search-scraper',
+    buildInput: (url) => ({ startUrls: [{ url }], maxItems: 40 }),
+  }],
+  lazada: [{
+    actor: 'jupri~lazada-scraper',
+    buildInput: (url) => ({ startUrls: [{ url }], maxItems: 40 }),
+  }],
+  tiki: [{
+    actor: 'crawlerbros~tiki-product-scraper',
+    buildInput: (url) => {
+      try {
+        const u = new URL(url);
+        const q = u.searchParams.get('q');
+        if (q) return { mode: 'searchProducts', keyword: q, maxItems: 40 };
+        const pMatch = u.pathname.match(/-p(\d+)\.html/i);
+        if (pMatch) return { mode: 'getProductDetail', productId: pMatch[1] };
+        const cMatch = u.pathname.match(/\/c(\d+)/i);
+        if (cMatch) return { mode: 'browseCategory', categoryId: cMatch[1], maxItems: 40 };
+      } catch (_) { /* noop */ }
+      return { mode: 'searchProducts', keyword: url, maxItems: 40 };
+    },
+  }],
+};
+
+async function scrapeMarketplaceApify(platform: string, url: string, listMode: boolean): Promise<ScrapeExtraction> {
+  const configs = MARKETPLACE_APIFY_ACTORS[platform] ?? [];
+  for (const cfg of configs) {
+    try {
+      const rawItems = await runApifyActor(cfg.actor, cfg.buildInput(url));
+      const products = normalizeApifyProducts(rawItems, url);
+      if (products.length) {
+        return listMode
+          ? { items: products.slice(0, 20), provider: 'apify', actor: cfg.actor }
+          : { ...products[0], provider: 'apify', actor: cfg.actor };
+      }
+    } catch (err) {
+      console.error(`${platform} apify actor failed`, cfg.actor, err instanceof Error ? err.message : String(err));
+    }
+  }
+  return listMode ? { items: [] } : {};
+}
+
 function normalizeApifyProducts(rawItems: any[], sourceUrl: string): ScrapeExtraction[] {
   const unpacked = rawItems.flatMap((item) => {
     if (Array.isArray(item?.products)) return item.products;
@@ -682,6 +726,9 @@ Deno.serve(async (req: Request) => {
 
       if (platform === 'tiktok_shop' && APIFY_TOKEN) {
         ext = await scrapeTikTokShopApify(watch.entity_url, listMode);
+        if (hasUsefulExtraction(ext, listMode)) provider = 'apify';
+      } else if (MARKETPLACE_APIFY_ACTORS[platform] && APIFY_TOKEN) {
+        ext = await scrapeMarketplaceApify(platform, watch.entity_url, listMode);
         if (hasUsefulExtraction(ext, listMode)) provider = 'apify';
       }
 
