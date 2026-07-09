@@ -20,6 +20,60 @@ interface ReviewActorConfig {
 }
 
 function buildTikTokShopInput(url: string): Record<string, unknown> {
+  const keyword = getSearchKeyword(url);
+  if (keyword) {
+    return {
+      queries: [keyword],
+      searchRegion: 'US',
+      maxPagesPerQuery: 1,
+      maxProductsPerQuery: 5,
+      maxProductsTotal: 5,
+      maxReviewsPerProduct: 10,
+      includeRawReview: false,
+      includeRawProduct: false,
+      compactNullFields: true,
+      requestTimeoutSecs: 45,
+    };
+  }
+
+  return {
+    productUrls: [url],
+    searchRegion: 'US',
+    maxProductsTotal: 1,
+    maxReviewsPerProduct: 30,
+    includeRawReview: false,
+    includeRawProduct: false,
+    compactNullFields: true,
+    requestTimeoutSecs: 45,
+  };
+}
+
+function buildTikTokShopLurkInput(url: string): Record<string, unknown> {
+  return {
+    urls: [url],
+    maxReviewsPerTarget: 30,
+    maxProductsPerShop: 3,
+    sortBy: 'newest',
+    starRating: 0,
+    withPhotosOnly: false,
+    country: 'US',
+    outputRating: true,
+    outputContent: true,
+    outputTimestamp: true,
+    outputAuthorHandle: true,
+    outputAuthorName: true,
+  };
+}
+
+function buildTikTokShopVisticsInput(url: string): Record<string, unknown> {
+  return {
+    startUrls: [url],
+    maxReviews: 30,
+    region: 'US',
+  };
+}
+
+function buildTikTokShopGenericInput(url: string): Record<string, unknown> {
   try {
     const u = new URL(url);
     const keyword = u.searchParams.get('keyword') || u.searchParams.get('q');
@@ -46,6 +100,15 @@ function buildTikTokShopInput(url: string): Record<string, unknown> {
     timeout: 30,
     maxConcurrency: 10,
   };
+}
+
+function getSearchKeyword(url: string): string | null {
+  try {
+    const u = new URL(url);
+    return u.searchParams.get('keyword') || u.searchParams.get('q');
+  } catch (_) {
+    return null;
+  }
 }
 
 function buildTikTokShopDiscoveryInput(url: string): Record<string, unknown> {
@@ -79,8 +142,10 @@ const REVIEW_ACTORS: Record<Platform, ReviewActorConfig[]> = {
     } },
   ],
   tiktok_shop: [
-    { actor: 'devcake~tiktok-shop-data-scraper', buildInput: buildTikTokShopInput },
-    { actor: 'pro100chok~tiktok-shop-scraper',   buildInput: (url) => ({ scrapeType: 'product', productUrls: [url], includeReviews: true, maxReviews: 60, region: 'us' }) },
+    { actor: 'sentry~tiktok-shop-reviews-pro', buildInput: buildTikTokShopInput },
+    { actor: 'lurkapi~tiktok-shop-reviews-scraper', buildInput: buildTikTokShopLurkInput },
+    { actor: 'vistics~tiktok-shop-product-reviews', buildInput: buildTikTokShopVisticsInput },
+    { actor: 'devcake~tiktok-shop-data-scraper', buildInput: buildTikTokShopGenericInput },
   ],
 };
 
