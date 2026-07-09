@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Plus, RefreshCw, ShoppingBag, TrendingUp, Package, Star, ExternalLink, Trash2, AlertTriangle, Sparkles } from 'lucide-react';
+import { Plus, RefreshCw, ShoppingBag, TrendingUp, Package, Star, ExternalLink, Trash2, AlertTriangle, Sparkles, Store, Boxes, Tags } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { formatDistanceToNow } from 'date-fns';
 import { EcomOnboardingWizard } from '@/components/ecom/EcomOnboardingWizard';
@@ -98,9 +98,27 @@ export default function EcomMarketOverview() {
       revenue: sum('revenue'),
       units: sum('units_sold'),
       avgPrice: avg('avg_price'),
+      activeShops: sum('active_shops'),
+      activeProducts: sum('active_products'),
       tracked: (list.data ?? []).length,
     };
   }, [snapshots.data, list.data]);
+
+  const latestInsight = useMemo(() => {
+    const latest = (snapshots.data ?? []).at(-1);
+    const raw = latest?.raw ?? {};
+    const items = Array.isArray(raw.items) ? raw.items : raw.extracted ? [raw.extracted] : [];
+    const prices = items.map((item: any) => Number(item.price)).filter((n: number) => Number.isFinite(n) && n > 0);
+    return {
+      snapshot: latest,
+      items,
+      coverage: raw.coverage ?? raw.data_quality ?? null,
+      minPrice: raw.min_price ?? (prices.length ? Math.min(...prices) : null),
+      maxPrice: raw.max_price ?? (prices.length ? Math.max(...prices) : null),
+      averageRating: raw.average_rating ?? null,
+      currency: raw.currency ?? items.find((item: any) => item.currency)?.currency ?? null,
+    };
+  }, [snapshots.data]);
 
   const chartData = useMemo(() => {
     const rows = snapshots.data ?? [];
@@ -209,12 +227,72 @@ export default function EcomMarketOverview() {
 
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4">
           <KpiCard icon={<TrendingUp className="h-5 w-5" />} label="Revenue (30d)" value={kpis.revenue ? kpis.revenue.toLocaleString() : '|'} />
           <KpiCard icon={<Package className="h-5 w-5" />} label="Units Sold (30d)" value={kpis.units ? kpis.units.toLocaleString() : '|'} />
           <KpiCard icon={<Star className="h-5 w-5" />} label="Avg Price" value={kpis.avgPrice ? kpis.avgPrice.toFixed(2) : '|'} />
+          <KpiCard icon={<Store className="h-5 w-5" />} label="Active Shops" value={kpis.activeShops ? kpis.activeShops.toLocaleString() : '|'} />
+          <KpiCard icon={<Boxes className="h-5 w-5" />} label="Active Products" value={kpis.activeProducts ? kpis.activeProducts.toLocaleString() : '|'} />
           <KpiCard icon={<ShoppingBag className="h-5 w-5" />} label="Tracked URLs" value={String(kpis.tracked)} />
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Tags className="h-5 w-5 text-primary" />
+              Latest scrape intelligence
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!latestInsight.snapshot ? (
+              <div className="text-sm text-muted-foreground py-8 text-center">
+                No scrape intelligence yet | run a scrape from the watchlist below.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <MiniMetric label="Revenue" value={latestInsight.snapshot.revenue ? Number(latestInsight.snapshot.revenue).toLocaleString() : '|'} />
+                  <MiniMetric label="Units sold" value={latestInsight.snapshot.units_sold ? Number(latestInsight.snapshot.units_sold).toLocaleString() : '|'} />
+                  <MiniMetric label="Price range" value={latestInsight.minPrice && latestInsight.maxPrice ? `${Number(latestInsight.minPrice).toFixed(2)} | ${Number(latestInsight.maxPrice).toFixed(2)}` : '|'} />
+                  <MiniMetric label="Avg rating" value={latestInsight.averageRating ? Number(latestInsight.averageRating).toFixed(1) : '|'} />
+                </div>
+                {latestInsight.coverage && (
+                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                    {Object.entries(latestInsight.coverage).map(([key, value]) => (
+                      <Badge key={key} variant="outline">{key.replace(/_/g, ' ')}: {String(value)}</Badge>
+                    ))}
+                  </div>
+                )}
+                {latestInsight.items.length > 0 && (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="text-xs text-muted-foreground">
+                        <tr className="border-b">
+                          <th className="py-2 text-left font-medium">Product</th>
+                          <th className="py-2 text-right font-medium">Price</th>
+                          <th className="py-2 text-right font-medium">Units</th>
+                          <th className="py-2 text-right font-medium">Revenue</th>
+                          <th className="py-2 text-left font-medium">Shop</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {latestInsight.items.slice(0, 8).map((item: any, index: number) => (
+                          <tr key={`${item.title || 'item'}-${index}`} className="border-b last:border-0">
+                            <td className="py-2 pr-3 max-w-[22rem] truncate">{item.title || 'Untitled product'}</td>
+                            <td className="py-2 text-right">{item.price ? Number(item.price).toLocaleString() : '|'}</td>
+                            <td className="py-2 text-right">{item.units_sold ? Number(item.units_sold).toLocaleString() : item.sold_text || '|'}</td>
+                            <td className="py-2 text-right">{item.revenue ? Number(item.revenue).toLocaleString() : '|'}</td>
+                            <td className="py-2 pl-3 max-w-[14rem] truncate">{item.shop_name || '|'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Alerts */}
         {(alerts.data?.length ?? 0) > 0 && (
@@ -323,5 +401,14 @@ function KpiCard({ icon, label, value }: { icon: React.ReactNode; label: string;
         <div className="text-2xl font-bold mt-2">{value}</div>
       </CardContent>
     </Card>
+  );
+}
+
+function MiniMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border p-3">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="text-lg font-semibold mt-1 truncate">{value}</div>
+    </div>
   );
 }

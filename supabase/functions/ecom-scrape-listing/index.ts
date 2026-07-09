@@ -40,6 +40,8 @@ const PRODUCT_SCHEMA = {
     rating: { type: 'number' },
     rating_count: { type: 'integer' },
     units_sold: { type: 'integer' },
+    sold_text: { type: 'string', description: 'Visible sold count label, such as "1.2K sold"' },
+    revenue: { type: 'number', description: 'Estimated sales value or GMV when shown, otherwise price multiplied by units sold' },
     currency: { type: 'string' },
     shop_name: { type: 'string' },
   },
@@ -59,11 +61,22 @@ const LIST_SCHEMA = {
           original_price: { type: 'number' },
           rating: { type: 'number' },
           units_sold: { type: 'integer' },
+            sold_text: { type: 'string' },
+            revenue: { type: 'number', description: 'Estimated item GMV, usually price multiplied by units sold' },
+            currency: { type: 'string' },
           shop_name: { type: 'string' },
           url: { type: 'string' },
         },
       },
     },
+    total_units_sold: { type: 'integer' },
+    total_revenue: { type: 'number' },
+    active_shops: { type: 'integer' },
+    active_products: { type: 'integer' },
+    min_price: { type: 'number' },
+    max_price: { type: 'number' },
+    average_rating: { type: 'number' },
+    currency: { type: 'string' },
   },
 };
 
@@ -133,8 +146,10 @@ function extractProductFromHtml(html: string, sourceUrl: string): ScrapeExtracti
   const currency = String(offers?.priceCurrency || meta('product:price:currency') || inferCurrency(html) || '').toUpperCase() || null;
   const rating = toNumber(productJson.aggregateRating?.ratingValue || findFirst(html, /"ratingValue"\s*:\s*"?([\d.]+)/i));
   const ratingCount = toInteger(productJson.aggregateRating?.reviewCount || productJson.aggregateRating?.ratingCount || findFirst(html, /"reviewCount"\s*:\s*"?(\d+)/i));
-  const sold = toInteger(findFirst(html, /(?:sold_count|soldCount|sales|units_sold|unitsSold)"?\s*:\s*"?(\d+)/i));
+  const soldText = findFirst(html, /(?:sold_count|soldCount|sales|units_sold|unitsSold|sold_text|soldText)"?\s*:\s*"?([^",}<]+)/i);
+  const sold = parseCompactNumber(soldText) ?? toInteger(soldText);
   const availability = String(offers?.availability || '').toLowerCase();
+  const revenue = price && sold ? price * sold : null;
 
   return {
     title: title || null,
@@ -147,6 +162,8 @@ function extractProductFromHtml(html: string, sourceUrl: string): ScrapeExtracti
     rating,
     rating_count: ratingCount,
     units_sold: sold,
+    sold_text: soldText || null,
+    revenue,
     currency,
     shop_name: cleanText(findFirst(html, /"shop_name"\s*:\s*"([^"]+)"/i) || findFirst(html, /"seller_name"\s*:\s*"([^"]+)"/i)) || null,
     source_url: sourceUrl,
@@ -200,15 +217,20 @@ function normalizeProductCandidate(value: Record<string, any>, sourceUrl: string
   ]));
   const rating = toNumber(findPrimitiveDeep(value, ['rating', 'ratingValue', 'score', 'review_score']));
   const ratingCount = toInteger(findPrimitiveDeep(value, ['rating_count', 'ratingCount', 'review_count', 'reviewCount', 'reviews']));
-  const unitsSold = toInteger(findPrimitiveDeep(value, [
+  const soldValue = findPrimitiveDeep(value, [
     'sold', 'sold_count', 'soldCount', 'sold_num', 'soldNum', 'sales', 'sale_count', 'saleCount', 'units_sold', 'unitsSold',
-  ]));
+  ]);
+  const soldText = cleanText(findStringDeep(value, ['sold_text', 'soldText', 'sales_text', 'salesText', 'sold_label', 'soldLabel']));
+  const unitsSold = parseCompactNumber(soldValue) ?? parseCompactNumber(soldText) ?? toInteger(soldValue) ?? toInteger(soldText);
   const shopName = cleanText(findStringDeep(value, [
     'shop_name', 'shopName', 'seller_name', 'sellerName', 'store_name', 'storeName', 'merchant_name', 'merchantName',
   ]));
   const currency = cleanText(findStringDeep(value, ['currency', 'currency_code', 'currencyCode', 'priceCurrency']))?.toUpperCase()
     || inferCurrency(JSON.stringify(value));
   const itemUrl = cleanText(findStringDeep(value, ['url', 'product_url', 'productUrl', 'item_url', 'itemUrl'])) || sourceUrl;
+
+  const revenue = toNumber(findPrimitiveDeep(value, ['revenue', 'gmv', 'sales_amount', 'salesAmount', 'revenue_amount', 'revenueAmount']))
+    ?? (price && unitsSold ? price * unitsSold : null);
 
   return {
     title,
@@ -220,6 +242,8 @@ function normalizeProductCandidate(value: Record<string, any>, sourceUrl: string
     rating,
     rating_count: ratingCount,
     units_sold: unitsSold,
+    sold_text: soldText,
+    revenue,
     currency,
     shop_name: shopName,
     url: itemUrl,
@@ -281,6 +305,85 @@ function dedupeProducts(items: ScrapeExtraction[]): ScrapeExtraction[] {
     seen.add(key);
     return true;
   });
+}
+
+function isGenericTikTokPage(ext: ScrapeExtraction, sourceUrl: string): boolean {
+  const title = String(ext.title || '').trim().toLowerCase();
+  const description = String(ext.description || '').trim().toLowerCase();
+  return detectPlatform(sourceUrl) === 'tiktok_shop'
+    && (
+      title === 'about | tiktok'
+      || title === 'tiktok'
+      || description.includes('leading destination for short-form mobile videos')
+    );
+}
+
+function isBlockedMarketplacePage(ext: ScrapeExtraction): boolean {
+  const text = `${ext.title || ''} ${ext.description || ''}`.toLowerCase();
+  return /security check|captcha|verify you are human|access denied|robot|unusual traffic|temporarily blocked/.test(text);
+}
+
+function normalizeItem(item: any): ScrapeExtraction {
+  const price = toNumber(item.price);
+  const originalPrice = toNumber(item.original_price ?? item.originalPrice);
+  const unitsSold = parseCompactNumber(item.units_sold ?? item.unitsSold ?? item.sold ?? item.sales ?? item.sold_text ?? item.soldText)
+    ?? toInteger(item.units_sold ?? item.unitsSold ?? item.sold ?? item.sales);
+  const revenue = toNumber(item.revenue ?? item.gmv ?? item.sales_amount ?? item.salesAmount)
+    ?? (price && unitsSold ? price * unitsSold : null);
+  const rating = toNumber(item.rating ?? item.ratingValue ?? item.score);
+
+  return {
+    ...item,
+    title: cleanText(item.title ?? item.name ?? item.product_name ?? item.productName),
+    price,
+    original_price: originalPrice,
+    rating,
+    rating_count: toInteger(item.rating_count ?? item.ratingCount ?? item.review_count ?? item.reviewCount),
+    units_sold: unitsSold,
+    sold_text: cleanText(item.sold_text ?? item.soldText ?? item.sales_text ?? item.salesText),
+    revenue,
+    currency: cleanText(item.currency ?? item.currency_code ?? item.currencyCode)?.toUpperCase() || null,
+    shop_name: cleanText(item.shop_name ?? item.shopName ?? item.seller_name ?? item.sellerName ?? item.store_name ?? item.storeName),
+    url: cleanText(item.url ?? item.product_url ?? item.productUrl ?? item.item_url ?? item.itemUrl),
+  };
+}
+
+function summarizeItems(items: ScrapeExtraction[], ext: ScrapeExtraction) {
+  const normalized = items.map(normalizeItem).filter((item) => item.title || item.price != null);
+  const prices = normalized.map((i) => Number(i.price)).filter((n) => Number.isFinite(n) && n > 0);
+  const units = normalized.map((i) => Number(i.units_sold)).filter((n) => Number.isFinite(n) && n >= 0);
+  const itemRevenue = normalized.map((i) => Number(i.revenue)).filter((n) => Number.isFinite(n) && n > 0);
+  const ratings = normalized.map((i) => Number(i.rating)).filter((n) => Number.isFinite(n) && n > 0);
+  const shops = new Set(normalized.map((i) => String(i.shop_name || '').trim()).filter(Boolean));
+  const avgPrice = prices.length ? prices.reduce((a, b) => a + b, 0) / prices.length : null;
+  const totalUnits = toInteger(ext.total_units_sold ?? ext.totalUnitsSold) ?? (units.length ? units.reduce((a, b) => a + b, 0) : null);
+  const revenue = toNumber(ext.total_revenue ?? ext.totalRevenue ?? ext.revenue)
+    ?? (itemRevenue.length ? itemRevenue.reduce((a, b) => a + b, 0) : null)
+    ?? (avgPrice && totalUnits ? avgPrice * totalUnits : null);
+
+  return {
+    items: normalized,
+    avgPrice,
+    totalUnits,
+    revenue,
+    activeProducts: toInteger(ext.active_products ?? ext.activeProducts) ?? normalized.length,
+    activeShops: toInteger(ext.active_shops ?? ext.activeShops) ?? (shops.size || null),
+    minPrice: prices.length ? Math.min(...prices) : null,
+    maxPrice: prices.length ? Math.max(...prices) : null,
+    averageRating: ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null,
+    currency: cleanText(ext.currency)?.toUpperCase() || normalized.find((item) => item.currency)?.currency || null,
+  };
+}
+
+function parseCompactNumber(value: unknown): number | null {
+  if (value == null || value === '') return null;
+  const text = String(value).replace(/\+/g, '').trim().toLowerCase();
+  const match = text.match(/([\d]+(?:[.,][\d]+)?)\s*([km])?\b/);
+  if (!match) return null;
+  const base = Number(match[1].replace(',', '.'));
+  if (!Number.isFinite(base)) return null;
+  const multiplier = match[2] === 'm' ? 1_000_000 : match[2] === 'k' ? 1_000 : 1;
+  return Math.round(base * multiplier);
 }
 
 function parseJsonCandidates(value: string): any[] {
@@ -422,8 +525,8 @@ Deno.serve(async (req: Request) => {
     try {
       const schema = listMode ? LIST_SCHEMA : PRODUCT_SCHEMA;
       const prompt = listMode
-        ? 'Extract the top 20 product cards visible on this search/category page: title, price, rating, units sold and shop name for each.'
-        : 'Extract pricing, stock and rating info from this marketplace product listing.';
+        ? 'Extract FMCG marketplace intelligence from the visible product cards. Return up to 20 items with title, price, original_price, rating, rating_count, units_sold, sold_text, revenue or GMV if visible, currency, shop_name and url. Also return total_units_sold, total_revenue, active_shops, active_products, min_price, max_price and average_rating when visible or inferable from the items.'
+        : 'Extract FMCG product listing intelligence: title, price, original_price, discount_pct, promo_label, stock status, rating, rating_count, units_sold or sold_text, revenue or GMV if visible, currency and shop_name.';
 
       const fcRes = await fetch(`${FIRECRAWL_V2}/scrape`, {
         method: 'POST',
@@ -486,22 +589,36 @@ Deno.serve(async (req: Request) => {
             error: `No products were extracted from this ${platform} page. The marketplace may be blocking automated scraping, or the URL may not show product cards publicly.`,
             items: 0,
             note: 'no items extracted',
-          }, 422);
+          }, 200);
         }
 
-        const prices = items.map((i) => Number(i.price)).filter((n) => Number.isFinite(n) && n > 0);
-        const units = items.map((i) => Number(i.units_sold)).filter((n) => Number.isFinite(n) && n >= 0);
-        const avgPrice = prices.length ? prices.reduce((a, b) => a + b, 0) / prices.length : null;
-        const totalUnits = units.length ? units.reduce((a, b) => a + b, 0) : null;
-        const revenue = avgPrice && totalUnits ? avgPrice * totalUnits : null;
+        const summary = summarizeItems(items, ext);
+        const coverage = {
+          products_with_price: summary.items.filter((item) => item.price != null).length,
+          products_with_units: summary.items.filter((item) => item.units_sold != null).length,
+          products_with_revenue: summary.items.filter((item) => item.revenue != null).length,
+          products_with_shop: summary.items.filter((item) => item.shop_name).length,
+        };
 
         await admin.from('ecom_snapshots').insert({
           firm_id: watch.firm_id,
           watchlist_id: watch.id,
-          revenue,
-          units_sold: totalUnits,
-          avg_price: avgPrice,
-          raw: { items: items.slice(0, 20), platform, source_url: watch.entity_url, mode: 'list' },
+          revenue: summary.revenue,
+          units_sold: summary.totalUnits,
+          active_shops: summary.activeShops,
+          active_products: summary.activeProducts,
+          avg_price: summary.avgPrice,
+          raw: {
+            items: summary.items.slice(0, 20),
+            platform,
+            source_url: watch.entity_url,
+            mode: 'list',
+            min_price: summary.minPrice,
+            max_price: summary.maxPrice,
+            average_rating: summary.averageRating,
+            currency: summary.currency,
+            coverage,
+          },
         });
 
         await admin
@@ -514,14 +631,34 @@ Deno.serve(async (req: Request) => {
           .update({
             status: 'completed',
             completed_at: new Date().toISOString(),
-            result: { items: items.length, avgPrice, totalUnits },
+            result: {
+              items: summary.items.length,
+              avgPrice: summary.avgPrice,
+              totalUnits: summary.totalUnits,
+              revenue: summary.revenue,
+              activeShops: summary.activeShops,
+              activeProducts: summary.activeProducts,
+              coverage,
+            },
           })
           .eq('id', job!.id);
 
-        return json({ success: true, mode: 'list', items: items.length, avgPrice, totalUnits });
+        return json({
+          success: true,
+          mode: 'list',
+          items: summary.items.length,
+          avgPrice: summary.avgPrice,
+          totalUnits: summary.totalUnits,
+          revenue: summary.revenue,
+          activeShops: summary.activeShops,
+          activeProducts: summary.activeProducts,
+          coverage,
+        });
       }
 
       // ---- product mode ----
+      ext = normalizeItem(ext);
+      if (isGenericTikTokPage(ext, watch.entity_url) || isBlockedMarketplacePage(ext)) ext = {};
       const hasRealData = ext && (ext.title || ext.price != null);
       if (!hasRealData) {
         await admin
@@ -540,7 +677,7 @@ Deno.serve(async (req: Request) => {
           success: false,
           error: `No product data was extracted from this ${platform} listing. The marketplace may be blocking automated scraping, or the URL may require login/location access.`,
           note: 'no product data extracted',
-        }, 422);
+        }, 200);
       }
 
       const { data: prev } = await admin
@@ -567,10 +704,25 @@ Deno.serve(async (req: Request) => {
       await admin.from('ecom_snapshots').insert({
         firm_id: watch.firm_id,
         watchlist_id: watch.id,
-        revenue: ext.price && ext.units_sold ? Number(ext.price) * Number(ext.units_sold) : null,
+        revenue: ext.revenue ?? (ext.price && ext.units_sold ? Number(ext.price) * Number(ext.units_sold) : null),
         units_sold: ext.units_sold ?? null,
+        active_shops: ext.shop_name ? 1 : null,
+        active_products: 1,
         avg_price: ext.price ?? null,
-        raw: { extracted: ext, platform, source_url: watch.entity_url, mode: 'product' },
+        raw: {
+          extracted: ext,
+          platform,
+          source_url: watch.entity_url,
+          mode: 'product',
+          revenue_source: ext.revenue ? 'extracted_or_price_times_units' : null,
+          data_quality: {
+            has_price: ext.price != null,
+            has_units: ext.units_sold != null,
+            has_revenue: ext.revenue != null || (ext.price != null && ext.units_sold != null),
+            has_shop: !!ext.shop_name,
+            has_rating: ext.rating != null,
+          },
+        },
       });
 
       if (prev?.price && ext.price && Number(ext.price) > 0) {
