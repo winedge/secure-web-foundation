@@ -310,17 +310,21 @@ function dedupeProducts(items: ScrapeExtraction[]): ScrapeExtraction[] {
 function isGenericTikTokPage(ext: ScrapeExtraction, sourceUrl: string): boolean {
   const title = String(ext.title || '').trim().toLowerCase();
   const description = String(ext.description || '').trim().toLowerCase();
-  return detectPlatform(sourceUrl) === 'tiktok_shop'
-    && (
-      title === 'about | tiktok'
-      || title === 'tiktok'
-      || description.includes('leading destination for short-form mobile videos')
-    );
+  if (detectPlatform(sourceUrl) !== 'tiktok_shop') return false;
+  return (
+    title === 'tiktok'
+    || title.startsWith('about | tiktok')
+    || title.startsWith('about tiktok')
+    || title.startsWith('explore more from')
+    || title.includes('{s_')
+    || description.includes('leading destination for short-form mobile videos')
+    || description.includes("world's leading destination")
+  );
 }
 
 function isBlockedMarketplacePage(ext: ScrapeExtraction): boolean {
   const text = `${ext.title || ''} ${ext.description || ''}`.toLowerCase();
-  return /security check|captcha|verify you are human|access denied|robot|unusual traffic|temporarily blocked/.test(text);
+  return /security check|captcha|verify you are human|access denied|robot|unusual traffic|temporarily blocked|please enable js|just a moment/.test(text);
 }
 
 function normalizeItem(item: any): ScrapeExtraction {

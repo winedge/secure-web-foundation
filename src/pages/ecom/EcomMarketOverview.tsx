@@ -109,13 +109,18 @@ export default function EcomMarketOverview() {
     const raw = latest?.raw ?? {};
     const items = Array.isArray(raw.items) ? raw.items : raw.extracted ? [raw.extracted] : [];
     const prices = items.map((item: any) => Number(item.price)).filter((n: number) => Number.isFinite(n) && n > 0);
+    const ratings = items.map((item: any) => Number(item.rating)).filter((n: number) => Number.isFinite(n) && n > 0);
+    const itemUnits = items.reduce((acc: number, item: any) => acc + (Number(item.units_sold) || 0), 0);
+    const itemRevenue = items.reduce((acc: number, item: any) => acc + (Number(item.revenue) || 0), 0);
     return {
       snapshot: latest,
       items,
       coverage: raw.coverage ?? raw.data_quality ?? null,
       minPrice: raw.min_price ?? (prices.length ? Math.min(...prices) : null),
       maxPrice: raw.max_price ?? (prices.length ? Math.max(...prices) : null),
-      averageRating: raw.average_rating ?? null,
+      averageRating: raw.average_rating ?? (ratings.length ? ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length : null),
+      revenue: Number(latest?.revenue) || itemRevenue || null,
+      unitsSold: Number(latest?.units_sold) || itemUnits || null,
       currency: raw.currency ?? items.find((item: any) => item.currency)?.currency ?? null,
     };
   }, [snapshots.data]);
@@ -251,10 +256,10 @@ export default function EcomMarketOverview() {
             ) : (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <MiniMetric label="Revenue" value={latestInsight.snapshot.revenue ? Number(latestInsight.snapshot.revenue).toLocaleString() : '|'} />
-                  <MiniMetric label="Units sold" value={latestInsight.snapshot.units_sold ? Number(latestInsight.snapshot.units_sold).toLocaleString() : '|'} />
-                  <MiniMetric label="Price range" value={latestInsight.minPrice && latestInsight.maxPrice ? `${Number(latestInsight.minPrice).toFixed(2)} | ${Number(latestInsight.maxPrice).toFixed(2)}` : '|'} />
-                  <MiniMetric label="Avg rating" value={latestInsight.averageRating ? Number(latestInsight.averageRating).toFixed(1) : '|'} />
+                  <MiniMetric label={`Revenue${latestInsight.currency ? ` (${latestInsight.currency})` : ''}`} value={latestInsight.revenue ? Number(latestInsight.revenue).toLocaleString() : '|'} />
+                  <MiniMetric label="Units sold" value={latestInsight.unitsSold ? Number(latestInsight.unitsSold).toLocaleString() : '|'} />
+                  <MiniMetric label="Price range" value={latestInsight.minPrice != null && latestInsight.maxPrice != null ? (Number(latestInsight.minPrice) === Number(latestInsight.maxPrice) ? Number(latestInsight.minPrice).toFixed(2) : `${Number(latestInsight.minPrice).toFixed(2)} | ${Number(latestInsight.maxPrice).toFixed(2)}`) : '|'} />
+                  <MiniMetric label="Avg rating" value={latestInsight.averageRating ? `${Number(latestInsight.averageRating).toFixed(1)} ★` : '|'} />
                 </div>
                 {latestInsight.coverage && (
                   <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
