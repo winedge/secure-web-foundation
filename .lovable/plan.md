@@ -1,88 +1,160 @@
-# TikTok Ads Integration Plan
 
-Goal: Ship TikTok Ads as a peer to Meta Ads and Google Ads with the same connect → plan → launch → optimize → report loop, powered by the same AI assistant and cross-platform comparison views.
+# Production Marketplace Scraping Engine
 
-This is a large build. I'll deliver it in 4 phases so you can validate each before we move on. Nothing ships to production until the phase works end-to-end.
+Because Playwright + Redis + BullMQ + persistent browser pools cannot run inside Supabase Edge Functions, this ships as **two coordinated halves in one repo**:
 
----
+1. `/worker` — new folder, standalone Node/TypeScript service you deploy to your VPS via Docker Compose
+2. `/supabase/functions/*` + new tables + dashboard — the control plane, callback sink, and UI
 
-## Phase 1 | Foundation & Account Connection (Week 1)
-
-**Backend**
-- New tables (mirroring `meta_*` shape):
-  - `tiktok_ad_accounts`, `tiktok_business_centers`
-  - `tiktok_campaigns`, `tiktok_ad_groups`, `tiktok_ads`, `tiktok_creatives`
-  - `tiktok_insights_campaign_daily`, `tiktok_insights_adgroup_daily`, `tiktok_insights_ad_daily`
-  - `tiktok_audiences`, `tiktok_custom_audiences`, `tiktok_lookalikes`
-  - `tiktok_job_queue`, `tiktok_audit_log`, `tiktok_sync_state`
-  - `tiktok_automated_rules`, `tiktok_recommendations`, `tiktok_ai_logs`
-  - Reuse existing `platform_connections` with `platform = 'tiktok'`
-- Full RLS + GRANTs per project conventions
-- Enqueue/claim/complete/fail job helpers modeled on `meta_*` functions
-
-**Edge functions**
-- `tiktok-oauth` | login URL, code exchange, refresh, verify, disconnect
-- `tiktok-ads-sync` | list ad accounts, set active account, sync campaigns/ad groups/ads/insights
-- `tiktok-ads-worker` | job queue consumer
-
-**Secrets required from you**
-- `TIKTOK_APP_ID`, `TIKTOK_APP_SECRET` (from TikTok for Business developer portal — I'll walk you through obtaining them when we get here)
-
-**Frontend**
-- `/settings?tab=connections` | TikTok connect card
-- `TikTokAdAccountBar` + `TikTokAdAccountSelector` (mirrors `MetaAdAccountBar`)
-- `TikTokConnectionBanner` on the TikTok Ads page
+All 6 marketplaces (TikTok Shop, Shopee, Lazada, Temu, Amazon, eBay) are in scope for v1.
 
 ---
 
-## Phase 2 | Campaign / Ad Group / Ad Management (Week 2)
+## Part A | Worker service (`/worker`, deployed to your VPS)
 
-- New route `/tiktok-ads` with tabs matching Meta Ads (Campaigns, Ad Sets → Ad Groups, Ads, Audiences, Creatives, Insights, Rules, Reports)
-- Hooks: `use-tiktok-campaigns`, `use-tiktok-adgroups`, `use-tiktok-ads`, `use-tiktok-audiences`, `use-tiktok-creatives`, `use-tiktok-insights`
-- Full CRUD: create, edit, duplicate, pause, resume, archive, delete, schedule, rename, budget change, objective change
-- Campaign objectives: Traffic, Leads, Web Conversions, App Installs, Video Views, Reach, Awareness, Sales
-- Ad group targeting UI: demographic, geo, language, device, interest, behavioral, custom & lookalike & exclusion audiences, placements, bid strategy, optimization goal, frequency, schedule
-- Ad types: Image, Video, Spark, Carousel (feature-detected)
-- Creative Library page shared across Meta/Google/TikTok (extend existing `creative-assets` bucket + `meta_media_assets` pattern into a `platform_creatives` table)
-- Review & Publish gate reusing the `meta_campaigns_enforce_publish_gate` trigger pattern
+New folder, TypeScript, deployed via `docker compose up -d`.
+
+```
+worker/
+├── docker-compose.yml          # redis + worker + (optional) redis-commander UI
+├── Dockerfile                  # node:20-slim + Playwright Chromium
+├── package.json
+├── tsconfig.json
+├── .env.example                # SUPABASE_URL, SERVICE_ROLE, REDIS_URL, PROXY_URL, CONCURRENCY
+├── src/
+│   ├── index.ts                # entrypoint: boots queue + workers + graceful shutdown
+│   ├── config.ts               # env schema (zod)
+│   ├── logger.ts               # pino structured logs
+│   ├── queue/
+│   │   ├── connection.ts       # ioredis
+│   │   ├── scrape-queue.ts     # BullMQ Queue definition, priorities, retries, backoff
+│   │   └── job-types.ts        # ScrapeWatchlistJob type
+│   ├── browser/
+│   │   ├── pool.ts             # keeps N Chromium instances alive, recycles every 500 jobs
+│   │   ├── context.ts          # per-marketplace context factory: cookies, UA, viewport
+│   │   ├── interceptor.ts      # block fonts/analytics/ads, cache static assets
+│   │   └── stealth.ts          # UA rotation, navigator.webdriver removal
+│   ├── scrapers/
+│   │   ├── base.ts             # abstract BaseScraper: login/prepare/extractProducts/extractPagination/extractMetadata/cleanup
+│   │   ├── tiktok.ts           # TikTokScraper — API sniff first, browser fallback
+│   │   ├── shopee.ts           # Shopee — uses /api/v4/search/search_items JSON
+│   │   ├── lazada.ts           # Lazada — sniff moduleData JSON
+│   │   ├── temu.ts             # Temu — browser + API discovery
+│   │   ├── amazon.ts           # Amazon — DOM parse
+│   │   ├── ebay.ts             # eBay — has Finding API path
+│   │   └── index.ts            # registry: marketplace -> scraper class
+│   ├── workers/
+│   │   └── scrape-worker.ts    # BullMQ Worker: dequeue -> pick scraper -> run -> POST callback
+│   ├── models/
+│   │   └── product.ts          # normalized Product interface + validator
+│   ├── errors/
+│   │   └── detectors.ts        # captcha/cloudflare/login/empty/rate-limit detection
+│   ├── diagnostics/
+│   │   └── capture.ts          # screenshot + HTML + console log upload to Supabase Storage
+│   ├── callback/
+│   │   └── client.ts           # POSTs results to Supabase edge function with service-role key
+│   ├── scheduler/
+│   │   └── poller.ts           # every 60s pulls due watchlists from Supabase and enqueues
+│   └── health/
+│       └── server.ts           # tiny express /health for uptime checks
+└── tests/
+    ├── shopee.parser.test.ts
+    ├── amazon.parser.test.ts
+    └── product.model.test.ts   # vitest, offline fixture-based
+```
+
+Key behaviors:
+- Browser pool of 5 Chromium (configurable via `CONCURRENCY`), each running up to 3 contexts = 15 concurrent scrapes per worker container. Scale horizontally by running more containers.
+- Every scraper tries: (1) direct API using sniffed endpoint/headers/cookies, (2) fallback to Playwright DOM extraction.
+- Cookie jars per marketplace persisted to Redis, reloaded on context creation.
+- On failure: screenshot + HTML uploaded to `scrape-diagnostics` bucket, `scrape_logs` row inserted with error class.
+- Retries: 3 attempts, exponential backoff (30s, 2m, 8m), then dead-letter.
+- Graceful shutdown on SIGTERM: stop accepting jobs, finish in-flight, close browsers.
 
 ---
 
-## Phase 3 | AI Layer (Week 3)
+## Part B | Supabase side (this repo)
 
-- `tiktok-ai-plan` edge function | user describes a business goal → AI returns full campaign structure (objective, audience, budget split, bids, placements, creative brief, schedule)
-- `tiktok-ai-generate-creative` | headlines, primary text, descriptions, CTAs, captions, hashtags, video hooks, UTM params, N variations
-- Reuse existing image + video generation (Lovable AI Gateway / `videogen`) for image/video ads
-- `tiktok-ai-monitor` scheduled job | detects fatigue, rising CPA, falling CTR/ROAS, over/under-delivery → writes to `tiktok_recommendations`
-- Automation rules engine (`tiktok_automated_rules`): auto-pause losers, auto-scale winners, auto-refresh creatives, auto-budget, auto-A/B, weekly summary
-- Extend the existing AI Marketing Assistant chat to answer TikTok questions and cross-platform questions (which campaign to scale, why leads dropped, TikTok vs Meta vs Google, etc.)
+### B1. Migration (new tables — keeping existing `ecom_watchlist`)
+
+```
+scrape_jobs         id, watchlist_id, marketplace, status, priority, attempts, error_class,
+                    started_at, finished_at, duration_ms, products_found, products_new,
+                    products_removed, price_changes_count
+scrape_logs         id, job_id, level, message, error_class, screenshot_url, html_url, meta jsonb
+scrape_products     id, watchlist_id, marketplace, product_id (external), title, price, currency,
+                    original_price, discount, rating, review_count, sold_count, seller, seller_id,
+                    image, images jsonb, product_url, category, stock_status, raw jsonb, scraped_at
+scrape_product_history  id, product_ref, watchlist_id, price, original_price, rating, review_count,
+                        sold_count, stock_status, snapshot_at
+browser_sessions    id, marketplace, cookies jsonb, storage_state jsonb, last_used_at, health
+scrape_insights     id, watchlist_id, summary text, new_products jsonb, removed_products jsonb,
+                    price_changes jsonb, trending jsonb, generated_at
+```
+
+Extend `ecom_watchlist` with: `priority` (high/medium/low), `next_scan_at`, `scan_interval_minutes`.
+
+All tables: GRANT to authenticated + service_role, RLS scoped to firm via existing `is_firm_member`. Service role bypasses for worker writes.
+
+New storage bucket: `scrape-diagnostics` (private).
+
+### B2. Edge functions
+
+- `scrape-enqueue` — called by worker's scheduler poller, returns due watchlists (uses service role, RLS-bypassing query)
+- `scrape-callback` — worker POSTs normalized products here with service-role header. Diffs vs `scrape_products`, writes `scrape_product_history` rows for price changes, updates `scrape_jobs`, triggers `scrape-insights`
+- `scrape-insights` — takes before/after snapshot, calls Lovable AI (`google/gemini-2.5-flash`) for narrative summary, writes to `scrape_insights`
+- Retire the old Firecrawl-based `ecom-scrape-listing` path for supported marketplaces (leave as fallback)
+
+### B3. Cron (via pg_cron, not migration tool)
+
+Every 5 minutes: mark watchlists whose `next_scan_at <= now()` as ready. Worker polls `scrape-enqueue` every 60s to pull them.
+
+### B4. Frontend additions
+
+Extend `src/pages/ecom/EcomMarketOverview.tsx` and add a small `ScrapeHealthCard` component:
+- Last scan time + duration
+- Products found / new / removed / price changes
+- Scraper health badge (green/yellow/red based on last 10 jobs)
+- Failure reason chip when latest job failed
+- "Rescan now" button (calls existing `useEcomWatchlist.scrape` which now enqueues instead of scraping inline)
+
+New hook `use-scrape-jobs.ts` for job status + `use-scrape-insights.ts` for AI summaries.
 
 ---
 
-## Phase 4 | Dashboard, Reports, Cross-Platform (Week 4)
+## Proxy recommendation
 
-- TikTok performance dashboard with the full metric set (Spend, Reach, Impr, Clicks, CTR, CPC, CPM, Conv, Leads, Purchases, CPA, ROAS, Freq, Video Views, Watch Time, Engagement, Cost/Result) + date filters (Today, Yesterday, 7d, 30d, custom)
-- AI Insights panel (why performance changed, what's working, best demos/geos/placements/dayparts, forecasts)
-- Reports engine extended: daily/weekly/monthly/executive TikTok summaries, downloadable + shareable (extends existing `report_schedules`)
-- Cross-Platform Comparison view: `/reports/cross-platform` showing Meta vs Google vs TikTok side-by-side with AI budget-shift recommendations
-- Notification rules: rejections, budget exhaustion, CPA/ROAS breaches, winners, delivery stops, fatigue, scale opportunities (extends existing `alert_rules` + `alert_notifications`)
+Since you asked for a rec: **Bright Data Web Unlocker** (~$3/GB, handles TikTok/Shopee/Lazada out of the box, no manual IP rotation) or **Smartproxy Residential** (~$4/GB, cheaper for Amazon/eBay). Start with Bright Data on TikTok only, standard datacenter proxies for the rest. The worker reads `PROXY_URL` from env — swap providers without code changes.
+
+Without a proxy, TikTok Shop and Shopee will start returning captchas within a few hundred requests. Amazon/eBay/Temu tolerate no-proxy for lower volumes.
 
 ---
 
-## Technical notes (for reference)
+## Deploy flow for you
 
-- TikTok Marketing API v1.3 (`https://business-api.tiktok.com/open_api/v1.3/`)
-- OAuth: authorization code flow, long-lived access token, refresh handled server-side
-- All calls proxied through edge functions | never expose `TIKTOK_APP_SECRET` client-side
-- Rate limits: use job queue + exponential backoff (same pattern as `meta_fail_job`)
-- Insights sync: hourly for last 3 days, daily for last 30 days, backfill on connect
-- Design system: reuse existing editorial tokens, `PageHeader`, `StatCard`, sidebar section `AI TOOLS` gets a new `TikTok Ads` entry under `OPERATE`
+```bash
+# On your VPS
+git clone <this repo>
+cd worker
+cp .env.example .env      # fill SUPABASE_URL, SERVICE_ROLE_KEY, PROXY_URL
+docker compose up -d
+docker compose logs -f worker
+```
+
+Health check: `curl localhost:3001/health`. Scale: `docker compose up -d --scale worker=4`.
 
 ---
 
-## Questions before I start Phase 1
+## Delivery order (one build cycle)
 
-1. **Scope confirmation** | Ship all 4 phases, or stop after each for review?
-2. **TikTok app credentials** | Do you already have a TikTok for Business developer app, or should I walk you through creating one when we reach the secrets step?
-3. **Creative Library unification** | Build a new shared library across Meta/Google/TikTok now (Phase 2), or keep TikTok's library separate for v1 and unify later?
-4. **Cross-platform view** | New dedicated page `/reports/cross-platform`, or extend the existing `Reports` page with a comparison tab?
+1. Migration for new tables + storage bucket
+2. Edge functions: `scrape-enqueue`, `scrape-callback`, `scrape-insights`
+3. Worker service scaffolding + browser pool + queue + base scraper
+4. All 6 marketplace scrapers (Shopee/Lazada/eBay get API-first path; TikTok/Amazon/Temu get browser + API sniff)
+5. Diagnostics + error detectors + retries
+6. Frontend `ScrapeHealthCard` + hooks + wire `EcomMarketOverview`
+7. Docker Compose + README + `.env.example`
+8. Vitest parser tests for Shopee/Amazon/Product model
+9. pg_cron schedule (via `supabase--insert`, not migration)
+
+Approve this and I'll build it in that order. Roughly 30-35 new files; the worker half is self-contained under `/worker` so it won't affect your existing app until you deploy it.
