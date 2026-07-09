@@ -558,7 +558,12 @@ Deno.serve(async (req: Request) => {
         const rawMsg = fcJson?.error || `Firecrawl ${fcRes.status}`;
         const unsupported = String(rawMsg).toLowerCase().includes(UNSUPPORTED_HINT);
         if (platform === 'tiktok_shop') {
-          ext = await scrapeTikTokShopFallback(watch.entity_url, listMode);
+          try {
+            ext = await scrapeTikTokShopFallback(watch.entity_url, listMode);
+          } catch (err) {
+            console.error('tiktok fallback failed', err);
+            ext = { blocked: true };
+          }
         } else {
         const friendly = unsupported
           ? `${platform} is not supported by our scraper yet. Use Shopee or Tiki product URLs for now.`
