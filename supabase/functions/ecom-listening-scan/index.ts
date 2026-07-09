@@ -46,6 +46,65 @@ const REVIEW_ACTORS: Record<Platform, ReviewActorConfig[]> = {
   ],
 };
 
+// Discovery actors: given a category/keyword/shop URL, return top product URLs.
+const DISCOVERY_ACTORS: Record<Platform, ReviewActorConfig[]> = {
+  shopee: [
+    { actor: 'easyapi~shopee-search-scraper', buildInput: (url) => ({ startUrls: [{ url }], maxItems: 5 }) },
+  ],
+  lazada: [
+    { actor: 'jupri~lazada-scraper', buildInput: (url) => ({ startUrls: [{ url }], maxItems: 5 }) },
+  ],
+  tiki: [
+    { actor: 'crawlerbros~tiki-product-scraper', buildInput: (url) => {
+      try {
+        const u = new URL(url);
+        const q = u.searchParams.get('q');
+        if (q) return { mode: 'searchProducts', keyword: q, maxItems: 5 };
+        const cMatch = u.pathname.match(/\/c(\d+)/i);
+        if (cMatch) return { mode: 'browseCategory', categoryId: cMatch[1], maxItems: 5 };
+      } catch (_) { /* noop */ }
+      return { mode: 'searchProducts', keyword: url, maxItems: 5 };
+    } },
+  ],
+  tiktok_shop: [
+    { actor: 'devcake~tiktok-shop-data-scraper', buildInput: (url) => {
+      try {
+        const u = new URL(url);
+        const kw = u.searchParams.get('keyword');
+        if (kw) return { searchKeywords: [kw], maxProducts: 5, includeReviews: false, maxRetries: 3 };
+      } catch (_) { /* noop */ }
+      return { urls: [url], maxProducts: 5, includeReviews: false, maxRetries: 3 };
+    } },
+  ],
+};
+
+function extractProductUrls(rawItems: any[]): string[] {
+  const urls: string[] = [];
+  const walk = (n: any) => {
+    if (!n || typeof n !== 'object') return;
+    if (Array.isArray(n)) return n.forEach(walk);
+    const cand = n.productUrl || n.product_url || n.url || n.link;
+    if (typeof cand === 'string' && /^https?:\/\//.test(cand)) urls.push(cand);
+    for (const k of ['items', 'products', 'data', 'results']) if (Array.isArray(n[k])) n[k].forEach(walk);
+  };
+  walk(rawItems);
+  return Array.from(new Set(urls)).slice(0, 5);
+}
+
+async function discoverProductUrls(platform: Platform, url: string): Promise<string[]> {
+  const configs = DISCOVERY_ACTORS[platform] ?? [];
+  for (const cfg of configs) {
+    try {
+      const raw = await runApifyActor(cfg.actor, cfg.buildInput(url));
+      const urls = extractProductUrls(raw);
+      if (urls.length) return urls;
+    } catch (e: any) {
+      console.error(`discovery actor failed`, cfg.actor, e?.message);
+    }
+  }
+  return [];
+}
+
 async function runApifyActor(actor: string, input: Record<string, unknown>): Promise<any[]> {
   if (!APIFY_TOKEN) throw new Error('APIFY_API_TOKEN not configured');
   const res = await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=120`, {
