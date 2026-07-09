@@ -87,6 +87,10 @@ export function useEcomWatchlist() {
           : null;
         throw new Error(payload?.error || error.message);
       }
+      if (data?.unsupported) {
+        toast({ title: 'Platform not supported yet', description: data.error, variant: 'destructive' });
+        return data;
+      }
       if (data?.success === false || data?.error) {
         throw new Error(data.error || data.note || 'Scrape did not return usable marketplace data');
       }

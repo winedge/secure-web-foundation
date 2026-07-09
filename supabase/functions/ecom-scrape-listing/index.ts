@@ -158,7 +158,7 @@ Deno.serve(async (req: Request) => {
           .from('ecom_scrape_jobs')
           .update({ status: 'failed', completed_at: new Date().toISOString(), error: friendly })
           .eq('id', job!.id);
-        return json({ success: false, error: friendly, unsupported }, 422);
+        return json({ success: false, error: friendly, unsupported }, 200);
       }
 
       const data = fcJson.data || fcJson;
