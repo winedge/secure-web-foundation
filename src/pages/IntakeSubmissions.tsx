@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useVertical } from '@/hooks/use-vertical';
 import { useAuth } from '@/lib/auth-context';
 import { useFirm } from '@/hooks/use-firm';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -28,6 +30,11 @@ export default function IntakeSubmissions() {
   const { user } = useAuth();
   const { data: firm } = useFirm();
   const queryClient = useQueryClient();
+  const { isVertical } = useVertical();
+  // FMCG doesn't use legal intake submissions — send them to the FMCG shop tracker.
+  if (isVertical('ecommerce_seller')) {
+    return <Navigate to="/my-shops" replace />;
+  }
   const [searchTerm, setSearchTerm] = useState('');
   const [priceDialogLead, setPriceDialogLead] = useState<any>(null);
   const [customPrice, setCustomPrice] = useState('');

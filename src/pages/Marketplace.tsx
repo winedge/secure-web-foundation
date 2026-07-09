@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Navigate } from 'react-router-dom';
 import { Search, ArrowUpDown, DollarSign, AlertCircle } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LeadCard } from '@/components/leads/LeadCard';
@@ -21,9 +21,13 @@ type SortOption = 'newest' | 'oldest' | 'price-low' | 'price-high' | 'score-high
 export default function Marketplace() {
   const { user, loading } = useAuth();
   const { data: firm, isLoading: firmLoading } = useFirm();
-  const { term, vertical, categories } = useVertical();
+  const { term, vertical, categories, isVertical } = useVertical();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  // FMCG tracks marketplace shops, not legal leads — redirect to the FMCG shop tracker.
+  if (isVertical('ecommerce_seller')) {
+    return <Navigate to="/my-shops" replace />;
+  }
 
   // Initialize state from URL query params (so links are shareable / state persists on reload)
   const [filters, setFilters] = useState<LeadFilters>(() => ({
