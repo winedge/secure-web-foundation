@@ -98,6 +98,7 @@ export const navGroups: NavGroup[] = [
     label: 'Leads',
     termKey: 'lead_plural',
     icon: Briefcase,
+    hideForVerticals: ['ecommerce_seller'],
     items: [
       { name: 'Marketplace', href: '/marketplace', icon: ShoppingCart, termKey: 'marketplace_title' },
       { name: 'My Leads', href: '/my-leads', icon: Briefcase, termTemplate: 'My {lead_plural}' },
