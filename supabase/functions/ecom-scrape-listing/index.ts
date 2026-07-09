@@ -10,6 +10,7 @@ const corsHeaders = {
 };
 
 const FIRECRAWL_V2 = 'https://api.firecrawl.dev/v2';
+const APIFY_TOKEN = Deno.env.get('APIFY_API_TOKEN') ?? '';
 
 function detectPlatform(url: string): string {
   const u = url.toLowerCase();
@@ -83,6 +84,152 @@ const LIST_SCHEMA = {
 const UNSUPPORTED_HINT = 'do not support this site';
 
 type ScrapeExtraction = Record<string, any>;
+
+interface TikTokShopTarget {
+  type: 'search' | 'product' | 'category' | 'store';
+  keyword?: string;
+  url?: string;
+  bestSellers: boolean;
+}
+
+interface ApifyActorConfig {
+  actor: string;
+  buildInput: (target: TikTokShopTarget, rawUrl: string) => Record<string, unknown>;
+}
+
+function getTikTokShopTarget(rawUrl: string): TikTokShopTarget {
+  try {
+    const url = new URL(rawUrl);
+    const keyword = url.searchParams.get('keyword')?.trim();
+    const sort = url.searchParams.get('sort')?.toLowerCase() || '';
+    const path = url.pathname.toLowerCase();
+    const bestSellers = ['sales', 'sold', 'best_sellers', 'best-sellers'].includes(sort);
+
+    if (keyword) return { type: 'search', keyword, bestSellers };
+    if (path.includes('/pdp/') || path.includes('/product/')) return { type: 'product', url: rawUrl, bestSellers };
+    if (path.includes('/c/') || path.includes('/category/')) return { type: 'category', url: rawUrl, bestSellers };
+    if (path.includes('/store/')) return { type: 'store', url: rawUrl, bestSellers };
+    return { type: 'search', keyword: rawUrl, bestSellers };
+  } catch (_) {
+    return { type: 'search', keyword: rawUrl, bestSellers: false };
+  }
+}
+
+const TIKTOK_SHOP_APIFY_ACTORS: ApifyActorConfig[] = [
+  {
+    actor: 'devcake~tiktok-shop-data-scraper',
+    buildInput: (target, rawUrl) => target.type === 'search'
+      ? {
+        searchKeywords: [target.keyword],
+        maxProducts: 40,
+        includeReviews: false,
+        sortBySoldCount: target.bestSellers ? 'highest_first' : 'none',
+        maxRetries: 5,
+        requestDelay: 250,
+        maxConcurrency: 2,
+      }
+      : {
+        urls: [target.url || rawUrl],
+        maxProducts: 40,
+        includeReviews: false,
+        maxRetries: 5,
+        requestDelay: 250,
+        maxConcurrency: 2,
+      },
+  },
+  {
+    actor: 'trakk~tiktok-shop-search-scraper',
+    buildInput: (target) => ({
+      keywords: [target.keyword || ''],
+      country_code: 'US',
+      maxItems: 40,
+      maxPages: 1,
+      sortBy: target.bestSellers ? 'best_sellers' : 'relevance',
+      maxRetries: 3,
+      requestTimeoutSec: 30,
+      proxyConfiguration: {
+        useApifyProxy: true,
+        apifyProxyGroups: ['RESIDENTIAL'],
+        apifyProxyCountry: 'US',
+      },
+    }),
+  },
+  {
+    actor: 'pro100chok~tiktok-shop-scraper',
+    buildInput: (target, rawUrl) => {
+      if (target.type === 'search') return { scrapeType: 'search', searchKeywords: [target.keyword], sortBy: target.bestSellers ? 'best_sellers' : 'relevance', maxItems: 40, region: 'us' };
+      if (target.type === 'product') return { scrapeType: 'product', productUrls: [target.url || rawUrl], includeReviews: false, maxItems: 40, region: 'us' };
+      if (target.type === 'category') return { scrapeType: 'category', categoryUrls: [target.url || rawUrl], maxItems: 40, region: 'us' };
+      return { scrapeType: 'store', storeUrls: [target.url || rawUrl], maxItems: 40, region: 'us' };
+    },
+  },
+];
+
+async function runApifyActor(actor: string, input: Record<string, unknown>): Promise<any[]> {
+  if (!APIFY_TOKEN) throw new Error('APIFY_API_TOKEN not configured');
+  const response = await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=90`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    throw new Error(`Apify actor ${actor} failed [${response.status}]: ${text.slice(0, 300)}`);
+  }
+  const data = await response.json().catch(() => []);
+  return Array.isArray(data) ? data : [];
+}
+
+async function scrapeTikTokShopApify(url: string, listMode: boolean): Promise<ScrapeExtraction> {
+  const target = getTikTokShopTarget(url);
+  const configs = target.type === 'search'
+    ? TIKTOK_SHOP_APIFY_ACTORS
+    : TIKTOK_SHOP_APIFY_ACTORS.filter((cfg) => cfg.actor !== 'trakk~tiktok-shop-search-scraper');
+
+  for (const config of configs) {
+    try {
+      const rawItems = await runApifyActor(config.actor, config.buildInput(target, url));
+      const products = normalizeApifyProducts(rawItems, url);
+      if (products.length) {
+        return listMode
+          ? { items: products.slice(0, 20), provider: 'apify', actor: config.actor }
+          : { ...products[0], provider: 'apify', actor: config.actor };
+      }
+    } catch (err) {
+      console.error('tiktok apify actor failed', config.actor, err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  return listMode ? { items: [] } : {};
+}
+
+function normalizeApifyProducts(rawItems: any[], sourceUrl: string): ScrapeExtraction[] {
+  const unpacked = rawItems.flatMap((item) => {
+    if (Array.isArray(item?.products)) return item.products;
+    if (Array.isArray(item?.items)) return item.items;
+    if (Array.isArray(item?.data)) return item.data;
+    return [item];
+  });
+
+  return dedupeProducts(unpacked.map((item) => normalizeItem({
+    ...item,
+    title: item?.title ?? item?.name ?? item?.productName ?? item?.product_name ?? item?.productTitle,
+    price: item?.price ?? item?.currentPrice ?? item?.priceValue ?? item?.salePrice ?? item?.sale_price,
+    original_price: item?.original_price ?? item?.originalPrice ?? item?.listPrice ?? item?.marketPrice,
+    rating: item?.rating ?? item?.averageRating ?? item?.ratingValue ?? item?.stars,
+    rating_count: item?.rating_count ?? item?.ratingCount ?? item?.reviewCount ?? item?.reviews,
+    units_sold: item?.units_sold ?? item?.unitsSold ?? item?.soldCount ?? item?.sold_count ?? item?.sold ?? item?.sales,
+    sold_text: item?.sold_text ?? item?.soldText ?? item?.soldCountText ?? item?.salesText,
+    currency: item?.currency ?? item?.currencyCode,
+    shop_name: item?.shop_name ?? item?.shopName ?? item?.sellerName ?? item?.seller?.name ?? item?.storeName ?? item?.brand,
+    url: item?.url ?? item?.link ?? item?.productUrl ?? item?.product_url ?? item?.itemUrl ?? sourceUrl,
+  })).filter((item) => item.title || item.price != null));
+}
+
+function hasUsefulExtraction(ext: ScrapeExtraction, listMode: boolean): boolean {
+  if (listMode) return Array.isArray(ext.items) && ext.items.length > 0;
+  return !!(ext.title || ext.price != null);
+}
 
 async function scrapeTikTokShopFallback(url: string, listMode: boolean): Promise<ScrapeExtraction> {
   const response = await fetch(url, {
@@ -486,7 +633,7 @@ Deno.serve(async (req: Request) => {
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
 
-    if (!firecrawlKey) return json({ error: 'FIRECRAWL_API_KEY not configured' }, 500);
+    if (!firecrawlKey && !APIFY_TOKEN) return json({ error: 'No scraper API key configured' }, 500);
 
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
@@ -530,55 +677,64 @@ Deno.serve(async (req: Request) => {
       .single();
 
     try {
-      const schema = listMode ? LIST_SCHEMA : PRODUCT_SCHEMA;
-      const prompt = listMode
-        ? 'Extract FMCG marketplace intelligence from the visible product cards. Return up to 20 items with title, price, original_price, rating, rating_count, units_sold, sold_text, revenue or GMV if visible, currency, shop_name and url. Also return total_units_sold, total_revenue, active_shops, active_products, min_price, max_price and average_rating when visible or inferable from the items.'
-        : 'Extract FMCG product listing intelligence: title, price, original_price, discount_pct, promo_label, stock status, rating, rating_count, units_sold or sold_text, revenue or GMV if visible, currency and shop_name.';
-
-      const fcRes = await fetch(`${FIRECRAWL_V2}/scrape`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${firecrawlKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: watch.entity_url,
-          formats: [
-            'markdown',
-            { type: 'json', schema, prompt },
-          ],
-          onlyMainContent: true,
-          waitFor: 1500,
-        }),
-      });
-      const fcJson = await fcRes.json();
       let ext: ScrapeExtraction = {};
+      let provider = 'none';
 
-      if (!fcRes.ok) {
-        const rawMsg = fcJson?.error || `Firecrawl ${fcRes.status}`;
-        const unsupported = String(rawMsg).toLowerCase().includes(UNSUPPORTED_HINT);
-        if (platform === 'tiktok_shop') {
-          try {
-            ext = await scrapeTikTokShopFallback(watch.entity_url, listMode);
-          } catch (err) {
-            console.error('tiktok fallback failed', err);
-            ext = { blocked: true };
-          }
-        } else {
-        const friendly = unsupported
-          ? `${platform} is not supported by our scraper yet. Use Shopee or Tiki product URLs for now.`
-          : rawMsg;
-        await admin
-          .from('ecom_scrape_jobs')
-          .update({ status: 'failed', completed_at: new Date().toISOString(), error: friendly })
-          .eq('id', job!.id);
-        return json({ success: false, error: friendly, unsupported }, 200);
-        }
+      if (platform === 'tiktok_shop' && APIFY_TOKEN) {
+        ext = await scrapeTikTokShopApify(watch.entity_url, listMode);
+        if (hasUsefulExtraction(ext, listMode)) provider = 'apify';
       }
 
-      if (!Object.keys(ext).length) {
-        const data = fcJson.data || fcJson;
-        ext = data.json || {};
+      if (!hasUsefulExtraction(ext, listMode) && firecrawlKey) {
+        const schema = listMode ? LIST_SCHEMA : PRODUCT_SCHEMA;
+        const prompt = listMode
+          ? 'Extract FMCG marketplace intelligence from the visible product cards. Return up to 20 items with title, price, original_price, rating, rating_count, units_sold, sold_text, revenue or GMV if visible, currency, shop_name and url. Also return total_units_sold, total_revenue, active_shops, active_products, min_price, max_price and average_rating when visible or inferable from the items.'
+          : 'Extract FMCG product listing intelligence: title, price, original_price, discount_pct, promo_label, stock status, rating, rating_count, units_sold or sold_text, revenue or GMV if visible, currency and shop_name.';
+
+        const fcRes = await fetch(`${FIRECRAWL_V2}/scrape`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${firecrawlKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: watch.entity_url,
+            formats: [
+              'markdown',
+              { type: 'json', schema, prompt },
+            ],
+            onlyMainContent: true,
+            waitFor: 1500,
+          }),
+        });
+        const fcJson = await fcRes.json();
+
+        if (!fcRes.ok) {
+          const rawMsg = fcJson?.error || `Firecrawl ${fcRes.status}`;
+          const unsupported = String(rawMsg).toLowerCase().includes(UNSUPPORTED_HINT);
+          if (platform === 'tiktok_shop') {
+            try {
+              ext = await scrapeTikTokShopFallback(watch.entity_url, listMode);
+              if (hasUsefulExtraction(ext, listMode)) provider = 'html_fallback';
+            } catch (err) {
+              console.error('tiktok fallback failed', err);
+              ext = { blocked: true };
+            }
+          } else {
+          const friendly = unsupported
+            ? `${platform} is not supported by our scraper yet. Use Shopee or Tiki product URLs for now.`
+            : rawMsg;
+          await admin
+            .from('ecom_scrape_jobs')
+            .update({ status: 'failed', completed_at: new Date().toISOString(), error: friendly })
+            .eq('id', job!.id);
+          return json({ success: false, error: friendly, unsupported }, 200);
+          }
+        } else {
+          const data = fcJson.data || fcJson;
+          ext = data.json || {};
+          if (hasUsefulExtraction(ext, listMode)) provider = 'firecrawl';
+        }
       }
 
       if (listMode) {
@@ -645,6 +801,7 @@ Deno.serve(async (req: Request) => {
           raw: {
             items: summary.items.slice(0, 20),
             platform,
+            provider,
             source_url: watch.entity_url,
             mode: 'list',
             min_price: summary.minPrice,
@@ -667,6 +824,7 @@ Deno.serve(async (req: Request) => {
             completed_at: new Date().toISOString(),
             result: {
               items: summary.items.length,
+              provider,
               avgPrice: summary.avgPrice,
               totalUnits: summary.totalUnits,
               revenue: summary.revenue,
@@ -680,6 +838,7 @@ Deno.serve(async (req: Request) => {
         return json({
           success: true,
           mode: 'list',
+          provider,
           items: summary.items.length,
           avgPrice: summary.avgPrice,
           totalUnits: summary.totalUnits,
@@ -750,6 +909,7 @@ Deno.serve(async (req: Request) => {
         raw: {
           extracted: ext,
           platform,
+          provider,
           source_url: watch.entity_url,
           mode: 'product',
           revenue_source: ext.revenue ? 'extracted_or_price_times_units' : null,
@@ -798,10 +958,10 @@ Deno.serve(async (req: Request) => {
 
       await admin
         .from('ecom_scrape_jobs')
-        .update({ status: 'completed', completed_at: new Date().toISOString(), result: { extracted: ext } })
+        .update({ status: 'completed', completed_at: new Date().toISOString(), result: { extracted: ext, provider } })
         .eq('id', job!.id);
 
-      return json({ success: true, mode: 'product', extracted: ext });
+      return json({ success: true, mode: 'product', provider, extracted: ext });
     } catch (e) {
       const msg = (e as Error).message || String(e);
       await admin
