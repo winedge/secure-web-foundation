@@ -1,5 +1,6 @@
-// Ecom Listening - scan the web for brand/product mentions and reviews
-// via Firecrawl search, classify sentiment + topics with AI, persist to ecom_mentions.
+// Ecom Listening - fetch REAL product reviews via Apify per-platform actors
+// (Shopee, Lazada, Tiki, TikTok Shop), classify sentiment + topics with AI,
+// persist to ecom_mentions.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const corsHeaders = {
@@ -9,7 +10,119 @@ const corsHeaders = {
 };
 const GATEWAY = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 const MODEL = 'google/gemini-2.5-flash';
-const FIRECRAWL = 'https://api.firecrawl.dev/v2/search';
+const APIFY_TOKEN = Deno.env.get('APIFY_API_TOKEN') ?? '';
+
+type Platform = 'shopee' | 'lazada' | 'tiki' | 'tiktok_shop';
+
+interface ReviewActorConfig {
+  actor: string;
+  buildInput: (url: string) => Record<string, unknown>;
+}
+
+// Per-platform Apify actors that fetch product reviews.
+// Multiple actors per platform for graceful fallback.
+const REVIEW_ACTORS: Record<Platform, ReviewActorConfig[]> = {
+  shopee: [
+    { actor: 'easyapi~shopee-product-reviews-scraper', buildInput: (url) => ({ startUrls: [{ url }], maxReviews: 60 }) },
+    { actor: 'easyapi~shopee-search-scraper',          buildInput: (url) => ({ startUrls: [{ url }], includeReviews: true, maxReviews: 60, maxItems: 1 }) },
+  ],
+  lazada: [
+    { actor: 'epctex~lazada-scraper', buildInput: (url) => ({ startUrls: [{ url }], includeReviews: true, maxReviews: 60, maxItems: 1 }) },
+    { actor: 'jupri~lazada-scraper',  buildInput: (url) => ({ startUrls: [{ url }], includeReviews: true, maxReviews: 60, maxItems: 1 }) },
+  ],
+  tiki: [
+    { actor: 'crawlerbros~tiki-product-scraper', buildInput: (url) => {
+      try {
+        const u = new URL(url);
+        const pMatch = u.pathname.match(/-p(\d+)\.html/i);
+        if (pMatch) return { mode: 'getProductReviews', productId: pMatch[1], maxReviews: 60 };
+      } catch (_) { /* noop */ }
+      return { mode: 'getProductReviews', productUrl: url, maxReviews: 60 };
+    } },
+  ],
+  tiktok_shop: [
+    { actor: 'devcake~tiktok-shop-data-scraper', buildInput: (url) => ({ urls: [url], maxProducts: 1, includeReviews: true, maxReviews: 60, maxRetries: 3 }) },
+    { actor: 'pro100chok~tiktok-shop-scraper',   buildInput: (url) => ({ scrapeType: 'product', productUrls: [url], includeReviews: true, maxReviews: 60, region: 'us' }) },
+  ],
+};
+
+async function runApifyActor(actor: string, input: Record<string, unknown>): Promise<any[]> {
+  if (!APIFY_TOKEN) throw new Error('APIFY_API_TOKEN not configured');
+  const res = await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=120`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Apify ${actor} [${res.status}]: ${text.slice(0, 200)}`);
+  }
+  const data = await res.json().catch(() => []);
+  return Array.isArray(data) ? data : [];
+}
+
+interface RawReview {
+  content: string;
+  author?: string;
+  rating?: number;
+  captured_at?: string;
+  source_url?: string;
+}
+
+function extractReviews(rawItems: any[], fallbackUrl: string): RawReview[] {
+  const out: RawReview[] = [];
+  const seen = new Set<string>();
+  const walk = (node: any, parentUrl?: string) => {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) { node.forEach((n) => walk(n, parentUrl)); return; }
+
+    const url = node.url || node.productUrl || node.product_url || parentUrl || fallbackUrl;
+
+    // Nested review arrays under common keys
+    for (const k of ['reviews', 'productReviews', 'comments', 'ratings']) {
+      if (Array.isArray(node[k])) node[k].forEach((r: any) => walk(r, url));
+    }
+
+    // Detect a review-shaped object
+    const text = node.text ?? node.content ?? node.review ?? node.comment ?? node.reviewText ?? node.review_text ?? node.body;
+    if (typeof text === 'string' && text.trim().length > 4) {
+      const author = node.author ?? node.username ?? node.userName ?? node.user_name ?? node.reviewer ?? node.nickname ?? node.user?.name;
+      const ratingRaw = node.rating ?? node.stars ?? node.score ?? node.rating_star ?? node.ratingStar;
+      const rating = typeof ratingRaw === 'number' ? ratingRaw : (typeof ratingRaw === 'string' ? parseFloat(ratingRaw) : undefined);
+      const captured = node.createdAt ?? node.created_at ?? node.date ?? node.time ?? node.reviewTime;
+      const key = `${(author || '').slice(0, 40)}|${text.slice(0, 120)}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        out.push({
+          content: text.trim().slice(0, 2000),
+          author: typeof author === 'string' ? author.slice(0, 120) : undefined,
+          rating: Number.isFinite(rating) ? Math.max(0, Math.min(5, rating!)) : undefined,
+          captured_at: typeof captured === 'string' ? captured : undefined,
+          source_url: url,
+        });
+      }
+    }
+  };
+  walk(rawItems);
+  return out.slice(0, 80);
+}
+
+async function fetchReviewsFromApify(platform: Platform, url: string): Promise<{ reviews: RawReview[]; actor: string | null; errors: string[] }> {
+  const configs = REVIEW_ACTORS[platform] ?? [];
+  const errors: string[] = [];
+  for (const cfg of configs) {
+    try {
+      const raw = await runApifyActor(cfg.actor, cfg.buildInput(url));
+      const reviews = extractReviews(raw, url);
+      if (reviews.length) return { reviews, actor: cfg.actor, errors };
+      errors.push(`${cfg.actor}: no reviews in dataset`);
+    } catch (e: any) {
+      errors.push(e?.message ?? String(e));
+      console.error(`review actor failed`, cfg.actor, e?.message);
+    }
+  }
+  return { reviews: [], actor: null, errors };
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -20,115 +133,103 @@ Deno.serve(async (req) => {
     const anon = Deno.env.get('SUPABASE_ANON_KEY')!;
     const svc = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const lovableKey = Deno.env.get('LOVABLE_API_KEY');
-    const fcKey = Deno.env.get('FIRECRAWL_API_KEY');
-    if (!lovableKey || !fcKey) return j({ error: 'missing API keys' }, 500);
+    if (!APIFY_TOKEN) return j({ error: 'APIFY_API_TOKEN not configured' }, 500);
+    if (!lovableKey) return j({ error: 'LOVABLE_API_KEY not configured' }, 500);
 
     const user = createClient(url, anon, { global: { headers: { Authorization: auth } } });
     const { data: u } = await user.auth.getUser();
     if (!u.user) return j({ error: 'unauthorized' }, 401);
 
-    const body = (await req.json().catch(() => ({}))) as {
-      query?: string; watchlist_id?: string; country?: string; timeframe?: 'qdr:d' | 'qdr:w' | 'qdr:m';
-    };
-    const country = (body.country || 'SG').toLowerCase();
-    const tbs = body.timeframe || 'qdr:w';
+    const body = (await req.json().catch(() => ({}))) as { watchlist_id?: string };
+    if (!body.watchlist_id) return j({ error: 'watchlist_id required' }, 400);
 
     const admin = createClient(url, svc);
-    let firm_id: string | null = null;
-    let query = (body.query || '').trim();
-
-    if (body.watchlist_id) {
-      const { data: w } = await admin.from('ecom_watchlist').select('*').eq('id', body.watchlist_id).single();
-      if (!w) return j({ error: 'watchlist not found' }, 404);
-      firm_id = w.firm_id;
-      query = query || `"${w.label}" review opinion ${w.platform || ''}`;
-    } else {
-      const { data: m } = await admin.from('firm_members').select('firm_id').eq('user_id', u.user.id).maybeSingle();
-      if (!m) return j({ error: 'no firm' }, 403);
-      firm_id = m.firm_id;
-    }
-    if (!query) return j({ error: 'query or watchlist_id required' }, 400);
+    const { data: w } = await admin.from('ecom_watchlist').select('*').eq('id', body.watchlist_id).single();
+    if (!w) return j({ error: 'watchlist not found' }, 404);
 
     const { data: member } = await admin.from('firm_members')
-      .select('firm_id').eq('user_id', u.user.id).eq('firm_id', firm_id!).maybeSingle();
+      .select('firm_id').eq('user_id', u.user.id).eq('firm_id', w.firm_id).maybeSingle();
     if (!member) return j({ error: 'forbidden' }, 403);
 
-    const fcRes = await fetch(FIRECRAWL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${fcKey}` },
-      body: JSON.stringify({ query, limit: 12, country, tbs, scrapeOptions: { formats: ['markdown'] } }),
-    });
-    if (!fcRes.ok) return j({ error: `firecrawl ${fcRes.status}` }, 502);
-    const fcJson = await fcRes.json();
-    const results: any[] = (fcJson?.data?.web ?? fcJson?.data ?? []).slice(0, 12);
-    if (!results.length) return j({ inserted: 0, note: 'No mentions found on the web for this listing yet' });
+    const platform = w.platform as Platform;
+    if (!REVIEW_ACTORS[platform]) return j({ inserted: 0, note: `Reviews not supported for platform ${platform}` });
+    if (w.entity_type !== 'product') {
+      return j({ inserted: 0, note: `Reviews require a product URL. This watchlist tracks a ${w.entity_type}.` });
+    }
 
-    const evidence = results.map((r, i) => ({
-      idx: i, url: r.url, title: r.title, description: r.description,
-      excerpt: typeof r.markdown === 'string' ? r.markdown.slice(0, 1200) : undefined,
-    }));
+    const { reviews, actor, errors } = await fetchReviewsFromApify(platform, w.entity_url);
+    if (!reviews.length) {
+      return j({ inserted: 0, note: `No reviews returned by Apify for this ${platform} product`, errors });
+    }
 
+    // Classify sentiment + topics via AI (single batch call).
+    const evidence = reviews.map((r, i) => ({ idx: i, content: r.content, rating: r.rating }));
     const aiRes = await fetch(GATEWAY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${lovableKey}` },
       body: JSON.stringify({
         model: MODEL,
         messages: [
-          { role: 'system', content: 'For each evidence item that contains an actual user opinion / review / discussion (skip pure ads or homepage stubs), produce a mention row. content must be a 1-3 sentence quote/paraphrase grounded in the excerpt. sentiment ∈ positive|neutral|negative. topics is 1-5 short tags. Always cite source_idx.' },
-          { role: 'user', content: JSON.stringify({ query, evidence }) },
+          { role: 'system', content: 'For each review, classify sentiment (positive|neutral|negative) and extract 1-4 short topic tags (kebab-case, e.g. "battery-life", "shipping", "packaging"). Use the rating as a strong hint when present (>=4 usually positive, <=2 usually negative).' },
+          { role: 'user', content: JSON.stringify({ reviews: evidence }) },
         ],
         tools: [{
           type: 'function',
           function: {
-            name: 'submit_mentions',
+            name: 'submit_classifications',
             parameters: {
               type: 'object',
               properties: {
-                mentions: {
+                items: {
                   type: 'array',
                   items: {
                     type: 'object',
                     properties: {
-                      source_idx: { type: 'integer' },
-                      author: { type: 'string' },
-                      content: { type: 'string' },
+                      idx: { type: 'integer' },
                       sentiment: { type: 'string', enum: ['positive', 'neutral', 'negative'] },
                       topics: { type: 'array', items: { type: 'string' } },
-                      rating: { type: 'number' },
                     },
-                    required: ['source_idx', 'content', 'sentiment'],
+                    required: ['idx', 'sentiment'],
                   },
                 },
               },
-              required: ['mentions'],
+              required: ['items'],
             },
           },
         }],
-        tool_choice: { type: 'function', function: { name: 'submit_mentions' } },
+        tool_choice: { type: 'function', function: { name: 'submit_classifications' } },
       }),
     });
-    if (!aiRes.ok) return j({ error: `ai ${aiRes.status}` }, 502);
-    const aiJson = await aiRes.json();
-    const args = JSON.parse(aiJson?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments ?? '{}');
-    const mentions = (args.mentions ?? []) as any[];
-    if (!mentions.length) return j({ inserted: 0, note: 'No usable mentions extracted' });
 
-    const rows = mentions.map((m) => {
-      const src = evidence[m.source_idx];
+    const classMap = new Map<number, { sentiment: string; topics: string[] }>();
+    if (aiRes.ok) {
+      const aiJson = await aiRes.json();
+      const args = JSON.parse(aiJson?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments ?? '{}');
+      for (const it of (args.items ?? [])) {
+        classMap.set(it.idx, { sentiment: it.sentiment, topics: Array.isArray(it.topics) ? it.topics.slice(0, 6) : [] });
+      }
+    }
+
+    const rows = reviews.map((r, i) => {
+      const c = classMap.get(i);
+      const sentiment = c?.sentiment ?? (r.rating != null ? (r.rating >= 4 ? 'positive' : r.rating <= 2 ? 'negative' : 'neutral') : 'neutral');
       return {
-        firm_id, watchlist_id: body.watchlist_id ?? null,
-        platform: null, source_url: src?.url ?? null,
-        author: m.author ?? null,
-        rating: m.rating ?? null,
-        content: String(m.content).slice(0, 2000),
-        sentiment: m.sentiment,
-        topics: Array.isArray(m.topics) ? m.topics.slice(0, 6) : null,
+        firm_id: w.firm_id,
+        watchlist_id: w.id,
+        platform,
+        source_url: r.source_url ?? w.entity_url,
+        author: r.author ?? null,
+        rating: r.rating ?? null,
+        content: r.content,
+        sentiment,
+        topics: c?.topics?.length ? c.topics : null,
+        captured_at: r.captured_at ? new Date(r.captured_at).toISOString() : undefined,
       };
-    }).filter((r) => r.source_url);
+    });
 
     const { error: insErr } = await admin.from('ecom_mentions').insert(rows);
     if (insErr) return j({ error: insErr.message }, 500);
-    return j({ inserted: rows.length });
+    return j({ inserted: rows.length, actor, platform });
   } catch (e: any) {
     return j({ error: e?.message ?? 'error' }, 500);
   }
