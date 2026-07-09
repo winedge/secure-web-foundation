@@ -93,9 +93,12 @@ async function scrapeTikTokShopFallback(url: string, listMode: boolean): Promise
     },
   });
 
-  const html = await response.text();
+  const html = await response.text().catch(() => '');
   if (!response.ok || !html.trim()) {
-    throw new Error(`TikTok Shop page fetch failed (${response.status})`);
+    // Treat as blocked/unavailable rather than throwing so the caller returns a
+    // structured "blocked" response instead of a 500. TikTok often returns 404
+    // for region-locked or bot-detected requests.
+    return listMode ? { items: [], blocked: true, fetchStatus: response.status } : { blocked: true, fetchStatus: response.status };
   }
 
   const products = extractProductsFromHtml(html, url);
@@ -555,7 +558,12 @@ Deno.serve(async (req: Request) => {
         const rawMsg = fcJson?.error || `Firecrawl ${fcRes.status}`;
         const unsupported = String(rawMsg).toLowerCase().includes(UNSUPPORTED_HINT);
         if (platform === 'tiktok_shop') {
-          ext = await scrapeTikTokShopFallback(watch.entity_url, listMode);
+          try {
+            ext = await scrapeTikTokShopFallback(watch.entity_url, listMode);
+          } catch (err) {
+            console.error('tiktok fallback failed', err);
+            ext = { blocked: true };
+          }
         } else {
         const friendly = unsupported
           ? `${platform} is not supported by our scraper yet. Use Shopee or Tiki product URLs for now.`
