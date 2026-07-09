@@ -53,7 +53,7 @@ import {
   CheckCircle2,
   Stethoscope,
 } from 'lucide-react';
-import type { ModuleKey } from '@/lib/verticals/types';
+import type { ModuleKey, VerticalSlug } from '@/lib/verticals/types';
 import { AI_TOOLS } from '@/lib/ai-tools/registry';
 
 export interface NavItem {
@@ -63,6 +63,10 @@ export interface NavItem {
   premium?: boolean;
   /** Module gate. If set, item only renders when the active vertical has this module enabled. */
   module?: ModuleKey;
+  /** Hide this item for the listed verticals. */
+  hideForVerticals?: VerticalSlug[];
+  /** Only show for these verticals (if set). */
+  onlyForVerticals?: VerticalSlug[];
   /** Terminology key — when set, label is replaced with the vertical-specific term at render time. */
   termKey?: string;
   /** Optional fallback label suffix; e.g. "My {lead_plural}" */
@@ -73,6 +77,10 @@ export interface NavGroup {
   label: string;
   icon: typeof LayoutDashboard;
   items: NavItem[];
+  /** Hide this whole group for the listed verticals. */
+  hideForVerticals?: VerticalSlug[];
+  /** Only show for these verticals (if set). */
+  onlyForVerticals?: VerticalSlug[];
   /** If set, clicking the group header navigates here */
   href?: string;
   /** Terminology key for the group label */
