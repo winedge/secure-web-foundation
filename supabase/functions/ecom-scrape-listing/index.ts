@@ -318,6 +318,11 @@ function isGenericTikTokPage(ext: ScrapeExtraction, sourceUrl: string): boolean 
     );
 }
 
+function isBlockedMarketplacePage(ext: ScrapeExtraction): boolean {
+  const text = `${ext.title || ''} ${ext.description || ''}`.toLowerCase();
+  return /security check|captcha|verify you are human|access denied|robot|unusual traffic|temporarily blocked/.test(text);
+}
+
 function normalizeItem(item: any): ScrapeExtraction {
   const price = toNumber(item.price);
   const originalPrice = toNumber(item.original_price ?? item.originalPrice);
@@ -653,7 +658,7 @@ Deno.serve(async (req: Request) => {
 
       // ---- product mode ----
       ext = normalizeItem(ext);
-      if (isGenericTikTokPage(ext, watch.entity_url)) ext = {};
+      if (isGenericTikTokPage(ext, watch.entity_url) || isBlockedMarketplacePage(ext)) ext = {};
       const hasRealData = ext && (ext.title || ext.price != null);
       if (!hasRealData) {
         await admin
