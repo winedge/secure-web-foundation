@@ -32,7 +32,8 @@ function buildTikTokShopInput(url: string): Record<string, unknown> {
       includeRawReview: false,
       includeRawProduct: false,
       compactNullFields: true,
-      requestTimeoutSecs: 45,
+      requestTimeoutSec: 15,
+      maxFetchRetries: 1,
     };
   }
 
@@ -44,7 +45,8 @@ function buildTikTokShopInput(url: string): Record<string, unknown> {
     includeRawReview: false,
     includeRawProduct: false,
     compactNullFields: true,
-    requestTimeoutSecs: 45,
+    requestTimeoutSec: 15,
+    maxFetchRetries: 1,
   };
 }
 
@@ -312,7 +314,7 @@ Deno.serve(async (req) => {
     // Resolve target product URLs. For product watchlists we use it directly;
     // for keyword/category/shop watchlists we first discover top products.
     let productUrls: string[] = [];
-    if (w.entity_type === 'product' || platform === 'tiktok_shop') {
+    if (w.entity_type === 'product') {
       productUrls = [w.entity_url];
     } else {
       productUrls = await discoverProductUrls(platform, w.entity_url);
