@@ -571,6 +571,28 @@ Deno.serve(async (req: Request) => {
 
       if (listMode) {
         const items: any[] = Array.isArray(ext.items) ? ext.items : [];
+        const normalizedListItems = items.map(normalizeItem);
+        const blockedListPage = normalizedListItems.some((item) => isGenericTikTokPage(item, watch.entity_url) || isBlockedMarketplacePage(item));
+        if (blockedListPage) {
+          await admin
+            .from('ecom_scrape_jobs')
+            .update({
+              status: 'completed',
+              completed_at: new Date().toISOString(),
+              result: { note: 'marketplace blocked scrape', platform, blocked: true },
+            })
+            .eq('id', job!.id);
+          await admin
+            .from('ecom_watchlist')
+            .update({ last_scraped_at: new Date().toISOString() })
+            .eq('id', watch.id);
+          return json({
+            success: false,
+            blocked: true,
+            error: `${platform} blocked this scrape with a security check, so no reliable marketplace metrics were saved. Try a Shopee, Lazada, or Tiki URL, or a TikTok Shop page that is publicly visible without verification.`,
+            note: 'marketplace blocked scrape',
+          }, 200);
+        }
         if (!items.length) {
           await admin
             .from('ecom_scrape_jobs')
@@ -658,7 +680,8 @@ Deno.serve(async (req: Request) => {
 
       // ---- product mode ----
       ext = normalizeItem(ext);
-      if (isGenericTikTokPage(ext, watch.entity_url) || isBlockedMarketplacePage(ext)) ext = {};
+      const blockedProductPage = isGenericTikTokPage(ext, watch.entity_url) || isBlockedMarketplacePage(ext);
+      if (blockedProductPage) ext = {};
       const hasRealData = ext && (ext.title || ext.price != null);
       if (!hasRealData) {
         await admin
@@ -666,7 +689,7 @@ Deno.serve(async (req: Request) => {
           .update({
             status: 'completed',
             completed_at: new Date().toISOString(),
-            result: { note: 'extraction returned no product data', platform },
+            result: { note: blockedProductPage ? 'marketplace blocked scrape' : 'extraction returned no product data', platform, blocked: blockedProductPage },
           })
           .eq('id', job!.id);
         await admin
@@ -675,8 +698,11 @@ Deno.serve(async (req: Request) => {
           .eq('id', watch.id);
         return json({
           success: false,
-          error: `No product data was extracted from this ${platform} listing. The marketplace may be blocking automated scraping, or the URL may require login/location access.`,
-          note: 'no product data extracted',
+          blocked: blockedProductPage,
+          error: blockedProductPage
+            ? `${platform} blocked this scrape with a security check, so no reliable product metrics were saved. Try a Shopee, Lazada, or Tiki URL, or a TikTok Shop page that is publicly visible without verification.`
+            : `No product data was extracted from this ${platform} listing. The marketplace may be blocking automated scraping, or the URL may require login/location access.`,
+          note: blockedProductPage ? 'marketplace blocked scrape' : 'no product data extracted',
         }, 200);
       }
 
