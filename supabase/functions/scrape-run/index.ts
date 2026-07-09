@@ -23,34 +23,82 @@ const WORKER_TOKEN = Deno.env.get('WORKER_SHARED_TOKEN') ?? '';
 const SUPA_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPA_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+interface ApifyActorConfig {
+  actor: string;
+  buildInput: (url: string) => Record<string, unknown>;
+}
+
+function getTikTokShopTarget(rawUrl: string) {
+  const url = new URL(rawUrl);
+  const keyword = url.searchParams.get('keyword')?.trim();
+  const sort = url.searchParams.get('sort')?.toLowerCase();
+  const path = url.pathname.toLowerCase();
+
+  if (keyword) return { type: 'search', keyword, bestSellers: sort === 'sales' || sort === 'best_sellers' };
+  if (path.includes('/pdp/')) return { type: 'product', url: rawUrl };
+  if (path.includes('/c/')) return { type: 'category', url: rawUrl };
+  if (path.includes('/store/')) return { type: 'store', url: rawUrl };
+  return { type: 'search', keyword: rawUrl, bestSellers: false };
+}
+
 /** Actor ID per marketplace on Apify. */
-const APIFY_ACTORS: Record<string, { actor: string; buildInput: (url: string) => Record<string, unknown> }> = {
-  tiktok_shop: {
-    actor: 'scraperino~tiktok-shop-scraper',
-    buildInput: (url) => ({ startUrls: [{ url }], maxItems: 40 }),
-  },
-
-
-  shopee: {
+const APIFY_ACTORS: Record<string, ApifyActorConfig[]> = {
+  tiktok_shop: [
+    {
+      actor: 'devcake~tiktok-shop-data-scraper',
+      buildInput: (url) => {
+        const target = getTikTokShopTarget(url);
+        return target.type === 'search'
+          ? {
+            searchKeywords: [target.keyword],
+            maxProducts: 40,
+            includeReviews: false,
+            sortBySoldCount: target.bestSellers ? 'highest_first' : 'none',
+            maxRetries: 5,
+            requestDelay: 250,
+            maxConcurrency: 2,
+          }
+          : {
+            urls: [url],
+            maxProducts: 40,
+            includeReviews: false,
+            maxRetries: 5,
+            requestDelay: 250,
+            maxConcurrency: 2,
+          };
+      },
+    },
+    {
+      actor: 'pro100chok~tiktok-shop-scraper',
+      buildInput: (url) => {
+        const target = getTikTokShopTarget(url);
+        if (target.type === 'search') return { scrapeType: 'search', searchKeywords: [target.keyword], sortBy: target.bestSellers ? 'best_sellers' : 'relevance', maxItems: 40, region: 'us' };
+        if (target.type === 'product') return { scrapeType: 'product', productUrls: [url], includeReviews: false, maxItems: 40, region: 'us' };
+        if (target.type === 'category') return { scrapeType: 'category', categoryUrls: [url], maxItems: 40, region: 'us' };
+        return { scrapeType: 'store', storeUrls: [url], maxItems: 40, region: 'us' };
+      },
+    },
+  ],
+  shopee: [{
     actor: 'easyapi~shopee-search-scraper',
     buildInput: (url) => ({ startUrls: [{ url }], maxItems: 40 }),
-  },
-  lazada: {
+  }],
+  lazada: [{
     actor: 'jupri~lazada-scraper',
     buildInput: (url) => ({ startUrls: [{ url }], maxItems: 40 }),
-  },
-  temu: {
+  }],
+  temu: [{
     actor: 'epctex~temu-scraper',
     buildInput: (url) => ({ startUrls: [url], maxItems: 40 }),
-  },
-  amazon: {
+  }],
+  amazon: [{
     actor: 'junglee~amazon-crawler',
     buildInput: (url) => ({ categoryOrProductUrls: [{ url }], maxItemsPerStartUrl: 40 }),
-  },
-  ebay: {
+  }],
+  ebay: [{
     actor: 'dtrungtin~ebay-items-scraper',
     buildInput: (url) => ({ startUrls: [{ url }], maxItems: 40 }),
-  },
+  }],
 };
 
 interface NormalizedProduct {
@@ -126,8 +174,8 @@ function normalize(marketplace: string, items: any[]): NormalizedProduct[] {
       review_count: Number(it.reviewCount ?? it.reviews ?? it.review_count) || undefined,
       sold_count: Number(it.soldCount ?? it.sold ?? it.sold_count) || undefined,
       seller: it.seller ?? it.shopName ?? it.brand,
-      image: it.image ?? it.imageUrl ?? it.thumbnail ?? (Array.isArray(it.images) ? it.images[0] : undefined),
-      images: Array.isArray(it.images) ? it.images : undefined,
+      image: it.image ?? it.imageUrl ?? it.thumbnail ?? (Array.isArray(it.imageUrls) ? it.imageUrls[0] : undefined) ?? (Array.isArray(it.images) ? it.images[0] : undefined),
+      images: Array.isArray(it.images) ? it.images : (Array.isArray(it.imageUrls) ? it.imageUrls : undefined),
       product_url: it.url ?? it.link ?? it.productUrl,
       category: it.category,
       stock_status: it.inStock === false ? 'out_of_stock' : (it.stockStatus ?? 'in_stock'),
@@ -151,18 +199,22 @@ async function processJob(supa: any, job: { id: string; watchlist_id: string; fi
   try {
     let items: any[] = [];
     let provider = 'none';
-    const cfg = APIFY_ACTORS[job.marketplace];
     const logs: Array<{ level: string; message: string }> = [];
+    const cfgs = APIFY_ACTORS[job.marketplace] ?? [];
 
-    // Try Apify first when configured
-    if (cfg && APIFY_TOKEN) {
-      try {
-        items = await runApify(cfg.actor, cfg.buildInput(job.url));
-        provider = 'apify';
-        logs.push({ level: 'info', message: `apify actor ${cfg.actor} returned ${items.length} raw items` });
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        logs.push({ level: 'warn', message: `apify failed, will try firecrawl: ${msg.slice(0, 200)}` });
+    // Try Apify first when configured. TikTok Shop search pages require keyword inputs,
+    // not raw /search URLs, so those URLs are converted before calling the actor.
+    if (cfgs.length > 0 && APIFY_TOKEN) {
+      for (const cfg of cfgs) {
+        try {
+          items = await runApify(cfg.actor, cfg.buildInput(job.url));
+          provider = 'apify';
+          logs.push({ level: 'info', message: `apify actor ${cfg.actor} returned ${items.length} raw items` });
+          if (items.length > 0) break;
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          logs.push({ level: 'warn', message: `apify actor ${cfg.actor} failed: ${msg.slice(0, 300)}` });
+        }
       }
     }
 
