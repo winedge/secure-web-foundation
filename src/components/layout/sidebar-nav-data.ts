@@ -53,7 +53,7 @@ import {
   CheckCircle2,
   Stethoscope,
 } from 'lucide-react';
-import type { ModuleKey } from '@/lib/verticals/types';
+import type { ModuleKey, VerticalSlug } from '@/lib/verticals/types';
 import { AI_TOOLS } from '@/lib/ai-tools/registry';
 
 export interface NavItem {
@@ -63,6 +63,10 @@ export interface NavItem {
   premium?: boolean;
   /** Module gate. If set, item only renders when the active vertical has this module enabled. */
   module?: ModuleKey;
+  /** Hide this item for the listed verticals. */
+  hideForVerticals?: VerticalSlug[];
+  /** Only show for these verticals (if set). */
+  onlyForVerticals?: VerticalSlug[];
   /** Terminology key — when set, label is replaced with the vertical-specific term at render time. */
   termKey?: string;
   /** Optional fallback label suffix; e.g. "My {lead_plural}" */
@@ -73,6 +77,10 @@ export interface NavGroup {
   label: string;
   icon: typeof LayoutDashboard;
   items: NavItem[];
+  /** Hide this whole group for the listed verticals. */
+  hideForVerticals?: VerticalSlug[];
+  /** Only show for these verticals (if set). */
+  onlyForVerticals?: VerticalSlug[];
   /** If set, clicking the group header navigates here */
   href?: string;
   /** Terminology key for the group label */
@@ -90,6 +98,7 @@ export const navGroups: NavGroup[] = [
     label: 'Leads',
     termKey: 'lead_plural',
     icon: Briefcase,
+    hideForVerticals: ['ecommerce_seller'],
     items: [
       { name: 'Marketplace', href: '/marketplace', icon: ShoppingCart, termKey: 'marketplace_title' },
       { name: 'My Leads', href: '/my-leads', icon: Briefcase, termTemplate: 'My {lead_plural}' },
@@ -272,15 +281,29 @@ export function buildAiToolGroups(): NavGroup[] {
 export function applyVerticalToNav(
   groups: NavGroup[],
   enabledModules: string[],
-  terminology: Record<string, string | undefined>
+  terminology: Record<string, string | undefined>,
+  verticalSlug?: string
 ): NavGroup[] {
   const interpolate = (template: string): string =>
     template.replace(/\{(\w+)\}/g, (_, k) => terminology[k] ?? k);
 
+  const groupVisible = (group: NavGroup) => {
+    if (verticalSlug && group.hideForVerticals?.includes(verticalSlug as VerticalSlug)) return false;
+    if (group.onlyForVerticals && (!verticalSlug || !group.onlyForVerticals.includes(verticalSlug as VerticalSlug))) return false;
+    return true;
+  };
+  const itemVisible = (item: NavItem) => {
+    if (item.module && !enabledModules.includes(item.module)) return false;
+    if (verticalSlug && item.hideForVerticals?.includes(verticalSlug as VerticalSlug)) return false;
+    if (item.onlyForVerticals && (!verticalSlug || !item.onlyForVerticals.includes(verticalSlug as VerticalSlug))) return false;
+    return true;
+  };
+
   return groups
+    .filter(groupVisible)
     .map((group) => {
       const items = group.items
-        .filter((item) => !item.module || enabledModules.includes(item.module))
+        .filter(itemVisible)
         .map((item) => {
           let name = item.name;
           if (item.termTemplate) name = interpolate(item.termTemplate);

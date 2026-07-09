@@ -34,9 +34,9 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { isAdmin } = useIsAdmin();
   const { tier } = useSubscriptionContext();
-  const { enabledModules, terminology } = useVertical();
-  const groups = applyVerticalToNav(navGroups, enabledModules, terminology);
-  const aiToolGroups = applyVerticalToNav(buildAiToolGroups(), enabledModules, terminology);
+  const { enabledModules, terminology, vertical } = useVertical();
+  const groups = applyVerticalToNav(navGroups, enabledModules, terminology, vertical?.slug);
+  const aiToolGroups = applyVerticalToNav(buildAiToolGroups(), enabledModules, terminology, vertical?.slug);
 
   const upgradeClass = ({ isActive }: { isActive: boolean }) =>
     cn(
