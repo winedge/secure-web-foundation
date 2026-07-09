@@ -256,10 +256,10 @@ export default function EcomMarketOverview() {
             ) : (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <MiniMetric label="Revenue" value={latestInsight.snapshot.revenue ? Number(latestInsight.snapshot.revenue).toLocaleString() : '|'} />
-                  <MiniMetric label="Units sold" value={latestInsight.snapshot.units_sold ? Number(latestInsight.snapshot.units_sold).toLocaleString() : '|'} />
-                  <MiniMetric label="Price range" value={latestInsight.minPrice && latestInsight.maxPrice ? `${Number(latestInsight.minPrice).toFixed(2)} | ${Number(latestInsight.maxPrice).toFixed(2)}` : '|'} />
-                  <MiniMetric label="Avg rating" value={latestInsight.averageRating ? Number(latestInsight.averageRating).toFixed(1) : '|'} />
+                  <MiniMetric label={`Revenue${latestInsight.currency ? ` (${latestInsight.currency})` : ''}`} value={latestInsight.revenue ? Number(latestInsight.revenue).toLocaleString() : '|'} />
+                  <MiniMetric label="Units sold" value={latestInsight.unitsSold ? Number(latestInsight.unitsSold).toLocaleString() : '|'} />
+                  <MiniMetric label="Price range" value={latestInsight.minPrice != null && latestInsight.maxPrice != null ? (Number(latestInsight.minPrice) === Number(latestInsight.maxPrice) ? Number(latestInsight.minPrice).toFixed(2) : `${Number(latestInsight.minPrice).toFixed(2)} | ${Number(latestInsight.maxPrice).toFixed(2)}`) : '|'} />
+                  <MiniMetric label="Avg rating" value={latestInsight.averageRating ? `${Number(latestInsight.averageRating).toFixed(1)} ★` : '|'} />
                 </div>
                 {latestInsight.coverage && (
                   <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
