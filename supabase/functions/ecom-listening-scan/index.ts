@@ -19,6 +19,109 @@ interface ReviewActorConfig {
   buildInput: (url: string) => Record<string, unknown>;
 }
 
+function buildTikTokShopInput(url: string): Record<string, unknown> {
+  const keyword = getSearchKeyword(url);
+  if (keyword) {
+    return {
+      queries: [keyword],
+      searchRegion: 'US',
+      maxPagesPerQuery: 1,
+      maxProductsPerQuery: 2,
+      maxProductsTotal: 2,
+      maxReviewsPerProduct: 5,
+      includeRawReview: false,
+      includeRawProduct: false,
+      compactNullFields: true,
+      requestTimeoutSec: 10,
+      maxFetchRetries: 1,
+    };
+  }
+
+  return {
+    productUrls: [url],
+    searchRegion: 'US',
+    maxProductsTotal: 1,
+    maxReviewsPerProduct: 30,
+    includeRawReview: false,
+    includeRawProduct: false,
+    compactNullFields: true,
+    requestTimeoutSec: 15,
+    maxFetchRetries: 1,
+  };
+}
+
+function buildTikTokShopLurkInput(url: string): Record<string, unknown> {
+  return {
+    urls: [url],
+    maxReviewsPerTarget: 30,
+    maxProductsPerShop: 3,
+    sortBy: 'newest',
+    starRating: 0,
+    withPhotosOnly: false,
+    country: 'US',
+    outputRating: true,
+    outputContent: true,
+    outputTimestamp: true,
+    outputAuthorHandle: true,
+    outputAuthorName: true,
+  };
+}
+
+function buildTikTokShopVisticsInput(url: string): Record<string, unknown> {
+  return {
+    startUrls: [url],
+    maxReviews: 30,
+    region: 'US',
+  };
+}
+
+function buildTikTokShopGenericInput(url: string): Record<string, unknown> {
+  try {
+    const u = new URL(url);
+    const keyword = u.searchParams.get('keyword') || u.searchParams.get('q');
+    if (keyword) {
+      return {
+        searchKeywords: [keyword],
+        maxProducts: 20,
+        includeReviews: true,
+        maxReviews: 5,
+        sortBySoldCount: 'highest_first',
+        maxRetries: 2,
+        timeout: 30,
+        maxConcurrency: 10,
+      };
+    }
+  } catch (_) { /* noop */ }
+
+  return {
+    urls: [url],
+    maxProducts: 20,
+    includeReviews: true,
+    maxReviews: 30,
+    maxRetries: 2,
+    timeout: 30,
+    maxConcurrency: 10,
+  };
+}
+
+function getSearchKeyword(url: string): string | null {
+  try {
+    const u = new URL(url);
+    return u.searchParams.get('keyword') || u.searchParams.get('q');
+  } catch (_) {
+    return null;
+  }
+}
+
+function buildTikTokShopDiscoveryInput(url: string): Record<string, unknown> {
+  try {
+    const u = new URL(url);
+    const keyword = u.searchParams.get('keyword') || u.searchParams.get('q');
+    if (keyword) return { searchKeywords: [keyword], maxProducts: 20, includeReviews: false, sortBySoldCount: 'highest_first', maxRetries: 2, timeout: 30, maxConcurrency: 10 };
+  } catch (_) { /* noop */ }
+  return { urls: [url], maxProducts: 20, includeReviews: false, maxRetries: 2, timeout: 30, maxConcurrency: 10 };
+}
+
 // Per-platform Apify actors that fetch product reviews.
 // Multiple actors per platform for graceful fallback.
 const REVIEW_ACTORS: Record<Platform, ReviewActorConfig[]> = {
@@ -41,8 +144,10 @@ const REVIEW_ACTORS: Record<Platform, ReviewActorConfig[]> = {
     } },
   ],
   tiktok_shop: [
-    { actor: 'devcake~tiktok-shop-data-scraper', buildInput: (url) => ({ urls: [url], maxProducts: 1, includeReviews: true, maxReviews: 60, maxRetries: 3 }) },
-    { actor: 'pro100chok~tiktok-shop-scraper',   buildInput: (url) => ({ scrapeType: 'product', productUrls: [url], includeReviews: true, maxReviews: 60, region: 'us' }) },
+    { actor: 'sentry~tiktok-shop-reviews-pro', buildInput: buildTikTokShopInput },
+    { actor: 'lurkapi~tiktok-shop-reviews-scraper', buildInput: buildTikTokShopLurkInput },
+    { actor: 'vistics~tiktok-shop-product-reviews', buildInput: buildTikTokShopVisticsInput },
+    { actor: 'devcake~tiktok-shop-data-scraper', buildInput: buildTikTokShopGenericInput },
   ],
 };
 
@@ -67,14 +172,7 @@ const DISCOVERY_ACTORS: Record<Platform, ReviewActorConfig[]> = {
     } },
   ],
   tiktok_shop: [
-    { actor: 'devcake~tiktok-shop-data-scraper', buildInput: (url) => {
-      try {
-        const u = new URL(url);
-        const kw = u.searchParams.get('keyword');
-        if (kw) return { searchKeywords: [kw], maxProducts: 5, includeReviews: false, maxRetries: 3 };
-      } catch (_) { /* noop */ }
-      return { urls: [url], maxProducts: 5, includeReviews: false, maxRetries: 3 };
-    } },
+    { actor: 'devcake~tiktok-shop-data-scraper', buildInput: buildTikTokShopDiscoveryInput },
   ],
 };
 
@@ -135,7 +233,7 @@ function extractReviews(rawItems: any[], fallbackUrl: string): RawReview[] {
     if (!node || typeof node !== 'object') return;
     if (Array.isArray(node)) { node.forEach((n) => walk(n, parentUrl)); return; }
 
-    const url = node.url || node.productUrl || node.product_url || parentUrl || fallbackUrl;
+    const url = node.url || node.productUrl || node.product_url || node.productPageUrl || node.product?.url || parentUrl || fallbackUrl;
 
     // Nested review arrays under common keys
     for (const k of ['reviews', 'productReviews', 'comments', 'ratings']) {
@@ -143,12 +241,12 @@ function extractReviews(rawItems: any[], fallbackUrl: string): RawReview[] {
     }
 
     // Detect a review-shaped object
-    const text = node.text ?? node.content ?? node.review ?? node.comment ?? node.reviewText ?? node.review_text ?? node.body;
+    const text = node.text ?? node.content ?? node.review ?? node.comment ?? node.reviewText ?? node.review_text ?? node.reviewContent ?? node.review_content ?? node.body;
     if (typeof text === 'string' && text.trim().length > 4) {
-      const author = node.author ?? node.username ?? node.userName ?? node.user_name ?? node.reviewer ?? node.nickname ?? node.user?.name;
-      const ratingRaw = node.rating ?? node.stars ?? node.score ?? node.rating_star ?? node.ratingStar;
+      const author = node.author ?? node.authorName ?? node.authorHandle ?? node.username ?? node.userName ?? node.user_name ?? node.reviewer ?? node.reviewerName ?? node.nickname ?? node.user?.name;
+      const ratingRaw = node.rating ?? node.stars ?? node.score ?? node.starRating ?? node.rating_star ?? node.ratingStar;
       const rating = typeof ratingRaw === 'number' ? ratingRaw : (typeof ratingRaw === 'string' ? parseFloat(ratingRaw) : undefined);
-      const captured = node.createdAt ?? node.created_at ?? node.date ?? node.time ?? node.reviewTime;
+      const captured = node.createdAt ?? node.created_at ?? node.date ?? node.time ?? node.timestamp ?? node.reviewDate ?? node.reviewTime;
       const key = `${(author || '').slice(0, 40)}|${text.slice(0, 120)}`;
       if (!seen.has(key)) {
         seen.add(key);
@@ -216,7 +314,7 @@ Deno.serve(async (req) => {
     // Resolve target product URLs. For product watchlists we use it directly;
     // for keyword/category/shop watchlists we first discover top products.
     let productUrls: string[] = [];
-    if (w.entity_type === 'product') {
+    if (w.entity_type === 'product' || (platform === 'tiktok_shop' && getSearchKeyword(w.entity_url))) {
       productUrls = [w.entity_url];
     } else {
       productUrls = await discoverProductUrls(platform, w.entity_url);
@@ -302,7 +400,7 @@ Deno.serve(async (req) => {
         content: r.content,
         sentiment,
         topics: c?.topics?.length ? c.topics : null,
-        captured_at: r.captured_at ? new Date(r.captured_at).toISOString() : undefined,
+        captured_at: r.captured_at ? new Date(r.captured_at).toISOString() : new Date().toISOString(),
       };
     });
 
