@@ -146,8 +146,10 @@ function extractProductFromHtml(html: string, sourceUrl: string): ScrapeExtracti
   const currency = String(offers?.priceCurrency || meta('product:price:currency') || inferCurrency(html) || '').toUpperCase() || null;
   const rating = toNumber(productJson.aggregateRating?.ratingValue || findFirst(html, /"ratingValue"\s*:\s*"?([\d.]+)/i));
   const ratingCount = toInteger(productJson.aggregateRating?.reviewCount || productJson.aggregateRating?.ratingCount || findFirst(html, /"reviewCount"\s*:\s*"?(\d+)/i));
-  const sold = toInteger(findFirst(html, /(?:sold_count|soldCount|sales|units_sold|unitsSold)"?\s*:\s*"?(\d+)/i));
+  const soldText = findFirst(html, /(?:sold_count|soldCount|sales|units_sold|unitsSold|sold_text|soldText)"?\s*:\s*"?([^",}<]+)/i);
+  const sold = parseCompactNumber(soldText) ?? toInteger(soldText);
   const availability = String(offers?.availability || '').toLowerCase();
+  const revenue = price && sold ? price * sold : null;
 
   return {
     title: title || null,
@@ -160,6 +162,8 @@ function extractProductFromHtml(html: string, sourceUrl: string): ScrapeExtracti
     rating,
     rating_count: ratingCount,
     units_sold: sold,
+    sold_text: soldText || null,
+    revenue,
     currency,
     shop_name: cleanText(findFirst(html, /"shop_name"\s*:\s*"([^"]+)"/i) || findFirst(html, /"seller_name"\s*:\s*"([^"]+)"/i)) || null,
     source_url: sourceUrl,
@@ -213,15 +217,20 @@ function normalizeProductCandidate(value: Record<string, any>, sourceUrl: string
   ]));
   const rating = toNumber(findPrimitiveDeep(value, ['rating', 'ratingValue', 'score', 'review_score']));
   const ratingCount = toInteger(findPrimitiveDeep(value, ['rating_count', 'ratingCount', 'review_count', 'reviewCount', 'reviews']));
-  const unitsSold = toInteger(findPrimitiveDeep(value, [
+  const soldValue = findPrimitiveDeep(value, [
     'sold', 'sold_count', 'soldCount', 'sold_num', 'soldNum', 'sales', 'sale_count', 'saleCount', 'units_sold', 'unitsSold',
-  ]));
+  ]);
+  const soldText = cleanText(findStringDeep(value, ['sold_text', 'soldText', 'sales_text', 'salesText', 'sold_label', 'soldLabel']));
+  const unitsSold = parseCompactNumber(soldValue) ?? parseCompactNumber(soldText) ?? toInteger(soldValue) ?? toInteger(soldText);
   const shopName = cleanText(findStringDeep(value, [
     'shop_name', 'shopName', 'seller_name', 'sellerName', 'store_name', 'storeName', 'merchant_name', 'merchantName',
   ]));
   const currency = cleanText(findStringDeep(value, ['currency', 'currency_code', 'currencyCode', 'priceCurrency']))?.toUpperCase()
     || inferCurrency(JSON.stringify(value));
   const itemUrl = cleanText(findStringDeep(value, ['url', 'product_url', 'productUrl', 'item_url', 'itemUrl'])) || sourceUrl;
+
+  const revenue = toNumber(findPrimitiveDeep(value, ['revenue', 'gmv', 'sales_amount', 'salesAmount', 'revenue_amount', 'revenueAmount']))
+    ?? (price && unitsSold ? price * unitsSold : null);
 
   return {
     title,
@@ -233,6 +242,8 @@ function normalizeProductCandidate(value: Record<string, any>, sourceUrl: string
     rating,
     rating_count: ratingCount,
     units_sold: unitsSold,
+    sold_text: soldText,
+    revenue,
     currency,
     shop_name: shopName,
     url: itemUrl,
@@ -294,6 +305,80 @@ function dedupeProducts(items: ScrapeExtraction[]): ScrapeExtraction[] {
     seen.add(key);
     return true;
   });
+}
+
+function isGenericTikTokPage(ext: ScrapeExtraction, sourceUrl: string): boolean {
+  const title = String(ext.title || '').trim().toLowerCase();
+  const description = String(ext.description || '').trim().toLowerCase();
+  return detectPlatform(sourceUrl) === 'tiktok_shop'
+    && (
+      title === 'about | tiktok'
+      || title === 'tiktok'
+      || description.includes('leading destination for short-form mobile videos')
+    );
+}
+
+function normalizeItem(item: any): ScrapeExtraction {
+  const price = toNumber(item.price);
+  const originalPrice = toNumber(item.original_price ?? item.originalPrice);
+  const unitsSold = parseCompactNumber(item.units_sold ?? item.unitsSold ?? item.sold ?? item.sales ?? item.sold_text ?? item.soldText)
+    ?? toInteger(item.units_sold ?? item.unitsSold ?? item.sold ?? item.sales);
+  const revenue = toNumber(item.revenue ?? item.gmv ?? item.sales_amount ?? item.salesAmount)
+    ?? (price && unitsSold ? price * unitsSold : null);
+  const rating = toNumber(item.rating ?? item.ratingValue ?? item.score);
+
+  return {
+    ...item,
+    title: cleanText(item.title ?? item.name ?? item.product_name ?? item.productName),
+    price,
+    original_price: originalPrice,
+    rating,
+    rating_count: toInteger(item.rating_count ?? item.ratingCount ?? item.review_count ?? item.reviewCount),
+    units_sold: unitsSold,
+    sold_text: cleanText(item.sold_text ?? item.soldText ?? item.sales_text ?? item.salesText),
+    revenue,
+    currency: cleanText(item.currency ?? item.currency_code ?? item.currencyCode)?.toUpperCase() || null,
+    shop_name: cleanText(item.shop_name ?? item.shopName ?? item.seller_name ?? item.sellerName ?? item.store_name ?? item.storeName),
+    url: cleanText(item.url ?? item.product_url ?? item.productUrl ?? item.item_url ?? item.itemUrl),
+  };
+}
+
+function summarizeItems(items: ScrapeExtraction[], ext: ScrapeExtraction) {
+  const normalized = items.map(normalizeItem).filter((item) => item.title || item.price != null);
+  const prices = normalized.map((i) => Number(i.price)).filter((n) => Number.isFinite(n) && n > 0);
+  const units = normalized.map((i) => Number(i.units_sold)).filter((n) => Number.isFinite(n) && n >= 0);
+  const itemRevenue = normalized.map((i) => Number(i.revenue)).filter((n) => Number.isFinite(n) && n > 0);
+  const ratings = normalized.map((i) => Number(i.rating)).filter((n) => Number.isFinite(n) && n > 0);
+  const shops = new Set(normalized.map((i) => String(i.shop_name || '').trim()).filter(Boolean));
+  const avgPrice = prices.length ? prices.reduce((a, b) => a + b, 0) / prices.length : null;
+  const totalUnits = toInteger(ext.total_units_sold ?? ext.totalUnitsSold) ?? (units.length ? units.reduce((a, b) => a + b, 0) : null);
+  const revenue = toNumber(ext.total_revenue ?? ext.totalRevenue ?? ext.revenue)
+    ?? (itemRevenue.length ? itemRevenue.reduce((a, b) => a + b, 0) : null)
+    ?? (avgPrice && totalUnits ? avgPrice * totalUnits : null);
+
+  return {
+    items: normalized,
+    avgPrice,
+    totalUnits,
+    revenue,
+    activeProducts: toInteger(ext.active_products ?? ext.activeProducts) ?? normalized.length,
+    activeShops: toInteger(ext.active_shops ?? ext.activeShops) ?? (shops.size || null),
+    minPrice: prices.length ? Math.min(...prices) : null,
+    maxPrice: prices.length ? Math.max(...prices) : null,
+    averageRating: ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null,
+    currency: cleanText(ext.currency)?.toUpperCase() || normalized.find((item) => item.currency)?.currency || null,
+  };
+}
+
+function parseCompactNumber(value: unknown): number | null {
+  if (value == null || value === '') return null;
+  const text = String(value).replace(/\+/g, '').trim().toLowerCase();
+  const match = text.match(/([\d]+(?:[.,][\d]+)?)\s*([km])?\b/);
+  if (!match) return null;
+  const base = Number(match[1].replace(',', '.'));
+  if (!Number.isFinite(base)) return null;
+  const multiplier = match[2] === 'm' ? 1_000_000 : match[2] === 'k' ? 1_000 : 1;
+  return Math.round(base * multiplier);
 }
 
 function parseJsonCandidates(value: string): any[] {
