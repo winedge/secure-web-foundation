@@ -589,7 +589,7 @@ Deno.serve(async (req: Request) => {
             error: `No products were extracted from this ${platform} page. The marketplace may be blocking automated scraping, or the URL may not show product cards publicly.`,
             items: 0,
             note: 'no items extracted',
-          }, 422);
+          }, 200);
         }
 
         const summary = summarizeItems(items, ext);
@@ -677,7 +677,7 @@ Deno.serve(async (req: Request) => {
           success: false,
           error: `No product data was extracted from this ${platform} listing. The marketplace may be blocking automated scraping, or the URL may require login/location access.`,
           note: 'no product data extracted',
-        }, 422);
+        }, 200);
       }
 
       const { data: prev } = await admin
