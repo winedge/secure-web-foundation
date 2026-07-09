@@ -281,15 +281,29 @@ export function buildAiToolGroups(): NavGroup[] {
 export function applyVerticalToNav(
   groups: NavGroup[],
   enabledModules: string[],
-  terminology: Record<string, string | undefined>
+  terminology: Record<string, string | undefined>,
+  verticalSlug?: string
 ): NavGroup[] {
   const interpolate = (template: string): string =>
     template.replace(/\{(\w+)\}/g, (_, k) => terminology[k] ?? k);
 
+  const groupVisible = (group: NavGroup) => {
+    if (verticalSlug && group.hideForVerticals?.includes(verticalSlug as VerticalSlug)) return false;
+    if (group.onlyForVerticals && (!verticalSlug || !group.onlyForVerticals.includes(verticalSlug as VerticalSlug))) return false;
+    return true;
+  };
+  const itemVisible = (item: NavItem) => {
+    if (item.module && !enabledModules.includes(item.module)) return false;
+    if (verticalSlug && item.hideForVerticals?.includes(verticalSlug as VerticalSlug)) return false;
+    if (item.onlyForVerticals && (!verticalSlug || !item.onlyForVerticals.includes(verticalSlug as VerticalSlug))) return false;
+    return true;
+  };
+
   return groups
+    .filter(groupVisible)
     .map((group) => {
       const items = group.items
-        .filter((item) => !item.module || enabledModules.includes(item.module))
+        .filter(itemVisible)
         .map((item) => {
           let name = item.name;
           if (item.termTemplate) name = interpolate(item.termTemplate);
