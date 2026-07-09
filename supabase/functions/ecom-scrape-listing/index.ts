@@ -727,6 +727,9 @@ Deno.serve(async (req: Request) => {
       if (platform === 'tiktok_shop' && APIFY_TOKEN) {
         ext = await scrapeTikTokShopApify(watch.entity_url, listMode);
         if (hasUsefulExtraction(ext, listMode)) provider = 'apify';
+      } else if (MARKETPLACE_APIFY_ACTORS[platform] && APIFY_TOKEN) {
+        ext = await scrapeMarketplaceApify(platform, watch.entity_url, listMode);
+        if (hasUsefulExtraction(ext, listMode)) provider = 'apify';
       }
 
       if (!hasUsefulExtraction(ext, listMode) && firecrawlKey) {
