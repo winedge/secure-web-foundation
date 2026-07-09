@@ -26,13 +26,13 @@ function buildTikTokShopInput(url: string): Record<string, unknown> {
       queries: [keyword],
       searchRegion: 'US',
       maxPagesPerQuery: 1,
-      maxProductsPerQuery: 5,
-      maxProductsTotal: 5,
-      maxReviewsPerProduct: 10,
+      maxProductsPerQuery: 2,
+      maxProductsTotal: 2,
+      maxReviewsPerProduct: 5,
       includeRawReview: false,
       includeRawProduct: false,
       compactNullFields: true,
-      requestTimeoutSec: 15,
+      requestTimeoutSec: 10,
       maxFetchRetries: 1,
     };
   }
@@ -314,7 +314,7 @@ Deno.serve(async (req) => {
     // Resolve target product URLs. For product watchlists we use it directly;
     // for keyword/category/shop watchlists we first discover top products.
     let productUrls: string[] = [];
-    if (w.entity_type === 'product') {
+    if (w.entity_type === 'product' || (platform === 'tiktok_shop' && getSearchKeyword(w.entity_url))) {
       productUrls = [w.entity_url];
     } else {
       productUrls = await discoverProductUrls(platform, w.entity_url);
