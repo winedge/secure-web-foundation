@@ -459,13 +459,15 @@ export default function EcomMarketOverview() {
             <CardTitle>Watchlist</CardTitle>
           </CardHeader>
           <CardContent>
-            {(list.data?.length ?? 0) === 0 ? (
+            {(filteredWatchlist.length ?? 0) === 0 ? (
               <div className="text-sm text-muted-foreground py-8 text-center">
-                No URLs being tracked yet. Click <strong>Track URL</strong> above to add a product, shop, or competitor.
+                {platformFilter === 'all'
+                  ? <>No URLs being tracked yet. Click <strong>Track URL</strong> above to add a product, shop, or competitor.</>
+                  : <>No tracked URLs on {PLATFORMS.find((p) => p.value === platformFilter)?.label}. Switch platform or add one.</>}
               </div>
             ) : (
               <div className="space-y-2">
-                {list.data!.map((w) => (
+                {filteredWatchlist.map((w) => (
                   <div key={w.id} className="flex items-center justify-between gap-2 border rounded-md p-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
