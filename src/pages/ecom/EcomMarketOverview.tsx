@@ -100,7 +100,7 @@ export default function EcomMarketOverview() {
   }, [list.data, platformFilter]);
 
   const kpis = useMemo(() => {
-    const rows = snapshots.data ?? [];
+    const rows = filteredSnapshots;
     const last30 = rows.slice(-30);
     const sum = (k: string) => last30.reduce((a, r) => a + (Number(r[k]) || 0), 0);
     const avg = (k: string) => {
@@ -113,12 +113,12 @@ export default function EcomMarketOverview() {
       avgPrice: avg('avg_price'),
       activeShops: sum('active_shops'),
       activeProducts: sum('active_products'),
-      tracked: (list.data ?? []).length,
+      tracked: filteredWatchlist.length,
     };
-  }, [snapshots.data, list.data]);
+  }, [filteredSnapshots, filteredWatchlist]);
 
   const latestInsight = useMemo(() => {
-    const latest = (snapshots.data ?? []).at(-1);
+    const latest = filteredSnapshots.at(-1);
     const raw = latest?.raw ?? {};
     const items = Array.isArray(raw.items) ? raw.items : raw.extracted ? [raw.extracted] : [];
     const prices = items.map((item: any) => Number(item.price)).filter((n: number) => Number.isFinite(n) && n > 0);
@@ -136,10 +136,10 @@ export default function EcomMarketOverview() {
       unitsSold: Number(latest?.units_sold) || itemUnits || null,
       currency: raw.currency ?? items.find((item: any) => item.currency)?.currency ?? null,
     };
-  }, [snapshots.data]);
+  }, [filteredSnapshots]);
 
   const chartData = useMemo(() => {
-    const rows = snapshots.data ?? [];
+    const rows = filteredSnapshots;
     const grouped: Record<string, { date: string; revenue: number; units: number }> = {};
     for (const r of rows) {
       const d = r.captured_on;
@@ -153,7 +153,7 @@ export default function EcomMarketOverview() {
         ...d,
         label: new Date(d.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
       }));
-  }, [snapshots.data]);
+  }, [filteredSnapshots]);
 
   const compactNumber = (n: number) => {
     if (!Number.isFinite(n)) return '0';
