@@ -148,6 +148,14 @@ export default function EcomReviewHeatmap() {
               </SelectContent>
             </Select>
             <Button
+              variant="outline"
+              onClick={() => fetchReviews.mutate()}
+              disabled={!target || fetchReviews.isPending}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {fetchReviews.isPending ? 'Fetching...' : 'Fetch reviews'}
+            </Button>
+            <Button
               onClick={() => target && recs.generate.mutate({ watchlist_id: target, mode: 'review_heatmap' })}
               disabled={!target || recs.generate.isPending || aggregate.total === 0}
             >
