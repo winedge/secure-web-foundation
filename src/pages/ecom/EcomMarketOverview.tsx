@@ -184,7 +184,16 @@ export default function EcomMarketOverview() {
               Live competitor intel across Shopee, Lazada, Tiki and TikTok Shop | every insight linked to scraped evidence.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={platformFilter} onValueChange={(v) => setPlatformFilter(v as 'all' | EcomPlatform)}>
+              <SelectTrigger className="w-[170px]">
+                <SelectValue placeholder="All platforms" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All platforms</SelectItem>
+                {PLATFORMS.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
             <Button variant="outline" onClick={() => setWizardOpen(true)}>
               <Sparkles className="h-4 w-4 mr-2" />
               Setup wizard
