@@ -4,7 +4,7 @@
  * surfaces pain points / praise themes. AI proposes fixes citing real review ids.
  */
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useEcomWatchlist, type EcomPlatform } from '@/hooks/use-ecom-watchlist';
 import { useEcomRecommendations } from '@/hooks/use-ecom-recommendations';
@@ -14,7 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Flame, Sparkles, ThumbsUp, ThumbsDown, MessageSquare, FileSearch } from 'lucide-react';
+import { Flame, Sparkles, ThumbsUp, ThumbsDown, MessageSquare, FileSearch, Download } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Mention {
   id: string;
@@ -39,10 +40,28 @@ export default function EcomReviewHeatmap() {
     : (own[0]?.id || filteredWatchlist[0]?.id || '');
   const targetRow = list.data?.find((w) => w.id === target);
   const recs = useEcomRecommendations(target || undefined);
+  const qc = useQueryClient();
   const filtered = useMemo(
     () => (recs.list.data ?? []).filter((r) => r.rec_type === 'review_heatmap'),
     [recs.list.data]
   );
+
+  const fetchReviews = useMutation({
+    mutationFn: async () => {
+      if (!target) throw new Error('Select a listing first');
+      const { data, error } = await supabase.functions.invoke('ecom-listening-scan', {
+        body: { watchlist_id: target, timeframe: 'qdr:m' },
+      });
+      if (error) throw error;
+      return data as { inserted?: number; note?: string; error?: string };
+    },
+    onSuccess: (data) => {
+      if (data?.error) { toast.error(data.error); return; }
+      toast.success(`Fetched ${data?.inserted ?? 0} reviews${data?.note ? ` | ${data.note}` : ''}`);
+      qc.invalidateQueries({ queryKey: ['ecom-mentions-all', target] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? 'Failed to fetch reviews'),
+  });
 
   const mentions = useQuery({
     queryKey: ['ecom-mentions-all', target],
@@ -129,6 +148,14 @@ export default function EcomReviewHeatmap() {
               </SelectContent>
             </Select>
             <Button
+              variant="outline"
+              onClick={() => fetchReviews.mutate()}
+              disabled={!target || fetchReviews.isPending}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {fetchReviews.isPending ? 'Fetching...' : 'Fetch reviews'}
+            </Button>
+            <Button
               onClick={() => target && recs.generate.mutate({ watchlist_id: target, mode: 'review_heatmap' })}
               disabled={!target || recs.generate.isPending || aggregate.total === 0}
             >
@@ -144,7 +171,7 @@ export default function EcomReviewHeatmap() {
           </CardContent></Card>
         ) : aggregate.total === 0 ? (
           <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">
-            No reviews scraped yet for <strong>{targetRow?.label || targetRow?.entity_url}</strong>. Run a scrape from Marketplace Radar.
+            No reviews collected yet for <strong>{targetRow?.label || targetRow?.entity_url}</strong>. Click <strong>Fetch reviews</strong> above to pull opinions and reviews from across the web.
           </CardContent></Card>
         ) : (
           <div className="grid gap-4 lg:grid-cols-3">
