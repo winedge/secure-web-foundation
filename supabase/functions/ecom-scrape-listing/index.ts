@@ -93,9 +93,12 @@ async function scrapeTikTokShopFallback(url: string, listMode: boolean): Promise
     },
   });
 
-  const html = await response.text();
+  const html = await response.text().catch(() => '');
   if (!response.ok || !html.trim()) {
-    throw new Error(`TikTok Shop page fetch failed (${response.status})`);
+    // Treat as blocked/unavailable rather than throwing so the caller returns a
+    // structured "blocked" response instead of a 500. TikTok often returns 404
+    // for region-locked or bot-detected requests.
+    return listMode ? { items: [], blocked: true, fetchStatus: response.status } : { blocked: true, fetchStatus: response.status };
   }
 
   const products = extractProductsFromHtml(html, url);
