@@ -400,7 +400,7 @@ Deno.serve(async (req) => {
         content: r.content,
         sentiment,
         topics: c?.topics?.length ? c.topics : null,
-        captured_at: r.captured_at ? new Date(r.captured_at).toISOString() : undefined,
+        captured_at: r.captured_at ? new Date(r.captured_at).toISOString() : new Date().toISOString(),
       };
     });
 
