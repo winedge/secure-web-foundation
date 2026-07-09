@@ -171,7 +171,7 @@ export default function EcomReviewHeatmap() {
           </CardContent></Card>
         ) : aggregate.total === 0 ? (
           <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">
-            No reviews scraped yet for <strong>{targetRow?.label || targetRow?.entity_url}</strong>. Run a scrape from Marketplace Radar.
+            No reviews collected yet for <strong>{targetRow?.label || targetRow?.entity_url}</strong>. Click <strong>Fetch reviews</strong> above to pull opinions and reviews from across the web.
           </CardContent></Card>
         ) : (
           <div className="grid gap-4 lg:grid-cols-3">
