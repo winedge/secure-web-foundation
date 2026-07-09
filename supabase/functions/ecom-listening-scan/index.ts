@@ -212,14 +212,34 @@ Deno.serve(async (req) => {
 
     const platform = w.platform as Platform;
     if (!REVIEW_ACTORS[platform]) return j({ inserted: 0, note: `Reviews not supported for platform ${platform}` });
-    if (w.entity_type !== 'product') {
-      return j({ inserted: 0, note: `Reviews require a product URL. This watchlist tracks a ${w.entity_type}.` });
+
+    // Resolve target product URLs. For product watchlists we use it directly;
+    // for keyword/category/shop watchlists we first discover top products.
+    let productUrls: string[] = [];
+    if (w.entity_type === 'product') {
+      productUrls = [w.entity_url];
+    } else {
+      productUrls = await discoverProductUrls(platform, w.entity_url);
+      if (!productUrls.length) {
+        return j({ inserted: 0, note: `Could not discover any products under this ${w.entity_type} on ${platform}` });
+      }
     }
 
-    const { reviews, actor, errors } = await fetchReviewsFromApify(platform, w.entity_url);
-    if (!reviews.length) {
-      return j({ inserted: 0, note: `No reviews returned by Apify for this ${platform} product`, errors });
+    const allReviews: RawReview[] = [];
+    const actorsUsed: string[] = [];
+    const errors: string[] = [];
+    for (const pUrl of productUrls) {
+      const r = await fetchReviewsFromApify(platform, pUrl);
+      if (r.actor) actorsUsed.push(r.actor);
+      errors.push(...r.errors);
+      allReviews.push(...r.reviews);
+      if (allReviews.length >= 80) break;
     }
+    const reviews = allReviews.slice(0, 80);
+    if (!reviews.length) {
+      return j({ inserted: 0, note: `No reviews returned by Apify for this ${platform} ${w.entity_type}`, products_checked: productUrls.length, errors });
+    }
+    const actor = Array.from(new Set(actorsUsed)).join(',') || null;
 
     // Classify sentiment + topics via AI (single batch call).
     const evidence = reviews.map((r, i) => ({ idx: i, content: r.content, rating: r.rating }));
