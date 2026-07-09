@@ -826,6 +826,42 @@ export type Database = {
           },
         ]
       }
+      browser_sessions: {
+        Row: {
+          cookies: Json
+          created_at: string
+          health: string
+          id: string
+          label: string | null
+          last_used_at: string | null
+          marketplace: string
+          storage_state: Json
+          updated_at: string
+        }
+        Insert: {
+          cookies?: Json
+          created_at?: string
+          health?: string
+          id?: string
+          label?: string | null
+          last_used_at?: string | null
+          marketplace: string
+          storage_state?: Json
+          updated_at?: string
+        }
+        Update: {
+          cookies?: Json
+          created_at?: string
+          health?: string
+          id?: string
+          label?: string | null
+          last_used_at?: string | null
+          marketplace?: string
+          storage_state?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       budget_reallocation_logs: {
         Row: {
           ai_confidence: number | null
@@ -2473,8 +2509,11 @@ export type Database = {
           is_own: boolean
           label: string | null
           last_scraped_at: string | null
+          next_scan_at: string | null
           platform: string
+          priority: Database["public"]["Enums"]["scrape_priority"]
           retention_months: number
+          scan_interval_minutes: number
           track_frequency_minutes: number
           updated_at: string
         }
@@ -2488,8 +2527,11 @@ export type Database = {
           is_own?: boolean
           label?: string | null
           last_scraped_at?: string | null
+          next_scan_at?: string | null
           platform: string
+          priority?: Database["public"]["Enums"]["scrape_priority"]
           retention_months?: number
+          scan_interval_minutes?: number
           track_frequency_minutes?: number
           updated_at?: string
         }
@@ -2503,8 +2545,11 @@ export type Database = {
           is_own?: boolean
           label?: string | null
           last_scraped_at?: string | null
+          next_scan_at?: string | null
           platform?: string
+          priority?: Database["public"]["Enums"]["scrape_priority"]
           retention_months?: number
+          scan_interval_minutes?: number
           track_frequency_minutes?: number
           updated_at?: string
         }
@@ -6791,6 +6836,342 @@ export type Database = {
         }
         Relationships: []
       }
+      scrape_insights: {
+        Row: {
+          firm_id: string
+          generated_at: string
+          id: string
+          job_id: string | null
+          new_products: Json
+          price_changes: Json
+          removed_products: Json
+          summary: string | null
+          trending: Json
+          watchlist_id: string
+        }
+        Insert: {
+          firm_id: string
+          generated_at?: string
+          id?: string
+          job_id?: string | null
+          new_products?: Json
+          price_changes?: Json
+          removed_products?: Json
+          summary?: string | null
+          trending?: Json
+          watchlist_id: string
+        }
+        Update: {
+          firm_id?: string
+          generated_at?: string
+          id?: string
+          job_id?: string | null
+          new_products?: Json
+          price_changes?: Json
+          removed_products?: Json
+          summary?: string | null
+          trending?: Json
+          watchlist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scrape_insights_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scrape_insights_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "scrape_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scrape_insights_watchlist_id_fkey"
+            columns: ["watchlist_id"]
+            isOneToOne: false
+            referencedRelation: "ecom_watchlist"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scrape_jobs: {
+        Row: {
+          attempts: number
+          created_at: string
+          duration_ms: number | null
+          error_class: string | null
+          finished_at: string | null
+          firm_id: string
+          id: string
+          marketplace: string
+          price_changes_count: number | null
+          priority: Database["public"]["Enums"]["scrape_priority"]
+          products_found: number | null
+          products_new: number | null
+          products_removed: number | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["scrape_job_status"]
+          updated_at: string
+          watchlist_id: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          duration_ms?: number | null
+          error_class?: string | null
+          finished_at?: string | null
+          firm_id: string
+          id?: string
+          marketplace: string
+          price_changes_count?: number | null
+          priority?: Database["public"]["Enums"]["scrape_priority"]
+          products_found?: number | null
+          products_new?: number | null
+          products_removed?: number | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["scrape_job_status"]
+          updated_at?: string
+          watchlist_id: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          duration_ms?: number | null
+          error_class?: string | null
+          finished_at?: string | null
+          firm_id?: string
+          id?: string
+          marketplace?: string
+          price_changes_count?: number | null
+          priority?: Database["public"]["Enums"]["scrape_priority"]
+          products_found?: number | null
+          products_new?: number | null
+          products_removed?: number | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["scrape_job_status"]
+          updated_at?: string
+          watchlist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scrape_jobs_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scrape_jobs_watchlist_id_fkey"
+            columns: ["watchlist_id"]
+            isOneToOne: false
+            referencedRelation: "ecom_watchlist"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scrape_logs: {
+        Row: {
+          created_at: string
+          error_class: string | null
+          html_url: string | null
+          id: string
+          job_id: string
+          level: string
+          message: string
+          meta: Json
+          screenshot_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_class?: string | null
+          html_url?: string | null
+          id?: string
+          job_id: string
+          level?: string
+          message: string
+          meta?: Json
+          screenshot_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_class?: string | null
+          html_url?: string | null
+          id?: string
+          job_id?: string
+          level?: string
+          message?: string
+          meta?: Json
+          screenshot_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scrape_logs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "scrape_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scrape_product_history: {
+        Row: {
+          id: string
+          original_price: number | null
+          price: number | null
+          product_ref: string
+          rating: number | null
+          review_count: number | null
+          snapshot_at: string
+          sold_count: number | null
+          stock_status: string | null
+          watchlist_id: string
+        }
+        Insert: {
+          id?: string
+          original_price?: number | null
+          price?: number | null
+          product_ref: string
+          rating?: number | null
+          review_count?: number | null
+          snapshot_at?: string
+          sold_count?: number | null
+          stock_status?: string | null
+          watchlist_id: string
+        }
+        Update: {
+          id?: string
+          original_price?: number | null
+          price?: number | null
+          product_ref?: string
+          rating?: number | null
+          review_count?: number | null
+          snapshot_at?: string
+          sold_count?: number | null
+          stock_status?: string | null
+          watchlist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scrape_product_history_product_ref_fkey"
+            columns: ["product_ref"]
+            isOneToOne: false
+            referencedRelation: "scrape_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scrape_product_history_watchlist_id_fkey"
+            columns: ["watchlist_id"]
+            isOneToOne: false
+            referencedRelation: "ecom_watchlist"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scrape_products: {
+        Row: {
+          category: string | null
+          created_at: string
+          currency: string | null
+          description: string | null
+          discount: number | null
+          external_product_id: string
+          firm_id: string
+          id: string
+          image: string | null
+          images: Json
+          marketplace: string
+          original_price: number | null
+          price: number | null
+          product_url: string | null
+          rating: number | null
+          raw: Json
+          review_count: number | null
+          scraped_at: string
+          seller: string | null
+          seller_id: string | null
+          seller_rating: number | null
+          sold_count: number | null
+          stock_status: string | null
+          title: string | null
+          updated_at: string
+          watchlist_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          discount?: number | null
+          external_product_id: string
+          firm_id: string
+          id?: string
+          image?: string | null
+          images?: Json
+          marketplace: string
+          original_price?: number | null
+          price?: number | null
+          product_url?: string | null
+          rating?: number | null
+          raw?: Json
+          review_count?: number | null
+          scraped_at?: string
+          seller?: string | null
+          seller_id?: string | null
+          seller_rating?: number | null
+          sold_count?: number | null
+          stock_status?: string | null
+          title?: string | null
+          updated_at?: string
+          watchlist_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          discount?: number | null
+          external_product_id?: string
+          firm_id?: string
+          id?: string
+          image?: string | null
+          images?: Json
+          marketplace?: string
+          original_price?: number | null
+          price?: number | null
+          product_url?: string | null
+          rating?: number | null
+          raw?: Json
+          review_count?: number | null
+          scraped_at?: string
+          seller?: string | null
+          seller_id?: string | null
+          seller_rating?: number | null
+          sold_count?: number | null
+          stock_status?: string | null
+          title?: string | null
+          updated_at?: string
+          watchlist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scrape_products_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scrape_products_watchlist_id_fkey"
+            columns: ["watchlist_id"]
+            isOneToOne: false
+            referencedRelation: "ecom_watchlist"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seo_issues: {
         Row: {
           category: string
@@ -9687,6 +10068,8 @@ export type Database = {
         | "rejected"
         | "published"
         | "failed"
+      scrape_job_status: "queued" | "running" | "succeeded" | "failed" | "dead"
+      scrape_priority: "high" | "medium" | "low"
       subscription_plan: "basic" | "premium"
       team_permission:
         | "view_leads"
@@ -9961,6 +10344,8 @@ export const Constants = {
         "published",
         "failed",
       ],
+      scrape_job_status: ["queued", "running", "succeeded", "failed", "dead"],
+      scrape_priority: ["high", "medium", "low"],
       subscription_plan: ["basic", "premium"],
       team_permission: [
         "view_leads",
