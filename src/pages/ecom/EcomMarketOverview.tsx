@@ -340,6 +340,9 @@ export default function EcomMarketOverview() {
         <Card>
           <CardHeader>
             <CardTitle>Revenue & Units Trend</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Daily totals across your tracked URLs. {chartData.length === 1 ? 'Only one day of data so far | more points appear after each scrape.' : ''}
+            </p>
           </CardHeader>
           <CardContent>
             {chartData.length === 0 ? (
@@ -347,19 +350,21 @@ export default function EcomMarketOverview() {
                 No data yet | track a URL above and run a scrape to populate this chart.
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={260}>
-                <LineChart data={chartData}>
+              <ResponsiveContainer width="100%" height={280}>
+                <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="units" stroke="hsl(var(--success))" strokeWidth={2} dot={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+                  <YAxis yAxisId="left" tick={{ fontSize: 12 }} tickFormatter={compactNumber} width={60} />
+                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} tickFormatter={compactNumber} width={50} />
+                  <Tooltip formatter={(v: number, name: string) => [Number(v).toLocaleString(), name === 'revenue' ? 'Revenue' : 'Units']} />
+                  <Line yAxisId="left" type="monotone" dataKey="revenue" name="Revenue" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line yAxisId="right" type="monotone" dataKey="units" name="Units" stroke="hsl(var(--success))" strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             )}
           </CardContent>
         </Card>
+
 
         {/* Watchlist */}
         <Card>
