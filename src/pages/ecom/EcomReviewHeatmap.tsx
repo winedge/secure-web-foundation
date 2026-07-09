@@ -4,7 +4,7 @@
  * surfaces pain points / praise themes. AI proposes fixes citing real review ids.
  */
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useEcomWatchlist, type EcomPlatform } from '@/hooks/use-ecom-watchlist';
 import { useEcomRecommendations } from '@/hooks/use-ecom-recommendations';
@@ -14,7 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Flame, Sparkles, ThumbsUp, ThumbsDown, MessageSquare, FileSearch } from 'lucide-react';
+import { Flame, Sparkles, ThumbsUp, ThumbsDown, MessageSquare, FileSearch, Download } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Mention {
   id: string;
