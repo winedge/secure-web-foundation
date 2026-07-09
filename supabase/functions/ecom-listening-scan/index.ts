@@ -41,7 +41,7 @@ const REVIEW_ACTORS: Record<Platform, ReviewActorConfig[]> = {
     } },
   ],
   tiktok_shop: [
-    { actor: 'devcake~tiktok-shop-data-scraper', buildInput: (url) => ({ urls: [url], maxProducts: 1, includeReviews: true, maxReviews: 60, maxRetries: 3 }) },
+    { actor: 'devcake~tiktok-shop-data-scraper', buildInput: (url) => ({ urls: [url], maxProducts: 20, includeReviews: true, maxReviews: 60, maxRetries: 3 }) },
     { actor: 'pro100chok~tiktok-shop-scraper',   buildInput: (url) => ({ scrapeType: 'product', productUrls: [url], includeReviews: true, maxReviews: 60, region: 'us' }) },
   ],
 };
@@ -71,9 +71,9 @@ const DISCOVERY_ACTORS: Record<Platform, ReviewActorConfig[]> = {
       try {
         const u = new URL(url);
         const kw = u.searchParams.get('keyword');
-        if (kw) return { searchKeywords: [kw], maxProducts: 5, includeReviews: false, maxRetries: 3 };
+        if (kw) return { searchKeywords: [kw], maxProducts: 20, includeReviews: false, maxRetries: 3 };
       } catch (_) { /* noop */ }
-      return { urls: [url], maxProducts: 5, includeReviews: false, maxRetries: 3 };
+      return { urls: [url], maxProducts: 20, includeReviews: false, maxRetries: 3 };
     } },
   ],
 };
