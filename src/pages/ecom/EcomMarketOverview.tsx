@@ -134,8 +134,22 @@ export default function EcomMarketOverview() {
       grouped[d].revenue += Number(r.revenue) || 0;
       grouped[d].units += Number(r.units_sold) || 0;
     }
-    return Object.values(grouped);
+    return Object.values(grouped)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map((d) => ({
+        ...d,
+        label: new Date(d.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+      }));
   }, [snapshots.data]);
+
+  const compactNumber = (n: number) => {
+    if (!Number.isFinite(n)) return '0';
+    const abs = Math.abs(n);
+    if (abs >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+    if (abs >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+    return String(Math.round(n));
+  };
+
 
   const handleAdd = async () => {
     if (!form.entity_url) return;
