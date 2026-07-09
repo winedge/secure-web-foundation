@@ -87,6 +87,18 @@ export default function EcomMarketOverview() {
     },
   });
 
+  const filteredSnapshots = useMemo(() => {
+    const rows = snapshots.data ?? [];
+    if (platformFilter === 'all') return rows;
+    const allowedIds = new Set((list.data ?? []).filter((w) => w.platform === platformFilter).map((w) => w.id));
+    return rows.filter((r: any) => allowedIds.has(r.watchlist_id));
+  }, [snapshots.data, list.data, platformFilter]);
+
+  const filteredWatchlist = useMemo(() => {
+    const rows = list.data ?? [];
+    return platformFilter === 'all' ? rows : rows.filter((w) => w.platform === platformFilter);
+  }, [list.data, platformFilter]);
+
   const kpis = useMemo(() => {
     const rows = snapshots.data ?? [];
     const last30 = rows.slice(-30);
