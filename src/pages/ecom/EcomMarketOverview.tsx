@@ -40,6 +40,7 @@ export default function EcomMarketOverview() {
   const { list, add, remove, scrape } = useEcomWatchlist();
   const [open, setOpen] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [platformFilter, setPlatformFilter] = useState<'all' | EcomPlatform>('all');
   const [form, setForm] = useState({
     platform: 'shopee' as EcomPlatform,
     entity_type: 'product' as EcomEntityType,
@@ -86,8 +87,20 @@ export default function EcomMarketOverview() {
     },
   });
 
-  const kpis = useMemo(() => {
+  const filteredSnapshots = useMemo(() => {
     const rows = snapshots.data ?? [];
+    if (platformFilter === 'all') return rows;
+    const allowedIds = new Set((list.data ?? []).filter((w) => w.platform === platformFilter).map((w) => w.id));
+    return rows.filter((r: any) => allowedIds.has(r.watchlist_id));
+  }, [snapshots.data, list.data, platformFilter]);
+
+  const filteredWatchlist = useMemo(() => {
+    const rows = list.data ?? [];
+    return platformFilter === 'all' ? rows : rows.filter((w) => w.platform === platformFilter);
+  }, [list.data, platformFilter]);
+
+  const kpis = useMemo(() => {
+    const rows = filteredSnapshots;
     const last30 = rows.slice(-30);
     const sum = (k: string) => last30.reduce((a, r) => a + (Number(r[k]) || 0), 0);
     const avg = (k: string) => {
@@ -100,12 +113,12 @@ export default function EcomMarketOverview() {
       avgPrice: avg('avg_price'),
       activeShops: sum('active_shops'),
       activeProducts: sum('active_products'),
-      tracked: (list.data ?? []).length,
+      tracked: filteredWatchlist.length,
     };
-  }, [snapshots.data, list.data]);
+  }, [filteredSnapshots, filteredWatchlist]);
 
   const latestInsight = useMemo(() => {
-    const latest = (snapshots.data ?? []).at(-1);
+    const latest = filteredSnapshots.at(-1);
     const raw = latest?.raw ?? {};
     const items = Array.isArray(raw.items) ? raw.items : raw.extracted ? [raw.extracted] : [];
     const prices = items.map((item: any) => Number(item.price)).filter((n: number) => Number.isFinite(n) && n > 0);
@@ -123,10 +136,10 @@ export default function EcomMarketOverview() {
       unitsSold: Number(latest?.units_sold) || itemUnits || null,
       currency: raw.currency ?? items.find((item: any) => item.currency)?.currency ?? null,
     };
-  }, [snapshots.data]);
+  }, [filteredSnapshots]);
 
   const chartData = useMemo(() => {
-    const rows = snapshots.data ?? [];
+    const rows = filteredSnapshots;
     const grouped: Record<string, { date: string; revenue: number; units: number }> = {};
     for (const r of rows) {
       const d = r.captured_on;
@@ -140,7 +153,7 @@ export default function EcomMarketOverview() {
         ...d,
         label: new Date(d.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
       }));
-  }, [snapshots.data]);
+  }, [filteredSnapshots]);
 
   const compactNumber = (n: number) => {
     if (!Number.isFinite(n)) return '0';
@@ -171,7 +184,16 @@ export default function EcomMarketOverview() {
               Live competitor intel across Shopee, Lazada, Tiki and TikTok Shop | every insight linked to scraped evidence.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={platformFilter} onValueChange={(v) => setPlatformFilter(v as 'all' | EcomPlatform)}>
+              <SelectTrigger className="w-[170px]">
+                <SelectValue placeholder="All platforms" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All platforms</SelectItem>
+                {PLATFORMS.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
             <Button variant="outline" onClick={() => setWizardOpen(true)}>
               <Sparkles className="h-4 w-4 mr-2" />
               Setup wizard
@@ -446,13 +468,15 @@ export default function EcomMarketOverview() {
             <CardTitle>Watchlist</CardTitle>
           </CardHeader>
           <CardContent>
-            {(list.data?.length ?? 0) === 0 ? (
+            {(filteredWatchlist.length ?? 0) === 0 ? (
               <div className="text-sm text-muted-foreground py-8 text-center">
-                No URLs being tracked yet. Click <strong>Track URL</strong> above to add a product, shop, or competitor.
+                {platformFilter === 'all'
+                  ? <>No URLs being tracked yet. Click <strong>Track URL</strong> above to add a product, shop, or competitor.</>
+                  : <>No tracked URLs on {PLATFORMS.find((p) => p.value === platformFilter)?.label}. Switch platform or add one.</>}
               </div>
             ) : (
               <div className="space-y-2">
-                {list.data!.map((w) => (
+                {filteredWatchlist.map((w) => (
                   <div key={w.id} className="flex items-center justify-between gap-2 border rounded-md p-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
