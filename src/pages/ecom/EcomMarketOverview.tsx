@@ -284,9 +284,12 @@ export default function EcomMarketOverview() {
                 )}
                 {latestInsight.items.length > 0 && (
                   <div>
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
                       <div className="text-xs text-muted-foreground">
                         Showing all {latestInsight.items.length} scraped products
+                      </div>
+                      <div className="text-[11px] text-muted-foreground italic">
+                        Prices reflect the last scrape{latestInsight.snapshot?.created_at ? ` (${formatDistanceToNow(new Date(latestInsight.snapshot.created_at), { addSuffix: true })})` : ''} and may differ from the live marketplace.
                       </div>
                     </div>
                     <div className="overflow-x-auto max-h-[420px] overflow-y-auto border rounded-md">
