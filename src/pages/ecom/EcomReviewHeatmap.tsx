@@ -6,7 +6,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useEcomWatchlist } from '@/hooks/use-ecom-watchlist';
+import { useEcomWatchlist, type EcomPlatform } from '@/hooks/use-ecom-watchlist';
 import { useEcomRecommendations } from '@/hooks/use-ecom-recommendations';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,8 +28,15 @@ interface Mention {
 export default function EcomReviewHeatmap() {
   const { list } = useEcomWatchlist();
   const [selected, setSelected] = useState<string>('');
-  const own = list.data?.filter((w) => w.is_own) ?? [];
-  const target = selected || own[0]?.id || list.data?.[0]?.id || '';
+  const [platformFilter, setPlatformFilter] = useState<'all' | EcomPlatform>('all');
+  const filteredWatchlist = useMemo(
+    () => (list.data ?? []).filter((w) => platformFilter === 'all' || w.platform === platformFilter),
+    [list.data, platformFilter]
+  );
+  const own = filteredWatchlist.filter((w) => w.is_own);
+  const target = selected && filteredWatchlist.some((w) => w.id === selected)
+    ? selected
+    : (own[0]?.id || filteredWatchlist[0]?.id || '');
   const targetRow = list.data?.find((w) => w.id === target);
   const recs = useEcomRecommendations(target || undefined);
   const filtered = useMemo(
@@ -98,13 +105,23 @@ export default function EcomReviewHeatmap() {
               Topic & sentiment breakdown of scraped reviews | AI surfaces the pain points dragging conversion.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={platformFilter} onValueChange={(v) => setPlatformFilter(v as 'all' | EcomPlatform)}>
+              <SelectTrigger className="w-40"><SelectValue placeholder="Platform" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All platforms</SelectItem>
+                <SelectItem value="shopee">Shopee</SelectItem>
+                <SelectItem value="lazada">Lazada</SelectItem>
+                <SelectItem value="tiki">Tiki</SelectItem>
+                <SelectItem value="tiktok_shop">TikTok Shop</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={target} onValueChange={setSelected}>
               <SelectTrigger className="w-72"><SelectValue placeholder="Select listing" /></SelectTrigger>
               <SelectContent>
-                {(list.data ?? []).length === 0 ? (
+                {filteredWatchlist.length === 0 ? (
                   <SelectItem value="_none" disabled>No listings tracked</SelectItem>
-                ) : (list.data ?? []).map((w) => (
+                ) : filteredWatchlist.map((w) => (
                   <SelectItem key={w.id} value={w.id}>
                     {w.is_own ? '★ ' : ''}{w.label || w.entity_url}
                   </SelectItem>
