@@ -105,13 +105,23 @@ export default function EcomReviewHeatmap() {
               Topic & sentiment breakdown of scraped reviews | AI surfaces the pain points dragging conversion.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={platformFilter} onValueChange={(v) => setPlatformFilter(v as 'all' | EcomPlatform)}>
+              <SelectTrigger className="w-40"><SelectValue placeholder="Platform" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All platforms</SelectItem>
+                <SelectItem value="shopee">Shopee</SelectItem>
+                <SelectItem value="lazada">Lazada</SelectItem>
+                <SelectItem value="tiki">Tiki</SelectItem>
+                <SelectItem value="tiktok_shop">TikTok Shop</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={target} onValueChange={setSelected}>
               <SelectTrigger className="w-72"><SelectValue placeholder="Select listing" /></SelectTrigger>
               <SelectContent>
-                {(list.data ?? []).length === 0 ? (
+                {filteredWatchlist.length === 0 ? (
                   <SelectItem value="_none" disabled>No listings tracked</SelectItem>
-                ) : (list.data ?? []).map((w) => (
+                ) : filteredWatchlist.map((w) => (
                   <SelectItem key={w.id} value={w.id}>
                     {w.is_own ? '★ ' : ''}{w.label || w.entity_url}
                   </SelectItem>
