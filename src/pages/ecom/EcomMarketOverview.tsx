@@ -40,6 +40,7 @@ export default function EcomMarketOverview() {
   const { list, add, remove, scrape } = useEcomWatchlist();
   const [open, setOpen] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [platformFilter, setPlatformFilter] = useState<'all' | EcomPlatform>('all');
   const [form, setForm] = useState({
     platform: 'shopee' as EcomPlatform,
     entity_type: 'product' as EcomEntityType,
