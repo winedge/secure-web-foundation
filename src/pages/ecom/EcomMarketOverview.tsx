@@ -259,7 +259,7 @@ export default function EcomMarketOverview() {
                 {latestInsight.coverage && (
                   <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                     {Object.entries(latestInsight.coverage).map(([key, value]) => (
-                      <Badge key={key} variant="outline">{key.replaceAll('_', ' ')}: {String(value)}</Badge>
+                      <Badge key={key} variant="outline">{key.replace(/_/g, ' ')}: {String(value)}</Badge>
                     ))}
                   </div>
                 )}
