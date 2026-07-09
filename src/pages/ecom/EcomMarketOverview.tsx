@@ -284,9 +284,12 @@ export default function EcomMarketOverview() {
                 )}
                 {latestInsight.items.length > 0 && (
                   <div>
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
                       <div className="text-xs text-muted-foreground">
                         Showing all {latestInsight.items.length} scraped products
+                      </div>
+                      <div className="text-[11px] text-muted-foreground italic">
+                        Prices reflect the last scrape{latestInsight.snapshot?.created_at ? ` (${formatDistanceToNow(new Date(latestInsight.snapshot.created_at), { addSuffix: true })})` : ''} and may differ from the live marketplace.
                       </div>
                     </div>
                     <div className="overflow-x-auto max-h-[420px] overflow-y-auto border rounded-md">
@@ -334,7 +337,7 @@ export default function EcomMarketOverview() {
                                     </span>
                                   </div>
                                 </td>
-                                <td className="py-2 px-3 text-right">{item.price ? Number(item.price).toLocaleString() : '|'}</td>
+                                <td className="py-2 px-3 text-right" title="Snapshot price from last scrape | live marketplace price may differ">{item.price ? Number(item.price).toLocaleString() : '|'}</td>
                                 <td className="py-2 px-3 text-right">{item.units_sold ? Number(item.units_sold).toLocaleString() : item.sold_text || '|'}</td>
                                 <td className="py-2 px-3 text-right">{item.revenue ? Number(item.revenue).toLocaleString() : '|'}</td>
                                 <td className="py-2 px-3 max-w-[14rem] truncate" title={item.shop_name}>
