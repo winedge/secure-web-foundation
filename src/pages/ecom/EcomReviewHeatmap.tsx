@@ -40,10 +40,28 @@ export default function EcomReviewHeatmap() {
     : (own[0]?.id || filteredWatchlist[0]?.id || '');
   const targetRow = list.data?.find((w) => w.id === target);
   const recs = useEcomRecommendations(target || undefined);
+  const qc = useQueryClient();
   const filtered = useMemo(
     () => (recs.list.data ?? []).filter((r) => r.rec_type === 'review_heatmap'),
     [recs.list.data]
   );
+
+  const fetchReviews = useMutation({
+    mutationFn: async () => {
+      if (!target) throw new Error('Select a listing first');
+      const { data, error } = await supabase.functions.invoke('ecom-listening-scan', {
+        body: { watchlist_id: target, timeframe: 'qdr:m' },
+      });
+      if (error) throw error;
+      return data as { inserted?: number; note?: string; error?: string };
+    },
+    onSuccess: (data) => {
+      if (data?.error) { toast.error(data.error); return; }
+      toast.success(`Fetched ${data?.inserted ?? 0} reviews${data?.note ? ` | ${data.note}` : ''}`);
+      qc.invalidateQueries({ queryKey: ['ecom-mentions-all', target] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? 'Failed to fetch reviews'),
+  });
 
   const mentions = useQuery({
     queryKey: ['ecom-mentions-all', target],
