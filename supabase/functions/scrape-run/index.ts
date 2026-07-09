@@ -25,8 +25,11 @@ const SUPA_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 /** Actor ID per marketplace on Apify. */
 const APIFY_ACTORS: Record<string, { actor: string; buildInput: (url: string) => Record<string, unknown> }> = {
-  // NOTE: TikTok Shop doesn't have a reliable free Apify actor for product listings.
-  // We route tiktok_shop directly to Firecrawl (AI-based extraction) which handles it well.
+  tiktok_shop: {
+    actor: 'scraperino~tiktok-shop-scraper',
+    buildInput: (url) => ({ startUrls: [{ url }], maxItems: 40 }),
+  },
+
 
   shopee: {
     actor: 'easyapi~shopee-search-scraper',
