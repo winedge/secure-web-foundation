@@ -231,7 +231,7 @@ function extractReviews(rawItems: any[], fallbackUrl: string): RawReview[] {
     if (!node || typeof node !== 'object') return;
     if (Array.isArray(node)) { node.forEach((n) => walk(n, parentUrl)); return; }
 
-    const url = node.url || node.productUrl || node.product_url || parentUrl || fallbackUrl;
+    const url = node.url || node.productUrl || node.product_url || node.productPageUrl || node.product?.url || parentUrl || fallbackUrl;
 
     // Nested review arrays under common keys
     for (const k of ['reviews', 'productReviews', 'comments', 'ratings']) {
@@ -239,12 +239,12 @@ function extractReviews(rawItems: any[], fallbackUrl: string): RawReview[] {
     }
 
     // Detect a review-shaped object
-    const text = node.text ?? node.content ?? node.review ?? node.comment ?? node.reviewText ?? node.review_text ?? node.body;
+    const text = node.text ?? node.content ?? node.review ?? node.comment ?? node.reviewText ?? node.review_text ?? node.reviewContent ?? node.review_content ?? node.body;
     if (typeof text === 'string' && text.trim().length > 4) {
-      const author = node.author ?? node.username ?? node.userName ?? node.user_name ?? node.reviewer ?? node.nickname ?? node.user?.name;
-      const ratingRaw = node.rating ?? node.stars ?? node.score ?? node.rating_star ?? node.ratingStar;
+      const author = node.author ?? node.authorName ?? node.authorHandle ?? node.username ?? node.userName ?? node.user_name ?? node.reviewer ?? node.reviewerName ?? node.nickname ?? node.user?.name;
+      const ratingRaw = node.rating ?? node.stars ?? node.score ?? node.starRating ?? node.rating_star ?? node.ratingStar;
       const rating = typeof ratingRaw === 'number' ? ratingRaw : (typeof ratingRaw === 'string' ? parseFloat(ratingRaw) : undefined);
-      const captured = node.createdAt ?? node.created_at ?? node.date ?? node.time ?? node.reviewTime;
+      const captured = node.createdAt ?? node.created_at ?? node.date ?? node.time ?? node.timestamp ?? node.reviewDate ?? node.reviewTime;
       const key = `${(author || '').slice(0, 40)}|${text.slice(0, 120)}`;
       if (!seen.has(key)) {
         seen.add(key);
