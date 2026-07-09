@@ -6,7 +6,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useEcomWatchlist } from '@/hooks/use-ecom-watchlist';
+import { useEcomWatchlist, type EcomPlatform } from '@/hooks/use-ecom-watchlist';
 import { useEcomRecommendations } from '@/hooks/use-ecom-recommendations';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
