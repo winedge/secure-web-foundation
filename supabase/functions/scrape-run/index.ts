@@ -25,10 +25,9 @@ const SUPA_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 /** Actor ID per marketplace on Apify. */
 const APIFY_ACTORS: Record<string, { actor: string; buildInput: (url: string) => Record<string, unknown> }> = {
-  tiktok_shop: {
-    actor: 'clockworks~tiktok-scraper',
-    buildInput: (url) => ({ postURLs: [url], resultsPerPage: 30 }),
-  },
+  // NOTE: TikTok Shop doesn't have a reliable free Apify actor for product listings.
+  // We route tiktok_shop directly to Firecrawl (AI-based extraction) which handles it well.
+
   shopee: {
     actor: 'easyapi~shopee-search-scraper',
     buildInput: (url) => ({ startUrls: [{ url }], maxItems: 40 }),
@@ -148,13 +147,40 @@ async function processJob(supa: any, job: { id: string; watchlist_id: string; fi
 
   try {
     let items: any[] = [];
+    let provider = 'none';
     const cfg = APIFY_ACTORS[job.marketplace];
+    const logs: Array<{ level: string; message: string }> = [];
+
+    // Try Apify first when configured
     if (cfg && APIFY_TOKEN) {
-      items = await runApify(cfg.actor, cfg.buildInput(job.url));
-    } else if ((job.marketplace === 'amazon' || job.marketplace === 'ebay') && FIRECRAWL_KEY) {
-      items = await runFirecrawl(job.url);
-    } else {
-      throw new Error(`No scraper configured for marketplace: ${job.marketplace}`);
+      try {
+        items = await runApify(cfg.actor, cfg.buildInput(job.url));
+        provider = 'apify';
+        logs.push({ level: 'info', message: `apify actor ${cfg.actor} returned ${items.length} raw items` });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logs.push({ level: 'warn', message: `apify failed, will try firecrawl: ${msg.slice(0, 200)}` });
+      }
+    }
+
+    // Fallback to Firecrawl for ANY marketplace when Apify returns nothing or isn't available
+    if (items.length === 0 && FIRECRAWL_KEY) {
+      try {
+        items = await runFirecrawl(job.url);
+        provider = 'firecrawl';
+        logs.push({ level: 'info', message: `firecrawl returned ${items.length} raw items` });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logs.push({ level: 'warn', message: `firecrawl failed: ${msg.slice(0, 200)}` });
+      }
+    }
+
+    if (items.length === 0) {
+      throw new Error(
+        `No products were extracted from this ${job.marketplace} page. ` +
+        `The marketplace may be blocking automated scraping, or the URL may not show product cards publicly. ` +
+        `Try a different search/category URL, or a marketplace like Amazon/eBay/Temu that scrape more reliably.`,
+      );
     }
 
     const products = normalize(job.marketplace, items);
@@ -163,9 +189,9 @@ async function processJob(supa: any, job: { id: string; watchlist_id: string; fi
       status: 'succeeded',
       duration_ms: Date.now() - started,
       products,
-      logs: [{ level: 'info', message: `scraped ${products.length} products via ${cfg ? 'apify' : 'firecrawl'}` }],
+      logs: [...logs, { level: 'info', message: `normalized ${products.length} products via ${provider}` }],
     });
-    return { job_id: job.id, ok: true, count: products.length };
+    return { job_id: job.id, ok: true, count: products.length, provider };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     await postCallback({
