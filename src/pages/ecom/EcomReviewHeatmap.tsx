@@ -28,8 +28,15 @@ interface Mention {
 export default function EcomReviewHeatmap() {
   const { list } = useEcomWatchlist();
   const [selected, setSelected] = useState<string>('');
-  const own = list.data?.filter((w) => w.is_own) ?? [];
-  const target = selected || own[0]?.id || list.data?.[0]?.id || '';
+  const [platformFilter, setPlatformFilter] = useState<'all' | EcomPlatform>('all');
+  const filteredWatchlist = useMemo(
+    () => (list.data ?? []).filter((w) => platformFilter === 'all' || w.platform === platformFilter),
+    [list.data, platformFilter]
+  );
+  const own = filteredWatchlist.filter((w) => w.is_own);
+  const target = selected && filteredWatchlist.some((w) => w.id === selected)
+    ? selected
+    : (own[0]?.id || filteredWatchlist[0]?.id || '');
   const targetRow = list.data?.find((w) => w.id === target);
   const recs = useEcomRecommendations(target || undefined);
   const filtered = useMemo(
