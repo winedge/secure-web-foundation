@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
     if (!fcRes.ok) return j({ error: `firecrawl ${fcRes.status}` }, 502);
     const fcJson = await fcRes.json();
     const results: any[] = (fcJson?.data?.web ?? fcJson?.data ?? []).slice(0, 12);
-    if (!results.length) return j({ error: 'No mentions found' }, 404);
+    if (!results.length) return j({ inserted: 0, note: 'No mentions found on the web for this listing yet' });
 
     const evidence = results.map((r, i) => ({
       idx: i, url: r.url, title: r.title, description: r.description,
