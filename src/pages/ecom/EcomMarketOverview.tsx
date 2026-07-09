@@ -337,7 +337,7 @@ export default function EcomMarketOverview() {
                                     </span>
                                   </div>
                                 </td>
-                                <td className="py-2 px-3 text-right">{item.price ? Number(item.price).toLocaleString() : '|'}</td>
+                                <td className="py-2 px-3 text-right" title="Snapshot price from last scrape | live marketplace price may differ">{item.price ? Number(item.price).toLocaleString() : '|'}</td>
                                 <td className="py-2 px-3 text-right">{item.units_sold ? Number(item.units_sold).toLocaleString() : item.sold_text || '|'}</td>
                                 <td className="py-2 px-3 text-right">{item.revenue ? Number(item.revenue).toLocaleString() : '|'}</td>
                                 <td className="py-2 px-3 max-w-[14rem] truncate" title={item.shop_name}>
