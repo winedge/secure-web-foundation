@@ -305,14 +305,34 @@ export default function EcomMarketOverview() {
                           {latestInsight.items.map((item: any, index: number) => {
                             const productHref = item.product_url || item.url || item.link || item.productUrl;
                             const shopHref = item.shop_url || item.shopUrl || item.store_url || item.storeUrl;
+                            const imgSrc = item.image || item.imageUrl || item.thumbnail || item.image_url
+                              || (Array.isArray(item.images) ? item.images[0] : undefined)
+                              || (Array.isArray(item.imageUrls) ? item.imageUrls[0] : undefined);
                             return (
                               <tr key={`${item.title || 'item'}-${index}`} className="border-b last:border-0 hover:bg-muted/30">
-                                <td className="py-2 px-3 max-w-[22rem] truncate" title={item.title}>
-                                  {productHref ? (
-                                    <a href={productHref} target="_blank" rel="noopener noreferrer" className="hover:text-primary hover:underline">
-                                      {item.title || 'Untitled product'}
-                                    </a>
-                                  ) : (item.title || 'Untitled product')}
+                                <td className="py-2 px-3 max-w-[24rem]" title={item.title}>
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    {imgSrc ? (
+                                      <img
+                                        src={imgSrc}
+                                        alt={item.title || 'product'}
+                                        loading="lazy"
+                                        className="h-10 w-10 rounded-md object-cover border shrink-0 bg-muted"
+                                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                                      />
+                                    ) : (
+                                      <div className="h-10 w-10 rounded-md border bg-muted shrink-0 flex items-center justify-center">
+                                        <Package className="h-4 w-4 text-muted-foreground" />
+                                      </div>
+                                    )}
+                                    <span className="truncate">
+                                      {productHref ? (
+                                        <a href={productHref} target="_blank" rel="noopener noreferrer" className="hover:text-primary hover:underline">
+                                          {item.title || 'Untitled product'}
+                                        </a>
+                                      ) : (item.title || 'Untitled product')}
+                                    </span>
+                                  </div>
                                 </td>
                                 <td className="py-2 px-3 text-right">{item.price ? Number(item.price).toLocaleString() : '|'}</td>
                                 <td className="py-2 px-3 text-right">{item.units_sold ? Number(item.units_sold).toLocaleString() : item.sold_text || '|'}</td>
