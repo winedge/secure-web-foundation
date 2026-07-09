@@ -283,29 +283,36 @@ export default function EcomMarketOverview() {
                   </div>
                 )}
                 {latestInsight.items.length > 0 && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="text-xs text-muted-foreground">
-                        <tr className="border-b">
-                          <th className="py-2 text-left font-medium">Product</th>
-                          <th className="py-2 text-right font-medium">Price</th>
-                          <th className="py-2 text-right font-medium">Units</th>
-                          <th className="py-2 text-right font-medium">Revenue</th>
-                          <th className="py-2 text-left font-medium">Shop</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {latestInsight.items.slice(0, 8).map((item: any, index: number) => (
-                          <tr key={`${item.title || 'item'}-${index}`} className="border-b last:border-0">
-                            <td className="py-2 pr-3 max-w-[22rem] truncate">{item.title || 'Untitled product'}</td>
-                            <td className="py-2 text-right">{item.price ? Number(item.price).toLocaleString() : '|'}</td>
-                            <td className="py-2 text-right">{item.units_sold ? Number(item.units_sold).toLocaleString() : item.sold_text || '|'}</td>
-                            <td className="py-2 text-right">{item.revenue ? Number(item.revenue).toLocaleString() : '|'}</td>
-                            <td className="py-2 pl-3 max-w-[14rem] truncate">{item.shop_name || '|'}</td>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-xs text-muted-foreground">
+                        Showing all {latestInsight.items.length} scraped products
+                      </div>
+                    </div>
+                    <div className="overflow-x-auto max-h-[420px] overflow-y-auto border rounded-md">
+                      <table className="w-full text-sm">
+                        <thead className="text-xs text-muted-foreground sticky top-0 bg-background z-10">
+                          <tr className="border-b">
+                            <th className="py-2 px-3 text-left font-medium">Product</th>
+                            <th className="py-2 px-3 text-right font-medium">Price</th>
+                            <th className="py-2 px-3 text-right font-medium">Units</th>
+                            <th className="py-2 px-3 text-right font-medium">Revenue</th>
+                            <th className="py-2 px-3 text-left font-medium">Shop</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {latestInsight.items.map((item: any, index: number) => (
+                            <tr key={`${item.title || 'item'}-${index}`} className="border-b last:border-0 hover:bg-muted/30">
+                              <td className="py-2 px-3 max-w-[22rem] truncate" title={item.title}>{item.title || 'Untitled product'}</td>
+                              <td className="py-2 px-3 text-right">{item.price ? Number(item.price).toLocaleString() : '|'}</td>
+                              <td className="py-2 px-3 text-right">{item.units_sold ? Number(item.units_sold).toLocaleString() : item.sold_text || '|'}</td>
+                              <td className="py-2 px-3 text-right">{item.revenue ? Number(item.revenue).toLocaleString() : '|'}</td>
+                              <td className="py-2 px-3 max-w-[14rem] truncate" title={item.shop_name}>{item.shop_name || '|'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 )}
               </div>
