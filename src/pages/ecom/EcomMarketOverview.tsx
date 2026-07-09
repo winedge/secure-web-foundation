@@ -397,13 +397,13 @@ export default function EcomMarketOverview() {
 
 function KpiCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <Card>
-      <CardContent className="pt-5">
-        <div className="flex items-center justify-between">
-          <div className="text-xs text-muted-foreground">{label}</div>
-          <div className="text-primary">{icon}</div>
+    <Card className="overflow-hidden">
+      <CardContent className="pt-5 min-w-0">
+        <div className="flex items-center justify-between gap-2 min-w-0">
+          <div className="text-xs text-muted-foreground truncate">{label}</div>
+          <div className="text-primary shrink-0">{icon}</div>
         </div>
-        <div className="text-2xl font-bold mt-2">{value}</div>
+        <div className="text-2xl font-bold mt-2 truncate" title={value}>{value}</div>
       </CardContent>
     </Card>
   );
