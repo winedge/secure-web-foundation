@@ -19,6 +19,44 @@ interface ReviewActorConfig {
   buildInput: (url: string) => Record<string, unknown>;
 }
 
+function buildTikTokShopInput(url: string): Record<string, unknown> {
+  try {
+    const u = new URL(url);
+    const keyword = u.searchParams.get('keyword') || u.searchParams.get('q');
+    if (keyword) {
+      return {
+        searchKeywords: [keyword],
+        maxProducts: 20,
+        includeReviews: true,
+        maxReviews: 5,
+        sortBySoldCount: 'highest_first',
+        maxRetries: 2,
+        timeout: 30,
+        maxConcurrency: 10,
+      };
+    }
+  } catch (_) { /* noop */ }
+
+  return {
+    urls: [url],
+    maxProducts: 20,
+    includeReviews: true,
+    maxReviews: 30,
+    maxRetries: 2,
+    timeout: 30,
+    maxConcurrency: 10,
+  };
+}
+
+function buildTikTokShopDiscoveryInput(url: string): Record<string, unknown> {
+  try {
+    const u = new URL(url);
+    const keyword = u.searchParams.get('keyword') || u.searchParams.get('q');
+    if (keyword) return { searchKeywords: [keyword], maxProducts: 20, includeReviews: false, sortBySoldCount: 'highest_first', maxRetries: 2, timeout: 30, maxConcurrency: 10 };
+  } catch (_) { /* noop */ }
+  return { urls: [url], maxProducts: 20, includeReviews: false, maxRetries: 2, timeout: 30, maxConcurrency: 10 };
+}
+
 // Per-platform Apify actors that fetch product reviews.
 // Multiple actors per platform for graceful fallback.
 const REVIEW_ACTORS: Record<Platform, ReviewActorConfig[]> = {
@@ -41,7 +79,7 @@ const REVIEW_ACTORS: Record<Platform, ReviewActorConfig[]> = {
     } },
   ],
   tiktok_shop: [
-    { actor: 'devcake~tiktok-shop-data-scraper', buildInput: (url) => ({ urls: [url], maxProducts: 20, includeReviews: true, maxReviews: 60, maxRetries: 3 }) },
+    { actor: 'devcake~tiktok-shop-data-scraper', buildInput: buildTikTokShopInput },
     { actor: 'pro100chok~tiktok-shop-scraper',   buildInput: (url) => ({ scrapeType: 'product', productUrls: [url], includeReviews: true, maxReviews: 60, region: 'us' }) },
   ],
 };
@@ -67,14 +105,7 @@ const DISCOVERY_ACTORS: Record<Platform, ReviewActorConfig[]> = {
     } },
   ],
   tiktok_shop: [
-    { actor: 'devcake~tiktok-shop-data-scraper', buildInput: (url) => {
-      try {
-        const u = new URL(url);
-        const kw = u.searchParams.get('keyword');
-        if (kw) return { searchKeywords: [kw], maxProducts: 20, includeReviews: false, maxRetries: 3 };
-      } catch (_) { /* noop */ }
-      return { urls: [url], maxProducts: 20, includeReviews: false, maxRetries: 3 };
-    } },
+    { actor: 'devcake~tiktok-shop-data-scraper', buildInput: buildTikTokShopDiscoveryInput },
   ],
 };
 
@@ -216,7 +247,7 @@ Deno.serve(async (req) => {
     // Resolve target product URLs. For product watchlists we use it directly;
     // for keyword/category/shop watchlists we first discover top products.
     let productUrls: string[] = [];
-    if (w.entity_type === 'product') {
+    if (w.entity_type === 'product' || platform === 'tiktok_shop') {
       productUrls = [w.entity_url];
     } else {
       productUrls = await discoverProductUrls(platform, w.entity_url);
