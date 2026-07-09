@@ -298,18 +298,62 @@ export default function EcomMarketOverview() {
                             <th className="py-2 px-3 text-right font-medium">Units</th>
                             <th className="py-2 px-3 text-right font-medium">Revenue</th>
                             <th className="py-2 px-3 text-left font-medium">Shop</th>
+                            <th className="py-2 px-3 text-right font-medium">Links</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {latestInsight.items.map((item: any, index: number) => (
-                            <tr key={`${item.title || 'item'}-${index}`} className="border-b last:border-0 hover:bg-muted/30">
-                              <td className="py-2 px-3 max-w-[22rem] truncate" title={item.title}>{item.title || 'Untitled product'}</td>
-                              <td className="py-2 px-3 text-right">{item.price ? Number(item.price).toLocaleString() : '|'}</td>
-                              <td className="py-2 px-3 text-right">{item.units_sold ? Number(item.units_sold).toLocaleString() : item.sold_text || '|'}</td>
-                              <td className="py-2 px-3 text-right">{item.revenue ? Number(item.revenue).toLocaleString() : '|'}</td>
-                              <td className="py-2 px-3 max-w-[14rem] truncate" title={item.shop_name}>{item.shop_name || '|'}</td>
-                            </tr>
-                          ))}
+                          {latestInsight.items.map((item: any, index: number) => {
+                            const productHref = item.product_url || item.url || item.link || item.productUrl;
+                            const shopHref = item.shop_url || item.shopUrl || item.store_url || item.storeUrl;
+                            return (
+                              <tr key={`${item.title || 'item'}-${index}`} className="border-b last:border-0 hover:bg-muted/30">
+                                <td className="py-2 px-3 max-w-[22rem] truncate" title={item.title}>
+                                  {productHref ? (
+                                    <a href={productHref} target="_blank" rel="noopener noreferrer" className="hover:text-primary hover:underline">
+                                      {item.title || 'Untitled product'}
+                                    </a>
+                                  ) : (item.title || 'Untitled product')}
+                                </td>
+                                <td className="py-2 px-3 text-right">{item.price ? Number(item.price).toLocaleString() : '|'}</td>
+                                <td className="py-2 px-3 text-right">{item.units_sold ? Number(item.units_sold).toLocaleString() : item.sold_text || '|'}</td>
+                                <td className="py-2 px-3 text-right">{item.revenue ? Number(item.revenue).toLocaleString() : '|'}</td>
+                                <td className="py-2 px-3 max-w-[14rem] truncate" title={item.shop_name}>
+                                  {shopHref ? (
+                                    <a href={shopHref} target="_blank" rel="noopener noreferrer" className="hover:text-primary hover:underline">
+                                      {item.shop_name || 'View shop'}
+                                    </a>
+                                  ) : (item.shop_name || '|')}
+                                </td>
+                                <td className="py-2 px-3 text-right whitespace-nowrap">
+                                  <div className="inline-flex gap-1">
+                                    {productHref && (
+                                      <a
+                                        href={productHref}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        title="Open product"
+                                        className="inline-flex items-center justify-center h-7 w-7 rounded-md border hover:bg-muted"
+                                      >
+                                        <Package className="h-3.5 w-3.5" />
+                                      </a>
+                                    )}
+                                    {shopHref && (
+                                      <a
+                                        href={shopHref}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        title="Open shop"
+                                        className="inline-flex items-center justify-center h-7 w-7 rounded-md border hover:bg-muted"
+                                      >
+                                        <Store className="h-3.5 w-3.5" />
+                                      </a>
+                                    )}
+                                    {!productHref && !shopHref && <span className="text-muted-foreground">|</span>}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
