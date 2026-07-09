@@ -520,8 +520,8 @@ Deno.serve(async (req: Request) => {
     try {
       const schema = listMode ? LIST_SCHEMA : PRODUCT_SCHEMA;
       const prompt = listMode
-        ? 'Extract the top 20 product cards visible on this search/category page: title, price, rating, units sold and shop name for each.'
-        : 'Extract pricing, stock and rating info from this marketplace product listing.';
+        ? 'Extract FMCG marketplace intelligence from the visible product cards. Return up to 20 items with title, price, original_price, rating, rating_count, units_sold, sold_text, revenue or GMV if visible, currency, shop_name and url. Also return total_units_sold, total_revenue, active_shops, active_products, min_price, max_price and average_rating when visible or inferable from the items.'
+        : 'Extract FMCG product listing intelligence: title, price, original_price, discount_pct, promo_label, stock status, rating, rating_count, units_sold or sold_text, revenue or GMV if visible, currency and shop_name.';
 
       const fcRes = await fetch(`${FIRECRAWL_V2}/scrape`, {
         method: 'POST',
@@ -587,19 +587,33 @@ Deno.serve(async (req: Request) => {
           }, 422);
         }
 
-        const prices = items.map((i) => Number(i.price)).filter((n) => Number.isFinite(n) && n > 0);
-        const units = items.map((i) => Number(i.units_sold)).filter((n) => Number.isFinite(n) && n >= 0);
-        const avgPrice = prices.length ? prices.reduce((a, b) => a + b, 0) / prices.length : null;
-        const totalUnits = units.length ? units.reduce((a, b) => a + b, 0) : null;
-        const revenue = avgPrice && totalUnits ? avgPrice * totalUnits : null;
+        const summary = summarizeItems(items, ext);
+        const coverage = {
+          products_with_price: summary.items.filter((item) => item.price != null).length,
+          products_with_units: summary.items.filter((item) => item.units_sold != null).length,
+          products_with_revenue: summary.items.filter((item) => item.revenue != null).length,
+          products_with_shop: summary.items.filter((item) => item.shop_name).length,
+        };
 
         await admin.from('ecom_snapshots').insert({
           firm_id: watch.firm_id,
           watchlist_id: watch.id,
-          revenue,
-          units_sold: totalUnits,
-          avg_price: avgPrice,
-          raw: { items: items.slice(0, 20), platform, source_url: watch.entity_url, mode: 'list' },
+          revenue: summary.revenue,
+          units_sold: summary.totalUnits,
+          active_shops: summary.activeShops,
+          active_products: summary.activeProducts,
+          avg_price: summary.avgPrice,
+          raw: {
+            items: summary.items.slice(0, 20),
+            platform,
+            source_url: watch.entity_url,
+            mode: 'list',
+            min_price: summary.minPrice,
+            max_price: summary.maxPrice,
+            average_rating: summary.averageRating,
+            currency: summary.currency,
+            coverage,
+          },
         });
 
         await admin
@@ -612,14 +626,34 @@ Deno.serve(async (req: Request) => {
           .update({
             status: 'completed',
             completed_at: new Date().toISOString(),
-            result: { items: items.length, avgPrice, totalUnits },
+            result: {
+              items: summary.items.length,
+              avgPrice: summary.avgPrice,
+              totalUnits: summary.totalUnits,
+              revenue: summary.revenue,
+              activeShops: summary.activeShops,
+              activeProducts: summary.activeProducts,
+              coverage,
+            },
           })
           .eq('id', job!.id);
 
-        return json({ success: true, mode: 'list', items: items.length, avgPrice, totalUnits });
+        return json({
+          success: true,
+          mode: 'list',
+          items: summary.items.length,
+          avgPrice: summary.avgPrice,
+          totalUnits: summary.totalUnits,
+          revenue: summary.revenue,
+          activeShops: summary.activeShops,
+          activeProducts: summary.activeProducts,
+          coverage,
+        });
       }
 
       // ---- product mode ----
+      ext = normalizeItem(ext);
+      if (isGenericTikTokPage(ext, watch.entity_url)) ext = {};
       const hasRealData = ext && (ext.title || ext.price != null);
       if (!hasRealData) {
         await admin
@@ -665,10 +699,25 @@ Deno.serve(async (req: Request) => {
       await admin.from('ecom_snapshots').insert({
         firm_id: watch.firm_id,
         watchlist_id: watch.id,
-        revenue: ext.price && ext.units_sold ? Number(ext.price) * Number(ext.units_sold) : null,
+        revenue: ext.revenue ?? (ext.price && ext.units_sold ? Number(ext.price) * Number(ext.units_sold) : null),
         units_sold: ext.units_sold ?? null,
+        active_shops: ext.shop_name ? 1 : null,
+        active_products: 1,
         avg_price: ext.price ?? null,
-        raw: { extracted: ext, platform, source_url: watch.entity_url, mode: 'product' },
+        raw: {
+          extracted: ext,
+          platform,
+          source_url: watch.entity_url,
+          mode: 'product',
+          revenue_source: ext.revenue ? 'extracted_or_price_times_units' : null,
+          data_quality: {
+            has_price: ext.price != null,
+            has_units: ext.units_sold != null,
+            has_revenue: ext.revenue != null || (ext.price != null && ext.units_sold != null),
+            has_shop: !!ext.shop_name,
+            has_rating: ext.rating != null,
+          },
+        },
       });
 
       if (prev?.price && ext.price && Number(ext.price) > 0) {
