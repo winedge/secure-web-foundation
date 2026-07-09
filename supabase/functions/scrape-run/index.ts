@@ -87,6 +87,21 @@ const APIFY_ACTORS: Record<string, ApifyActorConfig[]> = {
     actor: 'jupri~lazada-scraper',
     buildInput: (url) => ({ startUrls: [{ url }], maxItems: 40 }),
   }],
+  tiki: [{
+    actor: 'crawlerbros~tiki-product-scraper',
+    buildInput: (url) => {
+      try {
+        const u = new URL(url);
+        const q = u.searchParams.get('q');
+        if (q) return { mode: 'searchProducts', keyword: q, maxItems: 40 };
+        const pMatch = u.pathname.match(/-p(\d+)\.html/i);
+        if (pMatch) return { mode: 'getProductDetail', productId: pMatch[1] };
+        const cMatch = u.pathname.match(/\/c(\d+)/i);
+        if (cMatch) return { mode: 'browseCategory', categoryId: cMatch[1], maxItems: 40 };
+      } catch (_) { /* noop */ }
+      return { mode: 'searchProducts', keyword: url, maxItems: 40 };
+    },
+  }],
   temu: [{
     actor: 'epctex~temu-scraper',
     buildInput: (url) => ({ startUrls: [url], maxItems: 40 }),
