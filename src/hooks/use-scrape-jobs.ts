@@ -39,3 +39,12 @@ export function useScrapeJobs(watchlistId?: string, limit = 10) {
     refetchInterval: 15_000,
   });
 }
+
+/** Trigger an immediate scrape for one watchlist via the scrape-run edge function. */
+export async function runScrapeNow(watchlistId: string) {
+  const { data, error } = await supabase.functions.invoke('scrape-run', {
+    body: { watchlist_id: watchlistId },
+  });
+  if (error) throw error;
+  return data as { job_id: string; ok: boolean; count?: number; error?: string };
+}
