@@ -633,6 +633,190 @@ export type Database = {
           },
         ]
       }
+      api_audit_log: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          id: string
+          ip: string | null
+          latency_ms: number | null
+          method: string
+          path: string
+          status: number
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          ip?: string | null
+          latency_ms?: number | null
+          method: string
+          path: string
+          status: number
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          ip?: string | null
+          latency_ms?: number | null
+          method?: string
+          path?: string
+          status?: number
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      api_clients: {
+        Row: {
+          allowed_origins: string[]
+          allowed_redirect_uris: string[]
+          allowed_scopes: string[]
+          client_id: string
+          client_secret_hash: string
+          created_at: string
+          firm_id: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          allowed_origins?: string[]
+          allowed_redirect_uris?: string[]
+          allowed_scopes?: string[]
+          client_id: string
+          client_secret_hash: string
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          allowed_origins?: string[]
+          allowed_redirect_uris?: string[]
+          allowed_scopes?: string[]
+          client_id?: string
+          client_secret_hash?: string
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_clients_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_tokens: {
+        Row: {
+          client_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          last_used_at: string | null
+          refresh_token_hash: string
+          revoked_at: string | null
+          scopes: string[]
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          last_used_at?: string | null
+          refresh_token_hash: string
+          revoked_at?: string | null
+          scopes?: string[]
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_used_at?: string | null
+          refresh_token_hash?: string
+          revoked_at?: string | null
+          scopes?: string[]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_tokens_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "api_clients"
+            referencedColumns: ["client_id"]
+          },
+        ]
+      }
+      api_webhook_subscriptions: {
+        Row: {
+          client_id: string
+          created_at: string
+          event: string
+          firm_id: string
+          id: string
+          is_active: boolean
+          signing_secret: string
+          target_url: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          event: string
+          firm_id: string
+          id?: string
+          is_active?: boolean
+          signing_secret: string
+          target_url: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          event?: string
+          firm_id?: string
+          id?: string
+          is_active?: boolean
+          signing_secret?: string
+          target_url?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_webhook_subscriptions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "api_clients"
+            referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "api_webhook_subscriptions_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audience_profiles: {
         Row: {
           behavioral_signals: Json | null
