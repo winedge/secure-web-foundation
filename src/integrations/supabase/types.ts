@@ -10418,6 +10418,7 @@ export type Database = {
         }
         Returns: string
       }
+      mt_refresh_analytics_daily: { Args: never; Returns: undefined }
       purchase_lead: {
         Args: { _firm_id: string; _lead_id: string; _user_id: string }
         Returns: Json
