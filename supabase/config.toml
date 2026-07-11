@@ -187,3 +187,6 @@ verify_jwt = false
 verify_jwt = false
 
 
+
+[functions.admin-confirm-user]
+verify_jwt = false
