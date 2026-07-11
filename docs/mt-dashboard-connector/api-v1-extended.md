@@ -107,12 +107,35 @@ Published pages are served publicly at `https://snuggle-site-synth.lovable.app/l
 | DELETE | `/domains/{id}` | Remove |
 | POST   | `/domains/{id}/verify` | Trigger DNS/SSL verification via `verify-landing-domain` |
 
-### Catalogs (static, mirrors UI registries)
+### Catalogs (static, mirrors UI registries — full builder parity)
 | Method | Path | Purpose |
 | ------ | ---- | ------- |
+| GET    | `/catalog` | Entire catalog in one payload (sections + themes + starter stacks) |
 | GET    | `/catalog/themes` | Curated theme presets (`key`, `name`, `tagline`, `bestFor`) |
-| GET    | `/catalog/sections` | Every section type the builder supports (36 types: hero, features, faq, form, pricing_toggle, image_slider, video_hero, sticky_cta_bar, …) |
+| GET    | `/catalog/themes/full` | Complete `LANDING_THEMES` incl. fonts, layout, hero config, palette |
+| GET    | `/catalog/sections` | Compact list of section types |
+| GET    | `/catalog/sections/full` | **Complete `SECTION_REGISTRY`** — for every section type: `label`, `description`, `icon` (lucide-react name), `defaultProps`, and `schema` (inspector field list). This is everything the external dashboard needs to render the exact same builder UI (add-section picker + right-rail inspector) 1:1 with the Core Platform. |
+| GET    | `/catalog/sections/{type}` | One section definition (e.g. `hero`, `pricing_toggle`, `multi_step_form`) |
 | GET    | `/catalog/starter-stacks` | Recommended section stack per theme key |
+
+Inspector `schema` uses this `InspectorField` union — render each field with the matching control:
+
+```ts
+type InspectorField =
+  | { kind: 'text';    key: string; label: string; placeholder?: string }
+  | { kind: 'textarea';key: string; label: string; placeholder?: string; rows?: number }
+  | { kind: 'image';   key: string; label: string }
+  | { kind: 'select';  key: string; label: string; options: { value: string; label: string }[] }
+  | { kind: 'number';  key: string; label: string; min?: number; max?: number }
+  | { kind: 'toggle';  key: string; label: string }
+  | { kind: 'cta';     key: string; label: string }
+  | { kind: 'color';   key: string; label: string }
+  | { kind: 'slider';  key: string; label: string; min: number; max: number; step?: number; unit?: string }
+  | { kind: 'repeater';key: string; label: string; itemLabel: string;
+      fields: InspectorField[]; defaultItem: Record<string, any> };
+```
+
+`icon` values are string names from `lucide-react` (e.g. `"LayoutTemplate"`, `"Sparkles"`) — import dynamically in the external dashboard to render the section picker.
 
 ### AI helpers
 | Method | Path | Purpose |

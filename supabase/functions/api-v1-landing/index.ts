@@ -39,16 +39,25 @@
 //     DELETE /domains/{id}
 //     POST   /domains/{id}/verify      triggers verify-landing-domain
 //
-//   Catalogs (static reference data mirroring the UI registries)
-//     GET    /catalog/themes
-//     GET    /catalog/sections
+//   Catalogs (static reference data mirroring the UI registries — full builder parity)
+//     GET    /catalog/themes           curated theme presets (key/name/tagline/bestFor)
+//     GET    /catalog/themes/full      complete LANDING_THEMES incl. fonts/layout/hero config
+//     GET    /catalog/sections         list of section types (compact)
+//     GET    /catalog/sections/full    complete SECTION_REGISTRY: labels, descriptions,
+//                                      icon names, defaultProps, inspector schema — everything
+//                                      the external dashboard needs to render the exact same
+//                                      builder UI (add-section picker + right-rail inspector).
+//     GET    /catalog/sections/{type}  one section definition
 //     GET    /catalog/starter-stacks
+//     GET    /catalog                  the entire catalog in one payload
 //
 //   AI helpers
 //     POST   /ai/generate              body forwards to `dynamic-landing`
 //     POST   /ai/theme                 body forwards to `landing-theme-ai`
 //
 import { V1_CORS_BASE, admin, authenticateRequest, json, withAudit } from '../_shared/api-v1.ts';
+import CATALOG from './section-catalog.json' with { type: 'json' };
+
 
 const CORS = V1_CORS_BASE;
 const PAGE_FIELDS = 'id, firm_id, campaign_id, slug, page_title, headline, subheadline, cta_text, cta_color, sections, personalization_rules, is_published, conversion_rate, visits, conversions, created_at, updated_at';
@@ -140,11 +149,22 @@ Deno.serve(async (req) => {
 
     // ---------- CATALOGS ----------
     if (resource === 'catalog') {
-      if (action === '' && seg[1] === 'themes') return json({ themes: THEMES }, { cors: CORS });
-      if (action === '' && seg[1] === 'sections') return json({ section_types: SECTION_TYPES }, { cors: CORS });
-      if (action === '' && seg[1] === 'starter-stacks') return json({ stacks: STARTER_STACKS }, { cors: CORS });
+      const sub = seg[1] ?? '';
+      const sub2 = seg[2] ?? '';
+      if (sub === '') return json({ catalog: CATALOG }, { cors: CORS });
+      if (sub === 'themes' && sub2 === '') return json({ themes: THEMES }, { cors: CORS });
+      if (sub === 'themes' && sub2 === 'full') return json({ themes: (CATALOG as any).themes, default_theme_key: (CATALOG as any).default_theme_key }, { cors: CORS });
+      if (sub === 'sections' && sub2 === '') return json({ section_types: (CATALOG as any).order }, { cors: CORS });
+      if (sub === 'sections' && sub2 === 'full') return json({ order: (CATALOG as any).order, sections: (CATALOG as any).sections }, { cors: CORS });
+      if (sub === 'sections' && sub2) {
+        const found = ((CATALOG as any).sections as any[]).find((s) => s.type === sub2);
+        if (!found) return json({ error: 'not_found' }, { status: 404, cors: CORS });
+        return json({ section: found }, { cors: CORS });
+      }
+      if (sub === 'starter-stacks') return json({ stacks: (CATALOG as any).starter_stacks }, { cors: CORS });
       return json({ error: 'not_found' }, { status: 404, cors: CORS });
     }
+
 
     // ---------- AI ----------
     if (resource === 'ai' && req.method === 'POST') {
