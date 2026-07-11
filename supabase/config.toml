@@ -180,3 +180,10 @@ verify_jwt = false
 [functions.api-v1-analytics]
 verify_jwt = false
 
+[functions.api-v1-ai]
+verify_jwt = false
+
+[functions.api-v1-webhooks]
+verify_jwt = false
+
+
