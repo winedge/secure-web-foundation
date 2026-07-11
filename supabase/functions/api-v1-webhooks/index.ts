@@ -1,7 +1,7 @@
 // /api/v1/webhooks — manage outbound webhook subscriptions for the caller's client.
 // The signer helper (signAndPost) is imported by other functions when an event fires.
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
-import { admin, authenticateRequest, hashSecret, json, randomToken, V1_CORS_BASE, withAudit } from '../_shared/api-v1.ts';
+import { admin, authenticateRequest, json, randomToken, V1_CORS_BASE, withAudit } from '../_shared/api-v1.ts';
 
 const CORS = { ...V1_CORS_BASE, ...corsHeaders };
 
@@ -41,19 +41,19 @@ Deno.serve(async (req) => {
       if (!ALLOWED_EVENTS.has(event)) return json({ error: 'invalid_event' }, { status: 400, cors: CORS });
       try { new URL(target_url); } catch { return json({ error: 'invalid_target_url' }, { status: 400, cors: CORS }); }
 
-      const secretPlain = randomToken(24);
-      const secretHash = await hashSecret(secretPlain);
+      if (!auth.firmId) return json({ error: 'firm_required' }, { status: 400, cors: CORS });
+      const signingSecret = randomToken(24);
       const { data, error } = await db.from('api_webhook_subscriptions').insert({
         client_id: auth.client.client_id,
         firm_id: auth.firmId,
         event,
         target_url,
-        secret_hash: secretHash,
+        signing_secret: signingSecret,
         is_active: true,
       }).select('id, event, target_url, is_active, created_at').single();
       if (error) return json({ error: error.message }, { status: 500, cors: CORS });
-      // Return the secret once. Caller must store it to verify X-Signature.
-      return json({ subscription: data, signing_secret: secretPlain }, { status: 201, cors: CORS });
+      // Return the secret once so the caller can verify inbound X-Signature headers.
+      return json({ subscription: data, signing_secret: signingSecret }, { status: 201, cors: CORS });
     }
 
     // DELETE /{id}  -> unsubscribe
