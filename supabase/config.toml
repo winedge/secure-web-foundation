@@ -190,3 +190,18 @@ verify_jwt = false
 
 [functions.admin-confirm-user]
 verify_jwt = false
+
+[functions.api-v1-marketing]
+verify_jwt = false
+
+[functions.api-v1-intelligence]
+verify_jwt = false
+
+[functions.api-v1-landing]
+verify_jwt = false
+
+[functions.api-v1-teams]
+verify_jwt = false
+
+[functions.api-v1-alerts]
+verify_jwt = false
