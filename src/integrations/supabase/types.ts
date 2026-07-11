@@ -6574,6 +6574,305 @@ export type Database = {
         }
         Relationships: []
       }
+      mt_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after: Json | null
+          before: Json | null
+          created_at: string
+          firm_id: string
+          id: string
+          ip: unknown
+          resource_id: string | null
+          resource_type: string
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          firm_id: string
+          id?: string
+          ip?: unknown
+          resource_id?: string | null
+          resource_type: string
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          firm_id?: string
+          id?: string
+          ip?: unknown
+          resource_id?: string | null
+          resource_type?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      mt_case_documents: {
+        Row: {
+          case_id: string
+          created_at: string
+          file_name: string
+          firm_id: string
+          id: string
+          mime_type: string | null
+          scan_result: Json
+          scan_status: Database["public"]["Enums"]["mt_scan_status"]
+          size_bytes: number
+          storage_path: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          file_name: string
+          firm_id: string
+          id?: string
+          mime_type?: string | null
+          scan_result?: Json
+          scan_status?: Database["public"]["Enums"]["mt_scan_status"]
+          size_bytes?: number
+          storage_path: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          file_name?: string
+          firm_id?: string
+          id?: string
+          mime_type?: string | null
+          scan_result?: Json
+          scan_status?: Database["public"]["Enums"]["mt_scan_status"]
+          size_bytes?: number
+          storage_path?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mt_case_documents_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "mt_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mt_cases: {
+        Row: {
+          assigned_to: string | null
+          case_number: string
+          created_at: string
+          created_by: string | null
+          firm_id: string
+          id: string
+          incident_date: string | null
+          metadata: Json
+          plaintiff_display: string | null
+          plaintiff_name_encrypted: string | null
+          status: Database["public"]["Enums"]["mt_case_status"]
+          statute_of_limitations: string | null
+          title: string
+          tort_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          case_number: string
+          created_at?: string
+          created_by?: string | null
+          firm_id: string
+          id?: string
+          incident_date?: string | null
+          metadata?: Json
+          plaintiff_display?: string | null
+          plaintiff_name_encrypted?: string | null
+          status?: Database["public"]["Enums"]["mt_case_status"]
+          statute_of_limitations?: string | null
+          title: string
+          tort_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          case_number?: string
+          created_at?: string
+          created_by?: string | null
+          firm_id?: string
+          id?: string
+          incident_date?: string | null
+          metadata?: Json
+          plaintiff_display?: string | null
+          plaintiff_name_encrypted?: string | null
+          status?: Database["public"]["Enums"]["mt_case_status"]
+          statute_of_limitations?: string | null
+          title?: string
+          tort_type?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mt_firm_quotas: {
+        Row: {
+          cases_count: number
+          cases_limit: number
+          doc_count: number
+          doc_count_limit: number
+          firm_id: string
+          storage_bytes_limit: number
+          storage_bytes_used: number
+          updated_at: string
+        }
+        Insert: {
+          cases_count?: number
+          cases_limit?: number
+          doc_count?: number
+          doc_count_limit?: number
+          firm_id: string
+          storage_bytes_limit?: number
+          storage_bytes_used?: number
+          updated_at?: string
+        }
+        Update: {
+          cases_count?: number
+          cases_limit?: number
+          doc_count?: number
+          doc_count_limit?: number
+          firm_id?: string
+          storage_bytes_limit?: number
+          storage_bytes_used?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mt_notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          firm_id: string
+          id: string
+          payload: Json
+          read_at: string | null
+          title: string
+          type: Database["public"]["Enums"]["mt_notification_type"]
+          user_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          firm_id: string
+          id?: string
+          payload?: Json
+          read_at?: string | null
+          title: string
+          type: Database["public"]["Enums"]["mt_notification_type"]
+          user_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          firm_id?: string
+          id?: string
+          payload?: Json
+          read_at?: string | null
+          title?: string
+          type?: Database["public"]["Enums"]["mt_notification_type"]
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      mt_saved_views: {
+        Row: {
+          created_at: string
+          filters: Json
+          firm_id: string
+          id: string
+          is_shared: boolean
+          name: string
+          updated_at: string
+          user_id: string
+          view_type: string
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json
+          firm_id: string
+          id?: string
+          is_shared?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+          view_type: string
+        }
+        Update: {
+          created_at?: string
+          filters?: Json
+          firm_id?: string
+          id?: string
+          is_shared?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+          view_type?: string
+        }
+        Relationships: []
+      }
+      mt_webhook_errors: {
+        Row: {
+          created_at: string
+          endpoint: string
+          error: string | null
+          event_type: string
+          firm_id: string
+          id: string
+          last_attempt_at: string | null
+          next_retry_at: string | null
+          payload: Json
+          resolved_at: string | null
+          retry_count: number
+          status_code: number | null
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          error?: string | null
+          event_type: string
+          firm_id: string
+          id?: string
+          last_attempt_at?: string | null
+          next_retry_at?: string | null
+          payload?: Json
+          resolved_at?: string | null
+          retry_count?: number
+          status_code?: number | null
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          error?: string | null
+          event_type?: string
+          firm_id?: string
+          id?: string
+          last_attempt_at?: string | null
+          next_retry_at?: string | null
+          payload?: Json
+          resolved_at?: string | null
+          retry_count?: number
+          status_code?: number | null
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           contact_id: string | null
@@ -9894,6 +10193,17 @@ export type Database = {
         }
         Relationships: []
       }
+      mt_analytics_daily: {
+        Row: {
+          cases_created: number | null
+          cases_rejected: number | null
+          cases_settled: number | null
+          day: string | null
+          docs_uploaded: number | null
+          firm_id: string | null
+        }
+        Relationships: []
+      }
       platform_connections_safe: {
         Row: {
           connected_at: string | null
@@ -10108,6 +10418,7 @@ export type Database = {
         }
         Returns: string
       }
+      mt_refresh_analytics_daily: { Args: never; Returns: undefined }
       purchase_lead: {
         Args: { _firm_id: string; _lead_id: string; _user_id: string }
         Returns: Json
@@ -10252,6 +10563,24 @@ export type Database = {
         | "rejected"
         | "published"
         | "failed"
+      mt_case_status:
+        | "intake"
+        | "qualifying"
+        | "retained"
+        | "in_treatment"
+        | "documents_pending"
+        | "ready_to_file"
+        | "filed"
+        | "settled"
+        | "rejected"
+        | "closed"
+      mt_notification_type:
+        | "case.assigned"
+        | "case.status_changed"
+        | "doc.scanned"
+        | "quota.warning"
+        | "webhook.failed"
+      mt_scan_status: "pending" | "clean" | "infected" | "error"
       scrape_job_status: "queued" | "running" | "succeeded" | "failed" | "dead"
       scrape_priority: "high" | "medium" | "low"
       subscription_plan: "basic" | "premium"
@@ -10528,6 +10857,26 @@ export const Constants = {
         "published",
         "failed",
       ],
+      mt_case_status: [
+        "intake",
+        "qualifying",
+        "retained",
+        "in_treatment",
+        "documents_pending",
+        "ready_to_file",
+        "filed",
+        "settled",
+        "rejected",
+        "closed",
+      ],
+      mt_notification_type: [
+        "case.assigned",
+        "case.status_changed",
+        "doc.scanned",
+        "quota.warning",
+        "webhook.failed",
+      ],
+      mt_scan_status: ["pending", "clean", "infected", "error"],
       scrape_job_status: ["queued", "running", "succeeded", "failed", "dead"],
       scrape_priority: ["high", "medium", "low"],
       subscription_plan: ["basic", "premium"],
