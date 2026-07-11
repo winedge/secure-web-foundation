@@ -1,160 +1,91 @@
+## Mass Tort Sub-Project | Architecture Plan
 
-# Production Marketplace Scraping Engine
+### Deployment model
+Lovable projects are one app per project, so a truly independent deploy requires a **second Lovable project** in this workspace: `mass-tort-dashboard`. This plan covers the work in both projects.
 
-Because Playwright + Redis + BullMQ + persistent browser pools cannot run inside Supabase Edge Functions, this ships as **two coordinated halves in one repo**:
+- **Project A (this one, "Core Platform")**: expose a versioned, JWT-authenticated public API. No UI changes.
+- **Project B (new, "Mass Tort Dashboard")**: standalone React/Vite app with its own branding, routing, Cloud DB (for tort-specific tables), and marketing platform. Talks to Core only via HTTPS APIs — never touches Core's DB.
+- Auth: Mass Tort logs users in against Core via OAuth2 (Authorization Code + PKCE) and stores the returned JWT. Core remains the single identity/subscription/credits/roles source of truth.
 
-1. `/worker` — new folder, standalone Node/TypeScript service you deploy to your VPS via Docker Compose
-2. `/supabase/functions/*` + new tables + dashboard — the control plane, callback sink, and UI
+### Project A | Core Platform API surface
+New edge function group under `supabase/functions/api-v1-*` acting as the public REST facade. All endpoints:
+- Validate a Core-issued JWT (RS256 via `SUPABASE_JWKS`) + `X-Client-Id` header.
+- Enforce firm/role/module gates already in the DB.
+- Return only the fields listed below (no internal columns, prompts, or admin data).
 
-All 6 marketplaces (TikTok Shop, Shopee, Lazada, Temu, Amazon, eBay) are in scope for v1.
+Endpoints (all `/api/v1/*`):
+- `POST /oauth/token`, `POST /oauth/refresh`, `GET /oauth/userinfo` | delegate to Supabase Auth; issue short-lived access token + refresh token scoped to `mass_tort`.
+- `GET /me`, `GET /me/firm`, `GET /me/subscription`, `GET /me/credits`, `GET /me/permissions`.
+- `GET/POST /leads`, `GET/PATCH /leads/{id}`, `POST /leads/{id}/purchase`, `POST /leads/{id}/stage` | wraps `purchase_lead` + `charge_and_move_stage`.
+- `GET/POST /campaigns`, `GET/POST /intake-forms`, `POST /intake-submissions` (public, no JWT for the submit route, HMAC-signed by the form).
+- `GET/POST /crm/contacts`, `GET/POST /crm/notes`, `GET /crm/activity`.
+- `POST /ai/case-evaluate`, `POST /ai/settlement-predict` | proxies existing functions; charges Core credits.
+- `GET /analytics/leads`, `GET /analytics/campaigns`, `GET /analytics/pipeline`.
+- `POST /webhooks/subscribe`, `DELETE /webhooks/{id}`, plus outbound webhook signer (`X-Signature: sha256=...`) for `lead.created`, `lead.stage_changed`, `subscription.updated`, `credits.updated`.
 
----
+New tables in Core (migration in Project A):
+- `api_clients` (client_id, hashed_secret, firm_id, allowed_scopes, is_active) | one row per sub-project install.
+- `api_tokens` (client_id, user_id, refresh_hash, scopes, expires_at, revoked_at).
+- `api_webhook_subscriptions` (client_id, firm_id, event, target_url, secret, is_active).
+- `api_audit_log` (client_id, user_id, method, path, status, latency_ms, ip).
 
-## Part A | Worker service (`/worker`, deployed to your VPS)
+Rate limiting: per client_id + IP, in-memory + `api_audit_log` sliding window.
 
-New folder, TypeScript, deployed via `docker compose up -d`.
+### Project B | Mass Tort Dashboard (new Lovable project)
+Independent Vite + React + Tailwind app. Its own Lovable Cloud DB for tort-specific data.
 
+Structure:
 ```
-worker/
-├── docker-compose.yml          # redis + worker + (optional) redis-commander UI
-├── Dockerfile                  # node:20-slim + Playwright Chromium
-├── package.json
-├── tsconfig.json
-├── .env.example                # SUPABASE_URL, SERVICE_ROLE, REDIS_URL, PROXY_URL, CONCURRENCY
-├── src/
-│   ├── index.ts                # entrypoint: boots queue + workers + graceful shutdown
-│   ├── config.ts               # env schema (zod)
-│   ├── logger.ts               # pino structured logs
-│   ├── queue/
-│   │   ├── connection.ts       # ioredis
-│   │   ├── scrape-queue.ts     # BullMQ Queue definition, priorities, retries, backoff
-│   │   └── job-types.ts        # ScrapeWatchlistJob type
-│   ├── browser/
-│   │   ├── pool.ts             # keeps N Chromium instances alive, recycles every 500 jobs
-│   │   ├── context.ts          # per-marketplace context factory: cookies, UA, viewport
-│   │   ├── interceptor.ts      # block fonts/analytics/ads, cache static assets
-│   │   └── stealth.ts          # UA rotation, navigator.webdriver removal
-│   ├── scrapers/
-│   │   ├── base.ts             # abstract BaseScraper: login/prepare/extractProducts/extractPagination/extractMetadata/cleanup
-│   │   ├── tiktok.ts           # TikTokScraper — API sniff first, browser fallback
-│   │   ├── shopee.ts           # Shopee — uses /api/v4/search/search_items JSON
-│   │   ├── lazada.ts           # Lazada — sniff moduleData JSON
-│   │   ├── temu.ts             # Temu — browser + API discovery
-│   │   ├── amazon.ts           # Amazon — DOM parse
-│   │   ├── ebay.ts             # eBay — has Finding API path
-│   │   └── index.ts            # registry: marketplace -> scraper class
-│   ├── workers/
-│   │   └── scrape-worker.ts    # BullMQ Worker: dequeue -> pick scraper -> run -> POST callback
-│   ├── models/
-│   │   └── product.ts          # normalized Product interface + validator
-│   ├── errors/
-│   │   └── detectors.ts        # captcha/cloudflare/login/empty/rate-limit detection
-│   ├── diagnostics/
-│   │   └── capture.ts          # screenshot + HTML + console log upload to Supabase Storage
-│   ├── callback/
-│   │   └── client.ts           # POSTs results to Supabase edge function with service-role key
-│   ├── scheduler/
-│   │   └── poller.ts           # every 60s pulls due watchlists from Supabase and enqueues
-│   └── health/
-│       └── server.ts           # tiny express /health for uptime checks
-└── tests/
-    ├── shopee.parser.test.ts
-    ├── amazon.parser.test.ts
-    └── product.model.test.ts   # vitest, offline fixture-based
+src/
+  services/api/            auth, leads, campaigns, intake, crm, ai, analytics, billing, credits
+  services/api/client.ts   fetch wrapper, token refresh, error normalization
+  lib/branding/            per-firm white-label loader (logo/colors/fonts/company)
+  lib/theme/               CSS var injector driven by branding
+  routes/                  auth, dashboard, campaigns, intake-builder, cases,
+                           plaintiffs, medical-records, litigation, marketing,
+                           landing-builder, settings/branding
+  features/mass-tort/      cases, plaintiffs, defendants, medical, litigation
+  features/marketing/      landing pages, social calendar, ads (Meta/TikTok/Google)
+                           via Core /marketing/* proxy endpoints
+  features/landing-builder/  reuses shape of existing builder, stores in local DB,
+                             publishes via Core /landing/publish
 ```
 
-Key behaviors:
-- Browser pool of 5 Chromium (configurable via `CONCURRENCY`), each running up to 3 contexts = 15 concurrent scrapes per worker container. Scale horizontally by running more containers.
-- Every scraper tries: (1) direct API using sniffed endpoint/headers/cookies, (2) fallback to Playwright DOM extraction.
-- Cookie jars per marketplace persisted to Redis, reloaded on context creation.
-- On failure: screenshot + HTML uploaded to `scrape-diagnostics` bucket, `scrape_logs` row inserted with error class.
-- Retries: 3 attempts, exponential backoff (30s, 2m, 8m), then dead-letter.
-- Graceful shutdown on SIGTERM: stop accepting jobs, finish in-flight, close browsers.
+Mass-Tort-only tables (in Project B's Cloud DB):
+- `mt_law_firms` (mirrors Core firm_id + tort-specific fields: bar numbers, MDL memberships).
+- `mt_cases` (case_number, plaintiff_id, defendant_ids[], tort_type, litigation_status enum, statute_of_limitations, jurisdiction, mdl_number).
+- `mt_plaintiffs`, `mt_defendants`, `mt_case_parties`.
+- `mt_medical_records` (case_id, provider, record_date, storage_path, extracted_facts jsonb).
+- `mt_litigation_events` (case_id, event_type, event_date, notes).
+- `mt_campaigns` (tort_type, targeting jsonb, linked_core_campaign_id).
+- `mt_intake_forms`, `mt_intake_submissions` (submissions push to Core `/intake-submissions`).
+- `mt_landing_pages`, `mt_landing_versions`, `mt_landing_domains`.
+- `mt_branding` (firm_id, logo_url, colors jsonb, fonts jsonb, company_name, login_bg, email_from_name, email_from_address, email_templates jsonb).
 
----
+All tables get RLS scoped to `firm_id = current_firm()` (derived from Core JWT on the edge boundary).
 
-## Part B | Supabase side (this repo)
+### White-label (per-firm from DB)
+- On login, `services/api/branding.ts` fetches `mt_branding` for the firm and writes CSS variables (`--brand-primary`, `--brand-accent`, `--font-heading`, `--font-body`, etc.) plus swaps logo/company name in header, sidebar, login screen, and email templates rendered server-side.
+- Custom domains resolved via `mt_landing_domains`; Mass Tort app boots by `host` header, loads the matching firm's branding before first paint.
 
-### B1. Migration (new tables — keeping existing `ecom_watchlist`)
+### Security posture
+- No Core DB URL, service role key, admin routes, AI prompts, or internal function names in Project B.
+- Project B only knows: `VITE_CORE_API_BASE`, `VITE_CORE_OAUTH_CLIENT_ID`, and its own Cloud creds.
+- CORS allowlist on Core `/api/v1/*` is driven by `api_clients.allowed_origins`.
+- Every AI call goes through Core; prompts stay in Core edge functions.
 
-```
-scrape_jobs         id, watchlist_id, marketplace, status, priority, attempts, error_class,
-                    started_at, finished_at, duration_ms, products_found, products_new,
-                    products_removed, price_changes_count
-scrape_logs         id, job_id, level, message, error_class, screenshot_url, html_url, meta jsonb
-scrape_products     id, watchlist_id, marketplace, product_id (external), title, price, currency,
-                    original_price, discount, rating, review_count, sold_count, seller, seller_id,
-                    image, images jsonb, product_url, category, stock_status, raw jsonb, scraped_at
-scrape_product_history  id, product_ref, watchlist_id, price, original_price, rating, review_count,
-                        sold_count, stock_status, snapshot_at
-browser_sessions    id, marketplace, cookies jsonb, storage_state jsonb, last_used_at, health
-scrape_insights     id, watchlist_id, summary text, new_products jsonb, removed_products jsonb,
-                    price_changes jsonb, trending jsonb, generated_at
-```
+### Delivery phases
+1. **Core API foundation** (this project): `api_clients`, OAuth token endpoints, JWT middleware, audit log, rate limiter, `/me/*` endpoints.
+2. **Core resource endpoints**: leads, campaigns, intake, crm, ai proxy, analytics, webhooks.
+3. **Scaffold Project B**: new Lovable project, base layout, routing, `services/api` layer, OAuth login, branding loader.
+4. **Mass Tort DB + core screens**: cases, plaintiffs/defendants, medical records, litigation status, case detail view.
+5. **Marketing suite in Project B**: landing builder, social calendar, ads dashboards (all backed by Core proxy endpoints).
+6. **White-label polish + independent deploy**: per-firm branding editor, custom domains, publish `mass-tort.<domain>`.
 
-Extend `ecom_watchlist` with: `priority` (high/medium/low), `next_scan_at`, `scan_interval_minutes`.
+### Out of scope
+- Migrating existing Core UI screens into Project B.
+- Rewriting existing Core AI functions | Project B calls them via `/api/v1/ai/*`.
+- Building new AI models | reuses `ai-case-evaluator` and `settlement-predictor`.
 
-All tables: GRANT to authenticated + service_role, RLS scoped to firm via existing `is_firm_member`. Service role bypasses for worker writes.
-
-New storage bucket: `scrape-diagnostics` (private).
-
-### B2. Edge functions
-
-- `scrape-enqueue` — called by worker's scheduler poller, returns due watchlists (uses service role, RLS-bypassing query)
-- `scrape-callback` — worker POSTs normalized products here with service-role header. Diffs vs `scrape_products`, writes `scrape_product_history` rows for price changes, updates `scrape_jobs`, triggers `scrape-insights`
-- `scrape-insights` — takes before/after snapshot, calls Lovable AI (`google/gemini-2.5-flash`) for narrative summary, writes to `scrape_insights`
-- Retire the old Firecrawl-based `ecom-scrape-listing` path for supported marketplaces (leave as fallback)
-
-### B3. Cron (via pg_cron, not migration tool)
-
-Every 5 minutes: mark watchlists whose `next_scan_at <= now()` as ready. Worker polls `scrape-enqueue` every 60s to pull them.
-
-### B4. Frontend additions
-
-Extend `src/pages/ecom/EcomMarketOverview.tsx` and add a small `ScrapeHealthCard` component:
-- Last scan time + duration
-- Products found / new / removed / price changes
-- Scraper health badge (green/yellow/red based on last 10 jobs)
-- Failure reason chip when latest job failed
-- "Rescan now" button (calls existing `useEcomWatchlist.scrape` which now enqueues instead of scraping inline)
-
-New hook `use-scrape-jobs.ts` for job status + `use-scrape-insights.ts` for AI summaries.
-
----
-
-## Proxy recommendation
-
-Since you asked for a rec: **Bright Data Web Unlocker** (~$3/GB, handles TikTok/Shopee/Lazada out of the box, no manual IP rotation) or **Smartproxy Residential** (~$4/GB, cheaper for Amazon/eBay). Start with Bright Data on TikTok only, standard datacenter proxies for the rest. The worker reads `PROXY_URL` from env — swap providers without code changes.
-
-Without a proxy, TikTok Shop and Shopee will start returning captchas within a few hundred requests. Amazon/eBay/Temu tolerate no-proxy for lower volumes.
-
----
-
-## Deploy flow for you
-
-```bash
-# On your VPS
-git clone <this repo>
-cd worker
-cp .env.example .env      # fill SUPABASE_URL, SERVICE_ROLE_KEY, PROXY_URL
-docker compose up -d
-docker compose logs -f worker
-```
-
-Health check: `curl localhost:3001/health`. Scale: `docker compose up -d --scale worker=4`.
-
----
-
-## Delivery order (one build cycle)
-
-1. Migration for new tables + storage bucket
-2. Edge functions: `scrape-enqueue`, `scrape-callback`, `scrape-insights`
-3. Worker service scaffolding + browser pool + queue + base scraper
-4. All 6 marketplace scrapers (Shopee/Lazada/eBay get API-first path; TikTok/Amazon/Temu get browser + API sniff)
-5. Diagnostics + error detectors + retries
-6. Frontend `ScrapeHealthCard` + hooks + wire `EcomMarketOverview`
-7. Docker Compose + README + `.env.example`
-8. Vitest parser tests for Shopee/Amazon/Product model
-9. pg_cron schedule (via `supabase--insert`, not migration)
-
-Approve this and I'll build it in that order. Roughly 30-35 new files; the worker half is self-contained under `/worker` so it won't affect your existing app until you deploy it.
+### What I need from you before Phase 3
+The second Lovable project. Create it in this workspace named `mass-tort-dashboard` and @mention it back here so I can scaffold into it.

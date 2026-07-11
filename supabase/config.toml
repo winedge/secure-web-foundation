@@ -158,3 +158,13 @@ verify_jwt = false
 
 [functions.meta-targeting-search]
 verify_jwt = false
+
+[functions.api-v1-oauth-token]
+verify_jwt = false
+
+[functions.api-v1-me]
+verify_jwt = false
+
+[functions.api-v1-leads]
+verify_jwt = false
+
