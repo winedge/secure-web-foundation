@@ -1,91 +1,60 @@
-## Mass Tort Sub-Project | Architecture Plan
+# Rebuild Mass Tort Backend
 
-### Deployment model
-Lovable projects are one app per project, so a truly independent deploy requires a **second Lovable project** in this workspace: `mass-tort-dashboard`. This plan covers the work in both projects.
+Rebuild the backend that Phase 4a/4b/4c summaries claimed shipped but that never landed. The Mass Tort frontend and the `api_clients` row (`mt_9f96f723f3489b5c`) already exist and stay untouched.
 
-- **Project A (this one, "Core Platform")**: expose a versioned, JWT-authenticated public API. No UI changes.
-- **Project B (new, "Mass Tort Dashboard")**: standalone React/Vite app with its own branding, routing, Cloud DB (for tort-specific tables), and marketing platform. Talks to Core only via HTTPS APIs — never touches Core's DB.
-- Auth: Mass Tort logs users in against Core via OAuth2 (Authorization Code + PKCE) and stores the returned JWT. Core remains the single identity/subscription/credits/roles source of truth.
+## 1. Database (single migration)
 
-### Project A | Core Platform API surface
-New edge function group under `supabase/functions/api-v1-*` acting as the public REST facade. All endpoints:
-- Validate a Core-issued JWT (RS256 via `SUPABASE_JWKS`) + `X-Client-Id` header.
-- Enforce firm/role/module gates already in the DB.
-- Return only the fields listed below (no internal columns, prompts, or admin data).
+Create these tables in `public`, each with `GRANT` → `ENABLE RLS` → policies, following project convention (scope by `firm_id` via `is_firm_member` / `is_firm_owner`, `service_role` full access):
 
-Endpoints (all `/api/v1/*`):
-- `POST /oauth/token`, `POST /oauth/refresh`, `GET /oauth/userinfo` | delegate to Supabase Auth; issue short-lived access token + refresh token scoped to `mass_tort`.
-- `GET /me`, `GET /me/firm`, `GET /me/subscription`, `GET /me/credits`, `GET /me/permissions`.
-- `GET/POST /leads`, `GET/PATCH /leads/{id}`, `POST /leads/{id}/purchase`, `POST /leads/{id}/stage` | wraps `purchase_lead` + `charge_and_move_stage`.
-- `GET/POST /campaigns`, `GET/POST /intake-forms`, `POST /intake-submissions` (public, no JWT for the submit route, HMAC-signed by the form).
-- `GET/POST /crm/contacts`, `GET/POST /crm/notes`, `GET /crm/activity`.
-- `POST /ai/case-evaluate`, `POST /ai/settlement-predict` | proxies existing functions; charges Core credits.
-- `GET /analytics/leads`, `GET /analytics/campaigns`, `GET /analytics/pipeline`.
-- `POST /webhooks/subscribe`, `DELETE /webhooks/{id}`, plus outbound webhook signer (`X-Signature: sha256=...`) for `lead.created`, `lead.stage_changed`, `subscription.updated`, `credits.updated`.
+- **`mt_cases`** — id, firm_id, case_number, title, status, assigned_to, plaintiff_name (encrypted), tort_type, incident_date, statute_of_limitations, metadata jsonb, timestamps.
+- **`mt_case_documents`** — id, case_id, firm_id, storage_path, file_name, mime_type, size_bytes, `scan_status` (`pending|clean|infected|error`), scan_result jsonb, uploaded_by, timestamps.
+- **`mt_audit_log`** — id, firm_id, actor_id, action, resource_type, resource_id, before jsonb, after jsonb, ip, user_agent, created_at. Append-only (no UPDATE/DELETE policy).
+- **`mt_notifications`** — id, firm_id, user_id, type (`case.assigned|case.status_changed|doc.scanned|quota.warning`), title, body, payload jsonb, read_at, created_at.
+- **`mt_webhook_errors`** — id, firm_id, endpoint, event_type, payload jsonb, error, status_code, `retry_count`, `next_retry_at`, `last_attempt_at`, `resolved_at`, created_at (DLQ).
+- **`mt_firm_quotas`** — firm_id PK, storage_bytes_used bigint, storage_bytes_limit bigint, doc_count, doc_count_limit, cases_count, cases_limit, updated_at.
+- **`mt_saved_views`** — id, firm_id, user_id, name, view_type (`cases|documents`), filters jsonb, is_shared, timestamps.
 
-New tables in Core (migration in Project A):
-- `api_clients` (client_id, hashed_secret, firm_id, allowed_scopes, is_active) | one row per sub-project install.
-- `api_tokens` (client_id, user_id, refresh_hash, scopes, expires_at, revoked_at).
-- `api_webhook_subscriptions` (client_id, firm_id, event, target_url, secret, is_active).
-- `api_audit_log` (client_id, user_id, method, path, status, latency_ms, ip).
+Also:
+- Trigger on `mt_case_documents` insert/delete → keep `mt_firm_quotas.storage_bytes_used` / `doc_count` in sync.
+- Trigger on `mt_cases` insert/delete → keep `mt_firm_quotas.cases_count` in sync.
+- Trigger on `mt_cases` update (status, assigned_to) → insert into `mt_notifications` + `mt_audit_log`.
+- Materialized view **`mt_analytics_daily`** (firm_id, day, cases_created, cases_advanced, cases_rejected, docs_uploaded, avg_stage_seconds); grant SELECT only to `service_role`.
+- Storage bucket **`mt-documents`** (private) via migration if not present, plus RLS on `storage.objects` scoping to `firm_id/`.
 
-Rate limiting: per client_id + IP, in-memory + `api_audit_log` sliding window.
+## 2. Edge functions
 
-### Project B | Mass Tort Dashboard (new Lovable project)
-Independent Vite + React + Tailwind app. Its own Lovable Cloud DB for tort-specific data.
+- **`mt-proxy`** — main API surface consumed by the sub-project. Validates `x-client-id` / `x-client-secret` against `api_clients` (already in `_shared/api-v1.ts`), validates user JWT, routes `resource + action`:
+  - resources: `cases`, `documents`, `notifications`, `saved_views`, `audit` (read-only, `firm_owner` gated), `quotas` (read-only, `firm_owner` gated).
+  - every mutation → append `mt_audit_log` row.
+  - assignment/status changes → insert `mt_notifications`.
+- **`mt-doc-scan`** — stub scanner. Called after upload, flips `scan_status` to `clean` after a stub check (structure ready for a real AV provider swap). Emits `doc.scanned` notification.
+- **`mt-webhook`** — outbound webhook dispatcher. On failure writes to `mt_webhook_errors` with exponential `next_retry_at`.
+- **`mt-webhook-retry`** — cron-driven; picks `mt_webhook_errors` where `next_retry_at <= now()` and `resolved_at IS NULL`, retries, updates DLQ row.
+- **`mt-analytics-refresh`** — cron-driven; runs `REFRESH MATERIALIZED VIEW CONCURRENTLY mt_analytics_daily`.
 
-Structure:
-```
-src/
-  services/api/            auth, leads, campaigns, intake, crm, ai, analytics, billing, credits
-  services/api/client.ts   fetch wrapper, token refresh, error normalization
-  lib/branding/            per-firm white-label loader (logo/colors/fonts/company)
-  lib/theme/               CSS var injector driven by branding
-  routes/                  auth, dashboard, campaigns, intake-builder, cases,
-                           plaintiffs, medical-records, litigation, marketing,
-                           landing-builder, settings/branding
-  features/mass-tort/      cases, plaintiffs, defendants, medical, litigation
-  features/marketing/      landing pages, social calendar, ads (Meta/TikTok/Google)
-                           via Core /marketing/* proxy endpoints
-  features/landing-builder/  reuses shape of existing builder, stores in local DB,
-                             publishes via Core /landing/publish
-```
+Signed-URL uploads/downloads go through `mt-proxy` (`documents.upload_url`, `documents.download_url`) using `service_role` and the `mt-documents` bucket.
 
-Mass-Tort-only tables (in Project B's Cloud DB):
-- `mt_law_firms` (mirrors Core firm_id + tort-specific fields: bar numbers, MDL memberships).
-- `mt_cases` (case_number, plaintiff_id, defendant_ids[], tort_type, litigation_status enum, statute_of_limitations, jurisdiction, mdl_number).
-- `mt_plaintiffs`, `mt_defendants`, `mt_case_parties`.
-- `mt_medical_records` (case_id, provider, record_date, storage_path, extracted_facts jsonb).
-- `mt_litigation_events` (case_id, event_type, event_date, notes).
-- `mt_campaigns` (tort_type, targeting jsonb, linked_core_campaign_id).
-- `mt_intake_forms`, `mt_intake_submissions` (submissions push to Core `/intake-submissions`).
-- `mt_landing_pages`, `mt_landing_versions`, `mt_landing_domains`.
-- `mt_branding` (firm_id, logo_url, colors jsonb, fonts jsonb, company_name, login_bg, email_from_name, email_from_address, email_templates jsonb).
+## 3. Cron jobs (via `insert` tool, not migration — contain project URL + anon key)
 
-All tables get RLS scoped to `firm_id = current_firm()` (derived from Core JWT on the edge boundary).
+- `mt-analytics-refresh` — daily at 02:00.
+- `mt-webhook-retry` — every 5 minutes.
 
-### White-label (per-firm from DB)
-- On login, `services/api/branding.ts` fetches `mt_branding` for the firm and writes CSS variables (`--brand-primary`, `--brand-accent`, `--font-heading`, `--font-body`, etc.) plus swaps logo/company name in header, sidebar, login screen, and email templates rendered server-side.
-- Custom domains resolved via `mt_landing_domains`; Mass Tort app boots by `host` header, loads the matching firm's branding before first paint.
+## 4. Verification
 
-### Security posture
-- No Core DB URL, service role key, admin routes, AI prompts, or internal function names in Project B.
-- Project B only knows: `VITE_CORE_API_BASE`, `VITE_CORE_OAUTH_CLIENT_ID`, and its own Cloud creds.
-- CORS allowlist on Core `/api/v1/*` is driven by `api_clients.allowed_origins`.
-- Every AI call goes through Core; prompts stay in Core edge functions.
+After deploy: read `pg_matviews`, `cron.job`, and `information_schema.tables` to confirm every piece landed, and hit `mt-proxy` `me` route with the existing client to prove auth works end-to-end.
 
-### Delivery phases
-1. **Core API foundation** (this project): `api_clients`, OAuth token endpoints, JWT middleware, audit log, rate limiter, `/me/*` endpoints.
-2. **Core resource endpoints**: leads, campaigns, intake, crm, ai proxy, analytics, webhooks.
-3. **Scaffold Project B**: new Lovable project, base layout, routing, `services/api` layer, OAuth login, branding loader.
-4. **Mass Tort DB + core screens**: cases, plaintiffs/defendants, medical records, litigation status, case detail view.
-5. **Marketing suite in Project B**: landing builder, social calendar, ads dashboards (all backed by Core proxy endpoints).
-6. **White-label polish + independent deploy**: per-firm branding editor, custom domains, publish `mass-tort.<domain>`.
+## Out of scope
 
-### Out of scope
-- Migrating existing Core UI screens into Project B.
-- Rewriting existing Core AI functions | Project B calls them via `/api/v1/ai/*`.
-- Building new AI models | reuses `ai-case-evaluator` and `settlement-predictor`.
+- Frontend changes to the Mass Tort sub-project (already built and published).
+- Rate limiting (per your earlier decision — CDN/edge layer).
+- Real AV integration inside `mt-doc-scan` (stub; drop-in ready).
+- Sentry DSN wiring (still your call when you have the DSN).
 
-### What I need from you before Phase 3
-The second Lovable project. Create it in this workspace named `mass-tort-dashboard` and @mention it back here so I can scaffold into it.
+## Technical details
+
+- All tables `authenticated` GRANT + `service_role` GRANT; no `anon` GRANT on any `mt_*` table.
+- Policies reuse existing `public.is_firm_member(auth.uid(), firm_id)` and `public.is_firm_owner(auth.uid(), firm_id)`.
+- Encrypted columns (plaintiff PII) stored as bytea; encryption remains client-side per existing ZK pattern — no plaintext PII on server.
+- `mt_analytics_daily` uses `CREATE UNIQUE INDEX` on `(firm_id, day)` so `REFRESH ... CONCURRENTLY` works.
+- Edge functions use `_shared/api-v1.ts` `authenticateRequest` + `withAudit`. CORS via `_shared/cors.ts`. Zod validation on all inputs.
+- Deploy order: migration → edge functions → cron jobs → verification queries.
