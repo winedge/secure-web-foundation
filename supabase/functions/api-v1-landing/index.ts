@@ -149,11 +149,22 @@ Deno.serve(async (req) => {
 
     // ---------- CATALOGS ----------
     if (resource === 'catalog') {
-      if (action === '' && seg[1] === 'themes') return json({ themes: THEMES }, { cors: CORS });
-      if (action === '' && seg[1] === 'sections') return json({ section_types: SECTION_TYPES }, { cors: CORS });
-      if (action === '' && seg[1] === 'starter-stacks') return json({ stacks: STARTER_STACKS }, { cors: CORS });
+      const sub = seg[1] ?? '';
+      const sub2 = seg[2] ?? '';
+      if (sub === '') return json({ catalog: CATALOG }, { cors: CORS });
+      if (sub === 'themes' && sub2 === '') return json({ themes: THEMES }, { cors: CORS });
+      if (sub === 'themes' && sub2 === 'full') return json({ themes: (CATALOG as any).themes, default_theme_key: (CATALOG as any).default_theme_key }, { cors: CORS });
+      if (sub === 'sections' && sub2 === '') return json({ section_types: (CATALOG as any).order }, { cors: CORS });
+      if (sub === 'sections' && sub2 === 'full') return json({ order: (CATALOG as any).order, sections: (CATALOG as any).sections }, { cors: CORS });
+      if (sub === 'sections' && sub2) {
+        const found = ((CATALOG as any).sections as any[]).find((s) => s.type === sub2);
+        if (!found) return json({ error: 'not_found' }, { status: 404, cors: CORS });
+        return json({ section: found }, { cors: CORS });
+      }
+      if (sub === 'starter-stacks') return json({ stacks: (CATALOG as any).starter_stacks }, { cors: CORS });
       return json({ error: 'not_found' }, { status: 404, cors: CORS });
     }
+
 
     // ---------- AI ----------
     if (resource === 'ai' && req.method === 'POST') {
