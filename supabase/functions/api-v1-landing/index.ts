@@ -39,16 +39,25 @@
 //     DELETE /domains/{id}
 //     POST   /domains/{id}/verify      triggers verify-landing-domain
 //
-//   Catalogs (static reference data mirroring the UI registries)
-//     GET    /catalog/themes
-//     GET    /catalog/sections
+//   Catalogs (static reference data mirroring the UI registries — full builder parity)
+//     GET    /catalog/themes           curated theme presets (key/name/tagline/bestFor)
+//     GET    /catalog/themes/full      complete LANDING_THEMES incl. fonts/layout/hero config
+//     GET    /catalog/sections         list of section types (compact)
+//     GET    /catalog/sections/full    complete SECTION_REGISTRY: labels, descriptions,
+//                                      icon names, defaultProps, inspector schema — everything
+//                                      the external dashboard needs to render the exact same
+//                                      builder UI (add-section picker + right-rail inspector).
+//     GET    /catalog/sections/{type}  one section definition
 //     GET    /catalog/starter-stacks
+//     GET    /catalog                  the entire catalog in one payload
 //
 //   AI helpers
 //     POST   /ai/generate              body forwards to `dynamic-landing`
 //     POST   /ai/theme                 body forwards to `landing-theme-ai`
 //
 import { V1_CORS_BASE, admin, authenticateRequest, json, withAudit } from '../_shared/api-v1.ts';
+import CATALOG from './section-catalog.json' with { type: 'json' };
+
 
 const CORS = V1_CORS_BASE;
 const PAGE_FIELDS = 'id, firm_id, campaign_id, slug, page_title, headline, subheadline, cta_text, cta_color, sections, personalization_rules, is_published, conversion_rate, visits, conversions, created_at, updated_at';
