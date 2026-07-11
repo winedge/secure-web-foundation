@@ -168,3 +168,15 @@ verify_jwt = false
 [functions.api-v1-leads]
 verify_jwt = false
 
+[functions.api-v1-campaigns]
+verify_jwt = false
+
+[functions.api-v1-intake]
+verify_jwt = false
+
+[functions.api-v1-crm]
+verify_jwt = false
+
+[functions.api-v1-analytics]
+verify_jwt = false
+
