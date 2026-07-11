@@ -59,17 +59,94 @@ Errors: `{ "error": "<code>" }` with an HTTP status. `401 invalid_client`, `401 
 
 ## Landing Page Builder — `/api-v1-landing`
 
+Full builder parity with the Core Platform UI: pages, reusable templates, snapshot versions, shareable preview links, custom domains, static catalogs (themes / section types / starter stacks), and AI helpers. Every resource is scoped to the caller's firm.
+
+### Pages (published/live)
 | Method | Path | Purpose |
 | ------ | ---- | ------- |
-| GET    | `/templates` | Global template catalog |
 | GET    | `/pages` | List firm's landing pages |
 | POST   | `/pages` | `{ slug, page_title, headline?, subheadline?, cta_text?, cta_color?, sections?, personalization_rules?, campaign_id? }` |
 | GET    | `/pages/{id}` | Fetch |
 | PATCH  | `/pages/{id}` | Update fields |
 | DELETE | `/pages/{id}` | Remove |
-| POST   | `/pages/{id}/publish` | Sets `is_published = true` |
+| POST   | `/pages/{id}/publish` / `/unpublish` | Toggle `is_published` |
 
 Published pages are served publicly at `https://snuggle-site-synth.lovable.app/lp/{slug}`.
+
+### Templates (starter, user, firm-shared)
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| GET    | `/templates` | List (query: `category`, `vertical`, `mine=1`) — includes starters, public, own, and firm |
+| POST   | `/templates` | `{ name, snapshot, description?, category?, tags?, is_public?, thumbnail_url? }` |
+| GET    | `/templates/{id}` | Fetch full snapshot |
+| PATCH  | `/templates/{id}` | Update meta or snapshot |
+| DELETE | `/templates/{id}` | Remove (firm-owned only) |
+
+### Versions (snapshot history)
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| GET    | `/versions` | List firm snapshots |
+| POST   | `/versions` | `{ snapshot, label?, note? }` |
+| GET    | `/versions/{id}` | Fetch |
+| DELETE | `/versions/{id}` | Remove |
+
+### Previews (time-limited share links)
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| GET    | `/previews` | List firm previews |
+| POST   | `/previews` | `{ version_id, expires_in_days? }` (default 7). Returns `{ preview: { token, expires_at } }` |
+| DELETE | `/previews/{id}` | Revoke |
+| GET    | `/preview-token/{token}` | **Public** — resolves a token to snapshot (no auth, no client secret; 410 when expired) |
+
+### Custom domains
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| GET    | `/domains` | List firm domains |
+| POST   | `/domains` | `{ hostname }` — enforces valid FQDN, returns DNS verification token |
+| PATCH  | `/domains/{id}` | `{ is_primary?, notes? }` |
+| DELETE | `/domains/{id}` | Remove |
+| POST   | `/domains/{id}/verify` | Trigger DNS/SSL verification via `verify-landing-domain` |
+
+### Catalogs (static, mirrors UI registries)
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| GET    | `/catalog/themes` | Curated theme presets (`key`, `name`, `tagline`, `bestFor`) |
+| GET    | `/catalog/sections` | Every section type the builder supports (36 types: hero, features, faq, form, pricing_toggle, image_slider, video_hero, sticky_cta_bar, …) |
+| GET    | `/catalog/starter-stacks` | Recommended section stack per theme key |
+
+### AI helpers
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| POST   | `/ai/generate` | Full-page AI generation. Forwards to `dynamic-landing` — `{ tort_type?, category?, firm_name?, cta?, target_audience? }` → returns `{ page_title, hero, sections, personalization_rules, seo_keywords, … }` |
+| POST   | `/ai/theme` | AI theme tweak. Forwards to `landing-theme-ai` |
+
+### Typical builder flow (client-side)
+```ts
+// 1. Get starter theme + stack
+const [themes, stacks] = await Promise.all([
+  proxy('api-v1-landing', '/catalog/themes'),
+  proxy('api-v1-landing', '/catalog/starter-stacks'),
+]);
+
+// 2. AI-generate the page snapshot
+const gen = await proxy('api-v1-landing', '/ai/generate', 'POST', {
+  tort_type: 'Roundup', firm_name: 'Doe & Partners',
+});
+
+// 3. Save as a version, then create a shareable preview link
+const { version } = await proxy('api-v1-landing', '/versions', 'POST', { snapshot: gen });
+const { preview } = await proxy('api-v1-landing', '/previews', 'POST', {
+  version_id: version.id, expires_in_days: 14,
+});
+// preview.token → https://core-platform/lp-preview/{token}  (public route)
+
+// 4. Publish as a live page
+await proxy('api-v1-landing', '/pages', 'POST', {
+  slug: 'roundup-doe-partners',
+  page_title: gen.page_title,
+  sections: gen.sections,
+});
+```
 
 ---
 
