@@ -9,7 +9,7 @@ this platform's `mt-proxy`.
 
 In the other project (Lovable Cloud → Backend → Secrets), add:
 
-- `MT_PROXY_URL` = `https://snuggle-site-synth.lovable.app/functions/v1/mt-proxy`
+- `MT_PROXY_URL` = `https://sdtphgskqpelpbwhipls.supabase.co/functions/v1/mt-proxy`
 - `MT_PROXY_CLIENT_ID` = `mt_dash_3908442da3a14300`
 - `MT_PROXY_CLIENT_SECRET` = `Hm2eQ4cFmG4btLKkD5EV2qfKgdpuW4IVxZqT5D6qzvbZPQuUBJV9uNhJKMn-S1mE`
 

@@ -5,7 +5,7 @@ Dashboard project to call this platform's `mt-proxy` edge function.
 
 ## What this platform exposes
 
-- **Endpoint:** `https://snuggle-site-synth.lovable.app/functions/v1/mt-proxy`
+- **Endpoint:** `https://sdtphgskqpelpbwhipls.supabase.co/functions/v1/mt-proxy`
 - **Method:** `POST`
 - **Auth headers required on every call:**
   - `x-client-id` — your API client ID (provisioned below)
