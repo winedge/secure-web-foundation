@@ -350,9 +350,22 @@ function analyzePage(pageUrl: string, root: any, T: any, origin: string) {
   const meta: Record<string, any> = root.metadata || {};
   const screenshot: string = root.screenshot || '';
 
+  // Fallbacks parsed straight from the HTML (Firecrawl metadata can be empty on JS/CMS pages)
+  const metaContent = (re: RegExp) => {
+    const m = html.match(re);
+    return m ? m[1].trim() : '';
+  };
+  const htmlTitle = metaContent(/<title[^>]*>([\s\S]*?)<\/title>/i).replace(/\s+/g, ' ');
+  const htmlDesc =
+    metaContent(/<meta[^>]+name=["']description["'][^>]*content=["']([^"']*)["']/i) ||
+    metaContent(/<meta[^>]+content=["']([^"']*)["'][^>]*name=["']description["']/i) ||
+    metaContent(/<meta[^>]+property=["']og:description["'][^>]*content=["']([^"']*)["']/i);
+  const htmlOgTitle = metaContent(/<meta[^>]+property=["']og:title["'][^>]*content=["']([^"']*)["']/i);
+
   const issues: any[] = [];
-  const title = String(meta.title || '');
-  const description = String(meta.description || meta.ogDescription || '');
+  const title = String(meta.title || htmlTitle || meta.ogTitle || htmlOgTitle || '');
+  const description = String(meta.description || htmlDesc || meta.ogDescription || '');
+
 
   if (!title || title.length < T.title_min) {
     issues.push({ severity: 'error', category: 'meta', message: `Title missing or too short (${title.length}, min ${T.title_min})`, recommendation: `Aim for ${T.title_min}-${T.title_max} chars including primary keyword.` });
