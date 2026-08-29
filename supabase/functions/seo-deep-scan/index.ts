@@ -75,14 +75,14 @@ Deno.serve(async (req: Request) => {
             const mapRes = await fetch('https://api.firecrawl.dev/v2/map', {
               method: 'POST',
               headers: { Authorization: `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ url: origin, limit: maxPages * 3, includeSubdomains: false }),
+              body: JSON.stringify({ url: origin, limit: Math.min(maxPages * 3, 1000), includeSubdomains: false }),
             });
             const mapData = await mapRes.json();
             const rawLinks = (mapData?.links || mapData?.data?.links || []) as any[];
             const discovered: string[] = rawLinks
               .map((l) => (typeof l === 'string' ? l : (l?.url ?? '')))
               .filter((u) => typeof u === 'string' && u.length > 0)
-              .slice(0, maxPages * 3);
+              .slice(0, Math.min(maxPages * 3, 1000));
             for (const u of discovered) {
               if (pagesToScan.length >= maxPages) break;
               if (!pagesToScan.includes(u)) pagesToScan.push(u);
