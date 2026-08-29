@@ -35,7 +35,7 @@ export default function SeoDeepScan() {
         <Card>
           <CardHeader>
             <CardTitle>New scan</CardTitle>
-            <CardDescription>Enter the full URL including https://. Multi-page scans take 1-3 minutes.</CardDescription>
+            <CardDescription>Enter the full URL including https://. Multi-page scans take 1-3 minutes | up to 250 pages supported.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
@@ -47,9 +47,10 @@ export default function SeoDeepScan() {
               <Select value={maxPages} onValueChange={setMaxPages}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {['1', '3', '5', '10', '15'].map((n) => <SelectItem key={n} value={n}>{n} page{n === '1' ? '' : 's'}</SelectItem>)}
+                  {['1', '3', '5', '10', '15', '25', '50', '75', '100', '150', '200', '250'].map((n) => <SelectItem key={n} value={n}>{n} page{n === '1' ? '' : 's'}</SelectItem>)}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground mt-1">Large crawls (100+ pages) can take several minutes.</p>
             </div>
             <Button
               className="w-full"

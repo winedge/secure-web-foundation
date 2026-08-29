@@ -40,7 +40,7 @@ Deno.serve(async (req: Request) => {
 
     const body = (await req.json()) as ScanRequestBody;
     const url = (body.url || '').trim();
-    const maxPages = Math.min(Math.max(body.max_pages ?? 5, 1), 15);
+    const maxPages = Math.min(Math.max(body.max_pages ?? 5, 1), 250);
     if (!/^https?:\/\//i.test(url)) return json({ error: 'invalid url' }, 400);
 
     const { data: thr } = await admin
@@ -75,14 +75,14 @@ Deno.serve(async (req: Request) => {
             const mapRes = await fetch('https://api.firecrawl.dev/v2/map', {
               method: 'POST',
               headers: { Authorization: `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ url: origin, limit: maxPages * 3, includeSubdomains: false }),
+              body: JSON.stringify({ url: origin, limit: Math.min(maxPages * 3, 1000), includeSubdomains: false }),
             });
             const mapData = await mapRes.json();
             const rawLinks = (mapData?.links || mapData?.data?.links || []) as any[];
             const discovered: string[] = rawLinks
               .map((l) => (typeof l === 'string' ? l : (l?.url ?? '')))
               .filter((u) => typeof u === 'string' && u.length > 0)
-              .slice(0, maxPages * 3);
+              .slice(0, Math.min(maxPages * 3, 1000));
             for (const u of discovered) {
               if (pagesToScan.length >= maxPages) break;
               if (!pagesToScan.includes(u)) pagesToScan.push(u);
@@ -102,11 +102,12 @@ Deno.serve(async (req: Request) => {
         const llmsTxt = llmsRes.status === 'fulfilled' && llmsRes.value.ok ? await llmsRes.value.text() : '';
         const respHeaders = headerRes.status === 'fulfilled' ? headerRes.value.headers : new Headers();
 
-        // 3. Scrape each page
+        // 3. Scrape pages in parallel batches (keeps 100+ page scans within runtime limits)
         const pageReports: any[] = [];
         const issues: Array<any> = [];
+        const CONCURRENCY = 8;
 
-        for (const pageUrl of pagesToScan) {
+        const scrapeOne = async (pageUrl: string) => {
           let crawl: any = { pages: [] };
           if (firecrawlKey) {
             try {
@@ -123,9 +124,16 @@ Deno.serve(async (req: Request) => {
             } catch (_) { /* skip */ }
           }
           const root = crawl?.data ?? crawl ?? {};
-          const report = analyzePage(pageUrl, root, T, origin);
-          pageReports.push(report);
-          for (const i of report.issues) issues.push({ ...i, page_url: pageUrl });
+          return analyzePage(pageUrl, root, T, origin);
+        };
+
+        for (let i = 0; i < pagesToScan.length; i += CONCURRENCY) {
+          const batch = pagesToScan.slice(i, i + CONCURRENCY);
+          const results = await Promise.all(batch.map((p) => scrapeOne(p)));
+          for (const report of results) {
+            pageReports.push(report);
+            for (const iss of report.issues) issues.push({ ...iss, page_url: report.url ?? '' });
+          }
         }
 
         // 4. Site-wide checks (robots / sitemap / llms.txt / security headers)
