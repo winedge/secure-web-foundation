@@ -35,7 +35,7 @@ export default function SeoDeepScan() {
         <Card>
           <CardHeader>
             <CardTitle>New scan</CardTitle>
-            <CardDescription>Enter the full URL including https://. Multi-page scans take 1-3 minutes.</CardDescription>
+            <CardDescription>Enter the full URL including https://. Multi-page scans take 1-3 minutes | up to 250 pages supported.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
