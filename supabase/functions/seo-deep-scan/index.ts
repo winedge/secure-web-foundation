@@ -106,6 +106,7 @@ Deno.serve(async (req: Request) => {
         const pageReports: any[] = [];
         const issues: Array<any> = [];
         const CONCURRENCY = 4;
+        const DEADLINE = Date.now() + 5 * 60 * 1000; // hard stop: finalize with what we have
 
         const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -113,6 +114,7 @@ Deno.serve(async (req: Request) => {
         const plainFetch = async (pageUrl: string) => {
           try {
             const r = await fetch(pageUrl, {
+              signal: AbortSignal.timeout(20000),
               headers: {
                 'User-Agent': 'Mozilla/5.0 (compatible; LeadThruSEOBot/1.0; +https://leadthru.com/bot)',
                 Accept: 'text/html,application/xhtml+xml',
@@ -143,6 +145,7 @@ Deno.serve(async (req: Request) => {
               try {
                 const r = await fetch('https://api.firecrawl.dev/v2/scrape', {
                   method: 'POST',
+                  signal: AbortSignal.timeout(45000),
                   headers: { Authorization: `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
                   body: JSON.stringify({
                     url: pageUrl,
@@ -180,13 +183,19 @@ Deno.serve(async (req: Request) => {
 
 
         for (let i = 0; i < pagesToScan.length; i += CONCURRENCY) {
+          if (Date.now() > DEADLINE) break; // out of time: report what we have
           const batch = pagesToScan.slice(i, i + CONCURRENCY);
           const results = await Promise.all(batch.map((p) => scrapeOne(p)));
           for (const report of results) {
             pageReports.push(report);
             for (const iss of report.issues) issues.push({ ...iss, page_url: report.url ?? '' });
           }
+          // keep the UI honest during long crawls
+          if (i % (CONCURRENCY * 5) === 0) {
+            await admin.from('seo_scans').update({ pages_crawled: pageReports.length }).eq('id', scan.id);
+          }
         }
+
 
         // 4. Site-wide checks (robots / sitemap / llms.txt / security headers)
         const siteIssues: any[] = [];
