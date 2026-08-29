@@ -105,27 +105,79 @@ Deno.serve(async (req: Request) => {
         // 3. Scrape pages in parallel batches (keeps 100+ page scans within runtime limits)
         const pageReports: any[] = [];
         const issues: Array<any> = [];
-        const CONCURRENCY = 8;
+        const CONCURRENCY = 4;
+
+        const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+        /** Direct HTTP fetch fallback: returns Firecrawl-shaped root built from raw HTML. */
+        const plainFetch = async (pageUrl: string) => {
+          try {
+            const r = await fetch(pageUrl, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; LeadThruSEOBot/1.0; +https://leadthru.com/bot)',
+                Accept: 'text/html,application/xhtml+xml',
+              },
+            });
+            const html = await r.text();
+            if (!html) return null;
+            const links = [...html.matchAll(/<a\b[^>]+href=["']([^"']+)["']/gi)].map((m) => {
+              try { return new URL(m[1], pageUrl).toString(); } catch { return ''; }
+            }).filter(Boolean);
+            const text = html
+              .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+              .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+              .replace(/<[^>]+>/g, ' ')
+              .replace(/\s+/g, ' ')
+              .trim();
+            return { html, rawHtml: html, markdown: text, links, metadata: { statusCode: r.status } };
+          } catch (_) {
+            return null;
+          }
+        };
 
         const scrapeOne = async (pageUrl: string) => {
-          let crawl: any = { pages: [] };
+          let root: any = null;
+
           if (firecrawlKey) {
-            try {
-              const r = await fetch('https://api.firecrawl.dev/v2/scrape', {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  url: pageUrl,
-                  formats: pageUrl === url ? ['markdown', 'html', 'rawHtml', 'links', 'summary', 'screenshot'] : ['markdown', 'html', 'links'],
-                  onlyMainContent: false,
-                }),
-              });
-              crawl = await r.json();
-            } catch (_) { /* skip */ }
+            for (let attempt = 0; attempt < 3; attempt++) {
+              try {
+                const r = await fetch('https://api.firecrawl.dev/v2/scrape', {
+                  method: 'POST',
+                  headers: { Authorization: `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    url: pageUrl,
+                    formats: pageUrl === url ? ['markdown', 'rawHtml', 'links', 'summary', 'screenshot'] : ['markdown', 'rawHtml', 'links'],
+                    onlyMainContent: false,
+                    waitFor: 1500,
+                  }),
+                });
+                if (r.status === 429 || r.status >= 500) {
+                  const retryAfter = Number(r.headers.get('retry-after')) || 0;
+                  await sleep(retryAfter ? retryAfter * 1000 : 1500 * (attempt + 1));
+                  continue;
+                }
+                const crawl = await r.json();
+                const candidate = crawl?.data ?? crawl ?? {};
+                if (candidate?.rawHtml || candidate?.html || candidate?.markdown) {
+                  root = candidate;
+                  break;
+                }
+                await sleep(800 * (attempt + 1));
+              } catch (_) {
+                await sleep(800 * (attempt + 1));
+              }
+            }
           }
-          const root = crawl?.data ?? crawl ?? {};
-          return analyzePage(pageUrl, root, T, origin);
+
+          // Fallback (and enrichment) via direct fetch when Firecrawl returned nothing usable
+          if (!root || !(root.rawHtml || root.html)) {
+            const plain = await plainFetch(pageUrl);
+            if (plain) root = { ...(root || {}), ...plain, metadata: { ...(root?.metadata || {}), ...plain.metadata } };
+          }
+
+          return analyzePage(pageUrl, root || {}, T, origin);
         };
+
 
         for (let i = 0; i < pagesToScan.length; i += CONCURRENCY) {
           const batch = pagesToScan.slice(i, i + CONCURRENCY);
@@ -298,9 +350,22 @@ function analyzePage(pageUrl: string, root: any, T: any, origin: string) {
   const meta: Record<string, any> = root.metadata || {};
   const screenshot: string = root.screenshot || '';
 
+  // Fallbacks parsed straight from the HTML (Firecrawl metadata can be empty on JS/CMS pages)
+  const metaContent = (re: RegExp) => {
+    const m = html.match(re);
+    return m ? m[1].trim() : '';
+  };
+  const htmlTitle = metaContent(/<title[^>]*>([\s\S]*?)<\/title>/i).replace(/\s+/g, ' ');
+  const htmlDesc =
+    metaContent(/<meta[^>]+name=["']description["'][^>]*content=["']([^"']*)["']/i) ||
+    metaContent(/<meta[^>]+content=["']([^"']*)["'][^>]*name=["']description["']/i) ||
+    metaContent(/<meta[^>]+property=["']og:description["'][^>]*content=["']([^"']*)["']/i);
+  const htmlOgTitle = metaContent(/<meta[^>]+property=["']og:title["'][^>]*content=["']([^"']*)["']/i);
+
   const issues: any[] = [];
-  const title = String(meta.title || '');
-  const description = String(meta.description || meta.ogDescription || '');
+  const title = String(meta.title || htmlTitle || meta.ogTitle || htmlOgTitle || '');
+  const description = String(meta.description || htmlDesc || meta.ogDescription || '');
+
 
   if (!title || title.length < T.title_min) {
     issues.push({ severity: 'error', category: 'meta', message: `Title missing or too short (${title.length}, min ${T.title_min})`, recommendation: `Aim for ${T.title_min}-${T.title_max} chars including primary keyword.` });
