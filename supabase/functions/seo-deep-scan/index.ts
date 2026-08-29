@@ -102,11 +102,12 @@ Deno.serve(async (req: Request) => {
         const llmsTxt = llmsRes.status === 'fulfilled' && llmsRes.value.ok ? await llmsRes.value.text() : '';
         const respHeaders = headerRes.status === 'fulfilled' ? headerRes.value.headers : new Headers();
 
-        // 3. Scrape each page
+        // 3. Scrape pages in parallel batches (keeps 100+ page scans within runtime limits)
         const pageReports: any[] = [];
         const issues: Array<any> = [];
+        const CONCURRENCY = 8;
 
-        for (const pageUrl of pagesToScan) {
+        const scrapeOne = async (pageUrl: string) => {
           let crawl: any = { pages: [] };
           if (firecrawlKey) {
             try {
@@ -123,9 +124,16 @@ Deno.serve(async (req: Request) => {
             } catch (_) { /* skip */ }
           }
           const root = crawl?.data ?? crawl ?? {};
-          const report = analyzePage(pageUrl, root, T, origin);
-          pageReports.push(report);
-          for (const i of report.issues) issues.push({ ...i, page_url: pageUrl });
+          return analyzePage(pageUrl, root, T, origin);
+        };
+
+        for (let i = 0; i < pagesToScan.length; i += CONCURRENCY) {
+          const batch = pagesToScan.slice(i, i + CONCURRENCY);
+          const results = await Promise.all(batch.map((p) => scrapeOne(p)));
+          for (const report of results) {
+            pageReports.push(report);
+            for (const iss of report.issues) issues.push({ ...iss, page_url: report.url ?? '' });
+          }
         }
 
         // 4. Site-wide checks (robots / sitemap / llms.txt / security headers)
