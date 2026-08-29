@@ -40,7 +40,7 @@ Deno.serve(async (req: Request) => {
 
     const body = (await req.json()) as ScanRequestBody;
     const url = (body.url || '').trim();
-    const maxPages = Math.min(Math.max(body.max_pages ?? 5, 1), 15);
+    const maxPages = Math.min(Math.max(body.max_pages ?? 5, 1), 250);
     if (!/^https?:\/\//i.test(url)) return json({ error: 'invalid url' }, 400);
 
     const { data: thr } = await admin
